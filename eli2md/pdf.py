@@ -10,6 +10,7 @@ Layout facts this relies on (checked on 2024 acts, see eval/):
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections import Counter
 from dataclasses import dataclass, field
 
@@ -22,6 +23,8 @@ UNIT_START = re.compile(
     r"^(Art\.\s*\d|§\s*\d|\d+[a-z]*\.\s|\d+[a-z]*\)\s|[a-z]{1,3}\)\s|–\s|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
 )
 LOWER = "a-ząćęłńóśźż"
+ANNEX = re.compile(r"^Załącznik")
+SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+$")
 
 
 @dataclass
@@ -32,13 +35,38 @@ class Line:
     x0: float
     size: float
     text: str
+    pw: float = 595.0
+    ph: float = 842.0
+
+
+@dataclass
+class Block:
+    kind: str  # "p" | "signature" | "annex" (annex header)
+    text: str
+    page: int
 
 
 @dataclass
 class Document:
     masthead: list[str] = field(default_factory=list)
-    paragraphs: list[str] = field(default_factory=list)
+    blocks: list[Block] = field(default_factory=list)
     footnotes: list[str] = field(default_factory=list)
+
+    @property
+    def paragraphs(self) -> list[str]:
+        return [b.text for b in self.blocks]
+
+    def main_blocks(self) -> list[Block]:
+        """Blocks before the first annex header."""
+        out = []
+        for b in self.blocks:
+            if b.kind == "annex":
+                break
+            out.append(b)
+        return out
+
+    def annex_blocks(self) -> list[Block]:
+        return self.blocks[len(self.main_blocks()):]
 
 
 def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
@@ -73,7 +101,7 @@ def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
 
     rule_top = None
     for r in page.rects:
-        if r["height"] < 1.5 and 40 < r["width"] < 250 and r["top"] > page.height * 0.3:
+        if r["height"] < 1.5 and 130 < r["width"] < 160 and r["x0"] < page.width * 0.2 and r["top"] > page.height * 0.3:
             rule_top = r["top"] if rule_top is None else min(rule_top, r["top"])
 
     body, notes = [], []
@@ -100,7 +128,9 @@ def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
             bottom=max(w["bottom"] for w in normal_words),
             x0=min(w["x0"] for w in r),
             size=Counter(round(w["size"], 1) for w in normal_words).most_common(1)[0][0],
-            text=text,
+            text=_plain_math(text),
+            pw=float(page.width),
+            ph=float(page.height),
         )
         is_note = (rule_top is not None and line.top > rule_top) or (
             rule_top is None and line.size < body_size - 0.5 and line.top > page.height * 0.6
@@ -109,6 +139,11 @@ def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
     body.sort(key=lambda l: l.top)
     notes.sort(key=lambda l: l.top)
     return body, notes
+
+
+def _plain_math(text: str) -> str:
+    """Map Unicode mathematical alphanumerics (e.g. 𝑊𝑌𝐷 in formulas) to plain letters."""
+    return "".join(unicodedata.normalize("NFKC", c) if "\U0001D400" <= c <= "\U0001D7FF" else c for c in text)
 
 
 def _join(prev: str, nxt: str) -> str:
@@ -135,27 +170,36 @@ def convert(path: str) -> Document:
             body.extend(b)
             notes.extend(n)
 
-    # Paragraph segmentation by vertical gap (relative to font size), page breaks by content.
-    cur: str | None = None
+    # Block segmentation: vertical gap (relative to font size); page breaks by content;
+    # annex headers and signatures always start their own block.
+    cur: Block | None = None
     prev: Line | None = None
     for l in body:
-        new = False
-        if prev is None:
+        kind = "p"
+        if ANNEX.match(l.text) and l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph:
+            kind = "annex"
+        elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
+            kind = "signature"
+        if prev is None or cur is None:
             new = True
+        elif kind != "p" or cur.kind == "signature":
+            new = not (kind == "annex" and cur.kind == "annex" and l.page == prev.page)
+        elif cur.kind == "annex":
+            # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
+            new = not (l.page == prev.page and l.x0 > 0.4 * l.pw and l.top - prev.bottom < 0.8 * l.size)
         elif l.page != prev.page:
             new = bool(UNIT_START.match(l.text)) or bool(re.search(r"[.:;”]$", prev.text))
         else:
-            gap = l.top - prev.bottom
-            new = gap > 0.45 * l.size
+            new = l.top - prev.bottom > 0.45 * l.size
         if new:
             if cur is not None:
-                doc.paragraphs.append(cur)
-            cur = l.text
+                doc.blocks.append(cur)
+            cur = Block(kind, l.text, l.page)
         else:
-            cur = _join(cur, l.text)
+            cur.text = _join(cur.text, l.text)
         prev = l
     if cur is not None:
-        doc.paragraphs.append(cur)
+        doc.blocks.append(cur)
 
     cur = None
     for l in notes:
@@ -171,7 +215,14 @@ def convert(path: str) -> Document:
 
 
 def to_markdown(doc: Document) -> str:
-    out = [p for p in doc.paragraphs]
+    out = []
+    for b in doc.blocks:
+        if b.kind == "annex":
+            out.append("## " + b.text)
+        elif b.kind == "signature":
+            out.append("*" + b.text + "*")
+        else:
+            out.append(b.text)
     for f in doc.footnotes:
         m = re.match(r"^\[\^(\d+)\]\s*(.*)$", f, re.S)
         out.append(f"[^{m.group(1)}]: {m.group(2)}" if m else f)
