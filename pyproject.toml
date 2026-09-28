@@ -1,0 +1,21 @@
+[project]
+name = "eli2md"
+version = "0.1.0"
+description = "Dziennik Ustaw (Polish Journal of Laws) PDF -> Markdown, with measured accuracy"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = ["pdfplumber>=0.11"]
+
+[project.optional-dependencies]
+eval = ["beautifulsoup4"]
+
+[project.scripts]
+eli2md = "eli2md.__main__:main"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["eli2md"]

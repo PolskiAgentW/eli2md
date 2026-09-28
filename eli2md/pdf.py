@@ -9,6 +9,7 @@ Layout facts this relies on (checked on 2024 acts, see eval/):
 """
 from __future__ import annotations
 
+import json
 import re
 import unicodedata
 from collections import Counter
@@ -214,13 +215,61 @@ def convert(path: str) -> Document:
     return doc
 
 
-def to_markdown(doc: Document) -> str:
+UNIT_HEAD = {
+    "Art.": re.compile(r"^(Art\.\s*\d+[a-z]*\.)\s*(.*)$", re.S),
+    "§": re.compile(r"^(§\s*\d+[a-z]*\.)\s*(.*)$", re.S),
+}
+
+
+def frontmatter(meta: dict, source_pdf: str | None = None) -> str:
+    """YAML front matter; keys follow legalize-pl where the meaning is the same."""
+    from . import __version__
+
+    eli = meta["ELI"]
+    fields = {
+        "title": meta.get("title"),
+        "identifier": eli.replace("/", "-"),
+        "country": "pl",
+        "rank": (meta.get("type") or "").lower(),
+        "eli": eli,
+        "source": f"https://api.sejm.gov.pl/eli/acts/{eli}",
+        "source_pdf": source_pdf or f"https://api.sejm.gov.pl/eli/acts/{eli}/text.pdf",
+        "display_address": meta.get("displayAddress"),
+        "internal_address": meta.get("address"),
+        "publisher": meta.get("publisher"),
+        "position": str(meta.get("pos")),
+        "announcement_date": meta.get("announcementDate"),
+        "promulgation_date": meta.get("promulgation"),
+        "entry_into_force": meta.get("entryIntoForce"),
+        "status_pl": meta.get("status"),
+        "keywords": ", ".join(meta.get("keywords") or []),
+        "text_source": "pdf",
+        "converter": f"eli2md {__version__}",
+        "disclaimer": "Nieoficjalny tekst z automatycznej konwersji PDF. Wiążący jest PDF w Dzienniku Ustaw.",
+    }
+    lines = ["---"]
+    for k, v in fields.items():
+        if v not in (None, "", "None"):
+            lines.append(f"{k}: {json.dumps(v, ensure_ascii=False)}")
+    lines.append("---")
+    return "\n".join(lines)
+
+
+def to_markdown(doc: Document, meta: dict | None = None) -> str:
+    """Markdown body: one block per paragraph, top-level units (Art. or, if none, §) as h5."""
+    unit = "Art." if any(b.text.startswith("Art.") for b in doc.blocks) else "§"
     out = []
+    if meta:
+        out += [frontmatter(meta), "# " + meta["title"]]
     for b in doc.blocks:
         if b.kind == "annex":
             out.append("## " + b.text)
         elif b.kind == "signature":
             out.append("*" + b.text + "*")
+        elif m := UNIT_HEAD[unit].match(b.text):
+            out.append("##### " + m.group(1))
+            if m.group(2):
+                out.append(m.group(2))
         else:
             out.append(b.text)
     for f in doc.footnotes:
