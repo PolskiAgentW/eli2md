@@ -35,6 +35,7 @@ Rules:
   indentation to tell them apart.
 - Headings of systematising units (DZIAŁ, Rozdział, Oddział, ...) are flat `heading` nodes between
   the articles (articles are not nested in chapters); the next non-unit paragraph is their title.
+  In annexes, sections numbered "I." … "XXXIX." are `heading` nodes too (label "III.").
 - Footnote markers stay in the text as `[^n]`.
 - Each annex has its own tree (texts announced as consolidated texts have their own Art./§).
 """
@@ -61,7 +62,14 @@ TIRET = re.compile(r"^((?:–\s*)+)\s(\S.*)$", re.S)  # "– tekst", "– – te
 RANK = {"art": 0, "par": 1, "ust": 2, "pkt": 3, "lit": 4, "tir": 5}
 HEADING = re.compile(
     r"^((?:DZIAŁ|Dział|ROZDZIAŁ|Rozdział|ODDZIAŁ|Oddział|TYTUŁ|Tytuł|KSIĘGA|Księga|CZĘŚĆ|Część)"
-    rf"\s+(?:[0-9]+[a-z]*[{SUP}]*|[IVXLC]+[a-z]*[{SUP}]*))(?:\s+(.*))?$", re.S)
+    rf"\s+(?:[0-9]+[a-z]*[{SUP}]*|[IVXLC]+[a-z]*[{SUP}]*))\.?(?:\s+(.*))?$", re.S)  # "Rozdział 2. Tytuł" too
+# "III. Stanowiska pracy …": a section of an annex numbered I–XXXIX. It ends the units of the section before
+# (DU/2024/629: the "1)" list of section III is not under "6." of section II). Only in annexes: in the main text
+# such lines are mostly rows of tables replaced by an amendment without quotes (DU/2025/330: "część I otrzymuje
+# brzmienie:" / "I. Pakiet 1. …"), which must stay under the amending unit. Only as a sequence (_Builder.roman_section):
+# "I. METALE" inside the table of "1. Substancje …" (DU/2024/1657) is a row of that table.
+ROMAN = {"I": 1, "V": 5, "X": 10}
+ROMAN_HEAD = re.compile(rf"^((?=[IVX])X{{0,3}}(?:IX|IV|V?I{{0,3}})\.)\s+([{UPPER}].*)$", re.S)
 UNESCAPE = re.compile(r"^\\([>#|\[*+-])")  # the converter escapes Markdown syntax at a paragraph start
 FRONT = re.compile(r"^---\n(.*?)\n---\n", re.S)
 COMMON_PART = re.compile(rf"^(?:[{LOWER}]|–\s)")  # "część wspólna" after an enumeration
@@ -152,6 +160,7 @@ class _Builder:
         self.heading: dict | None = None  # heading still waiting for its title
         self.common = False  # the last text was the common part after an enumeration
         self.undo: tuple[list, list] | None = None  # (closed list item entries, common-part text nodes)
+        self.roman = 0  # number of the last "I." … "XXXIX." section heading
 
     def _parent_list(self) -> list[dict]:
         return self.stack[-1][1]["children"] if self.stack else self.body
@@ -219,6 +228,14 @@ class _Builder:
         node = {"type": "heading", "label": " ".join(label.split()), "text": text}
         self.body.append(node)
         self.heading = node if not text else None
+
+    def roman_section(self, label: str) -> bool:
+        """True if "IV." is a section heading: "I." where no unit is open, the others right after the one before."""
+        num = sum(ROMAN[a] if ROMAN[a] >= ROMAN.get(b, 0) else -ROMAN[a] for a, b in zip(label[:-1], label[1:]))
+        if (num == 1 and not self.stack) or (self.roman and num == self.roman + 1):
+            self.roman = num
+            return True
+        return False
 
     def add_flat(self, typ: str, text: str) -> None:
         """Signature (ends the units) or a note about content missing from the text layer (in place)."""
@@ -303,6 +320,9 @@ def md_to_tree(md: str) -> dict:
             b.add_unit(*u)
         elif d == 0 and (h := HEADING.match(text)) and len(text) < 300:
             b.add_heading(h.group(1), (h.group(2) or "").strip())
+        elif d == 0 and kind == "p" and parts[-1][0] == "annex" and (h := ROMAN_HEAD.match(text)) \
+                and b.roman_section(h.group(1)):
+            b.add_heading(h.group(1), h.group(2).strip())
         else:
             b.add_text(text, quoted=d > 0 or text.startswith(("„", "“")))
     out["body"] = parts[0][2].body

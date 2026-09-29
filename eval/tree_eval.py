@@ -285,7 +285,8 @@ def evaluate_act(pos: int, md_cache: Path | None = None, show: bool = False) -> 
     for label in ("main", "annex"):
         score_part(ref[label], hyp[label], c, label, bad)
     if show:
-        for label, side, kind, p, got, i in bad[:200]:
+        order = {"R": 0, "P": 1, "T": 2}  # unit misses first, then paragraphs under the wrong unit
+        for label, side, kind, p, got, i in sorted(bad, key=lambda b: order[b[1]])[:200]:
             rt = ref[label]["tokens"]
             what = {"R": "missed", "P": "false ", "T": "text  "}[side]
             print(f"{label:5} {what} {kind:4} {p:32} other: {','.join(got) or '-':32} "

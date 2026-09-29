@@ -36,6 +36,37 @@ class Tree(unittest.TestCase):
         pkt3 = t["body"][0]["children"][0]["children"][0]
         self.assertEqual(pkt3["children"][0], {"type": "text", "text": "zakażeniom w stadzie, w tym:"})
 
+    def test_chapter_heading_with_dot_ends_units(self):
+        # DU/2024/853: "Rozdział 2. Tytuł" in one line; the pkt after it are not under ust. 2 of chapter 1
+        t = md_to_tree(md("Rozdział 1. Dane ogólne", "1. Wybory przeprowadziły:", "1) komisja;", "2. Wybierano posłów.",
+                          "Rozdział 2. Zbiorcze wyniki", "Komisja ustaliła wyniki:", "1) liczba wyborców;"))
+        self.assertEqual(paths(t["body"]), ["ust_1", "ust_1/pkt_1", "ust_2", "pkt_1"])
+        self.assertEqual([n.get("label") for n in t["body"] if n["type"] == "heading"], ["Rozdział 1", "Rozdział 2"])
+
+    def test_roman_sections_in_annex_end_units(self):
+        # DU/2024/629: section III starts with a "1)" list, which is not under "6." of section II
+        annex = ("## Załącznik nr 1", "WYKAZ STANOWISK", "I. Stanowiska w obszarze wytwarzania:", "1. realizacji procesu:",
+                 "1) asystent;", "II. Stanowiska w obszarze remontów:", "6. gospodarowania nieruchomościami:",
+                 "1) dyrektor;", "III. Stanowiska w obszarze warsztatów:", "1) administrator sieci", "IV. Inne", "1. Zasady")
+        t = md_to_tree(md("##### § 1.", "Tekst.", *annex))
+        body = t["annexes"][0]["body"]
+        self.assertEqual(paths(body), ["ust_1", "ust_1/pkt_1", "ust_6", "ust_6/pkt_1", "pkt_1", "ust_1"])
+        self.assertEqual([(n["label"], n["text"]) for n in body if n["type"] == "heading"],
+                         [("I.", "Stanowiska w obszarze wytwarzania:"), ("II.", "Stanowiska w obszarze remontów:"), ("III.", "Stanowiska w obszarze warsztatów:"),
+                          ("IV.", "Inne")])
+        # "I." inside an open unit is a row of a table (DU/2024/1657), and so are the sections after it
+        annex = ("## Załącznik", "1. Substancje i zawartości:", "Lp. Substancja I II", "I. METALE I METALOID", "1 arsen 25",
+                 "II. ZANIECZYSZCZENIA", "1 cyjanki 5", "2. Drugi ustęp.")
+        t = md_to_tree(md("##### § 1.", "Tekst.", *annex))
+        body = t["annexes"][0]["body"]
+        self.assertEqual(paths(body), ["ust_1", "ust_2"])
+        self.assertEqual(len(body[0]["children"]), 5)
+        # in the main text a roman line is left alone: here it is a row of a table replaced without quotes
+        t = md_to_tree(md("##### § 1.", "W załączniku:", "a) część I otrzymuje brzmienie:", "I. Pakiet 1. Uprawy",
+                          "1 bobik R UR", "b) część II otrzymuje brzmienie:"))
+        self.assertEqual(paths(t["body"]), ["par_1", "par_1/lit_a", "par_1/lit_b"])
+        self.assertEqual(t["body"][0]["children"][0]["children"][0]["text"], "I. Pakiet 1. Uprawy")
+
     def test_ocr_paragraphs_are_not_units(self):
         t = md_to_tree(md("##### Art. 1.", "Tekst.", "> [Strona 2 PDF nie ma czytelnej warstwy tekstowej. Tekst poniżej odczytał OCR "
                           "(tesseract 5.5.0, pol+eng). Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]",
