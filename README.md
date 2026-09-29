@@ -57,6 +57,29 @@ Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który g
 - Ust., pkt i lit. zaczynają nowy akapit (`1.`, `1)`, `a)`). Jawne drzewo jednostek jest w JSON (niżej, od 0.5.3).
 - Cyfry w indeksie górnym i dolnym jako znaki Unicode: `Art. 41¹.`, `m²`, `P₂O₅` (od 0.5.0;
   wcześniej błędnie jako odnośniki do przypisów `[^1]`).
+- Indeks numeru jednostki z literą też w całości jako znaki górne, litery jako litery modyfikujące Unicode:
+  `Art. 22¹ᵃ.`, `Art. 479³⁰ᶠ.`, tak samo `num` i `path` w JSON (`"479³⁰ᶠ"`, `art_479³⁰ᶠ`) (od 0.6.3, szczegóły niżej).
+
+#### Indeksy przy numerach jednostek (od 0.6.3)
+
+PDF-y drukują indeks (`Art. 479³⁰ᶠ`) małym, podniesionym pismem, ale w dwóch zapisach. Do 2025 r. (i w części
+PDF-ów z 2026 r., np. DU/2026/236) bez nawiasów: `22` + małe `1` albo `1a` (DU/2025/277). W części PDF-ów
+z 2026 r. w nawiasach kwadratowych, także same cyfry: `479[30f]`, `§ 4[1]` (DU/2026/468, 795, 1245, 1046).
+Oba zapisy dają ten sam wynik: cały indeks jako znaki górne, bez nawiasów (`479³⁰ᶠ`, `§ 4¹`). Nawiasy to tylko
+zapis drukarski, więc ten sam artykuł ma w wyniku ten sam numer niezależnie od rocznika druku. Zapisu cyframi
+górnymi (`41¹`, od 0.5.0; w zbiorze DU 2025–2026 z 0.6.2 było 848 takich nagłówków) nie zmieniałem. Zapis
+z nawiasami dla wszystkich indeksów dałby dwa zapisy tego samego artykułu w danych z różnych lat. Litery
+modyfikujące (`ᵃ` U+1D43, `ᶠ` U+1DA0, …) mają rozkład zgodności na zwykłe litery: po normalizacji NFKC
+`479³⁰ᶠ` to `47930f` (tak jak `41¹` to `411`). Litera q nie ma znaku górnego w Unicode. Indeks z taką literą
+zostaje w zapisie z nawiasami: `5[1q]` (w sprawdzonych PDF-ach go nie było).
+
+Za indeks uznaję mały wyraz w nawiasach (`[30f]`) albo cyfry z literą (`1a`), który zaczyna się tuż za wyrazem
+zwykłej wielkości zakończonym literą lub cyfrą (odstęp < 1,5 pt) i jest podniesiony nad jego środek. Mały
+wyraz `[2]` z dala od poprzedniego wyrazu zostaje bez zmian. Do 0.6.2 indeks z literą był osobnym wyrazem
+(`Art. 22 1a .`). Indeks w nawiasach też był osobnym wyrazem (`art. 18 [3a] :`). Gdy w jednej linii były
+co najmniej trzy indeksy, linia indeksów trafiała przed linię główną: `[30f] [30] [30a] [30e] Art. 479 . W
+postępowaniu…`. Artykuły z takim numerem nie były nagłówkami ani węzłami `art`. Skalę i pomiar opisuje
+`eval/indices_2026_v0.6.3.dev.md`.
 - Nagłówki załączników jako `## Załącznik nr …`, podpis kursywą.
 - Przypisy w składni Markdown: `[^1]` w tekście i `[^1]: …` na końcu. Numeracja przypisów zaczyna się od nowa
   w załącznikach i formularzach; od 0.6.1 kolejny przypis o tym samym numerze ma etykietę `[^1_2]`, `[^1_3]`…,
