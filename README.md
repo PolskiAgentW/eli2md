@@ -357,5 +357,5 @@ renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część st
 
 ## Licencja
 
-Kod: MIT. Teksty aktów normatywnych nie podlegają prawu autorskiemu (art. 4 pkt 2 ustawy
+Kod: MIT. Teksty aktów normatywnych nie podlegają prawu autorskiemu (art. 4 pkt 1 ustawy
 o prawie autorskim i prawach pokrewnych).
