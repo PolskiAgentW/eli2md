@@ -1,13 +1,14 @@
 """Build or update a directory of Markdown texts of Dziennik Ustaw acts that have only PDF text.
 
     python -m eli2md.dataset --root DIR [--years 2025 2026] [--max N] [--time-budget SEC] [--jobs N] [--all] [--json]
-        [--ocr [LANG]]
+        [--rewrite-json] [--ocr [LANG]]
 
 Layout: DIR/DU/<year>/DU-<year>-<pos>.md and DIR/index.csv (one row per act, including failures).
 With --json also DIR/DU/<year>/DU-<year>-<pos>.json (tree of units, eli2md.tree) next to each .md.
 An act is (re)converted when it is new, when its ELI `changeDate` differs from the index, or when
-it previously failed (or always, with --all). Downloads are sequential and polite (see eli.fetch);
-conversion can be parallel.
+it previously failed (or always, with --all). With --ocr also acts with pages without a text layer that
+were never converted with OCR (index column ocr_pages empty). Downloads are sequential and polite
+(see eli.fetch); conversion can be parallel.
 """
 from __future__ import annotations
 
@@ -32,7 +33,8 @@ from .pdf import convert, to_markdown
 from .tree import md_to_tree
 
 FIELDS = ["eli", "year", "pos", "type", "title", "announcement_date", "promulgation", "change_date",
-          "pdf_sha256", "pages", "words", "no_text_pages", "image_pages", "status", "error", "converter", "converted_at"]
+          "pdf_sha256", "pages", "words", "no_text_pages", "image_pages", "ocr_pages", "status", "error", "converter",
+          "converted_at"]
 FIRST_PDF_ONLY_YEAR = 2025  # from 2025 the ELI API has no HTML text for DU (checked 2026-09-29)
 
 
@@ -91,7 +93,8 @@ def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
             pages = len(p.pages)
         return {"eli": eli, "status": "ok", "error": "", "pages": pages,
                 "words": sum(len(b.text.split()) for b in doc.blocks), "no_text_pages": len(doc.no_text_pages),
-                "image_pages": len(doc.image_pages), "secs": round(time.time() - t0, 1)}
+                "image_pages": len(doc.image_pages), "ocr_pages": len(doc.ocr_pages) if ocr else "",
+                "secs": round(time.time() - t0, 1)}
     except MemoryError:
         pass  # report below, once the frames holding the large objects are released
     except Exception as e:  # keep going; the failure is recorded in the index
@@ -113,6 +116,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--mem-limit-gb", type=float, default=3,
                     help="address-space limit per conversion worker (0 = none)")
     ap.add_argument("--json", action="store_true", help="also write the tree of units as .json next to each .md")
+    ap.add_argument("--rewrite-json", action="store_true",
+                    help="with --json: rebuild the .json of up-to-date acts too (after a change in eli2md.tree)")
     ap.add_argument("--ocr", nargs="?", const=OCR_LANG, metavar="LANG",
                     help=f"OCR pages without a text layer with tesseract (off by default; LANG default {OCR_LANG})")
     a = ap.parse_args(argv)
@@ -132,10 +137,11 @@ def main(argv: list[str] | None = None) -> int:
             if not it.get("textPDF") or it.get("textHTML"):
                 continue
             old = index.get(it["ELI"])
+            needs_ocr = bool(a.ocr and old and int(old.get("no_text_pages") or 0) > 0 and not old.get("ocr_pages"))
             if not a.all and old and old["change_date"] == it["changeDate"] and old["status"] == "ok" \
-                    and md_path(a.root, year, it["pos"]).exists():
+                    and md_path(a.root, year, it["pos"]).exists() and not needs_ocr:
                 mdf = md_path(a.root, year, it["pos"])
-                if a.json and not json_path(mdf).exists():  # up-to-date .md: the tree needs no reconversion
+                if a.json and (a.rewrite_json or not json_path(mdf).exists()):  # the tree needs no reconversion
                     write_json(mdf.read_text(encoding="utf-8"), mdf)
                 continue
             todo.append((it, old))
@@ -165,7 +171,8 @@ def main(argv: list[str] | None = None) -> int:
                              initargs=(a.mem_limit_gb,)) as ex:
         for res in ex.map(_convert_one, jobs):
             row = index[res["eli"]]
-            row.update({k: res[k] for k in ("status", "error", "pages", "words", "no_text_pages", "image_pages") if k in res})
+            row.update({k: res[k] for k in ("status", "error", "pages", "words", "no_text_pages", "image_pages", "ocr_pages")
+                        if k in res})
             row.update(converter=f"eli2md {__version__}",
                        converted_at=dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
             done += 1
