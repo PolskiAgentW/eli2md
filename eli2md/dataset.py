@@ -3,8 +3,9 @@
     python -m eli2md.dataset --root DIR [--years 2025 2026] [--max N] [--time-budget SEC] [--jobs N] [--all] [--json]
         [--rewrite-json] [--ocr [LANG]]
 
-Layout: DIR/DU/<year>/DU-<year>-<pos>.md and DIR/index.csv (one row per act, including failures).
-With --json also DIR/DU/<year>/DU-<year>-<pos>.json (tree of units, eli2md.tree) next to each .md.
+Layout: DIR/<PUB>/<year>/<PUB>-<year>-<pos>.md and DIR/index.csv (one row per act, including failures);
+<PUB> is DU (Dziennik Ustaw, default) or MP (Monitor Polski, --publisher MP).
+With --json also DIR/<PUB>/<year>/<PUB>-<year>-<pos>.json (tree of units, eli2md.tree) next to each .md.
 An act is (re)converted when it is new, when its ELI `changeDate` differs from the index, or when
 it previously failed (or always, with --all). With --ocr also acts with pages without a text layer that
 were never converted with OCR (index column ocr_pages empty). Downloads are sequential and polite
@@ -57,8 +58,8 @@ def save_index(root: Path, index: dict[str, dict]) -> None:
     tmp.replace(root / "index.csv")
 
 
-def md_path(root: Path, year: int, pos: int) -> Path:
-    return root / "DU" / str(year) / f"DU-{year}-{pos}.md"
+def md_path(root: Path, year: int, pos: int, publisher: str = "DU") -> Path:
+    return root / publisher / str(year) / f"{publisher}-{year}-{pos}.md"
 
 
 def _limit_memory(gb: float) -> None:
@@ -107,6 +108,7 @@ def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="eli2md.dataset")
     ap.add_argument("--root", required=True, type=Path)
+    ap.add_argument("--publisher", choices=("DU", "MP"), default="DU", help="DU: Dziennik Ustaw; MP: Monitor Polski")
     ap.add_argument("--years", type=int, nargs="*",
                     default=list(range(FIRST_PDF_ONLY_YEAR, dt.date.today().year + 1)))
     ap.add_argument("--max", type=int, default=0, help="at most this many acts per run (0 = no limit)")
@@ -132,15 +134,15 @@ def main(argv: list[str] | None = None) -> int:
 
     todo = []
     for year in a.years:
-        items = json.loads(get(f"{API}/DU/{year}"))["items"]
+        items = json.loads(get(f"{API}/{a.publisher}/{year}"))["items"]
         for it in sorted(items, key=lambda i: i["pos"]):
             if not it.get("textPDF") or it.get("textHTML"):
                 continue
             old = index.get(it["ELI"])
             needs_ocr = bool(a.ocr and old and int(old.get("no_text_pages") or 0) > 0 and not old.get("ocr_pages"))
             if not a.all and old and old["change_date"] == it["changeDate"] and old["status"] == "ok" \
-                    and md_path(a.root, year, it["pos"]).exists() and not needs_ocr:
-                mdf = md_path(a.root, year, it["pos"])
+                    and md_path(a.root, year, it["pos"], a.publisher).exists() and not needs_ocr:
+                mdf = md_path(a.root, year, it["pos"], a.publisher)
                 if a.json and (a.rewrite_json or not json_path(mdf).exists()):  # the tree needs no reconversion
                     write_json(mdf.read_text(encoding="utf-8"), mdf)
                 continue
@@ -164,7 +166,7 @@ def main(argv: list[str] | None = None) -> int:
             continue
         sha = hashlib.sha256(pdf.read_bytes()).hexdigest()
         index[eli] = {**_base_row(it), "pdf_sha256": sha}
-        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos)), a.json, a.ocr))
+        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos, a.publisher)), a.json, a.ocr))
 
     done = 0
     with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,

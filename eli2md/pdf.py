@@ -19,7 +19,7 @@ from dataclasses import dataclass, field, replace
 import pdfplumber
 from pdfplumber.utils import extract_words
 
-RUNNING_HEADER = re.compile(r"^Dziennik Ustaw\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
+RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
 MASTHEAD_END = re.compile(r"^Poz\.\s*\d+\s*$")
 SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 41¹., 5²)
 # Lines that start a new unit even without a vertical gap (used at page breaks).
