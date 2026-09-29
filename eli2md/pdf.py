@@ -293,8 +293,8 @@ def _join(prev: str, nxt: str) -> str:
 
 
 def convert(path: str, ocr: str | None = None) -> Document:
-    """ocr: tesseract language(s), e.g. "pol+eng", to read pages without a text layer (see ocr.py);
-    None (default) = no OCR, such pages only get a note."""
+    """ocr: "auto" or tesseract language(s), e.g. "pol+eng", to read pages without a text layer
+    (see ocr.py); None (default) = no OCR, such pages only get a note."""
     doc = Document()
     body: list[Line] = []
     notes: list[Line] = []

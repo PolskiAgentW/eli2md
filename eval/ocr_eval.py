@@ -170,7 +170,8 @@ def main_digital(a) -> None:
     for lang in a.langs:
         print(f"tesseract {check(lang)} lang {lang}")
     if a.pages:  # explicit list [{"eli", "type", "page", "pdf"}, ...] instead of a random sample
-        items = [{k: it[k] for k in ("eli", "type", "page", "pdf")} for it in json.loads(Path(a.pages).read_text())]
+        items = [{**{k: it[k] for k in ("eli", "type", "page")}, "pdf": os.path.expanduser(it["pdf"])}
+                 for it in json.loads(Path(a.pages).read_text())]
     else:
         items = pick_digital(a.root, a.seed, a.agreements, a.other)
     Path(a.cache).mkdir(parents=True, exist_ok=True)

@@ -125,6 +125,16 @@ class Ocr(unittest.TestCase):
             self.assertEqual(ocr.ocr_page(mock.Mock(page_number=5), "pol+eng").lang, "pol+eng")
         self.assertEqual(calls, ["pol+eng"])
 
+    def test_timeout(self):
+        import subprocess
+
+        def slow(*a, **k):
+            raise subprocess.TimeoutExpired("tesseract", ocr.TIMEOUT)
+        with mock.patch.object(ocr, "tesseract", return_value=("t", "5.5.0", frozenset({"pol", "eng"}))), \
+                mock.patch.object(ocr, "render", return_value=mock.Mock(height=3508)), \
+                mock.patch.object(ocr, "_run", slow), self.assertWarnsRegex(UserWarning, "took over"):
+            self.assertFalse(ocr.usable(ocr.ocr_page(mock.Mock(page_number=19))))
+
     def test_no_ocr_fields_without_ocr(self):
         md = to_markdown(Document(blocks=[Block("notext", "", 1)], no_text_pages=[1]), META)
         self.assertNotIn("pages_ocr", md)

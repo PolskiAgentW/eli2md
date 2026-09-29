@@ -58,7 +58,7 @@ Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który g
   `> [Strony 2-28 PDF nie mają warstwy tekstowej …]` (skany) oraz
   `> [Na stronie 7 PDF jest obraz …]` (obraz zajmujący ≥10% strony: wzór, rysunek, mapa).
   We front matter te same strony są w polach `pages_without_text` i `pages_with_images`.
-  Tej treści nie ma w Markdown. Konwerter nie robi OCR.
+  Tej treści nie ma w Markdown. Domyślnie konwerter nie robi OCR (opcja `--ocr` niżej).
 
 ## Jakość: jak mierzę i co wyszło
 
@@ -180,6 +180,70 @@ Obejrzałem tylko najgorszy przypadek, DU/2025/243. To wzór formularza z kilkom
 warstwami tekstu, a wynik jest tam częściowo pomieszany. Pozostałych nie przeglądałem.
 Strony bez warstwy tekstowej (skany) są dla tej kontroli niewidoczne. Wynik je tylko oznacza.
 
+## OCR stron bez warstwy tekstowej (prototyp, opcja `--ocr`)
+
+```sh
+sudo apt install tesseract-ocr tesseract-ocr-pol      # wymagane; opcjonalnie np. -por -fra -ell
+eli2md DU/2025/1604 --ocr -o DU-2025-1604.md           # język dobierany dla każdej strony (auto)
+eli2md DU/2025/1604 --ocr pol+eng                      # jeden zestaw języków dla wszystkich stron
+python -m eli2md.dataset --root dane/ --ocr --all      # zbiór danych (domyślnie bez OCR)
+```
+
+Domyślnie wyłączone. Strona bez warstwy tekstowej jest renderowana w 300 dpi i czytana przez
+tesseract (`eli2md/ocr.py`). W Markdown przed jej tekstem stoi notka
+`> [Strona 5 PDF nie ma warstwy tekstowej. Tekst poniżej odczytał OCR (tesseract 5.5.0, pol+eng). Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]`,
+a we front matter są pola `pages_ocr` i `ocr`. `pages_without_text` zostaje (opisuje PDF).
+Strona, z której OCR daje mniej niż 20 słów albo medianę pewności słów poniżej 80
+(mapy, nuty, podpisy), dostaje tylko dawną notkę. Tekst OCR nigdy nie jest nagłówkiem `#####`.
+
+Tryb `auto`: najpierw `pol+eng`. Jeśli wynik jest nieczytelny, orientacja strony wg OSD
+(formularze drukowane w poziomie, np. DU/2025/15) i ewentualnie pismo (grecki → `ell`).
+Jeśli słowa funkcyjne wskazują inny język (pt, fr, de, es, sv, it) i są jego dane, strona jest
+czytana jeszcze raz w tym języku. Bez tych danych zostaje wynik `pol+eng` bez części znaków
+diakrytycznych (não → nao).
+
+**Jak mierzę (bez ręcznego wzorca).** Strony *z* warstwą tekstową renderuję w 300 dpi, robię OCR
+i porównuję słowa z warstwą tekstową tej strony (`eval/ocr_eval.py digital`, tokeny i difflib jak
+w `evaluate.py`). Próba: 95 stron z aktów 2025–2026 (seed 7310; jedna losowa strona z losowego aktu,
+55 z umów międzynarodowych i oświadczeń rządowych, 40 z innych aktów). Wyrenderowana strona cyfrowa
+jest czystsza niż skan, więc to **górna granica** jakości na skanach. Wynik `pol+eng` z `fix_text`
+(tak działa `--ocr`):
+
+| strony                     | n  | recall (mediana / micro) | precision (mediana / micro) | recall liczb (micro) |
+|----------------------------|---:|--------------------------|-----------------------------|---------------------:|
+| wszystkie                  | 95 | 0.984 / 0.972            | 0.989 / 0.976               | 0.881                |
+| tekst po polsku            | 79 | 0.989 / 0.982            | 0.993 / 0.986               | 0.908                |
+| tabele, listy (język „?”)  | 14 | 0.963 / 0.830            | 0.967 / 0.836               | 0.613                |
+
+Liczby to tokeny z cyfrą. Część strat nie jest błędem OCR: tabele i kolumny OCR czyta w innej
+kolejności (recall bez kolejności: 0.978 wszystkie, 0.987 po polsku), a w warstwie tekstowej
+odnośniki przypisów są doklejone do słów („wsi1”), których OCR nie odtwarza. Najczęstszy błąd
+liczb to samotne „1” czytane jako „|”; `fix_text` poprawia je po słowach jak „ust.”, „art.”,
+„Ustęp” (recall liczb na stronach po polsku 0.897 → 0.908). `pol` i `pol+eng` dają prawie to samo,
+`eng` na polskich stronach ma recall 0.72. Wyniki: `eval/ocr_eval_digital_s7310.txt`.
+
+Na prawdziwych skanach nie mam wzorca. Kontrola wzrokowa czterech stron polskich i angielskich
+(`eval/ocr_eval_visual_check.txt`, to nie pomiar): 0–3 błędy w treści na ok. 110–230 słów
+(np. „się” → „sie”, „II” → „H”, „1” → „|”); odnośniki przypisów w indeksie górnym są zniekształcone,
+podpisy dają śmieci. Strony portugalskie i francuskie czytane `pol+eng` tracą diakrytyki, grecka
+to śmieci. Z danymi `por` i `fra` sprawdzone fragmenty nie miały różnic; z `ell` grecki tekst ma
+medianę pewności 92.7 (nie sprawdzałem go litera po literze).
+
+**Co jest na 1734 stronach bez tekstu** (`eval/ocr_eval_scans_poleng.txt`, OCR `pol+eng` wszystkich
+stron). Każda to obraz całej strony razem z nagłówkiem Dziennika Ustaw. Mediana pewności słów
+jest ≥ 90 na 1600 stronach (na stronach cyfrowych z próby wyżej: 92 z 95 stron ≥ 95, mediana 96.4).
+Kryteria z `--ocr` przyjmuje 1618 stron. Język wg słów funkcyjnych: polski 907, angielski 347,
+portugalski 43, francuski 37, szwedzki 11, hiszpański 2, bez rozpoznanego języka 271 (tabele, listy,
+legendy map). Odrzuconych 115, m.in. mapy (np. DU/2025/57, 348), obrócone formularze, nuty, prawie
+puste strony i 9 stron umowy z Grecją (DU/2026/968, wersja grecka; z `auto` i danymi `ell` 8 z nich
+ma tekst). Jedna strona (DU/2026/14 s. 19, formularz na tle gilosza) zajęła tesseractowi ponad
+10 minut, dlatego limit to 120 s na stronę. Tekstu tych skanów nie znalazłem w warstwie tekstowej
+innych aktów 2025–2026 (sprawdzone DU/2025/29, 360, 370: 0 z 36 losowych fragmentów po 8 słów).
+
+**Koszt.** Ok. 2.1 s CPU tesseracta na stronę (1 wątek, i5-1335U, 40 losowych stron) plus 0.2 s
+renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część stron drugi raz
+(inny język, obrót). Nowe akty: średnio 83 strony bez tekstu na miesiąc (od 1 do 306).
+
 ## Znane ograniczenia
 
 - Tabele są spłaszczane do akapitów (komórki wierszami), wzory do zwykłego tekstu. Grafik i skanów
@@ -192,8 +256,8 @@ Strony bez warstwy tekstowej (skany) są dla tej kontroli niewidoczne. Wynik je 
   Taki ukryty tekst wykrywam heurystycznie: renderuję stronę i sprawdzam, czy pod znakiem jest tusz.
   Mogą zostać pojedyncze duplikaty.
 - Objaśnienia pod formularzami w załącznikach bywają brane za przypisy (niska precision przypisów).
-- Bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 52 905 stron),
-  głównie umowy międzynarodowe.
+- Domyślnie bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 53 356 stron
+  w indeksie z 29.09.2026), głównie umowy międzynarodowe. OCR (`--ocr`) to prototyp, opis niżej.
 
 ## Licencja
 

@@ -7,7 +7,7 @@ Facts this relies on (the 1734 pages without text in DU 2025-2026, checked 2026-
 - such a page is a raster image of the whole page, the gazette header included
   ("Dziennik Ustaw – 58 – Poz. 975"), so the header is dropped from the OCR text;
 - most are Polish or English text; bilateral agreements also have the other party's version
-  (seen: Portuguese, French, Greek). pol+eng reads Polish and English; other languages lose their
+  (seen: Portuguese, French, Swedish, Greek). pol+eng reads Polish and English; others lose their
   diacritics (não -> nao) or, for Greek, come out as garbage. Hence "auto": pol+eng first, then the
   page's own language if its stopwords (or, for other scripts, orientation/script detection) say so
   and its language data is installed;
@@ -38,6 +38,9 @@ BASE_LANG = "pol+eng"  # first pass of "auto"; must be installed
 OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw)?[\s\-–—.,|\d]*(Poz\.?\s*\d+)?$", re.I)
 HEADER_BAND = 0.08  # share of the page height where the gazette header sits
 MIN_WORDS, MIN_CONF = 20, 80.0  # below either, the page keeps only the note (eval/ocr_eval_scans_*.txt)
+# seconds per tesseract call. Pages take ~2 s, but a guilloche background (DU/2026/14 p19, excise
+# stamp form) kept tesseract busy for over 10 minutes; such a page keeps only the note.
+TIMEOUT = 120
 LOWER = "a-ząćęłńóśźżàâçéèêëîïôûùüÿñæœäöåõãíúýøα-ωά-ώ"
 
 # tesseract (pol) often reads a lone "1" as "|": "ust. | pkt 2", "Ustęp |". Fixed only after a unit
@@ -121,8 +124,8 @@ def _run(img, lang: str, fmt: str = "txt", psm: int = 3) -> str:
     img.save(buf, format="PNG")
     env = {**os.environ, "OMP_THREAD_LIMIT": os.environ.get("OMP_THREAD_LIMIT", "1")}  # one thread by default
     cmd = [exe, "stdin", "stdout", "-l", lang, "--psm", str(psm)] + ([fmt] if fmt != "txt" else [])
-    return subprocess.run(cmd, input=buf.getvalue(), capture_output=True, env=env, check=True).stdout.decode(
-        "utf-8", errors="replace")
+    return subprocess.run(cmd, input=buf.getvalue(), capture_output=True, env=env, check=True,
+                          timeout=TIMEOUT).stdout.decode("utf-8", errors="replace")
 
 
 def ocr_image(img, lang: str = BASE_LANG) -> str:
@@ -187,7 +190,7 @@ def osd(img) -> tuple[int, str]:
         return 0, ""
     try:
         out = _run(img, "osd", psm=0)
-    except subprocess.CalledProcessError:  # "Too few characters. Skipping this page"
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):  # "Too few characters. Skipping this page"
         return 0, ""
     rot, script = re.search(r"^Rotate: (\d+)", out, re.M), re.search(r"^Script: (\w+)", out, re.M)
     return (int(rot.group(1)) if rot else 0), (script.group(1) if script else "")
@@ -208,7 +211,19 @@ def ocr_page(page, lang: str = LANG, dpi: int = DPI) -> OcrPage:
     have = tesseract()[2]
     img = render(page, dpi)
     pno = getattr(page, "page_number", None)
-    read = _read(img, BASE_LANG if lang == "auto" else lang, pno)
+    try:
+        read = _read(img, BASE_LANG if lang == "auto" else lang, pno)
+    except subprocess.TimeoutExpired:
+        warnings.warn(f"page {pno}: tesseract took over {TIMEOUT} s, page skipped")
+        return OcrPage(lang=BASE_LANG if lang == "auto" else lang)
+    try:
+        return _retry(read, img, pno, lang, have)
+    except subprocess.TimeoutExpired:  # keep the first reading
+        return read
+
+
+def _retry(read: OcrPage, img, pno: int | None, lang: str, have: frozenset[str]) -> OcrPage:
+    """Second readings for ocr_page: turned page, other script, the page's own language."""
     if not usable(read):
         rot, script = osd(img)
         if rot:

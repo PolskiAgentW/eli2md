@@ -1,0 +1,90 @@
+# Survey of all pages without a text layer in DU 2025-2026 (dataset index of 2026-09-29 15:23: 62 acts, 1734 pages)
+# python eval/ocr_eval.py scans --root DATA --lang pol+eng --out DIR --jobs 2  (+ a second run --reverse --skip-existing)
+# python eval/ocr_eval.py summary --out DIR
+# One page is missing: DU/2026/14 p19 (excise stamp form on a guilloche background). tesseract ran on it for over
+# 10 minutes in both runs and was killed; hence ocr.TIMEOUT = 120 s (the page then keeps only the note).
+# Language: stopword guess (ocr.language) on the pol+eng text, only for pages that ocr.usable() accepts;
+# "-" = not usable, "?" = tables, lists, maps, too little running text. Greek pages come out as "-" with pol+eng.
+1733 pages in 61 acts; usable() with MIN_WORDS=20, MIN_CONF=80.0: 1618 pages
+not usable: < MIN_WORDS words: 32 | enough words but median confidence < MIN_CONF: 83
+pages by median word confidence (bucket: pages): {0: 16, 10: 2, 20: 19, 30: 12, 40: 21, 50: 14, 60: 6, 70: 11, 80: 32, 90: 1600}
+usable pages by guessed language: {'pl': 907, 'en': 347, '?': 271, 'pt': 43, 'fr': 37, 'sv': 11, 'es': 2}
+DU/2025/15       1 pages, conf median  46.7, words median   104  {'-': 1}
+DU/2025/29      27 pages, conf median  96.7, words median   426  {'pl': 14, 'en': 13}
+DU/2025/54      10 pages, conf median  92.4, words median    76  {'?': 9, '-': 1}
+DU/2025/57      28 pages, conf median  50.5, words median   100  {'-': 16, '?': 12}
+DU/2025/100      4 pages, conf median  94.4, words median    56  {'-': 1, '?': 1, 'pt': 1, 'pl': 1}
+DU/2025/145     60 pages, conf median  93.7, words median    38  {'?': 57, '-': 3}
+DU/2025/299      1 pages, conf median  77.5, words median    26  {'-': 1}
+DU/2025/348      4 pages, conf median  41.2, words median    58  {'-': 4}
+DU/2025/360      2 pages, conf median  96.5, words median   254  {'pl': 1, 'en': 1}
+DU/2025/370    149 pages, conf median  96.6, words median   573  {'pl': 110, '?': 39}
+DU/2025/380    149 pages, conf median  96.3, words median   381  {'pl': 136, '?': 11, 'fr': 1, 'es': 1}
+DU/2025/406      1 pages, conf median  68.8, words median     2  {'-': 1}
+DU/2025/430      1 pages, conf median  34.5, words median    35  {'-': 1}
+DU/2025/457     50 pages, conf median  96.5, words median   247  {'pl': 28, 'en': 22}
+DU/2025/593    198 pages, conf median  96.5, words median   472  {'pl': 151, '?': 39, '-': 8}
+DU/2025/600      4 pages, conf median  96.4, words median   286  {'pl': 2, 'en': 2}
+DU/2025/634     25 pages, conf median  96.3, words median   284  {'pl': 12, 'en': 12, '?': 1}
+DU/2025/642     48 pages, conf median  96.5, words median   437  {'pl': 37, '-': 9, '?': 2}
+DU/2025/675     12 pages, conf median  92.9, words median    45  {'?': 12}
+DU/2025/710      1 pages, conf median  96.4, words median    37  {'pl': 1}
+DU/2025/717      2 pages, conf median  96.4, words median   122  {'pl': 2}
+DU/2025/722     22 pages, conf median  93.6, words median   170  {'?': 11, 'pl': 11}
+DU/2025/761     12 pages, conf median  96.3, words median   222  {'en': 6, 'pl': 6}
+DU/2025/898      8 pages, conf median  46.6, words median    56  {'-': 8}
+DU/2025/903      1 pages, conf median   0.0, words median     0  {'-': 1}
+DU/2025/975     73 pages, conf median  96.5, words median   483  {'pl': 57, '-': 8, '?': 8}
+DU/2025/1009    25 pages, conf median  96.4, words median   207  {'en': 16, 'pl': 8, '-': 1}
+DU/2025/1036    21 pages, conf median  95.3, words median   520  {'pl': 15, '?': 6}
+DU/2025/1039    15 pages, conf median  96.3, words median   185  {'en': 8, 'pl': 7}
+DU/2025/1058     1 pages, conf median  45.0, words median    59  {'-': 1}
+DU/2025/1061     6 pages, conf median  91.2, words median    61  {'?': 4, '-': 2}
+DU/2025/1072    20 pages, conf median  36.7, words median    74  {'-': 15, 'fr': 2, 'pl': 1, 'en': 1, 'es': 1}
+DU/2025/1121    39 pages, conf median  92.7, words median    40  {'?': 26, '-': 13}
+DU/2025/1129     7 pages, conf median  96.5, words median   371  {'pl': 4, 'en': 3}
+DU/2025/1230     1 pages, conf median  40.7, words median    49  {'-': 1}
+DU/2025/1481     9 pages, conf median  96.3, words median   301  {'pl': 5, 'en': 4}
+DU/2025/1538    35 pages, conf median  96.5, words median   203  {'pl': 18, 'en': 17}
+DU/2025/1604    76 pages, conf median  96.4, words median   417  {'pt': 28, 'pl': 25, 'en': 23}
+DU/2025/1781     5 pages, conf median  96.4, words median   521  {'pl': 4, '?': 1}
+DU/2025/1874     1 pages, conf median  96.5, words median   288  {'pl': 1}
+DU/2026/108      9 pages, conf median  96.4, words median   208  {'en': 5, 'pl': 4}
+DU/2026/189     34 pages, conf median  95.8, words median   407  {'pl': 17, 'fr': 17}
+DU/2026/204     38 pages, conf median  96.4, words median   210  {'pl': 13, 'pt': 13, 'en': 12}
+DU/2026/286     48 pages, conf median  96.3, words median   215  {'fr': 17, 'en': 16, 'pl': 14, '?': 1}
+DU/2026/365     24 pages, conf median  95.0, words median   152  {'?': 12, 'pl': 11, 'pt': 1}
+DU/2026/381      2 pages, conf median   0.0, words median     0  {'-': 2}
+DU/2026/518     26 pages, conf median  95.9, words median   506  {'pl': 19, '?': 6, '-': 1}
+DU/2026/684     16 pages, conf median  96.5, words median   344  {'en': 8, 'pl': 8}
+DU/2026/818     34 pages, conf median  96.3, words median   193  {'en': 12, 'pl': 11, 'sv': 11}
+DU/2026/832      2 pages, conf median  96.6, words median   310  {'pl': 2}
+DU/2026/951      5 pages, conf median  96.3, words median   246  {'pl': 3, 'en': 2}
+DU/2026/968     27 pages, conf median  96.3, words median   206  {'pl': 9, '-': 9, 'en': 9}
+DU/2026/995     37 pages, conf median  96.5, words median   398  {'pl': 14, 'en': 14, '?': 5, '-': 4}
+DU/2026/1015    47 pages, conf median  96.4, words median   327  {'en': 27, 'pl': 18, '?': 2}
+DU/2026/1051    65 pages, conf median  96.2, words median   350  {'en': 32, 'pl': 31, '?': 2}
+DU/2026/1111     1 pages, conf median   0.0, words median     0  {'-': 1}
+DU/2026/1133     1 pages, conf median  92.5, words median    25  {'?': 1}
+DU/2026/1165    16 pages, conf median  91.5, words median   232  {'pl': 12, 'en': 3, '?': 1}
+DU/2026/1176   143 pages, conf median  96.5, words median   381  {'en': 79, 'pl': 62, '?': 2}
+DU/2026/1207     2 pages, conf median  96.5, words median   319  {'pl': 2}
+DU/2026/1214     2 pages, conf median  95.0, words median    18  {'-': 2}
+
+# Timing: 40 random pages without text (--sample 40 --seed 5), 1 process, while 2 other tesseract processes ran;
+# laptop Intel i5-1335U (12 threads), OMP_THREAD_LIMIT=1:
+# tesseract 5.5.0 lang pol+eng
+# 40 pages without text in 20 acts
+# 40 pages 96s
+# wall 96s with 1 processes (load average at end: 4.3); per page, tesseract 1 thread: wall mean 2.18s median 2.12s max 5.41s; CPU mean 2.07s median 2.04s; render (300 dpi) wall mean 0.20s
+
+# Median word confidence of the 95 digital sample pages (pol+eng TSV) vs their recall (pol+eng fix_text),
+# for comparison with the confidence of the scans above:
+# conf [0,80): 2 pages, recall median 0.4098 micro 0.4098, min 0.066
+# conf [90,95): 1 pages, recall median 1.0000 micro 1.0000, min 1.000
+# conf [95,101): 92 pages, recall median 0.9848 micro 0.9745, min 0.666
+# digital sample conf median 96.4
+
+# End-to-end `eli2md DU/... --ocr` (auto), 2 acts in parallel (tesseract data: pol eng por fra ell swe osd):
+#   DU/2026/968 (Greek agreement): 27 pages without text, 26 with OCR text (8 ell, 18 pol+eng), 1 note only; 94 s wall
+#   DU/2026/818 (Swedish agreement): 34 pages without text, 34 with OCR text (11 swe+eng, 23 pol+eng); 117 s wall
