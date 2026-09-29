@@ -1,0 +1,14 @@
+Dev samples (sample_2024_n50_s2024.json, sample_2024_n50_s7.json): effect of _dedupe (rotated frames) vs 0.6.2.
+
+The change only touches pages read in a rotated frame. pypdfium2 scan of the 100 dev acts: 8 have pages with >= 30%
+rotated chars: DU/2024/1777, 1334, 440, 144, 870, 122, 458, 1108. Neither dedupe removes a char on the rotated pages
+of 1334, 144, 440, 870 (output unchanged); 1108 and 1777 remove the same chars (111 and 33 true double draws) and
+their Markdown is identical. Changed Markdown: DU/2024/122 (s7; annex tables of the budget act, 1237 chars removed by
+the old dedupe, 0 by the new) and DU/2024/458 (s7; only dot leaders "……" differ). s2024: no act changes.
+
+evaluate.py / structure.py / tree_eval.py on the two changed acts (sub-sample of s7), base (0.6.2) vs new:
+evaluate  identical except DU/2024/122 annex hyp tokens 188834 -> 188977 (annex not scored: the HTML links it as PDF, ref 0)
+  122 main R=0.999 P=0.999 (ref 4138, hyp 4138) notes R=0.971 P=1.000 annex R=1.000*   (base = new)
+  458 main R=1.000 P=0.999 (ref 10436, hyp 10443) notes R=0.981 P=0.412 annex R=1.000*  (base = new)
+structure identical (output text and JSON byte-identical)
+tree_eval identical (output text and JSON byte-identical)
