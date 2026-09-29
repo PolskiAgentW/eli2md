@@ -30,6 +30,12 @@ eli2md DU/2025/900 -o DU-2025-900.md      # pobiera metadane i PDF z API ELI
 eli2md plik.pdf                            # lokalny PDF, wynik na stdout
 ```
 
+Cały rocznik (nowe i zmienione akty; indeks w `index.csv`):
+
+```sh
+python -m eli2md.dataset --root dane/ --years 2025 2026 --jobs 4
+```
+
 Pobrane pliki trafiają do `~/cache/eli` (zmienna `ELI2MD_CACHE`). Klient robi przerwę 1 s między zapytaniami.
 
 ## Format wyniku

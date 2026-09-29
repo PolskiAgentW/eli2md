@@ -45,6 +45,18 @@ class Basic(unittest.TestCase):
         # a later char in the same line (further up the page) must come later in the frame
         self.assertGreater(_to_frame({**c, "top": 737.5, "bottom": 747.0}, 90, 595, 842)["x0"], f["x0"])
 
+    def test_dataset_index_roundtrip(self):
+        import tempfile
+        from pathlib import Path
+        from eli2md.dataset import load_index, save_index
+        with tempfile.TemporaryDirectory() as d:
+            rows = {"DU/2025/10": {"eli": "DU/2025/10", "year": "2025", "pos": "10", "title": "A, \"b\"", "status": "ok"},
+                    "DU/2025/9": {"eli": "DU/2025/9", "year": "2025", "pos": "9", "title": "c", "status": "error"}}
+            save_index(Path(d), rows)
+            back = load_index(Path(d))
+            self.assertEqual(list(back), ["DU/2025/9", "DU/2025/10"])  # numeric order
+            self.assertEqual(back["DU/2025/10"]["title"], 'A, "b"')
+
 
 if __name__ == "__main__":
     unittest.main()

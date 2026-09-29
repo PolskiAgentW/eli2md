@@ -34,12 +34,15 @@ def get(url: str, retries: int = 3) -> bytes:
     raise AssertionError("unreachable")
 
 
-def fetch(eli: str, delay: float = 1.0) -> tuple[dict, Path]:
-    """Return (metadata, path to text.pdf), using the on-disk cache when possible."""
+def fetch(eli: str, delay: float = 1.0, refresh: bool = False) -> tuple[dict, Path]:
+    """Return (metadata, path to text.pdf), using the on-disk cache unless `refresh`."""
     pub, year, pos = parse_eli(eli)
     d = CACHE / pub / str(year) / str(pos)
     d.mkdir(parents=True, exist_ok=True)
     meta_f, pdf_f = d / "meta.json", d / "text.pdf"
+    if refresh:
+        meta_f.unlink(missing_ok=True)
+        pdf_f.unlink(missing_ok=True)
     if not meta_f.exists():
         meta_f.write_bytes(get(f"{API}/{pub}/{year}/{pos}"))
         time.sleep(delay)
