@@ -28,6 +28,7 @@ UNIT_START = re.compile(
 )
 UNIT_START_Q = re.compile("^„?" + UNIT_START.pattern[1:])  # also a quoted unit of an amendment: „1. Treść
 ITEM_START = re.compile(rf"^„?(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_DIGITS}]*\)\s|[a-z]{{1,3}}\)\s)")  # not "1." / "–"
+POINT_START = re.compile(rf"^„?(\d+[a-z]*[{SUP_DIGITS}]*\)\s|[a-z]{{1,3}}\)\s)")  # "1)", "a)" only
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
@@ -343,6 +344,20 @@ def _continuation_gaps(body: list[Line]) -> dict[int, float]:
     return {p: sorted(r)[len(r) // 4] for p, r in ratios.items() if len(r) >= 5}
 
 
+POINT_LABEL = re.compile(r"^„?(\d+|[a-z])\)\s")
+
+
+def _follows(a: str, b: str) -> bool:
+    """Line b starts with the point label right after the one line a starts with: "1)" -> "2)", "a)" -> "b)"."""
+    ma, mb = POINT_LABEL.match(a), POINT_LABEL.match(b)
+    if not ma or not mb:
+        return False
+    x, y = ma.group(1), mb.group(1)
+    if x.isdigit() and y.isdigit():
+        return int(y) == int(x) + 1
+    return not x.isdigit() and not y.isdigit() and ord(y) == ord(x) + 1
+
+
 def _segment(body: list[Line]) -> list[Block]:
     """Group lines into blocks (paragraphs): by the vertical gap (relative to font size and to the usual
     gap on the page), at page breaks by content. Annex headers and signatures always start a block."""
@@ -377,9 +392,17 @@ def _segment(body: list[Line]) -> list[Block]:
             # after a sentence end, and a line that ends short of the right margin ends its paragraph.
             gap, limit = l.top - prev.bottom, split.get(l.page, 0.45)
             short = 0 < prev.x1 < prev.right - 2 * prev.size
+            # "2)", "b)" after a short line start a point even without ";" before: points in a table cell
+            # set with the usual line gap (MP/2025/121). So does "2)" right below a one-line "1)" whose row
+            # also holds the next cell ("1) B1.1, B1.3, B2, C   483", ibid.). Not after a hyphen ("impedan-"
+            # "cji) i", MP/2025/910), nor after an overlapping line or one of another size: footnote markers
+            # read as "1)" in tables (MP/2025/541).
+            point = (short or (_follows(prev.text, l.text) and abs(l.x0 - prev.x0) < 1)) \
+                and bool(POINT_START.match(l.text)) and gap >= 0 and abs(l.size - prev.size) < 0.5 \
+                and not prev.text.endswith("-")
             new = gap > limit * l.size or (limit > 0.45 and short) or bool(UNIT_START_Q.match(l.text)) and (
                 (prev.lead >= 0 and gap > prev.lead + 1.2)
-                or (short and bool(re.search(r"[.:;,”]$", prev.text)))
+                or (short and bool(re.search(r"[.:;,”]$", prev.text))) or point
                 or (limit > 0.45 and (bool(ITEM_START.match(l.text)) or bool(re.search(r"[.:;,”]$", prev.text)))))
         if new:
             if cur is not None:

@@ -153,6 +153,32 @@ class Basic(unittest.TestCase):
                 line(152, 72, 544, "2. kwartał – tekst, który jest dalszym ciągiem zdania z odstępem 2 pt.")]
         self.assertEqual([b.text[:6] for b in _segment(body)], ["1) w §", "„1. Pr", "2. Czł"])
 
+    def test_segment_points_in_tight_table_cell(self):
+        # MP/2025/121: points in a table cell set with the usual line gap and no ";": "2)" after a short line
+        # starts a point; "2." after a short line without a sentence end, and "2)" after a full line, do not
+        def line(top, x0, x1, text):
+            return Line(1, top, top + 9, x0, 9.0, text, x1=x1, right=301, lead=1.5)
+        body = [line(100, 58, 217, "1. W zakresie koncesji na przewóz lotniczy:"),
+                line(110.5, 66, 431, "1) przyznanie uprawnień do wykonywania regularnego 9553"),
+                line(121, 85, 301, "przewozu z wykorzystaniem statków powietrznych bez"),
+                line(131.5, 85, 157, "miejsc pasażerskich"),
+                line(142, 66, 431, "2) przyznanie uprawnień do wykonywania regularnego 6372"),
+                line(152.5, 85, 199, "określonych w pkt"),
+                line(163, 85, 301, "2. kwartał – dalszy ciąg zdania w tej samej komórce tabeli i"),
+                line(173.5, 85, 301, "3) dalszy ciąg po pełnej linii")]
+        self.assertEqual([b.text[:6] for b in _segment(body)], ["1. W z", "1) prz", "2) prz"])
+
+    def test_segment_one_line_points_with_value_cell(self):
+        # MP/2025/121: one-line points whose row also holds the fee cell, so no line is short; "2)" right
+        # below "1)" at the same x0 starts a point, a label that does not follow ("4)" after "2)") does not
+        def line(top, x0, x1, text):
+            return Line(1, top, top + 9, x0, 9.0, text, x1=x1, right=301, lead=1.5)
+        body = [line(100, 58, 250, "5. Wydanie licencji mechanika lotniczego w zakresie:"),
+                line(110.5, 66, 429, "1) B1.1, B1.3, B2, C 483"),
+                line(121, 66, 429, "2) B1.2, B1.4 326"),
+                line(131.5, 66, 429, "4) pozostałych kategorii lub podkategorii 164")]
+        self.assertEqual([b.text[:5] for b in _segment(body)], ["5. Wy", "1) B1", "2) B1"])
+
     def test_segment_wide_line_spacing(self):
         # DU/2024/853: lines of a paragraph 7 pt apart at 12 pt (over 0.45 * size), paragraphs 17 pt apart;
         # the threshold follows the usual gap before continuation lines on that page, and only on that page
