@@ -84,9 +84,9 @@ class Basic(unittest.TestCase):
         words = [w("Art.", 50), w("41", 72), w("1", 82, 98, 6), w(".", 85.5),
                  w("Pole", 100), w("m", 125), w("2", 131, 98, 6), w("i", 140),
                  w("P", 150), w("2", 156, 106, 6), w("O", 160), w("5", 166, 106, 6),
-                 w("ustawy", 180), w("3)", 211, 98, 6)]
+                 w("ustawy", 180), w("3)", 211, 98, 6), w(",", 221)]
         body, _ = _frame_lines(words, 600, 800, [], 1)
-        self.assertEqual([l.text for l in body], ["Art. 41¹. Pole m² i P₂O₅ ustawy[^3]"])
+        self.assertEqual([l.text for l in body], ["Art. 41¹. Pole m² i P₂O₅ ustawy[^3],"])
         md = to_markdown(Document(blocks=[Block("p", "Art. 41¹. Treść.", 1)]))
         self.assertTrue(md.startswith("##### Art. 41¹.\n\nTreść."))
 

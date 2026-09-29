@@ -251,9 +251,10 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             elif w.get("script"):
                 up = mid is None or (w["top"] + w["bottom"]) / 2 < mid
                 parts.append((w["text"].translate(SUPER if up else SUB), True))
-            else:  # "Art. 41¹." : the dot after a script is a separate word with no space
-                after_script = k > 0 and r[k - 1].get("script") and w["x0"] - r[k - 1]["x1"] < 1.0
-                parts.append((w["text"], bool(after_script)))
+            else:  # "Art. 41¹.", "art. 63[^59]," : punctuation after a script or marker is a separate word
+                after_small = k > 0 and (r[k - 1].get("script") or r[k - 1].get("sup")) \
+                    and w["x0"] - r[k - 1]["x1"] < 1.0
+                parts.append((w["text"], bool(after_small)))
         text = ""
         for p, glued in parts:
             text = p if not text else text + p if glued else text + " " + p
