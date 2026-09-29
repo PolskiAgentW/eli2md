@@ -23,12 +23,14 @@ import pdfplumber
 CACHE = Path.home() / "cache" / "eli"
 TOKEN = re.compile(r"\w+")
 HEADER = re.compile(r"Dziennik Ustaw\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+")
+# the converter writes small digits as ¹/₂ (Art. 41¹); the PDF text layer has them as separate words
+SCRIPTS = {ord(c): f" {i % 10} " for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉")}
 
 
 def tokens(text: str) -> Counter:
     """Tokens keyed by their sorted letters: plain extract_words reads text on rotated pages
     (landscape tables) backwards ("isw" for "wsi"), which the converter reads correctly."""
-    return Counter("".join(sorted(t.lower())) for t in TOKEN.findall(text))
+    return Counter("".join(sorted(t.lower())) for t in TOKEN.findall(text.translate(SCRIPTS)))
 
 
 def md_body(md: str) -> str:

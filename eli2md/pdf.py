@@ -21,15 +21,20 @@ from pdfplumber.utils import extract_words
 
 RUNNING_HEADER = re.compile(r"^Dziennik Ustaw\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
 MASTHEAD_END = re.compile(r"^Poz\.\s*\d+\s*$")
+SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 41¹., 5²)
 # Lines that start a new unit even without a vertical gap (used at page breaks).
 UNIT_START = re.compile(
-    r"^(Art\.\s*\d|§\s*\d|\d+[a-z]*\.\s|\d+[a-z]*\)\s|[a-z]{1,3}\)\s|–\s|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
+    rf"^(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_DIGITS}]*\.\s|\d+[a-z]*[{SUP_DIGITS}]*\)\s|[a-z]{{1,3}}\)\s|–\s|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
 )
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
 FOOTNOTE_MARK = re.compile(r"^\d{1,3}\)?[,.;:]?$")
+# Small digits without ")" are not footnote markers but unit numbers (Art. 41¹), units (m²)
+# or chemical subscripts (P₂O₅). Kept as Unicode super/subscript digits.
+SUPER = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
 SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+$")
 
 
@@ -204,18 +209,24 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
     # Small words: footnote markers ("1)"), whole lines of small print, or sub/superscripts in
     # formulas. Markers and formula scripts are attached to the nearest normal line.
     normal = [w for w in words if w["size"] >= sup_limit]
-    sups, inline = [], []
+    attach: list[tuple[dict, dict]] = []  # (small word, flag) to attach to the nearest normal line
     for r in _rows([w for w in words if w["size"] < sup_limit]):
         text = [w for w in r if not FOOTNOTE_MARK.match(w["text"])]
         words_ = [w for w in text if not MATH.search(w["text"])]  # formula scripts are math italic
         if (len(r) >= 3 and words_) or sum(len(w["text"]) for w in words_) >= 15:
             normal += r
-        else:
-            sups += [w for w in r if FOOTNOTE_MARK.match(w["text"])]
-            inline += text
+            continue
+        for w in r:
+            if not FOOTNOTE_MARK.match(w["text"]):
+                continue
+            close = next((x for x in text if x["text"] == ")" and 0 <= x["x0"] - w["x1"] < 1.5), None)
+            if close is not None and ")" not in w["text"]:  # marker extracted as "1" + ")"
+                text.remove(close)
+                w = {**w, "text": w["text"] + ")", "x1": close["x1"]}
+            attach.append((w, {"sup": True} if ")" in w["text"] else {"script": True}))
+        attach += [(w, {}) for w in text]
     rows = _rows(normal)
-    for s in sups + inline:
-        flag = {"sup": True} if s in sups else {}
+    for s, flag in attach:
         best = min(rows, key=lambda r: abs((r[0]["top"] + r[0]["bottom"]) / 2 - s["bottom"]), default=None)
         if best is not None and abs((best[0]["top"] + best[0]["bottom"]) / 2 - s["bottom"]) < 12:
             best.append({**s, **flag})
@@ -230,22 +241,23 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
     body, notes = [], []
     for r in rows:
         r.sort(key=lambda w: w["x0"])
-        parts: list[str] = []
-        for w in r:
+        parts: list[tuple[str, bool]] = []  # (text, glued to the previous word)
+        base = [w for w in r if not w.get("sup") and not w.get("script")]
+        mid = sum((w["top"] + w["bottom"]) / 2 for w in base) / len(base) if base else None
+        for k, w in enumerate(r):
             if w.get("sup"):
                 m = re.match(r"^(\d+)\)?(.*)$", w["text"])
-                parts.append(f"[^{m.group(1)}]{m.group(2)}")
-            else:
-                parts.append(w["text"])
+                parts.append((f"[^{m.group(1)}]{m.group(2)}", True))
+            elif w.get("script"):
+                up = mid is None or (w["top"] + w["bottom"]) / 2 < mid
+                parts.append((w["text"].translate(SUPER if up else SUB), True))
+            else:  # "Art. 41¹." : the dot after a script is a separate word with no space
+                after_script = k > 0 and r[k - 1].get("script") and w["x0"] - r[k - 1]["x1"] < 1.0
+                parts.append((w["text"], bool(after_script)))
         text = ""
-        for p in parts:
-            if not text:
-                text = p
-            elif p.startswith("[^"):
-                text += p
-            else:
-                text += " " + p
-        normal_words = [w for w in r if not w.get("sup")] or r
+        for p, glued in parts:
+            text = p if not text else text + p if glued else text + " " + p
+        normal_words = [w for w in r if not w.get("sup") and not w.get("script")] or r
         line = Line(
             page=pno,
             top=min(w["top"] for w in normal_words),
@@ -351,9 +363,26 @@ def convert(path: str) -> Document:
 
 
 UNIT_HEAD = {
-    "Art.": re.compile(r"^(Art\.\s*\d+[a-z]*\.)\s*(.*)$", re.S),
-    "§": re.compile(r"^(§\s*\d+[a-z]*\.)\s*(.*)$", re.S),
+    "Art.": re.compile(rf"^(Art\.\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s*(.*)$", re.S),
+    "§": re.compile(rf"^(§\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s*(.*)$", re.S),
 }
+# A quoted unit that opens with its ust. 1: "„Art. 21. 1. Treść" -> "„Art. 21." + "1. Treść"
+QUOTED_UNIT = re.compile(rf"^(„?(?:Art\.|§)\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s+(\d+[a-z]*[{SUP_DIGITS}]*\.\s.*)$", re.S)
+
+
+def quote_depths(blocks: list[Block]) -> list[int]:
+    """Quotation depth (opening minus closing marks) at the start of each block. Units inside
+    quotes are provisions of another act (amendments, "przepisy nieobjęte tekstem jednolitym"),
+    not units of this one. Only the first quoted unit carries the opening „, so the depth has to
+    be carried over. Some PDFs close with ˮ (U+02EE); “ opens English quotes in forms."""
+    depths, d = [], 0
+    for b in blocks:
+        if b.kind == "annex":
+            d = 0
+        depths.append(d)
+        t = b.text
+        d = max(0, d + t.count("„") + t.count("“") - t.count("”") - t.count("ˮ"))
+    return depths
 
 
 def page_ranges(pages: list[int]) -> str:
@@ -414,7 +443,8 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
 
 def to_markdown(doc: Document, meta: dict | None = None) -> str:
     """Markdown body: one block per paragraph, top-level units (Art. or, if none, §) as h5."""
-    unit = "Art." if any(b.text.startswith("Art.") for b in doc.blocks) else "§"
+    depths = quote_depths(doc.blocks)
+    unit = "Art." if any(b.text.startswith("Art.") and d == 0 for b, d in zip(doc.blocks, depths)) else "§"
     out = []
     if meta:
         out += [frontmatter(meta, no_text_pages=doc.no_text_pages, image_pages=doc.image_pages), "# " + meta["title"]]
@@ -433,10 +463,12 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
             out.append("## " + b.text)
         elif b.kind == "signature":
             out.append("*" + b.text + "*")
-        elif m := UNIT_HEAD[unit].match(b.text):
+        elif depths[i] == 0 and (m := UNIT_HEAD[unit].match(b.text)):
             out.append("##### " + m.group(1))
             if m.group(2):
                 out.append(m.group(2))
+        elif m := QUOTED_UNIT.match(b.text):
+            out += [m.group(1), m.group(2)]
         else:
             out.append(b.text)
     for f in doc.footnotes:

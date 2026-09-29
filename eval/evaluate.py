@@ -26,11 +26,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from eli2md.pdf import convert  # noqa: E402
 
 CACHE = Path.home() / "cache" / "eli"
+# the converter writes small digits as ¹/₂ (Art. 41¹); the HTML has <sup>1</sup>, i.e. a separate token
+SCRIPTS = {ord(c): f" {i % 10} " for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉")}
 
 
 def tokens(text: str) -> list[str]:
     """Word tokens, case-folded (HTML titles are title-case, PDF titles are upper-case)."""
-    text = unicodedata.normalize("NFC", text)
+    text = unicodedata.normalize("NFC", text).translate(SCRIPTS)
     text = re.sub(r"\[\^\w+\]", " ", text)  # our footnote markers
     return re.findall(r"\w+", text.lower())
 
