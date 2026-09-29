@@ -54,26 +54,39 @@ z tekstem HTML (`eval/evaluate.py`: tokeny słów bez rozróżniania wielkości 
 Treść główna, przypisy i załączniki są liczone osobno. Pomijam akty, dla których HTML jest
 pustym placeholderem, oraz załączniki, które HTML podaje tylko jako link do PDF-a.
 
-Dwie losowe próby po 50 aktów z 2024 r., wersja 0.2, micro-średnie:
+**Test (próba odłożona):** 50 losowych aktów z 2024 r. (seed 99) minus 3, które były już w próbach
+deweloperskich, czyli 47. Zbiór zapisałem w gicie przed oceną (`eval/test_2024_s99.json`).
+Ocena jednorazowa, wersja 0.2.0, bez strojenia pod ten zbiór:
 
-| część          | próba seed 2024 (n, R, P) | próba seed 7 (n, R, P) |
+| część          | n  | recall | precision |
+|----------------|---:|-------:|----------:|
+| treść główna   | 47 | 0.9999 | 0.9995    |
+| przypisy       | 41 | 0.968  | 0.883     |
+| załączniki     | 18 | 0.997  | 0.962     |
+
+Wynik jest lepszy niż na próbach deweloperskich poniżej. W tej próbie trafiło się mniej
+dużych tabel. Traktuj to jako jeden pomiar, nie jako gwarancję.
+
+**Czego ta miara nie sprawdza:** podziału na akapity, nagłówków (`##### Art.`), tabel ani
+kolejności tekstu wewnątrz tabel. Porównuje tylko ciąg słów.
+
+Próby deweloperskie (na nich stroiłem, więc liczby są zawyżone), wersja 0.2:
+
+| część          | seed 2024 (n, R, P)       | seed 7 (n, R, P)       |
 |----------------|---------------------------|------------------------|
 | treść główna   | 49, 0.993, 0.984          | 50, 0.999, 0.998       |
 | przypisy       | 41, 0.954, 0.879          | 45, 0.971, 0.745       |
 | załączniki     | 24, 0.934, 0.826          | 29, 0.996, 0.829       |
 
-**Zastrzeżenie:** obie próby oglądałem i na nich stroiłem konwerter (to zbiory deweloperskie),
-więc liczby są zawyżone. Wynik na nowej próbie, uruchomionej raz i bez strojenia, dopiszę tutaj,
-gdy go zmierzę. Przykład zmiany z 0.1 na 0.2 na próbie seed 7: precision treści głównej
-wzrosła z 0.109 do 0.998. Przyczyną były obrócone strony, np. w ustawie budżetowej (DU/2024/122).
-Pełne wyniki per akt: `eval/results_v2*.txt`.
+Między wersjami 0.1 a 0.2 precision treści głównej na próbie seed 7 wzrosła z 0.109 do 0.998.
+To efekt obsługi obróconych stron (np. ustawa budżetowa DU/2024/122). Wyniki per akt: `eval/results_*.txt`.
 
 Odtworzenie wyników:
 
 ```sh
 pip install -e '.[eval]'
-python eval/fetch_sample.py 50 2024
-python eval/evaluate.py eval/sample_2024_n50_s2024.json
+python eval/fetch_sample.py 50 99                 # pobiera PDF + HTML do ~/cache/eli
+python eval/evaluate.py eval/test_2024_s99.json
 ```
 
 ## Znane ograniczenia
