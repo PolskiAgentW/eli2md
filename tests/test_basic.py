@@ -91,6 +91,28 @@ class Basic(unittest.TestCase):
         md = to_markdown(Document(blocks=[Block("p", "Art. 41¹. Treść.", 1)]))
         self.assertTrue(md.startswith("##### Art. 41¹.\n\nTreść."))
 
+    def test_small_indices(self):
+        # 2026 prints: indices in brackets, several in one line (DU/2026/468 p. 98); 2025 prints: "22" + small "1a"
+        def w(text, x0, top=100.0, size=10.0, x1=None):
+            return {"text": text, "x0": x0, "x1": x1 or x0 + 5 * len(text), "top": top, "bottom": top + size,
+                    "size": size}
+        words = [w("Art.", 50), w("479", 72), w("[30f]", 87, 98, 6.5, 100), w(".", 100),
+                 w("art.", 110), w("479", 132), w("[30a]", 147, 98, 6.5, 160), w("–479", 160, x1=180),
+                 w("[30e]", 180, 98, 6.5, 193), w("i", 200), w("479", 210),
+                 w("[92", 225, 98, 6.5, 233), w("]", 233, 98, 7, 235),  # split by size (DU/2026/468 p. 103)
+                 w("ust.", 240), w("1", 262), w("[1]10)", 267, 98, 6.5, 285),  # index + marker (DU/2026/913 p. 44)
+                 w("art.", 290), w("22", 312), w("1a", 322, 98, 6.5, 328), w(",", 328)]
+        body, _ = _frame_lines(words, 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["Art. 479³⁰ᶠ. art. 479³⁰ᵃ–479³⁰ᵉ i 479⁹² ust. 1¹[^10] art. 22¹ᵃ,"])
+        # a small "[2]" away from the word before it is not an index: kept as printed
+        body, _ = _frame_lines([w("Pole", 50), w("x", 100), w("[2]", 150, 98, 6.5)], 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["Pole x [2]"])
+        body, _ = _frame_lines([w("Art.", 50), w("5", 72), w("[1q]", 77, 98, 6.5), w(".", 97)], 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["Art. 5[1q]."])  # no superscript q: as printed
+        md = to_markdown(Document(blocks=[Block("p", "Art. 479³⁰ᶠ. Treść.", 1)]))
+        self.assertTrue(md.startswith("##### Art. 479³⁰ᶠ.\n\nTreść."))
+        self.assertTrue(UNIT_START.match("5¹ᵃ) treść"))
+
     def test_quoted_units_are_not_headings(self):
         doc = Document(blocks=[Block("p", "Art. 1. W ustawie wprowadza się zmiany:", 1),
                                Block("p", "1) art. 29 i art. 30 otrzymują brzmienie:", 1),

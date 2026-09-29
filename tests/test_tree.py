@@ -82,6 +82,10 @@ class Tree(unittest.TestCase):
         self.assertEqual([(c["type"], c["text"]) for c in t["body"][0]["children"]],
                          [("text", "> 90 dni ≤ 180 dni"), ("text", "# 5")])
 
+    def test_index_with_letters(self):  # DU/2026/468: "Art. 479[30f]." printed, "Art. 479³⁰ᶠ." in Markdown
+        t = md_to_tree(md("##### Art. 479³⁰ᶠ.", "§ 1¹ᵃ. Treść.", "1³ᵇ) pkt."))
+        self.assertEqual(paths(t["body"]), ["art_479³⁰ᶠ", "art_479³⁰ᶠ/par_1¹ᵃ", "art_479³⁰ᶠ/par_1¹ᵃ/pkt_1³ᵇ"])
+
     def test_statute_units_and_front_matter(self):
         doc = Document(blocks=[Block("p", "USTAWA", 1), Block("p", "Art. 1. 1. Ustawa określa:", 1),
                                Block("p", "1) zasady;", 1), Block("p", "2) tryb, w tym:", 1),

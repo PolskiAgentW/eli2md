@@ -49,14 +49,14 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from eli2md.pdf import convert, to_markdown  # noqa: E402
+from eli2md.pdf import SUP_CHARS, convert, to_markdown  # noqa: E402
 from eli2md.tree import RANK, md_to_tree  # noqa: E402
 from evaluate import CACHE, tokens  # noqa: E402
 
 HTML_TYPE = {"arti": "art", "para": "par", "pass": "ust", "pint": "pkt", "lett": "lit", "tire": "tir", "slet": "slit"}
 TYPES = ("art", "par", "ust", "pkt", "lit", "tir", "slit")
 QUOTED_CLASSES = {"pro-rplc-text", "pro-cite-text"}
-SUP = str.maketrans({c: f"_{i}" for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹")})
+SUP = str.maketrans({c: f"_{p}" for c, p in zip(SUP_CHARS, "0123456789abcdefghijklmnoprstuvwxyz")})  # 22¹ᵃ: 22_1a
 LABEL = {"art": "Art. {}.", "par": "§ {}.", "ust": "{}.", "pkt": "{})", "lit": "{})", "tir": "–"}
 
 
