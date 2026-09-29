@@ -1,7 +1,7 @@
 import unittest
 
 from eli2md.eli import parse_eli
-from eli2md.pdf import Block, Document, to_markdown
+from eli2md.pdf import Block, Document, _char_angle, _to_frame, to_markdown
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
         "pos": 1, "publisher": "DU", "keywords": ["a", "b"]}
@@ -30,6 +30,20 @@ class Basic(unittest.TestCase):
     def test_markdown_paragraph_units(self):
         doc = Document(blocks=[Block("p", "§ 1. Rozporządzenie określa zasady.", 1)])
         self.assertEqual(to_markdown(doc), "##### § 1.\n\nRozporządzenie określa zasady.\n")
+
+    def test_rotated_frame(self):
+        # text rotated 90 degrees counter-clockwise on a portrait page (595x842), as in DU/2024/144
+        c = {"matrix": (0.0, 10.0, -10.0, 0.0, 0, 0), "x0": 94.6, "x1": 104.6, "top": 747.5, "bottom": 757.0}
+        self.assertEqual(_char_angle(c), 90)
+        self.assertEqual(_char_angle({"matrix": (8.0, 0.0, 0.0, 8.0, 0, 0)}), 0)
+        self.assertEqual(_char_angle({"matrix": (-7.8, 0.0, 0.0, -7.8, 0, 0)}), 180)
+        f = _to_frame(c, 90, 595, 842)
+        self.assertAlmostEqual(f["x0"], 842 - 757.0)
+        self.assertAlmostEqual(f["top"], 94.6)
+        self.assertEqual(f["size"], 10.0)
+        self.assertTrue(f["upright"])
+        # a later char in the same line (further up the page) must come later in the frame
+        self.assertGreater(_to_frame({**c, "top": 737.5, "bottom": 747.0}, 90, 595, 842)["x0"], f["x0"])
 
 
 if __name__ == "__main__":

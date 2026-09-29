@@ -54,18 +54,19 @@ z tekstem HTML (`eval/evaluate.py`: tokeny słów bez rozróżniania wielkości 
 Treść główna, przypisy i załączniki są liczone osobno. Pomijam akty, dla których HTML jest
 pustym placeholderem, oraz załączniki, które HTML podaje tylko jako link do PDF-a.
 
-Losowa próba 50 aktów z 2024 r. (seed 2024, ocenionych 49):
+Dwie losowe próby po 50 aktów z 2024 r., wersja 0.2, micro-średnie:
 
-| część          | n  | recall (micro) | precision (micro) |
-|----------------|---:|---------------:|------------------:|
-| treść główna   | 49 | 0.993          | 0.985             |
-| przypisy       | 41 | 0.954          | 0.880             |
-| załączniki     | 24 | 0.934          | 0.819             |
+| część          | próba seed 2024 (n, R, P) | próba seed 7 (n, R, P) |
+|----------------|---------------------------|------------------------|
+| treść główna   | 49, 0.993, 0.984          | 50, 0.999, 0.998       |
+| przypisy       | 41, 0.954, 0.879          | 45, 0.971, 0.745       |
+| załączniki     | 24, 0.934, 0.826          | 29, 0.996, 0.829       |
 
-**Zastrzeżenie:** na tej próbie stroiłem konwerter (to zbiór deweloperski), więc liczby są
-zawyżone. Wynik na nowej próbie, uruchomionej raz i bez strojenia, dopiszę tutaj,
-gdy go zmierzę. Na drugiej próbie (seed 7) wyszło recall 0.999, ale precision tylko 0.109.
-Winne są akty z obróconymi stronami, np. ustawa budżetowa z tabelami w poziomie.
+**Zastrzeżenie:** obie próby oglądałem i na nich stroiłem konwerter (to zbiory deweloperskie),
+więc liczby są zawyżone. Wynik na nowej próbie, uruchomionej raz i bez strojenia, dopiszę tutaj,
+gdy go zmierzę. Przykład zmiany z 0.1 na 0.2 na próbie seed 7: precision treści głównej
+wzrosła z 0.109 do 0.998. Przyczyną były obrócone strony, np. w ustawie budżetowej (DU/2024/122).
+Pełne wyniki per akt: `eval/results_v2*.txt`.
 
 Odtworzenie wyników:
 
@@ -77,9 +78,14 @@ python eval/evaluate.py eval/sample_2024_n50_s2024.json
 
 ## Znane ograniczenia
 
-- Strony obrócone (tabele w poziomie) dają tekst pomieszany lub odwrócony. Do naprawy jako pierwsze.
-- Tabele są spłaszczane do akapitów, wzory do zwykłego tekstu, grafiki pomijane.
-- Przypisy w załącznikach bywają łączone z tekstem (niska precision przypisów).
+- Tabele są spłaszczane do akapitów (komórki wierszami), wzory do zwykłego tekstu, grafiki pomijane.
+- Strony z tekstem obróconym (tabele w poziomie na stronie pionowej) czytam w obróconym układzie
+  (od 0.2). Tekst w innym kierunku niż reszta strony, np. pionowe nagłówki kolumn, trafia na
+  koniec strony.
+- Załączniki bywają wklejonymi PDF-ami, a ich pierwotny nagłówek jest w Dzienniku Ustaw zakryty.
+  Taki ukryty tekst wykrywam heurystycznie: renderuję stronę i sprawdzam, czy pod znakiem jest tusz.
+  Mogą zostać pojedyncze duplikaty.
+- Objaśnienia pod formularzami w załącznikach bywają brane za przypisy (niska precision przypisów).
 - Tylko PDF-y z warstwą tekstową (Dz.U. je ma). Bez OCR.
 
 ## Licencja

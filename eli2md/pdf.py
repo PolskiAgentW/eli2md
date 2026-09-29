@@ -10,12 +10,14 @@ Layout facts this relies on (checked on 2024 acts, see eval/):
 from __future__ import annotations
 
 import json
+import math
 import re
 import unicodedata
 from collections import Counter
 from dataclasses import dataclass, field
 
 import pdfplumber
+from pdfplumber.utils import extract_words
 
 RUNNING_HEADER = re.compile(r"^Dziennik Ustaw\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
 MASTHEAD_END = re.compile(r"^Poz\.\s*\d+\s*$")
@@ -25,6 +27,9 @@ UNIT_START = re.compile(
 )
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
+INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
+MATH = re.compile("[\U0001D400-\U0001D7FF]")
+FOOTNOTE_MARK = re.compile(r"^\d{1,3}\)?[,.;:]?$")
 SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+$")
 
 
@@ -70,9 +75,108 @@ class Document:
         return self.blocks[len(self.main_blocks()):]
 
 
+def _char_angle(c: dict) -> int:
+    """Writing direction of a char in degrees (0, 90, 180, 270), from its text matrix."""
+    a, b = c["matrix"][0], c["matrix"][1]
+    return round(math.degrees(math.atan2(b, a)) / 90) % 4 * 90
+
+
+def _to_frame(o: dict, rot: int, w: float, h: float) -> dict:
+    """Map an object's bbox into a frame where text written at `rot` degrees runs left-to-right."""
+    x0, x1, t, b = o["x0"], o["x1"], o["top"], o["bottom"]
+    if rot == 90:  # text runs bottom-to-top; the landscape top is on the left
+        x0, x1, t, b = h - b, h - t, x0, x1
+    elif rot == 270:
+        x0, x1, t, b = t, b, w - x1, w - x0
+    elif rot == 180:
+        x0, x1, t, b = w - x1, w - x0, h - b, h - t
+    out = {**o, "x0": x0, "x1": x1, "top": t, "bottom": b, "doctop": t, "width": x1 - x0, "height": b - t}
+    if "matrix" in o:  # pdfminer's size of a rotated glyph is its advance, not the font size
+        out.update(upright=True, size=math.hypot(o["matrix"][0], o["matrix"][1]))
+    return out
+
+
+def _drop_hidden_placed(page):
+    """Drop text of a placed PDF (annex) that is not visible on the page.
+
+    Annexes are often placed PDFs; the gazette covers their original heading with its own and
+    hides the placed copy (clipping path or white box), which pdfminer ignores (DU/2024/144, 458).
+    A placed char is hidden if the rendered page has no ink in its box, or if it lies under
+    the gazette's own text (then the ink test cannot tell the two copies apart).
+    """
+    placed = [c for c in page.chars if c.get("tag") == "PlacedPDF"]
+    own = [c for c in page.chars if c.get("tag") != "PlacedPDF"]
+    if not placed or not own:
+        return page
+    own_words = extract_words(own)
+    boxes = [(w["x0"] - 3, w["top"] - 3, w["x1"] + 3, w["bottom"] + 3) for w in own_words]
+    # the gazette's running header band; a placed page reaching into it is clipped there (DU/2024/1337)
+    header_bottom = max((w["bottom"] for w in own_words if w["bottom"] < 0.1 * page.height), default=0)
+    scale = INK_DPI / 72
+    img = page.to_image(resolution=INK_DPI).original.convert("L")
+
+    def hidden(c: dict) -> bool:
+        cx, cy = (c["x0"] + c["x1"]) / 2, (c["top"] + c["bottom"]) / 2
+        if cy < header_bottom or any(x0 <= cx <= x1 and t <= cy <= b for x0, t, x1, b in boxes):
+            return True
+        if not c["text"].strip():
+            return False
+        crop = img.crop((int(c["x0"] * scale), int(c["top"] * scale),
+                         int(c["x1"] * scale) + 1, int(c["bottom"] * scale) + 1))
+        return crop.getextrema()[0] > INK_LEVEL
+
+    drop = {id(c) for c in placed if hidden(c)}
+    return page.filter(lambda o: id(o) not in drop) if drop else page
+
+
+def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
+    """(words, width, height, rects) per writing direction, dominant direction first.
+
+    Landscape tables are printed on portrait pages with text rotated by 90 degrees; such a
+    page is read in a rotated frame. Pages with mostly upright text are read as before.
+    """
+    angles = Counter(_char_angle(c) for c in page.chars)
+    if not angles or angles.most_common(1)[0][0] == 0:
+        return [(page.extract_words(extra_attrs=["size"], keep_blank_chars=False),
+                 float(page.width), float(page.height), page.rects)]
+    frames = []
+    page = page.dedupe_chars()  # bold is sometimes drawn twice; seen on rotated table pages
+    w, h = float(page.width), float(page.height)
+    for rot, _ in angles.most_common():
+        chars = [_to_frame(c, rot, w, h) for c in page.chars if _char_angle(c) == rot]
+        fw, fh = (h, w) if rot in (90, 270) else (w, h)
+        words = extract_words(chars, extra_attrs=["size"], keep_blank_chars=False)
+        frames.append((words, fw, fh, [_to_frame(r, rot, w, h) for r in page.rects]))
+    return frames
+
+
 def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
     """Return (body_lines, footnote_lines) for one page."""
-    words = page.extract_words(extra_attrs=["size"], keep_blank_chars=False)
+    body, notes = [], []
+    for k, (words, fw, fh, rects) in enumerate(_frames(_drop_hidden_placed(page))):
+        b, n = _frame_lines(words, fw, fh, rects, pno)
+        if k > 0:
+            b = [l for l in b if not RUNNING_HEADER.match(l.text)]
+        body += b
+        notes += n
+    return body, notes
+
+
+def _rows(words: list[dict]) -> list[list[dict]]:
+    """Group words into lines: vertical overlap with the line's first word and similar size."""
+    rows: list[list[dict]] = []
+    for w in sorted(words, key=lambda w: (w["top"], w["x0"])):
+        mid = (w["top"] + w["bottom"]) / 2
+        for r in rows:
+            if r[0]["top"] - 1 <= mid <= r[0]["bottom"] + 1 and abs(r[0]["size"] - w["size"]) < 2:
+                r.append(w)
+                break
+        else:
+            rows.append([w])
+    return rows
+
+
+def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno: int) -> tuple[list[Line], list[Line]]:
     if not words:
         return [], []
     sizes = Counter()
@@ -82,27 +186,30 @@ def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
     sup_limit = body_size * 0.75
 
     # Cluster words into lines. Superscripts attach to the line they overlap vertically.
-    normal = sorted((w for w in words if w["size"] >= sup_limit), key=lambda w: (w["top"], w["x0"]))
-    sups = [w for w in words if w["size"] < sup_limit]
-    rows: list[list[dict]] = []
-    for w in normal:
-        mid = (w["top"] + w["bottom"]) / 2
-        for r in rows:
-            if r[0]["top"] - 1 <= mid <= r[0]["bottom"] + 1 and abs(r[0]["size"] - w["size"]) < 2:
-                r.append(w)
-                break
+    # Small words: footnote markers ("1)"), whole lines of small print, or sub/superscripts in
+    # formulas. Markers and formula scripts are attached to the nearest normal line.
+    normal = [w for w in words if w["size"] >= sup_limit]
+    sups, inline = [], []
+    for r in _rows([w for w in words if w["size"] < sup_limit]):
+        text = [w for w in r if not FOOTNOTE_MARK.match(w["text"])]
+        words_ = [w for w in text if not MATH.search(w["text"])]  # formula scripts are math italic
+        if (len(r) >= 3 and words_) or sum(len(w["text"]) for w in words_) >= 15:
+            normal += r
         else:
-            rows.append([w])
-    for s in sups:
+            sups += [w for w in r if FOOTNOTE_MARK.match(w["text"])]
+            inline += text
+    rows = _rows(normal)
+    for s in sups + inline:
+        flag = {"sup": True} if s in sups else {}
         best = min(rows, key=lambda r: abs((r[0]["top"] + r[0]["bottom"]) / 2 - s["bottom"]), default=None)
         if best is not None and abs((best[0]["top"] + best[0]["bottom"]) / 2 - s["bottom"]) < 12:
-            best.append({**s, "sup": True})
+            best.append({**s, **flag})
         else:
-            rows.append([{**s, "sup": True}])
+            rows.append([{**s, **flag}])
 
     rule_top = None
-    for r in page.rects:
-        if r["height"] < 1.5 and 130 < r["width"] < 160 and r["x0"] < page.width * 0.2 and r["top"] > page.height * 0.3:
+    for r in rects:
+        if r["height"] < 1.5 and 130 < r["width"] < 160 and r["x0"] < pw * 0.2 and r["top"] > ph * 0.3:
             rule_top = r["top"] if rule_top is None else min(rule_top, r["top"])
 
     body, notes = [], []
@@ -111,7 +218,8 @@ def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
         parts: list[str] = []
         for w in r:
             if w.get("sup"):
-                parts.append(f"[^{w['text'].rstrip(')')}]")
+                m = re.match(r"^(\d+)\)?(.*)$", w["text"])
+                parts.append(f"[^{m.group(1)}]{m.group(2)}")
             else:
                 parts.append(w["text"])
         text = ""
@@ -130,11 +238,11 @@ def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
             x0=min(w["x0"] for w in r),
             size=Counter(round(w["size"], 1) for w in normal_words).most_common(1)[0][0],
             text=_plain_math(text),
-            pw=float(page.width),
-            ph=float(page.height),
+            pw=pw,
+            ph=ph,
         )
         is_note = (rule_top is not None and line.top > rule_top) or (
-            rule_top is None and line.size < body_size - 0.5 and line.top > page.height * 0.6
+            rule_top is None and line.size < body_size - 0.5 and line.top > ph * 0.6
         )
         (notes if is_note else body).append(line)
     body.sort(key=lambda l: l.top)
