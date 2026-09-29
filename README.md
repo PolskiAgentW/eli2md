@@ -60,6 +60,38 @@ Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który g
   We front matter te same strony są w polach `pages_without_text` i `pages_with_images`.
   Tej treści nie ma w Markdown. Konwerter nie robi OCR.
 
+### JSON: drzewo jednostek (wersja rozwojowa)
+
+`eli2md DU/2025/900 --json` (albo `--format json`) oraz `python -m eli2md.dataset … --json` (plik `.json`
+obok `.md`) dają drzewo jednostek zbudowane z Markdown (`eli2md/tree.py`; da się je odtworzyć
+z opublikowanych plików `.md`):
+
+```json
+{"eli": "DU/2025/1", "title": "…", "converter": "eli2md …", "source_pdf": "…",
+ "body": [{"type": "art", "num": "1", "path": "art_1", "text": "…",
+           "children": [{"type": "pkt", "num": "1", "path": "art_1/pkt_1", "text": "art. 5 otrzymuje brzmienie:",
+                         "children": [{"type": "text", "text": "„Art. 5. …”;", "quoted": true}]}]}],
+ "annexes": [{"heading": "Załącznik nr 1 …", "body": […]}],
+ "footnotes": {"1": "…"}}
+```
+
+Typy: `art`, `par` (§), `ust`, `pkt`, `lit`, `tir` oraz `text`, `heading` (rozdział, dział…), `signature`, `note`.
+Jednostki cytowane w nowelizacjach nie są węzłami, tylko tekstem (`"quoted": true`) jednostki, która je zawiera.
+Akapit bez numeru trafia do najgłębszej otwartej jednostki, więc tekst kończący wyliczenie („część wspólna”)
+wisi pod ostatnim punktem. Markdown nie ma wcięć, po których dałoby się to rozróżnić.
+
+`eval/tree_eval.py` porównuje ścieżki (`art_5/ust_2/pkt_3`) z identyfikatorami jednostek w HTML 2024 (bez
+jednostek cytowanych) w tym samym miejscu tekstu. Tylko próby deweloperskie (na nich stroiłem, liczby zawyżone):
+
+| art, §, ust., pkt, lit.  | seed 2024: R / P     | seed 7: R / P        |
+|--------------------------|----------------------|----------------------|
+| treść główna             | 1.000 / 1.000 (942)  | 0.992 / 0.996 (1830) |
+| załączniki               | 0.991 / 0.852 (4825) | 0.9998 / 0.994 (11946) |
+
+Niska precision załączników w seed 2024 to głównie DU/2024/1337 (karty akwenów: numerowane wiersze tabel,
+których HTML nie oznacza jako jednostek); bez niego 0.993 (4561/4591). Tiret HTML nie oznacza, więc nie są mierzone.
+Wyniki per akt: `eval/tree_dev_s*.txt`. Na próbie odłożonej jeszcze nie mierzone.
+
 ## Jakość: jak mierzę i co wyszło
 
 Akty z 2024 r. mają zarówno PDF, jak i oficjalny HTML. Konwertuję PDF i porównuję słowa
