@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import re
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
@@ -55,16 +56,30 @@ def ocr_pages(md: str) -> set[int]:
     return pages
 
 
+def watermark(o: dict) -> bool:
+    """The invisible diagonal "www.rcl.gov.pl" over MP 2012 pages (same test as eli2md.pdf._watermark, kept
+    here so that the check runs against any converter version): not text of the act."""
+    if o.get("object_type") != "char" or o.get("tag") != "Artifact" or "matrix" not in o:
+        return False
+    deg = math.degrees(math.atan2(o["matrix"][1], o["matrix"][0])) % 90
+    return 10 < deg < 80
+
+
 def check(md_file: Path, pdf_file: Path) -> dict:
     md = md_file.read_text(encoding="utf-8")
     skip = ocr_pages(md)
     with pdfplumber.open(pdf_file) as pdf:
         parts = []
         for n, p in enumerate(pdf.pages, start=1):
-            parts.append("" if n in skip else " ".join(w["text"] for w in p.extract_words()))
+            if n in skip:
+                parts.append("")
+            else:
+                q = p.filter(lambda o: not watermark(o)) if any(watermark(c) for c in p.chars) else p
+                parts.append(" ".join(w["text"] for w in q.extract_words()))
             p.close()
-    # the output deliberately drops the masthead (page 1, up to "Poz. N") and running headers
-    parts[0] = re.sub(r"\A.*?Poz\.\s*\d+", "", parts[0], count=1, flags=re.S)
+    # the output deliberately drops the masthead (page 1, up to "Poz. N", in early MP 2012 "Pozycja N")
+    # and running headers
+    parts[0] = re.sub(r"\A.*?Poz(?:\.|ycja)\s*\d+", "", parts[0], count=1, flags=re.S)
     raw = CID.sub(" ", HEADER.sub(" ", "\n".join(parts)))  # unmapped glyphs are not words (dropped since 0.6.1)
     tp, tm = tokens(raw), tokens(md_body(md))
     common = sum((tp & tm).values())
