@@ -1,7 +1,7 @@
 import unittest
 
 from eli2md.eli import parse_eli
-from eli2md.pdf import Block, Document, _char_angle, _to_frame, to_markdown
+from eli2md.pdf import Block, Document, _char_angle, _to_frame, page_ranges, to_markdown
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
         "pos": 1, "publisher": "DU", "keywords": ["a", "b"]}
@@ -56,6 +56,18 @@ class Basic(unittest.TestCase):
             back = load_index(Path(d))
             self.assertEqual(list(back), ["DU/2025/9", "DU/2025/10"])  # numeric order
             self.assertEqual(back["DU/2025/10"]["title"], 'A, "b"')
+
+
+    def test_no_text_pages(self):
+        self.assertEqual(page_ranges([2, 3, 4, 7]), "2-4, 7")
+        self.assertEqual(page_ranges([]), "")
+        doc = Document(blocks=[Block("p", "Tekst.", 1), Block("notext", "", 2), Block("notext", "", 3),
+                               Block("p", "Dalej.", 4), Block("notext", "", 6)], no_text_pages=[2, 3, 6])
+        md = to_markdown(doc, META)
+        self.assertIn('pages_without_text: "2-3, 6"', md)
+        self.assertIn("> [Strony 2-3 PDF nie mają warstwy tekstowej", md)
+        self.assertIn("> [Strona 6 PDF nie ma warstwy tekstowej", md)
+        self.assertEqual(md.count("> ["), 2)
 
 
 if __name__ == "__main__":

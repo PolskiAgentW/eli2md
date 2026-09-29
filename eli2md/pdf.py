@@ -47,7 +47,7 @@ class Line:
 
 @dataclass
 class Block:
-    kind: str  # "p" | "signature" | "annex" (annex header)
+    kind: str  # "p" | "signature" | "annex" (annex header) | "notext" (page without a text layer)
     text: str
     page: int
 
@@ -57,6 +57,7 @@ class Document:
     masthead: list[str] = field(default_factory=list)
     blocks: list[Block] = field(default_factory=list)
     footnotes: list[str] = field(default_factory=list)
+    no_text_pages: list[int] = field(default_factory=list)  # e.g. scanned pages: their content is lost
 
     @property
     def paragraphs(self) -> list[str]:
@@ -276,6 +277,9 @@ def convert(path: str) -> Document:
                         break
             elif b and RUNNING_HEADER.match(b[0].text):
                 b = b[1:]
+            if not b and not n:
+                doc.no_text_pages.append(pno)
+                b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height)]  # position marker
             body.extend(b)
             notes.extend(n)
             page.close()  # pdfplumber caches every parsed page; 867-page acts exhausted 14 GB RAM
@@ -286,13 +290,15 @@ def convert(path: str) -> Document:
     prev: Line | None = None
     for l in body:
         kind = "p"
-        if ANNEX.match(l.text) and l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph:
+        if not l.text:
+            kind = "notext"
+        elif ANNEX.match(l.text) and l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph:
             kind = "annex"
         elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
             kind = "signature"
         if prev is None or cur is None:
             new = True
-        elif kind != "p" or cur.kind == "signature":
+        elif kind != "p" or cur.kind in ("signature", "notext"):
             new = not (kind == "annex" and cur.kind == "annex" and l.page == prev.page)
         elif cur.kind == "annex":
             # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
@@ -330,7 +336,26 @@ UNIT_HEAD = {
 }
 
 
-def frontmatter(meta: dict, source_pdf: str | None = None) -> str:
+def page_ranges(pages: list[int]) -> str:
+    """[2, 3, 4, 7] -> 2-4, 7"""
+    out: list[list[int]] = []
+    for p in pages:
+        if out and p == out[-1][1] + 1:
+            out[-1][1] = p
+        else:
+            out.append([p, p])
+    return ", ".join(str(a) if a == b else f"{a}-{b}" for a, b in out)
+
+
+def no_text_note(pages: list[int]) -> str:
+    if len(pages) == 1:
+        return (f"> [Strona {pages[0]} PDF nie ma warstwy tekstowej (np. skan lub grafika). "
+                "Jej treści tu nie ma, jest tylko w PDF.]")
+    return (f"> [Strony {page_ranges(pages)} PDF nie mają warstwy tekstowej (np. skan lub grafika). "
+            "Ich treści tu nie ma, jest tylko w PDF.]")
+
+
+def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[int] | None = None) -> str:
     """YAML front matter; keys follow legalize-pl where the meaning is the same."""
     from . import __version__
 
@@ -353,6 +378,7 @@ def frontmatter(meta: dict, source_pdf: str | None = None) -> str:
         "status_pl": meta.get("status"),
         "keywords": ", ".join(meta.get("keywords") or []),
         "text_source": "pdf",
+        "pages_without_text": page_ranges(no_text_pages or []),
         "converter": f"eli2md {__version__}",
         "disclaimer": "Nieoficjalny tekst z automatycznej konwersji PDF. Wiążący jest PDF w Dzienniku Ustaw.",
     }
@@ -369,9 +395,16 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
     unit = "Art." if any(b.text.startswith("Art.") for b in doc.blocks) else "§"
     out = []
     if meta:
-        out += [frontmatter(meta), "# " + meta["title"]]
-    for b in doc.blocks:
-        if b.kind == "annex":
+        out += [frontmatter(meta, no_text_pages=doc.no_text_pages), "# " + meta["title"]]
+    run: list[int] = []  # consecutive pages without text get one note
+    for i, b in enumerate(doc.blocks):
+        if b.kind == "notext":
+            run.append(b.page)
+            nxt = doc.blocks[i + 1] if i + 1 < len(doc.blocks) else None
+            if not (nxt and nxt.kind == "notext" and nxt.page == b.page + 1):
+                out.append(no_text_note(run))
+                run = []
+        elif b.kind == "annex":
             out.append("## " + b.text)
         elif b.kind == "signature":
             out.append("*" + b.text + "*")

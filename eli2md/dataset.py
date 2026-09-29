@@ -1,10 +1,11 @@
 """Build or update a directory of Markdown texts of Dziennik Ustaw acts that have only PDF text.
 
-    python -m eli2md.dataset --root DIR [--years 2025 2026] [--max N] [--time-budget SEC] [--jobs N]
+    python -m eli2md.dataset --root DIR [--years 2025 2026] [--max N] [--time-budget SEC] [--jobs N] [--all]
 
 Layout: DIR/DU/<year>/DU-<year>-<pos>.md and DIR/index.csv (one row per act, including failures).
 An act is (re)converted when it is new, when its ELI `changeDate` differs from the index, or when
-it previously failed. Downloads are sequential and polite (see eli.fetch); conversion can be parallel.
+it previously failed (or always, with --all). Downloads are sequential and polite (see eli.fetch);
+conversion can be parallel.
 """
 from __future__ import annotations
 
@@ -27,7 +28,7 @@ from .eli import API, fetch, get
 from .pdf import convert, to_markdown
 
 FIELDS = ["eli", "year", "pos", "type", "title", "announcement_date", "promulgation", "change_date",
-          "pdf_sha256", "pages", "words", "status", "error", "converter", "converted_at"]
+          "pdf_sha256", "pages", "words", "no_text_pages", "status", "error", "converter", "converted_at"]
 FIRST_PDF_ONLY_YEAR = 2025  # from 2025 the ELI API has no HTML text for DU (checked 2026-09-29)
 
 
@@ -75,7 +76,8 @@ def _convert_one(job: tuple[str, str, str]) -> dict:
         with pdfplumber.open(pdf_path) as p:
             pages = len(p.pages)
         return {"eli": eli, "status": "ok", "error": "", "pages": pages,
-                "words": sum(len(b.text.split()) for b in doc.blocks), "secs": round(time.time() - t0, 1)}
+                "words": sum(len(b.text.split()) for b in doc.blocks), "no_text_pages": len(doc.no_text_pages),
+                "secs": round(time.time() - t0, 1)}
     except MemoryError:
         pass  # report below, once the frames holding the large objects are released
     except Exception as e:  # keep going; the failure is recorded in the index
@@ -93,6 +95,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max", type=int, default=0, help="at most this many acts per run (0 = no limit)")
     ap.add_argument("--time-budget", type=float, default=0, help="stop downloading after this many seconds")
     ap.add_argument("--jobs", type=int, default=1)
+    ap.add_argument("--all", action="store_true", help="reconvert every act (e.g. after a converter change)")
     ap.add_argument("--mem-limit-gb", type=float, default=3,
                     help="address-space limit per conversion worker (0 = none)")
     a = ap.parse_args(argv)
@@ -107,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
             if not it.get("textPDF") or it.get("textHTML"):
                 continue
             old = index.get(it["ELI"])
-            if old and old["change_date"] == it["changeDate"] and old["status"] == "ok" \
+            if not a.all and old and old["change_date"] == it["changeDate"] and old["status"] == "ok" \
                     and md_path(a.root, year, it["pos"]).exists():
                 continue
             todo.append((it, old))
@@ -137,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
                              initargs=(a.mem_limit_gb,)) as ex:
         for res in ex.map(_convert_one, jobs):
             row = index[res["eli"]]
-            row.update({k: res[k] for k in ("status", "error", "pages", "words") if k in res})
+            row.update({k: res[k] for k in ("status", "error", "pages", "words", "no_text_pages") if k in res})
             row.update(converter=f"eli2md {__version__}",
                        converted_at=dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
             done += 1
