@@ -3,8 +3,9 @@
 For each act: word tokens of the whole PDF text layer vs word tokens of the Markdown body
 (front matter, markers and headings markup removed). Reports the share of PDF tokens found in
 the output (multiset overlap, order ignored) and the share of output tokens found in the PDF.
-Running headers and the masthead are in the PDF but not in the output, so ~0.97-0.99 is normal;
-much lower values point at dropped text (e.g. text wrongly treated as hidden).
+The masthead and running headers are removed from the PDF side, as the output drops them too.
+Low values point at dropped text (e.g. text wrongly treated as hidden); scanned pages (no text layer)
+are invisible to this check.
 Usage: python eval/selfcheck.py DATA_ROOT [--limit N] [--out FILE] [--jobs N]
 """
 from __future__ import annotations
@@ -21,10 +22,13 @@ import pdfplumber
 
 CACHE = Path.home() / "cache" / "eli"
 TOKEN = re.compile(r"\w+")
+HEADER = re.compile(r"Dziennik Ustaw\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+")
 
 
 def tokens(text: str) -> Counter:
-    return Counter(t.lower() for t in TOKEN.findall(text))
+    """Tokens keyed by their sorted letters: plain extract_words reads text on rotated pages
+    (landscape tables) backwards ("isw" for "wsi"), which the converter reads correctly."""
+    return Counter("".join(sorted(t.lower())) for t in TOKEN.findall(text))
 
 
 def md_body(md: str) -> str:
@@ -41,7 +45,9 @@ def check(md_file: Path, pdf_file: Path) -> dict:
         for p in pdf.pages:
             parts.append(" ".join(w["text"] for w in p.extract_words()))
             p.close()
-        raw = "\n".join(parts)
+    # the output deliberately drops the masthead (page 1, up to "Poz. N") and running headers
+    parts[0] = re.sub(r"\A.*?Poz\.\s*\d+", "", parts[0], count=1, flags=re.S)
+    raw = HEADER.sub(" ", "\n".join(parts))
     tp, tm = tokens(raw), tokens(md_body(md_file.read_text(encoding="utf-8")))
     common = sum((tp & tm).values())
     return {"pdf_tokens": sum(tp.values()), "md_tokens": sum(tm.values()),
