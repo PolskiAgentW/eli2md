@@ -366,8 +366,10 @@ UNIT_HEAD = {
     "Art.": re.compile(rf"^(Art\.\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s*(.*)$", re.S),
     "§": re.compile(rf"^(§\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s*(.*)$", re.S),
 }
-# A quoted unit that opens with its ust. 1: "„Art. 21. 1. Treść" -> "„Art. 21." + "1. Treść"
-QUOTED_UNIT = re.compile(rf"^(„?(?:Art\.|§)\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s+(\d+[a-z]*[{SUP_DIGITS}]*\.\s.*)$", re.S)
+# A quoted unit that opens with its ust. 1 or § 1 (codes): "„Art. 21. 1. Treść" -> "„Art. 21." + "1. Treść",
+# "Art. 14t. § 1. Treść" -> "Art. 14t." + "§ 1. Treść"
+QUOTED_UNIT = re.compile(
+    rf"^(„?(?:Art\.|§)\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s+((?:§\s*)?\d+[a-z]*[{SUP_DIGITS}]*\.\s.*)$", re.S)
 
 
 def quote_depths(blocks: list[Block]) -> list[int]:

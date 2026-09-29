@@ -94,11 +94,13 @@ class Basic(unittest.TestCase):
         doc = Document(blocks=[Block("p", "Art. 1. W ustawie wprowadza się zmiany:", 1),
                                Block("p", "1) art. 29 i art. 30 otrzymują brzmienie:", 1),
                                Block("p", "„Art. 29. Treść.", 1), Block("p", "Art. 30. 1. Treść ust. 1.", 1),
-                               Block("p", "2. Treść ust. 2.”;", 1), Block("p", "Art. 2. Ustawa wchodzi w życie.", 1)])
+                               Block("p", "2. Treść ust. 2.", 1), Block("p", "Art. 31. § 1. Treść § 1.”;", 1),
+                               Block("p", "Art. 2. Ustawa wchodzi w życie.", 1)])
         md = to_markdown(doc)
         self.assertEqual(md.count("##### "), 2)
         self.assertIn("##### Art. 2.", md)
         self.assertIn("„Art. 29. Treść.\n\nArt. 30.\n\n1. Treść ust. 1.", md)
+        self.assertIn("\n\nArt. 31.\n\n§ 1. Treść § 1.”;\n\n##### Art. 2.", md)
 
     def test_unit_start(self):
         for t in ["Art. 41¹. Treść", "§ 2. Treść", "2. Treść", "5²) treść", "b) treść", "aa) treść", "– treść"]:
