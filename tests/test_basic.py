@@ -153,6 +153,40 @@ class Basic(unittest.TestCase):
                 line(152, 72, 544, "2. kwartał – tekst, który jest dalszym ciągiem zdania z odstępem 2 pt.")]
         self.assertEqual([b.text[:6] for b in _segment(body)], ["1) w §", "„1. Pr", "2. Czł"])
 
+    def test_segment_wide_line_spacing(self):
+        # DU/2024/853: lines of a paragraph 7 pt apart at 12 pt (over 0.45 * size), paragraphs 17 pt apart;
+        # the threshold follows the usual gap before continuation lines on that page, and only on that page
+        def line(page, top, x0, text):
+            return Line(page, top, top + 12, x0, 12.0, text, x1=500)
+        p1 = ["Na podstawie protokołów wyników głosowania z wszystkich okręgów, Państwowa", "Komisja Wyborcza ustaliła:",
+              "1) liczba wyborców uprawnionych wyniosła 29 098 155;", "2) karty do głosowania wydano 11 827 313 wyborcom,",
+              "w tym:", "a) 12 735 kart wydano na podstawie przedstawionego", "pełnomocnictwa,", "b) 147 414 wyborców głosowało",
+              "na podstawie zaświadczenia;", "3) pakiety wyborcze wysłano", "łącznie 4 277 wyborcom;", "4) liczba kart",
+              "wydanych w lokalach", "oraz w głosowaniu korespondencyjnym;"]
+        gaps = [7, 17, 17, 7, 17, 7, 17, 7, 17, 7, 17, 7, 7]
+        body, top = [line(1, 100, 56, p1[0])], 100.0
+        for g, t in zip(gaps, p1[1:]):
+            top += 12 + g
+            body.append(line(1, top, 56, t))
+        # page 2 has the usual spacing (2 pt): a 7 pt gap still starts a paragraph there
+        body += [line(2, 100, 56, "Tekst na drugiej stronie, który"), line(2, 114, 56, "ciągnie się dalej"),
+                 line(2, 128, 56, "i jeszcze dalej"), line(2, 142, 56, "oraz dalej"), line(2, 156, 56, "a także dalej"),
+                 line(2, 170, 56, "i do końca."), line(2, 189, 56, "Nowy akapit po odstępie 7 pt.")]
+        self.assertEqual([b.text[:12] for b in _segment(body)],
+                         ["Na podstawie", "1) liczba wy", "2) karty do ", "a) 12 735 ka", "b) 147 414 w", "3) pakiety w",
+                          "4) liczba ka", "Tekst na dru", "Nowy akapit "])
+
+    def test_segment_wide_spacing_units_without_extra_gap(self):
+        # DU/2024/1442: lines 8.6 pt apart at 12 pt and units no further apart; "1)"/"a)" start a unit anyway,
+        # "1." only after a sentence end ("2. kwartał" after "w" continues the sentence)
+        texts = ["Wymagania:", "1) certyfikat wydany przez akredytowaną", "instytucję w analogicznym", "zakresie;",
+                 "2) deklarację zgodności UE,", "w tym:", "a) wynik w teście co najmniej 85 punktów lub", "b) inny wynik",
+                 "osiągnięty w teście;", "3) wydajność osiągana w", "2. kwartał – dalszy ciąg zdania", "i jeszcze dalej;",
+                 "4. Czwarty ustęp."]
+        body = [Line(1, 100 + i * 20.6, 112 + i * 20.6, 56, 12.0, t, x1=524, right=524) for i, t in enumerate(texts)]
+        self.assertEqual([b.text[:8] for b in _segment(body)],
+                         ["Wymagani", "1) certy", "2) dekla", "a) wynik", "b) inny ", "3) wydaj", "4. Czwar"])
+
     def test_heading_unit_per_part(self):
         # "Art. 42 ust. 1 ustawy…" in an annex must not turn off the § headings of the main text
         doc = Document(blocks=[Block("p", "§ 1. Treść.", 1), Block("p", "§ 2. Treść.", 1),

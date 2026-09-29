@@ -27,6 +27,7 @@ UNIT_START = re.compile(
     rf"^(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_DIGITS}]*\.\s|\d+[a-z]*[{SUP_DIGITS}]*\)\s|[a-z]{{1,3}}\)\s|–\s|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
 )
 UNIT_START_Q = re.compile("^„?" + UNIT_START.pattern[1:])  # also a quoted unit of an amendment: „1. Treść
+ITEM_START = re.compile(rf"^„?(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_DIGITS}]*\)\s|[a-z]{{1,3}}\)\s)")  # not "1." / "–"
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
@@ -327,10 +328,25 @@ def _join(prev: str, nxt: str) -> str:
     return prev + " " + nxt
 
 
+def _continuation_gaps(body: list[Line]) -> dict[int, float]:
+    """Per page: usual gap before a line that continues a paragraph (starts with a lower-case letter and not
+    with "a) "), relative to the font size; pages with fewer than 5 such lines are left out. Most pages set
+    lines at 0.2 of the size; some at 0.6–0.75 (DU/2024/853, annex of DU/2024/440), which the fixed 0.45 split
+    into one block per line. Per page, because forms in annexes are spaced out (DU/2024/1542)."""
+    ratios: dict[int, list[float]] = {}
+    for a, b in zip(body, body[1:]):
+        if a.page == b.page and abs(a.size - b.size) < 0.5 and 0 <= b.top - a.bottom < a.size \
+                and re.match(rf"[{LOWER}]", b.text) and not UNIT_START.match(b.text):
+            ratios.setdefault(b.page, []).append((b.top - a.bottom) / a.size)
+    return {p: sorted(r)[len(r) // 2] for p, r in ratios.items() if len(r) >= 5}
+
+
 def _segment(body: list[Line]) -> list[Block]:
     """Group lines into blocks (paragraphs): by the vertical gap (relative to font size and to the usual
     gap on the page), at page breaks by content. Annex headers and signatures always start a block."""
     blocks: list[Block] = []
+    # a new block needs a gap above 0.45 of the font size, or clearly above the usual continuation gap
+    split = {p: max(0.45, g + 0.1) for p, g in _continuation_gaps(body).items()}
     cur: Block | None = None
     prev: Line | None = None
     for l in body:
@@ -354,10 +370,13 @@ def _segment(body: list[Line]) -> list[Block]:
             # Some PDFs set units with little extra space (2 pt over the usual gap between lines, not 6),
             # or none: then a unit starts after a line that ends short of the right margin (the last line
             # of a justified paragraph).
-            gap = l.top - prev.bottom
-            new = gap > 0.45 * l.size or bool(UNIT_START_Q.match(l.text)) and (
+            # On pages set with wide line spacing units often have no more space than other lines (DU/2024/1442):
+            # there "1)", "a)", "Art. 1", "§ 1" at a line start begin a unit; "1." and "–" only after a sentence end.
+            gap, limit = l.top - prev.bottom, split.get(l.page, 0.45)
+            new = gap > limit * l.size or bool(UNIT_START_Q.match(l.text)) and (
                 (prev.lead >= 0 and gap > prev.lead + 1.2)
-                or (0 < prev.x1 < prev.right - 2 * prev.size and bool(re.search(r"[.:;,”]$", prev.text))))
+                or (0 < prev.x1 < prev.right - 2 * prev.size and bool(re.search(r"[.:;,”]$", prev.text)))
+                or (limit > 0.45 and (bool(ITEM_START.match(l.text)) or bool(re.search(r"[.:;,”]$", prev.text)))))
         if new:
             if cur is not None:
                 blocks.append(cur)
