@@ -332,13 +332,15 @@ def _continuation_gaps(body: list[Line]) -> dict[int, float]:
     """Per page: usual gap before a line that continues a paragraph (starts with a lower-case letter and not
     with "a) "), relative to the font size; pages with fewer than 5 such lines are left out. Most pages set
     lines at 0.2 of the size; some at 0.6–0.75 (DU/2024/853, annex of DU/2024/440), which the fixed 0.45 split
-    into one block per line. Per page, because forms in annexes are spaced out (DU/2024/1542)."""
+    into one block per line. Per page, because forms in annexes are spaced out (DU/2024/1542). The lower
+    quartile, not the median: paragraphs may start with a lower-case word too (clauses of a court
+    resolution "po rozpoznaniu…", "z udziałem…" in DU/2024/1883), and their gaps are larger."""
     ratios: dict[int, list[float]] = {}
     for a, b in zip(body, body[1:]):
         if a.page == b.page and abs(a.size - b.size) < 0.5 and 0 <= b.top - a.bottom < a.size \
                 and re.match(rf"[{LOWER}]", b.text) and not UNIT_START.match(b.text):
             ratios.setdefault(b.page, []).append((b.top - a.bottom) / a.size)
-    return {p: sorted(r)[len(r) // 2] for p, r in ratios.items() if len(r) >= 5}
+    return {p: sorted(r)[len(r) // 4] for p, r in ratios.items() if len(r) >= 5}
 
 
 def _segment(body: list[Line]) -> list[Block]:
