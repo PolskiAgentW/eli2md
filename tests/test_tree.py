@@ -1,0 +1,156 @@
+import json
+import sys
+import unittest
+from pathlib import Path
+
+from eli2md.pdf import Block, Document, to_markdown
+from eli2md.tree import iter_units, md_to_tree
+
+
+def md(*paras: str) -> str:
+    return "\n\n".join(paras) + "\n"
+
+
+def paths(nodes: list[dict]) -> list[str]:
+    return [n["path"] for n in iter_units(nodes)]
+
+
+class Tree(unittest.TestCase):
+    def test_statute_units_and_front_matter(self):
+        doc = Document(blocks=[Block("p", "USTAWA", 1), Block("p", "Art. 1. 1. Ustawa określa:", 1),
+                               Block("p", "1) zasady;", 1), Block("p", "2) tryb, w tym:", 1),
+                               Block("p", "a) terminy,", 1), Block("p", "– pierwszy,", 1), Block("p", "– drugi,", 1),
+                               Block("p", "b) opłaty.", 1), Block("p", "2. Przepis ust. 1 stosuje się.", 1),
+                               Block("p", "Art. 41¹. Ustawa wchodzi w życie po 14 dniach.", 1),
+                               Block("signature", "Prezydent: A. B", 1)])
+        meta = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa", "pos": 1}
+        t = md_to_tree(to_markdown(doc, meta))
+        self.assertEqual(t["eli"], "DU/2025/1")
+        self.assertEqual(t["title"], "Ustawa z dnia 1 stycznia 2025 r. o próbie")
+        self.assertTrue(t["converter"].startswith("eli2md "))
+        self.assertEqual(paths(t["body"]), [
+            "art_1", "art_1/ust_1", "art_1/ust_1/pkt_1", "art_1/ust_1/pkt_2", "art_1/ust_1/pkt_2/lit_a",
+            "art_1/ust_1/pkt_2/lit_a/tir_1", "art_1/ust_1/pkt_2/lit_a/tir_2", "art_1/ust_1/pkt_2/lit_b",
+            "art_1/ust_2", "art_41¹"])
+        art1 = t["body"][1]
+        self.assertEqual((art1["type"], art1["num"], art1["text"]), ("art", "1", ""))
+        self.assertEqual(art1["children"][0]["text"], "Ustawa określa:")
+        self.assertEqual(t["body"][2]["text"], "Ustawa wchodzi w życie po 14 dniach.")
+        self.assertEqual(t["body"][-1], {"type": "signature", "text": "Prezydent: A. B"})
+        json.dumps(t)  # serialisable
+
+    def test_amendment_quoted_units_are_text(self):
+        t = md_to_tree(md(
+            "##### Art. 1.",
+            "W ustawie z dnia 1 lutego 2020 r. o czymś wprowadza się następujące zmiany:",
+            "1) art. 5 otrzymuje brzmienie:",
+            "„Art. 5.",
+            "1. Nowa treść ust. 1.",
+            "2. Nowa treść ust. 2:",
+            "1) pierwszy,",
+            "2) drugi.”;",
+            "2) w art. 6 ust. 2 otrzymuje brzmienie:",
+            "„2. Treść.”.",
+            "##### Art. 2.",
+            "Ustawa wchodzi w życie z dniem 1 stycznia 2026 r."))
+        self.assertEqual(paths(t["body"]), ["art_1", "art_1/pkt_1", "art_1/pkt_2", "art_2"])
+        pkt1 = t["body"][0]["children"][0]
+        self.assertEqual(pkt1["text"], "art. 5 otrzymuje brzmienie:")
+        self.assertEqual([c["type"] for c in pkt1["children"]], ["text"] * 5)
+        self.assertTrue(all(c.get("quoted") for c in pkt1["children"]))
+        self.assertEqual(pkt1["children"][0]["text"], "„Art. 5.")
+
+    def test_quote_missing_opening_mark(self):
+        # DU/2024/859: the source prints no „ before the added ust. 1a, but closes the quote
+        t = md_to_tree(md("##### Art. 1.", "W ustawie … wprowadza się następujące zmiany:",
+                          "1) po ust. 1 dodaje się ust. 1a i 1b w brzmieniu:",
+                          "1a. Pierwszy.", "1b. Drugi.”;", "2) uchyla się ust. 3."))
+        self.assertEqual(paths(t["body"]), ["art_1", "art_1/pkt_1", "art_1/pkt_2"])
+        # tables replaced in an amendment carry no quotes; the next unit must still be a unit (DU/2024/1141)
+        t = md_to_tree(md("##### § 1.", "W rozporządzeniu … wprowadza się następujące zmiany:",
+                          "a) lp. 3 otrzymuje brzmienie:", "3 470 694 RADIODYFUZJA cywilne",
+                          "b) lp. 4 otrzymuje brzmienie:", "4 694 790 STAŁA cywilne"))
+        self.assertEqual(paths(t["body"]), ["par_1", "par_1/lit_a", "par_1/lit_b"])
+
+    def test_announcement_with_consolidated_text_annex(self):
+        t = md_to_tree(md(
+            "OBWIESZCZENIE", "1. Ogłasza się jednolity tekst rozporządzenia.",
+            "2. Tekst jednolity nie obejmuje § 2 rozporządzenia zmieniającego, który stanowi:",
+            "„§ 2. Rozporządzenie wchodzi w życie z dniem 1 października 2023 r.”.",
+            "*Minister: J. K*",
+            "## Załącznik do obwieszczenia Ministra z dnia 9 lutego 2024 r. (Dz. U. poz. 193)",
+            "ROZPORZĄDZENIE", "Rozdział 1", "Przepisy ogólne", "##### § 1.", "Rozporządzenie określa:",
+            "1) zasady;", "1a)[^2] fundusz;", "##### § 2.", "[^3] 1. Treść.", "2.Druga treść bez spacji.",
+            "[^2]: Dodany przez § 1.", "[^3]: W brzmieniu ustalonym przez § 1."))
+        self.assertEqual(paths(t["body"]), ["ust_1", "ust_2"])
+        self.assertTrue(t["body"][2]["children"][0]["quoted"])
+        a = t["annexes"][0]
+        self.assertTrue(a["heading"].startswith("Załącznik do obwieszczenia"))
+        self.assertEqual(paths(a["body"]), ["par_1", "par_1/pkt_1", "par_1/pkt_1a", "par_2", "par_2/ust_1", "par_2/ust_2"])
+        self.assertEqual(a["body"][1], {"type": "heading", "label": "Rozdział 1", "text": "Przepisy ogólne"})
+        par1 = a["body"][2]
+        self.assertEqual(par1["text"], "Rozporządzenie określa:")
+        self.assertEqual(par1["children"][1]["text"], "[^2] fundusz;")
+        self.assertEqual(a["body"][3]["text"], "[^3]")  # the marker printed before ust. 1 belongs to § 2
+        self.assertEqual(t["footnotes"], {"2": "Dodany przez § 1.", "3": "W brzmieniu ustalonym przez § 1."})
+
+    def test_split_quoted_article_is_not_a_unit(self):
+        # to_markdown splits "Art. 25. „1. …" into "Art. 25." + "„1. …" (not a heading)
+        t = md_to_tree(md("##### Art. 1.", "Tekst jednolity nie obejmuje art. 25, który stanowi:",
+                          "Art. 25.", "„1. Świadczenie przysługuje:", "1) członkom;", "2) innym.”"))
+        self.assertEqual(paths(t["body"]), ["art_1"])
+        self.assertTrue(all(c.get("quoted") for c in t["body"][0]["children"]))
+
+    def test_code_style_paragraphs_under_article(self):
+        t = md_to_tree(md("##### Art. 14t.", "§ 1. Treść.", "§ 2. Treść:", "1) pkt;", "##### Art. 15.", "Treść."))
+        self.assertEqual(paths(t["body"]), ["art_14t", "art_14t/par_1", "art_14t/par_2", "art_14t/par_2/pkt_1", "art_15"])
+
+
+class TreeMeasure(unittest.TestCase):
+    """eval/tree_eval.py on a tiny HTML reference: a correct tree scores 1, broken ones do not."""
+
+    HTML = """<html><h1>Ustawa o próbie</h1><section id="part_1">
+<div class="unit unit_arti pro-text" id="arti_1">Art. 1. W ustawie wprowadza się zmiany:
+<div class="unit unit_pint pro-text" id="arti_1-pint_1">1) art. 5 otrzymuje brzmienie:
+<div class="unit unit_arti pro-rplc-text" id="arti_1-pint_1-arti_5">„Art. 5. Treść.”;</div></div>
+<div class="unit unit_pint pro-text" id="arti_1-pint_2">2) uchyla się art. 6.</div></div>
+<div class="unit unit_arti pro-text" id="arti_41_1">Art. 41<sup>1</sup>. Wchodzi w życie.</div>
+</section></html>"""
+
+    def setUp(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "eval"))
+        import tree_eval
+        self.te = tree_eval
+
+    def score(self, tree: dict) -> tuple[str, str]:
+        from collections import Counter
+        ref = self.te.html_units(self.HTML)
+        hyp = self.te.json_units(tree)
+        c = Counter()
+        self.te.score_part(ref["main"], hyp["main"], c, "main")
+        core = ("art", "par", "ust", "pkt", "lit")
+        r = f"{self.te.summed(c, 'main', 'R', core, 'hit')}/{self.te.summed(c, 'main', 'R', core, 'n')}"
+        p = f"{self.te.summed(c, 'main', 'P', core, 'hit')}/{self.te.summed(c, 'main', 'P', core, 'n')}"
+        return r, p
+
+    def test_scores(self):
+        good = md("# Ustawa o próbie", "##### Art. 1.", "W ustawie wprowadza się zmiany:",
+                  "1) art. 5 otrzymuje brzmienie:", "„Art. 5. Treść.”;", "2) uchyla się art. 6.",
+                  "##### Art. 41¹.", "Wchodzi w życie.")
+        self.assertEqual(self.score(md_to_tree(good)), ("4/4", "4/4"))  # quoted Art. 5 is no unit on either side
+        # pkt 2 flattened into text of Art. 1 (same words): missed
+        t = md_to_tree(good)
+        art1 = t["body"][0]
+        art1["children"][1] = {"type": "text", "text": "2) uchyla się art. 6."}
+        self.assertEqual(self.score(t), ("3/4", "3/3"))
+        # pkt 2 with a wrong number in its path: missed and false
+        t = md_to_tree(good)
+        t["body"][0]["children"][1]["path"] = "art_1/pkt_3"
+        self.assertEqual(self.score(t), ("3/4", "3/4"))
+        # the quoted Art. 5 taken for a unit of the act: a false Art. 5, and pkt 2 lands under it
+        bad = good.replace("\n\n„Art. 5. Treść.”;", "\n\n##### Art. 5.\n\nTreść.")
+        self.assertEqual(self.score(md_to_tree(bad)), ("3/4", "3/5"))
+
+
+if __name__ == "__main__":
+    unittest.main()

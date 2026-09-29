@@ -273,6 +273,10 @@ def report(total: Counter, out) -> None:
             r, p = f"{part}.R.{t}", f"{part}.P.{t}"
             if not (total[r + "_n"] or total[p + "_n"] or total[r + "_unal"] or total[p + "_unal"]):
                 continue
+            if not (total[r + "_n"] or total[r + "_unal"]):  # e.g. tirets: the HTML does not mark them
+                print(f"TOTAL {part:5} {t:4}  no reference units in the HTML, not scored; JSON nodes: "
+                      f"{total[p + '_n'] + total[p + '_unal']}", file=out)
+                continue
             print(f"TOTAL {part:5} {t:4}  R={rate(total, r):22}  P={rate(total, p):22}  "
                   f"R miss none/path {total[r + '_none']}/{total[r + '_path']}  "
                   f"P miss none/path {total[p + '_none']}/{total[p + '_path']}  "

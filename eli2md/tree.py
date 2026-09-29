@@ -203,21 +203,19 @@ class _Builder:
 
 def md_to_tree(md: str) -> dict:
     """Build the unit tree from eli2md Markdown (with or without front matter)."""
-    out: dict = {}
+    out: dict = {"eli": None, "title": None, "converter": None, "source_pdf": None}
     m = FRONT.match(md)
     if m:
         for line in m.group(1).splitlines():
             k, _, v = line.partition(": ")
-            if k in ("eli", "title", "converter", "source_pdf"):
+            if k in out:
                 out[k] = json.loads(v)
         md = md[m.end():]
-    out.setdefault("eli", None)
     paras = [p.strip() for p in md.split("\n\n")]
     paras = [p for p in paras if p]
     if paras and paras[0].startswith("# "):
-        out.setdefault("title", paras[0][2:].strip())
+        out["title"] = out["title"] or paras[0][2:].strip()
         paras = paras[1:]
-    out.setdefault("title", None)
     footnotes: dict[str, str] = {}
     blocks: list[tuple[str, str]] = []  # (kind, text) in the converter's block kinds
     for p in paras:
