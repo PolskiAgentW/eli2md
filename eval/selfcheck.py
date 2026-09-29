@@ -5,7 +5,7 @@ For each act: word tokens of the whole PDF text layer vs word tokens of the Mark
 the output (multiset overlap, order ignored) and the share of output tokens found in the PDF.
 Running headers and the masthead are in the PDF but not in the output, so ~0.97-0.99 is normal;
 much lower values point at dropped text (e.g. text wrongly treated as hidden).
-Usage: python eval/selfcheck.py DATA_ROOT [--limit N] [--out FILE]
+Usage: python eval/selfcheck.py DATA_ROOT [--limit N] [--out FILE] [--jobs N]
 """
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ import csv
 import json
 import re
 from collections import Counter
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import pdfplumber
@@ -35,7 +36,11 @@ def md_body(md: str) -> str:
 
 def check(md_file: Path, pdf_file: Path) -> dict:
     with pdfplumber.open(pdf_file) as pdf:
-        raw = "\n".join(" ".join(w["text"] for w in p.extract_words()) for p in pdf.pages)
+        parts = []
+        for p in pdf.pages:
+            parts.append(" ".join(w["text"] for w in p.extract_words()))
+            p.close()
+        raw = "\n".join(parts)
     tp, tm = tokens(raw), tokens(md_body(md_file.read_text(encoding="utf-8")))
     common = sum((tp & tm).values())
     return {"pdf_tokens": sum(tp.values()), "md_tokens": sum(tm.values()),
@@ -47,15 +52,16 @@ def main() -> None:
     ap.add_argument("root", type=Path)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--jobs", type=int, default=1)
     a = ap.parse_args()
     rows = [r for r in csv.DictReader(open(a.root / "index.csv", encoding="utf-8")) if r["status"] == "ok"]
     if a.limit:
         rows = rows[: a.limit]
-    res = []
-    for r in rows:
-        md = a.root / "DU" / r["year"] / f"DU-{r['year']}-{r['pos']}.md"
-        c = check(md, CACHE / "DU" / r["year"] / r["pos"] / "text.pdf")
-        res.append({"eli": r["eli"], "type": r["type"], **c})
+    files = [(a.root / "DU" / r["year"] / f"DU-{r['year']}-{r['pos']}.md",
+              CACHE / "DU" / r["year"] / r["pos"] / "text.pdf") for r in rows]
+    with ProcessPoolExecutor(max(1, a.jobs)) as ex:
+        res = [{"eli": r["eli"], "type": r["type"], "pages": int(r["pages"]), **c}
+               for r, c in zip(rows, ex.map(check, *zip(*files), chunksize=8))]
     res.sort(key=lambda x: x["kept"])
     for x in res[:25]:
         print(f"{x['eli']:14} {x['type'][:14]:14} kept={x['kept']:.3f} grounded={x['grounded']:.3f} "
