@@ -35,7 +35,7 @@ OCR_UNIT = re.compile(r"^(Artykuł|ARTYKUŁ|Article|ARTICLE|Artigo|ARTIGO|Άρθ
 LANG = "auto"
 BASE_LANG = "pol+eng"  # first pass of "auto"; must be installed
 # a header line (or its pieces) at the top of the page: "Dziennik Ustaw — 58 — Poz. 975", "— 58 —"
-OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw)?[\s\-–—.,|\d]*(Poz\.?\s*\d+)?$", re.I)
+OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw|Monitor\s*Polski)?[\s\-–—.,|\d]*(Poz\.?\s*\d+)?$", re.I)
 HEADER_BAND = 0.08  # share of the page height where the gazette header sits
 MIN_WORDS, MIN_CONF = 20, 80.0  # below either, the page keeps only the note (eval/ocr_eval_scans_*.txt)
 # seconds per tesseract call. Pages take ~2 s, but a guilloche background (DU/2026/14 p19, excise
@@ -213,12 +213,12 @@ def ocr_page(page, lang: str = LANG, dpi: int = DPI) -> OcrPage:
     pno = getattr(page, "page_number", None)
     try:
         read = _read(img, BASE_LANG if lang == "auto" else lang, pno)
-    except subprocess.TimeoutExpired:
-        warnings.warn(f"page {pno}: tesseract took over {TIMEOUT} s, page skipped")
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:  # the page keeps only the note
+        warnings.warn(f"page {pno}: tesseract failed ({type(e).__name__}), page skipped")
         return OcrPage(lang=BASE_LANG if lang == "auto" else lang)
     try:
         return _retry(read, img, pno, lang, have)
-    except subprocess.TimeoutExpired:  # keep the first reading
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError):  # keep the first reading
         return read
 
 
