@@ -1,0 +1,26 @@
+MP/2025/1128   Uchwała        kept=0.722 grounded=0.775 pdf=29891 md=27850
+MP/2025/541    Uchwała        kept=0.785 grounded=0.958 pdf=21048 md=17245
+MP/2026/172    Zarządzenie    kept=0.800 grounded=0.891 pdf=235 md=211
+MP/2025/1133   Obwieszczenie  kept=0.835 grounded=0.990 pdf=723 md=610
+MP/2026/240    Zarządzenie    kept=0.840 grounded=0.945 pdf=325 md=289
+MP/2025/1017   Uchwała        kept=0.848 grounded=0.952 pdf=1240 md=1105
+MP/2025/613    Zarządzenie    kept=0.852 grounded=0.990 pdf=223 md=192
+MP/2025/715    Zarządzenie    kept=0.853 grounded=0.990 pdf=238 md=205
+MP/2025/1243   Zarządzenie    kept=0.860 grounded=0.990 pdf=228 md=198
+MP/2025/523    Zarządzenie    kept=0.860 grounded=0.993 pdf=336 md=291
+MP/2025/538    Zarządzenie    kept=0.864 grounded=0.963 pdf=242 md=217
+MP/2026/856    Zarządzenie    kept=0.864 grounded=1.000 pdf=235 md=203
+MP/2025/1210   Zarządzenie    kept=0.864 grounded=0.995 pdf=228 md=198
+MP/2025/1092   Zarządzenie    kept=0.865 grounded=0.921 pdf=311 md=292
+MP/2026/553    Zarządzenie    kept=0.870 grounded=0.995 pdf=246 md=215
+MP/2026/347    Zarządzenie    kept=0.871 grounded=0.982 pdf=371 md=329
+MP/2025/1007   Zarządzenie    kept=0.871 grounded=0.993 pdf=334 md=293
+MP/2025/297    Zarządzenie    kept=0.874 grounded=1.000 pdf=436 md=381
+MP/2025/1130   Zarządzenie    kept=0.874 grounded=0.995 pdf=238 md=209
+MP/2026/615    Zarządzenie    kept=0.874 grounded=0.995 pdf=238 md=209
+MP/2025/117    Zarządzenie    kept=0.875 grounded=0.991 pdf=240 md=212
+MP/2026/923    Zarządzenie    kept=0.875 grounded=1.000 pdf=336 md=294
+MP/2025/725    Zarządzenie    kept=0.876 grounded=1.000 pdf=233 md=204
+MP/2025/121    Obwieszczenie  kept=0.876 grounded=0.993 pdf=12980 md=11444
+MP/2025/268    Zarządzenie    kept=0.876 grounded=1.000 pdf=226 md=198
+n=2272 micro kept=0.9788; kept<0.95: 85

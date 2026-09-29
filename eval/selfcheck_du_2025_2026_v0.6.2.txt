@@ -1,0 +1,26 @@
+DU/2025/243    Rozporządzenie kept=0.346 grounded=0.716 pdf=6829 md=3303
+DU/2025/653    Rozporządzenie kept=0.394 grounded=0.924 pdf=11311 md=4818
+DU/2026/40     Rozporządzenie kept=0.473 grounded=0.868 pdf=6864 md=3744
+DU/2025/1031   Rozporządzenie kept=0.545 grounded=0.828 pdf=5436 md=3579
+DU/2026/1184   Rozporządzenie kept=0.585 grounded=0.939 pdf=1080 md=673
+DU/2025/1097   Rozporządzenie kept=0.611 grounded=0.984 pdf=396 md=246
+DU/2026/1038   Obwieszczenie  kept=0.642 grounded=0.953 pdf=987 md=665
+DU/2025/662    Rozporządzenie kept=0.672 grounded=0.851 pdf=3830 md=3027
+DU/2026/1163   Rozporządzenie kept=0.679 grounded=0.922 pdf=420 md=309
+DU/2025/848    Rozporządzenie kept=0.696 grounded=0.892 pdf=3400 md=2654
+DU/2025/687    Rozporządzenie kept=0.702 grounded=0.959 pdf=504 md=369
+DU/2026/1134   Obwieszczenie  kept=0.737 grounded=0.945 pdf=4043 md=3155
+DU/2025/1278   Rozporządzenie kept=0.741 grounded=0.985 pdf=2195 md=1651
+DU/2026/922    Rozporządzenie kept=0.747 grounded=0.911 pdf=1197 md=981
+DU/2025/984    Rozporządzenie kept=0.753 grounded=0.917 pdf=74198 md=60900
+DU/2026/643    Rozporządzenie kept=0.753 grounded=0.974 pdf=1283 md=992
+DU/2025/873    Rozporządzenie kept=0.761 grounded=0.977 pdf=566 md=441
+DU/2025/612    Obwieszczenie  kept=0.769 grounded=0.822 pdf=1885 md=1765
+DU/2026/659    Rozporządzenie kept=0.772 grounded=0.933 pdf=654 md=541
+DU/2026/604    Obwieszczenie  kept=0.774 grounded=0.941 pdf=9017 md=7418
+DU/2021/2479   Rozporządzenie kept=0.776 grounded=0.948 pdf=2927 md=2395
+DU/2025/609    Obwieszczenie  kept=0.780 grounded=0.835 pdf=4405 md=4115
+DU/2026/1131   Rozporządzenie kept=0.798 grounded=0.982 pdf=1301 md=1057
+DU/2025/932    Rozporządzenie kept=0.801 grounded=0.980 pdf=5091 md=4159
+DU/2025/1751   Rozporządzenie kept=0.802 grounded=0.996 pdf=2871 md=2313
+n=3266 micro kept=0.9725; kept<0.95: 216
