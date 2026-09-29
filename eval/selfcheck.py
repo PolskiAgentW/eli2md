@@ -28,8 +28,9 @@ HEADER = re.compile(r"(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\
 # them to the word ("411", "221a")
 SCRIPTS = {ord(c): p for c, p in zip("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻ",
                                      "0123456789" * 2 + "abcdefghijklmnoprstuvwxyz")}
-# 2026 prints bracket the index ("Art. 479[30f]."), the converter writes it without brackets ("479³⁰ᶠ")
-PDF_INDEX = re.compile(r"(?<=\d)\[(\d{1,3}[a-z]{0,3})\]")
+# 2026 prints bracket the index ("Art. 479[30f].", "Art. 6b[1]."), the converter writes it without brackets
+# ("479³⁰ᶠ", "6b¹")
+PDF_INDEX = re.compile(r"(?<=\w)\[(\d{1,3}[a-z]{0,3})\]")
 
 
 def tokens(text: str) -> Counter:
