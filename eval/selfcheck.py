@@ -22,6 +22,7 @@ import pdfplumber
 
 CACHE = Path.home() / "cache" / "eli"
 TOKEN = re.compile(r"\w+")
+CID = re.compile(r"\(cid:\d+\)")
 HEADER = re.compile(r"(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+")
 # the converter writes small digits as ¹/₂ (Art. 41¹); extract_words glues them to the word ("411")
 SCRIPTS = {ord(c): str(i % 10) for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉")}
@@ -42,16 +43,30 @@ def md_body(md: str) -> str:
     return re.sub(r"^#+ ", "", md, flags=re.M)
 
 
+def ocr_pages(md: str) -> set[int]:
+    """Pages the output read by OCR (front matter `pages_ocr: "2-23, 30"`): their text layer is unreadable
+    ("(cid:N)" glyphs), and their OCR text is left out of the output side, so they are left out of both."""
+    m = re.search(r'^pages_ocr: "([^"]*)"', md, re.M)
+    pages: set[int] = set()
+    for part in (m.group(1).split(",") if m else []):
+        a, _, b = part.strip().partition("-")
+        if a:
+            pages.update(range(int(a), int(b or a) + 1))
+    return pages
+
+
 def check(md_file: Path, pdf_file: Path) -> dict:
+    md = md_file.read_text(encoding="utf-8")
+    skip = ocr_pages(md)
     with pdfplumber.open(pdf_file) as pdf:
         parts = []
-        for p in pdf.pages:
-            parts.append(" ".join(w["text"] for w in p.extract_words()))
+        for n, p in enumerate(pdf.pages, start=1):
+            parts.append("" if n in skip else " ".join(w["text"] for w in p.extract_words()))
             p.close()
     # the output deliberately drops the masthead (page 1, up to "Poz. N") and running headers
     parts[0] = re.sub(r"\A.*?Poz\.\s*\d+", "", parts[0], count=1, flags=re.S)
-    raw = HEADER.sub(" ", "\n".join(parts))
-    tp, tm = tokens(raw), tokens(md_body(md_file.read_text(encoding="utf-8")))
+    raw = CID.sub(" ", HEADER.sub(" ", "\n".join(parts)))  # unmapped glyphs are not words (dropped since 0.6.1)
+    tp, tm = tokens(raw), tokens(md_body(md))
     common = sum((tp & tm).values())
     return {"pdf_tokens": sum(tp.values()), "md_tokens": sum(tm.values()),
             "kept": common / max(1, sum(tp.values())), "grounded": common / max(1, sum(tm.values()))}
