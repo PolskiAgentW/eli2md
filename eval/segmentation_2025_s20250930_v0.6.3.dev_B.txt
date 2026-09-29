@@ -1,0 +1,64 @@
+Paragraph segmentation base (v0.6.2) vs v0.6.3.dev_B (thread B: points in tight table cells)
+Both _segment versions run on the same extracted lines (convert() of the new code with the base
+_segment run on the same body). A change = a block start present in one version only (word offsets;
+the text of every changed act is identical in both versions). No HTML reference for 2025.
+Sample: 200 random MP 2025 + 200 random DU 2025 acts with text.pdf in ~/cache/eli, random.Random(20250930)
+over the acts sorted by position (MP: 1317 acts, DU: 1900 acts).
+
+MP 2025 n=200: acts changed 1; blocks base 10246 -> new 10251 (+5 splits, 0 merges); acts with changed words: 0
+   MP/2025/676: blocks 133 -> 138
+DU 2025 n=200: acts changed 9; blocks base 57119 -> new 57237 (+118 splits, 0 merges); acts with changed words: 0
+   DU/2025/320: blocks 430 -> 431
+   DU/2025/391: blocks 675 -> 685
+   DU/2025/647: blocks 4211 -> 4212
+   DU/2025/690: blocks 46 -> 54
+   DU/2025/760: blocks 341 -> 349
+   DU/2025/843: blocks 1507 -> 1511
+   DU/2025/1212: blocks 179 -> 262
+   DU/2025/1685: blocks 1262 -> 1264
+   DU/2025/1719: blocks 136 -> 137
+
+MP/2025/121 (the reported act, not in the sample): blocks 229 -> 535
+dev samples s2024 + s7 (100 acts): DU/2024/840: 461 -> 462, DU/2024/1973: 448 -> 452, DU/2024/1040: 353 -> 354, DU/2024/440: 301 -> 304, DU/2024/870: 336 -> 396, DU/2024/122: 7708 -> 7710, DU/2024/813: 1152 -> 1161
+
+Review on page renders (100 dpi): 12 changes drawn at random (random.Random(20250930).sample) from the
+123 splits in the 2025 sample acts, plus one per changed act not drawn (5). Verdict per split:
+   0 per-act DU/2025/320   p2   ok                                   | ...8) (uchylony) || 9) rozporządzenia (WE) nr 183/2005 Parlamentu Euro
+   1 random  DU/2025/391   p10  ok                                   | ...iatło czerwone co najmniej przez minutę; || 9) wodoszczelną latarkę elektryczną do sygnalizacj
+   2 per-act DU/2025/647   p5   ok                                   | ...5) (uchylony) || 6) dyrektywy 1999/94/WE Parlamentu Europejskiego i
+   3 random  DU/2025/690   p1   ok (multi-column table, column 1)    | ... na 4 lata, 2) grunt orny – dokonał jego || b) wydobywania z nich torfu, zaorania, z wyłączeni
+   4 random  DU/2025/760   p17  ok                                   | ...6) Liczba godzin w ujęciu tygodniowym. || 7) Wypełnić w przypadku, gdy ocena jest ustalana z
+   5 per-act DU/2025/843   p51  ok                                   | ...różne środki transportu (PKWiU 79.11.1), || b) przez agentów i pośredników turystycznych w zak
+   6 random  DU/2025/1212  p2   ok (multi-column table, column 1)    | ...z zaburzeniami psychicznymi; umiarkowany || e) ocenę wskazań według następujących 2) osoba wyk
+   7 random  DU/2025/1212  p7   ok (multi-column table, column 1)    | ...terapii; Leczniczych, Wyrobów Medycznych || 2) kalibracji z pierwszym wyznaczeniem MT i Produk
+   8 random  DU/2025/1212  p9   ok (multi-column table, column 1)    | ...; salwy tripletów o częstotliwości 50 Hz || 5) sesji podsumowującej terapię – konsultacji powt
+   9 random  DU/2025/1212  p18  ok                                   | ...b) psychoedukację, || c) oddziaływania interwencyjne,
+  10 random  DU/2025/1212  p24  ok (multi-column table, column 1)    | ...o kolejnego świadczenia wynosi 60 minut. || d) świadczenia terapeutyczno-rehabilitacyjne, e) p
+  11 random  DU/2025/1212  p30  ok                                   | ...niobiorcy), b) ocenę stanu somatycznego, || c) wydanie niezbędnych zaleceń odnośnie do kontynu
+  12 random  DU/2025/1212  p41  ok                                   | ...ennym odbywa się przez 5 dni w tygodniu; || 5) świadczeniodawca realizuje konsylia dla zespołu
+  13 random  DU/2025/1212  p54  ok                                   | ...zeń całodobowych przez 7 dni w tygodniu; || 3) dopuszcza się pełnienie dyżurów przez lekarza w
+  14 per-act DU/2025/1685  p2   ok                                   | ...7) (uchylony) || 8) rozporządzenia Komisji (UE) nr 1123/2013 z dnia
+  15 random  DU/2025/1719  p8   ok                                   | ... której funkcjonariusz zamieszkuje, albo || 2) pełnienia służby przez funkcjonariusza, wskazan
+  16 per-act MP/2025/676   p4   ok                                   | ...mat sportu osób z niepełnosprawnościami; || 7) promocja zdrowego stylu życia i aktywności osób
+correct 17/17 (random: 12/12), wrong 0. 'multi-column table': rows of several cells are
+read as one line, so the block text mixes columns before and after the change; the new break falls on a
+real point start in the first column.
+
+Dev samples (structure/tree files *_v0.6.3.dev_B.txt; base = *_v0.6.2.txt, re-run: identical): main text
+unchanged on both. Changes are in annexes. s7 break P and tree annex P drop because of two acts:
+ - DU/2024/813 p50/p54/p56 (balance sheet): 'a) udziały lub akcje', 'b) inne papiery wartościowe', ... are
+   separate indented lines in the PDF (checked on the render) and separate lett units in the first copy of the
+   HTML (id ...-pass_1-lett_b), but the second copy in the HTML is one div ('III. Inwestycje krótkoterminowe
+   1. Krótkoterminowe aktywa finansowe a) udziały lub akcje b) inne papiery ...'); the new breaks align there
+   and count as 'break inside text' (8) and false lit (9 JSON units).
+ - DU/2024/440 p25: table notes 'b) Opis badania.', 'c) ...', 'd) ...' now start blocks (each is its own
+   line in the PDF; structure counts all 3 as hits), tree_eval counts them as 3 false lit (HTML: no units).
+ - DU/2024/870 p18 '1) etan; 2) etylen; ...' (+60 splits), DU/2024/122 p159 table rows 'b) Bank Światowy',
+   'c) Bank Rozwoju Rady Europy' (+2) and DU/2024/1040 p45 'b) w okresie zimowym' (+1), all correct on the
+   render, fall where the Markdown does not align with the HTML (s7 unaligned breaks +63), so the rates do
+   not move. s2024: DU/2024/840 (+1, improves R and P) and DU/2024/1973 p46 form rows '2) ....' .. '5) ....'
+   (+4, correct on the render, unaligned).
+
+Sample act positions:
+MP: 17 19 20 49 68 72 73 75 77 86 89 94 95 97 98 102 112 115 120 131 133 134 139 141 144 153 154 168 178 180 186 187 190 191 197 214 228 234 235 236 237 240 244 246 252 262 271 291 293 297 301 303 310 312 315 320 322 353 373 378 380 386 391 400 414 417 420 423 424 434 435 436 442 453 455 458 467 477 478 479 491 495 526 541 542 548 555 567 569 573 589 603 606 616 631 642 644 647 660 662 673 674 676 684 690 692 699 700 708 714 717 730 738 742 751 755 756 760 762 771 791 792 800 813 817 823 824 835 836 839 841 843 845 851 853 859 862 863 870 871 881 885 888 895 903 910 916 921 926 927 928 934 937 946 955 957 966 977 993 996 997 999 1000 1003 1006 1010 1016 1018 1026 1027 1039 1040 1043 1058 1061 1072 1082 1083 1090 1095 1101 1107 1143 1145 1146 1147 1166 1173 1182 1192 1212 1219 1223 1233 1236 1260 1274 1279 1293 1294
+DU: 19 49 68 73 75 86 89 95 97 98 102 115 131 134 139 141 154 168 178 190 228 234 235 236 237 252 271 291 293 297 301 303 310 312 315 320 322 353 373 378 380 386 391 400 417 420 423 424 434 435 436 455 458 467 479 491 541 542 548 567 569 573 606 616 631 642 644 647 660 673 684 690 692 699 708 714 730 738 742 751 760 762 771 791 792 800 813 817 824 836 841 843 851 853 859 863 870 871 881 888 895 910 916 921 934 937 955 966 977 993 996 999 1000 1003 1006 1010 1016 1018 1026 1039 1040 1043 1058 1061 1072 1095 1101 1143 1147 1166 1192 1212 1219 1233 1260 1279 1293 1294 1329 1335 1345 1346 1374 1379 1385 1395 1398 1407 1408 1429 1437 1446 1448 1449 1455 1464 1472 1517 1524 1536 1540 1545 1548 1557 1562 1565 1582 1591 1595 1604 1612 1630 1634 1643 1657 1660 1673 1674 1684 1685 1688 1706 1719 1736 1742 1767 1777 1784 1793 1801 1804 1808 1814 1823 1826 1845 1852 1858 1873 1875
