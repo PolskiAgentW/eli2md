@@ -23,13 +23,16 @@ RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\
 # "Pozycja 19": MP 2012 up to poz. 130; ") Poz. 1024*": the last act of a year has a note "*) Ostatnia pozycja"
 MASTHEAD_END = re.compile(r"^[*)\s]*Poz(?:\.|ycja)\s*\d+[*)\s]*$")
 SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 41¹., 5²)
+# Letters of an index ("Art. 22¹ᵃ."): Unicode modifier letters a-z; there is none for q.
+SUP_LETTERS = "ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻ"
+SUP_CHARS = SUP_DIGITS + SUP_LETTERS
 # Lines that start a new unit even without a vertical gap (used at page breaks).
 UNIT_START = re.compile(
-    rf"^(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_DIGITS}]*\.\s|\d+[a-z]*[{SUP_DIGITS}]*\)\s|[a-z]{{1,3}}\)\s|–\s|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
+    rf"^(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_CHARS}]*\.\s|\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s|–\s|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
 )
 UNIT_START_Q = re.compile("^„?" + UNIT_START.pattern[1:])  # also a quoted unit of an amendment: „1. Treść
-ITEM_START = re.compile(rf"^„?(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_DIGITS}]*\)\s|[a-z]{{1,3}}\)\s)")  # not "1." / "–"
-POINT_START = re.compile(rf"^„?(\d+[a-z]*[{SUP_DIGITS}]*\)\s|[a-z]{{1,3}}\)\s)")  # "1)", "a)" only
+ITEM_START = re.compile(rf"^„?(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s)")  # not "1." / "–"
+POINT_START = re.compile(rf"^„?(\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s)")  # "1)", "a)" only
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
@@ -39,8 +42,12 @@ CID = re.compile(r"\(cid:\d+\)")  # a glyph the PDF font does not map to Unicode
 FOOTNOTE_MARK = re.compile(r"^\d{1,3}\)?[,.;:]?$")
 # Small digits without ")" are not footnote markers but unit numbers (Art. 41¹), units (m²)
 # or chemical subscripts (P₂O₅). Kept as Unicode super/subscript digits.
-SUPER = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+SUPER = str.maketrans("0123456789abcdefghijklmnoprstuvwxyz", SUP_CHARS)
 SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+# Index of a unit number in small raised type right after the number: "22" + "1a" (2025 prints: Art. 22¹ᵃ.),
+# "479" + "[30f]" (2026 prints use brackets, also for digits: "§ 4[1]", DU/2026/468). Written as superscripts
+# without the brackets, so both prints give "Art. 479³⁰ᶠ." ("1" alone is a script digit, see FOOTNOTE_MARK).
+INDEX = re.compile(r"^(?:\[(\d{1,3}[a-z]{0,3})\]|(\d{1,3}[a-z]{1,3}))$")
 SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+$")
 
 
@@ -274,6 +281,35 @@ def _rows(words: list[dict]) -> list[list[dict]]:
     return rows
 
 
+def _index_words(r: list[dict], big: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Split a row of small words into (other words, indices). An index matches INDEX, starts right after a
+    normal-size word ending with a letter or digit and sits above that word's middle: "479" + "[30f]".
+    Index text is returned without brackets ("30f")."""
+    words: list[dict] = []
+    for w in sorted(r, key=lambda w: w["x0"]):
+        prev = words[-1] if words else None
+        if prev and re.fullmatch(r"\[\d{1,3}[a-z]{0,3}", prev["text"]) and w["text"] == "]" \
+                and w["x0"] - prev["x1"] < 1.0:  # "[92" + "]" in another size (DU/2026/468 p. 103)
+            words[-1] = {**prev, "text": prev["text"] + "]", "x1": w["x1"]}
+        elif m := re.fullmatch(r"(\[\d{1,3}[a-z]{0,3}\])(\d{1,3}\)[,.;:]?)", w["text"]):
+            # index + footnote marker in one word: "ust. 1 i 1[1]10)" (DU/2026/913 p. 44)
+            cut = w["x0"] + (w["x1"] - w["x0"]) * len(m.group(1)) / len(w["text"])
+            words += [{**w, "text": m.group(1), "x1": cut}, {**w, "text": m.group(2), "x0": cut}]
+        else:
+            words.append(w)
+    rest, idx = [], []
+    for w in words:
+        m = INDEX.match(w["text"])
+        mid = (w["top"] + w["bottom"]) / 2
+        if m and any(-1.0 < w["x0"] - n["x1"] < 1.5 and n["top"] - 1 < mid < (n["top"] + n["bottom"]) / 2
+                     and n["text"][-1:].isalnum() for n in big):
+            idx.append({**w, "text": m.group(1) or m.group(2)})
+        else:
+            rest.append(w)
+    rest.sort(key=lambda w: (w["top"], w["x0"]))  # the order of _rows: attach order decides ties (DU/2024/1089)
+    return rest, idx
+
+
 def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno: int) -> tuple[list[Line], list[Line]]:
     if not words:
         return [], []
@@ -287,8 +323,14 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
     # Small words: footnote markers ("1)"), whole lines of small print, or sub/superscripts in
     # formulas. Markers and formula scripts are attached to the nearest normal line.
     normal = [w for w in words if w["size"] >= sup_limit]
+    big = list(normal)
     attach: list[tuple[dict, dict]] = []  # (small word, flag) to attach to the nearest normal line
     for r in _rows([w for w in words if w["size"] < sup_limit]):
+        # indices are scripts even when a line has several: "Art. 479[30f]. … art. 479[30a]–479[30e]"
+        r, idx = _index_words(r, big)
+        attach += [(w, {"script": True, "index": True}) for w in idx]
+        if not r:
+            continue
         text = [w for w in r if not FOOTNOTE_MARK.match(w["text"])]
         words_ = [w for w in text if not MATH.search(w["text"])]  # formula scripts are math italic
         if (len(r) >= 3 and words_) or sum(len(w["text"]) for w in words_) >= 15:
@@ -327,6 +369,9 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             if w.get("sup"):
                 m = re.match(r"^(\d+)\)?(.*)$", w["text"])
                 parts.append((f"[^{m.group(1)}]{m.group(2)}", True))
+            elif w.get("index"):  # "30f" -> "³⁰ᶠ"; as printed if a char has no superscript form ("[1q]")
+                sup = w["text"].translate(SUPER)
+                parts.append((sup if all(c in SUP_CHARS for c in sup) else f"[{w['text']}]", True))
             elif w.get("script"):
                 up = mid is None or (w["top"] + w["bottom"]) / 2 < mid
                 parts.append((w["text"].translate(SUPER if up else SUB), True))
@@ -546,17 +591,17 @@ def convert(path: str, ocr: str | None = None) -> Document:
 
 
 UNIT_HEAD = {
-    "Art.": re.compile(rf"^(Art\.\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s*(.*)$", re.S),
-    "§": re.compile(rf"^(§\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s*(.*)$", re.S),
+    "Art.": re.compile(rf"^(Art\.\s*\d+[a-z]*[{SUP_CHARS}]*\.)\s*(.*)$", re.S),
+    "§": re.compile(rf"^(§\s*\d+[a-z]*[{SUP_CHARS}]*\.)\s*(.*)$", re.S),
 }
 # A quoted unit that opens with its ust. 1 or § 1 (codes): "„Art. 21. 1. Treść" -> "„Art. 21." + "1. Treść",
 # "Art. 14t. § 1. Treść" -> "Art. 14t." + "§ 1. Treść"
 QUOTED_UNIT = re.compile(
-    rf"^(„?(?:Art\.|§)\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s+(„?(?:§\s*)?\d+[a-z]*[{SUP_DIGITS}]*\.\s.*)$", re.S)
+    rf"^(„?(?:Art\.|§)\s*\d+[a-z]*[{SUP_CHARS}]*\.)\s+(„?(?:§\s*)?\d+[a-z]*[{SUP_CHARS}]*\.\s.*)$", re.S)
 # ” after minutes is the seconds sign in coordinates (16°41’56,70”), not a closing quote
 SECONDS = re.compile(r"\d[’′']\s?\d+(?:[,.]\d+)?”")
 # a quote that opens a block, possibly after the unit number: "„Art. 5.", "Art. 30. „1.", "1) „a)"
-QUOTE_HEAD = re.compile(rf"^(?:(?:Art\.|§)\s*\d+[a-z]*[{SUP_DIGITS}]*\.\s*|\d+[a-z]*[{SUP_DIGITS}]*[.)]\s*|[a-z]{{1,3}}\)\s*)?[„“]")
+QUOTE_HEAD = re.compile(rf"^(?:(?:Art\.|§)\s*\d+[a-z]*[{SUP_CHARS}]*\.\s*|\d+[a-z]*[{SUP_CHARS}]*[.)]\s*|[a-z]{{1,3}}\)\s*)?[„“]")
 
 
 def quote_depths(blocks: list[Block]) -> list[int]:

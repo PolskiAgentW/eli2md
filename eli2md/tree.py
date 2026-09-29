@@ -27,8 +27,8 @@ Rules:
 - Ranks: art > par (§) > ust > pkt > lit > tir (> tir under tir for "– –"). A unit becomes a child of
   the nearest open unit of a higher rank, so an article without ust. can hold pkt directly and
   § in codes sits under Art.
-- Numbers keep letters and superscripts as printed: "41¹", "2a". Tirets have no number; `num` is
-  their ordinal within the parent.
+- Numbers keep letters and superscripts as printed: "41¹", "2a"; an index with letters is all superscript
+  ("22¹ᵃ", printed "22[1a]" in 2026). Tirets have no number; `num` is their ordinal within the parent.
 - A paragraph that is not a unit start becomes a `text` child of the deepest open unit (except the
   first one after a bare number such as `##### Art. N.` or `##### § N.`, which is that unit's own text). So a closing
   sentence after a list of pkt ("część wspólna") ends up under the last pkt: the Markdown has no
@@ -44,9 +44,9 @@ from __future__ import annotations
 import json
 import re
 
-from .pdf import LOWER, QUOTE_HEAD, SECONDS, SUP_DIGITS
+from .pdf import LOWER, QUOTE_HEAD, SECONDS, SUP_CHARS
 
-SUP = SUP_DIGITS
+SUP = SUP_CHARS  # digits and letters of an index: "41¹", "22¹ᵃ"
 UPPER = "A-ZĄĆĘŁŃÓŚŹŻ"
 NOTE = r"(?:\[\^\d+(?:_\d+)?\])*"  # footnote markers glued to a unit number: "1a)[^2] treść", "Art. 5.[^3]"
 LEAD_NOTES = re.compile(r"^((?:\[\^\d+(?:_\d+)?\]\s*)+)(.*)$", re.S)  # "[^7] 1. Treść" (marker of the Art. heading)

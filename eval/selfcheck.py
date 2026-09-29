@@ -26,8 +26,13 @@ CACHE = Path.home() / "cache" / "eli"
 TOKEN = re.compile(r"\w+")
 CID = re.compile(r"\(cid:\d+\)")
 HEADER = re.compile(r"(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+")
-# the converter writes small digits as ¹/₂ (Art. 41¹); extract_words glues them to the word ("411")
-SCRIPTS = {ord(c): str(i % 10) for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉")}
+# the converter writes small digits as ¹/₂ (Art. 41¹) and index letters as ᵃ (Art. 22¹ᵃ); extract_words glues
+# them to the word ("411", "221a")
+SCRIPTS = {ord(c): p for c, p in zip("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻ",
+                                     "0123456789" * 2 + "abcdefghijklmnoprstuvwxyz")}
+# 2026 prints bracket the index ("Art. 479[30f].", "Art. 6b[1]."), the converter writes it without brackets
+# ("479³⁰ᶠ", "6b¹")
+PDF_INDEX = re.compile(r"(?<=\w)\[(\d{1,3}[a-z]{0,3})\]")
 
 
 def tokens(text: str) -> Counter:
@@ -111,6 +116,7 @@ def check(md_file: Path, pdf_file: Path) -> dict:
     # and running headers
     parts[0] = re.sub(r"\A.*?Poz(?:\.|ycja)\s*\d+", "", parts[0], count=1, flags=re.S)
     raw = CID.sub(" ", HEADER.sub(" ", "\n".join(parts)))  # unmapped glyphs are not words (dropped since 0.6.1)
+    raw = PDF_INDEX.sub(r"\1", raw)
     tp, tm = tokens(raw), tokens(md_body(md))
     common = sum((tp & tm).values())
     return {"pdf_tokens": sum(tp.values()), "md_tokens": sum(tm.values()),

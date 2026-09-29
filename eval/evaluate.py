@@ -23,16 +23,20 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from eli2md.pdf import convert  # noqa: E402
+from eli2md.pdf import SUP_CHARS, SUP_LETTERS, convert  # noqa: E402
 
 CACHE = Path.home() / "cache" / "eli"
 # the converter writes small digits as ¹/₂ (Art. 41¹); the HTML has <sup>1</sup>, i.e. a separate token
 SCRIPTS = {ord(c): f" {i % 10} " for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉")}
+# an index with letters (Art. 22¹ᵃ) is one token, as <sup>1a</sup> in the HTML
+SUP_LETTER_RUN = re.compile(f"[{SUP_CHARS}]*[{SUP_LETTERS}][{SUP_CHARS}]*")
+PLAIN = str.maketrans(SUP_CHARS, "0123456789abcdefghijklmnoprstuvwxyz")
 
 
 def tokens(text: str) -> list[str]:
     """Word tokens, case-folded (HTML titles are title-case, PDF titles are upper-case)."""
-    text = unicodedata.normalize("NFC", text).translate(SCRIPTS)
+    text = SUP_LETTER_RUN.sub(lambda m: " " + m.group().translate(PLAIN) + " ", unicodedata.normalize("NFC", text))
+    text = text.translate(SCRIPTS)
     text = re.sub(r"\[\^\w+\]", " ", text)  # our footnote markers
     return re.findall(r"\w+", text.lower())
 
