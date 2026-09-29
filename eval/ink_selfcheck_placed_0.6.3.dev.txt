@@ -19,8 +19,9 @@ Scan of all 5440 cached acts DU/MP 2025-26 (/tmp/threadA/scan_placed.py): 751 ac
 A box moves only for a font whose /Descent puts > 3/4 of the box below the baseline (or a subscript lowered by
 > ~0.4 em). Font descriptors (xref walk): 101 of the 751 acts have a font with Descent < -500 (CourierNewPSMT -680:
 49 acts, SegoeUISymbol -789: 41, CambriaMath -2464: 38, Cambria -2464: 6, Poppins -572: 3, others); base vs new
-was run on these 101. The other 650 acts: not converted with the new code (no font there can trigger the move;
-a subscript lowered by > ~0.4 em could; not checked).
+was run on these 101. The other 650 acts (18363 pages with placed chars): /tmp/threadA/scan_affected.py applied
+_glyph_box to every placed char on pages that also have own chars (only there _drop_hidden_placed tests): 0 acts
+with a moved box, so their output is the same as 0.6.2 (not converted).
 Base: 98 acts from the published 0.6.2 selfcheck (converter 0.6.2, no OCR pages; own base conversions of 4 of them
 are byte-identical to the published Markdown, and MP/2025/1128 gives the published values), 3 acts with OCR pages
 converted with 0.6.2 without OCR. New: converted without OCR. Per act: ink_selfcheck_placed_0.6.3.dev.json.
