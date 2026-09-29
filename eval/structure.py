@@ -11,6 +11,10 @@ evaluate.py and aligned with difflib; a unit counts only where its first token i
   sub R        units of a given type (ust., pkt, lit., ...) that start a Markdown paragraph.
   break P      share of Markdown paragraph starts that fall on any block start in the HTML
                (unit, text block, table cell, title). A miss is a break inside running text.
+  break R      share of HTML block starts outside tables (units, paragraphs, headings; not the title)
+               where a Markdown paragraph starts. A miss is two paragraphs run together. Table cells
+               are left out (tables are flattened row by row), and so is the start of a unit's text
+               right after its number, which the HTML puts in a block of its own.
 Scored separately for the main text and for annexes (as in evaluate.py, annexes that the HTML
 only links to as PDF are left out). Breaks inside the act title are counted apart ("title"):
 the PDF prints the title on several lines. Footnotes are dropped.
@@ -50,8 +54,10 @@ def _walk(roots: list[Tag]) -> dict:
     toks: list[str] = []
     units: list[tuple[int, str, bool]] = []  # (token index, type, top-level)
     starts: set[int] = set()
+    text_starts: set[int] = set()  # block starts outside tables
     for root in roots:
         starts.add(len(toks))
+        text_starts.add(len(toks))
         for node in root.descendants:
             if isinstance(node, NavigableString):
                 toks.extend(tokens(str(node)))
@@ -60,11 +66,13 @@ def _walk(roots: list[Tag]) -> dict:
                 continue
             if node.name in BLOCK_TAGS:
                 starts.add(len(toks))
+                if node.name not in ("td", "th", "tr", "table") and node.find_parent("table") is None:
+                    text_starts.add(len(toks))
             ut = unit_type(node)
             if ut:
                 nested = any(unit_type(p) in NESTING for p in node.parents if isinstance(p, Tag))
                 units.append((len(toks), ut, not nested))
-    return {"tokens": toks, "units": units, "starts": starts}
+    return {"tokens": toks, "units": units, "starts": starts, "text_starts": text_starts}
 
 
 def html_structure(html: str) -> dict | None:
@@ -160,6 +168,19 @@ def score_part(ref: dict, hyp: dict, head_type: str, c: Counter, show: bool, lab
         c[f"{label}.{key}_hit"] += i in ref["starts"]
         if i not in ref["starts"] and key == "break":
             bad.append(("break inside text", i))
+    unit_starts = {u for u, _, _ in ref["units"]}
+    for i in sorted(ref["text_starts"]):
+        if i == 0 or i < ref["title_end"] or i >= len(r2h):
+            continue
+        if i not in unit_starts and (i - 1 in unit_starts or i - 2 in unit_starts):
+            continue  # the HTML puts a unit's number ("1)", "Art. 5.") and its text in separate blocks
+        j = r2h[i]
+        if j < 0:
+            continue
+        c[f"{label}.breakr_n"] += 1
+        c[f"{label}.breakr_hit"] += j in hstarts
+        if j not in hstarts:
+            bad.append(("missed break", i))
     if show:
         rt = ref["tokens"]
         for kind, i in bad[:60]:
@@ -207,6 +228,7 @@ def main() -> None:
         total.update(c)
         print(f"{it['pos']:5} {it['type'][:14]:14} {r['head_type']}  " + "  ".join(
             f"{p}: head R={rate(c, p + '.head')} P={rate(c, p + '.headp')} break P={rate(c, p + '.break')}"
+            f" R={rate(c, p + '.breakr')}"
             for p in ("main", "annex") if c[p + ".break_n"]), flush=True)
     done = [r for r in rows if "skipped" not in r]
     print(f"scored {len(done)}/{len(rows)} acts")
@@ -216,7 +238,7 @@ def main() -> None:
         for t in SUB_TYPES + ("para",):
             if total[f"{p}.{t}_n"] or total[f"{p}.{t}_unaligned"]:
                 print(f"TOTAL {p:5} sub {t:6} R={rate(total, f'{p}.{t}')}  unaligned {total[f'{p}.{t}_unaligned']}")
-        print(f"TOTAL {p:5} break    P={rate(total, p + '.break')}  unaligned {total[p + '.break_unaligned']}"
+        print(f"TOTAL {p:5} break    P={rate(total, p + '.break')}  R={rate(total, p + '.breakr')}  unaligned {total[p + '.break_unaligned']}"
               + (f"  (title breaks, not in P: {total[p + '.title_n']})" if total[p + ".title_n"] else ""))
     for p in ("main", "annex"):
         heads = [r["counts"] for r in done if r["counts"].get(p + ".head_n")]

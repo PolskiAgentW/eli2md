@@ -370,12 +370,14 @@ def _segment(body: list[Line]) -> list[Block]:
             # Some PDFs set units with little extra space (2 pt over the usual gap between lines, not 6),
             # or none: then a unit starts after a line that ends short of the right margin (the last line
             # of a justified paragraph).
-            # On pages set with wide line spacing units often have no more space than other lines (DU/2024/1442):
-            # there "1)", "a)", "Art. 1", "§ 1" at a line start begin a unit; "1." and "–" only after a sentence end.
+            # On pages set with wide line spacing units and paragraphs often have no more space than other lines
+            # (DU/2024/1442, 440): there "1)", "a)", "Art. 1", "§ 1" at a line start begin a unit, "1." and "–" only
+            # after a sentence end, and a line that ends short of the right margin ends its paragraph.
             gap, limit = l.top - prev.bottom, split.get(l.page, 0.45)
-            new = gap > limit * l.size or bool(UNIT_START_Q.match(l.text)) and (
+            short = 0 < prev.x1 < prev.right - 2 * prev.size
+            new = gap > limit * l.size or (limit > 0.45 and short) or bool(UNIT_START_Q.match(l.text)) and (
                 (prev.lead >= 0 and gap > prev.lead + 1.2)
-                or (0 < prev.x1 < prev.right - 2 * prev.size and bool(re.search(r"[.:;,”]$", prev.text)))
+                or (short and bool(re.search(r"[.:;,”]$", prev.text)))
                 or (limit > 0.45 and (bool(ITEM_START.match(l.text)) or bool(re.search(r"[.:;,”]$", prev.text)))))
         if new:
             if cur is not None:
