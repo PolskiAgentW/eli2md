@@ -23,8 +23,8 @@ import pdfplumber
 CACHE = Path.home() / "cache" / "eli"
 TOKEN = re.compile(r"\w+")
 HEADER = re.compile(r"Dziennik Ustaw\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+")
-# the converter writes small digits as ¹/₂ (Art. 41¹); the PDF text layer has them as separate words
-SCRIPTS = {ord(c): f" {i % 10} " for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉")}
+# the converter writes small digits as ¹/₂ (Art. 41¹); extract_words glues them to the word ("411")
+SCRIPTS = {ord(c): str(i % 10) for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉")}
 
 
 def tokens(text: str) -> Counter:
