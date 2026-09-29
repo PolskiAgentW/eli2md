@@ -1,0 +1,53 @@
+  805 Obwieszczenie  main: R=1.0000 (8/8) P=1.0000 (8/8)  annex: R=1.0000 (376/376) P=1.0000 (376/376)
+  479 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
+  240 Rozporządzenie main: R=1.0000 (6/6) P=1.0000 (6/6)
+ 1583 Obwieszczenie  main: R=1.0000 (22/22) P=1.0000 (22/22)  annex: R=1.0000 (554/554) P=1.0000 (554/554)
+ 1320 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (3761/3761) P=1.0000 (3761/3761)
+  258 Obwieszczenie  main: R=1.0000 (6/6) P=1.0000 (6/6)  annex: R=1.0000 (77/77) P=1.0000 (77/77)
+  801 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (24/24) P=1.0000 (24/24)
+  825 Oświadczenie r main: R=1.0000 (2/2) P=1.0000 (2/2)
+ 1405 Obwieszczenie  main: R=1.0000 (8/8) P=1.0000 (8/8)  annex: R=1.0000 (424/424) P=1.0000 (424/424)
+   64 Rozporządzenie main: R=1.0000 (47/47) P=1.0000 (47/47)
+ 1309 Rozporządzenie main: R=1.0000 (7/7) P=1.0000 (7/7)
+ 1580 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=0.9928 (138/139) P=1.0000 (138/138)
+ 1577 Rozporządzenie main: R=1.0000 (8/8) P=1.0000 (8/8)
+  583 Obwieszczenie  main: R=1.0000 (6/6) P=1.0000 (6/6)  annex: R=1.0000 (57/57) P=1.0000 (57/57)
+ 1279 Rozporządzenie main: R=1.0000 (14/14) P=1.0000 (14/14)
+  853 Obwieszczenie  main: R=0.9682 (1888/1950) P=0.9672 (1888/1952)
+ 1455 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (242/242) P=1.0000 (242/242)
+ 1058 Rozporządzenie main: R=1.0000 (4/4) P=1.0000 (4/4)  annex: R=1.0000 (85/85) P=1.0000 (85/85)
+ 1499 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
+ 1467 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (422/422) P=1.0000 (422/422)
+  569 Rozporządzenie main: R=1.0000 (10/10) P=1.0000 (10/10)
+ 1791 Rozporządzenie main: R=1.0000 (5/5) P=1.0000 (5/5)
+ 1417 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
+ 1382 Rozporządzenie main: R=1.0000 (4/4) P=1.0000 (4/4)
+ 1657 Rozporządzenie main: R=1.0000 (24/24) P=1.0000 (24/24)  annex: R=1.0000 (2/2) P=1.0000 (2/2)
+  438 Rozporządzenie main: R=1.0000 (5/5) P=1.0000 (5/5)
+ 1730 Umowa międzyna 
+  968 Rozporządzenie main: R=1.0000 (4/4) P=1.0000 (4/4)
+  629 Rozporządzenie main: R=1.0000 (4/4) P=1.0000 (4/4)  annex: R=0.7300 (3179/4355) P=0.7300 (3179/4355)
+  383 Obwieszczenie  main: R=1.0000 (12/12) P=1.0000 (12/12)  annex: R=1.0000 (467/467) P=1.0000 (467/467)
+ 1160 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (13/13) P=1.0000 (13/13)
+ 1650 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (63/63) P=1.0000 (63/63)
+ 1585 Ustawa         main: R=1.0000 (20/20) P=1.0000 (20/20)
+ 1929 Rozporządzenie main: R=1.0000 (29/29) P=1.0000 (29/29)
+  655 Rozporządzenie main: R=1.0000 (22/22) P=1.0000 (22/22)
+ 1063 Obwieszczenie  main: R=1.0000 (6/6) P=1.0000 (6/6)  annex: R=1.0000 (784/784) P=1.0000 (784/784)
+scored 36/36 acts
+TOTAL main  all (art,par,ust,pkt,lit)  R=0.9725 (2191/2253)  P=0.9716 (2191/2255)  R miss none/path 0/62  P miss none/path 2/62  unaligned ref 43, json 0; quoted ref units left out: 283; untyped HTML units typed by label: 6
+TOTAL main  attach  text paragraphs under the right unit: 0.7579 (817/1078) (unaligned 20); words in the right unit: 0.9326 (33609/36038)
+TOTAL main  art   R=1.0000 (6/6)            P=1.0000 (6/6)            R miss none/path 0/0  P miss none/path 0/0  unaligned ref 17, json 0
+TOTAL main  par   R=1.0000 (54/54)          P=1.0000 (54/54)          R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL main  ust   R=1.0000 (242/242)        P=1.0000 (242/242)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 26, json 0
+TOTAL main  pkt   R=0.9744 (1672/1716)      P=0.9738 (1672/1717)      R miss none/path 0/44  P miss none/path 1/44  unaligned ref 0, json 0
+TOTAL main  lit   R=0.9234 (217/235)        P=0.9195 (217/236)        R miss none/path 0/18  P miss none/path 1/18  unaligned ref 0, json 0
+TOTAL main  tir   no reference units in the HTML, not scored; JSON nodes: 29
+TOTAL annex all (art,par,ust,pkt,lit)  R=0.9006 (10668/11845)  P=0.9007 (10668/11844)  R miss none/path 1/1176  P miss none/path 0/1176  unaligned ref 10, json 103; quoted ref units left out: 0; untyped HTML units typed by label: 38
+TOTAL annex attach  text paragraphs under the right unit: 0.9383 (1933/2060) (unaligned 350); words in the right unit: 0.9496 (197771/208262)
+TOTAL annex art   R=1.0000 (922/922)        P=1.0000 (922/922)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL annex par   R=1.0000 (358/358)        P=1.0000 (358/358)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL annex ust   R=1.0000 (2812/2812)      P=1.0000 (2812/2812)      R miss none/path 0/0  P miss none/path 0/0  unaligned ref 10, json 64
+TOTAL annex pkt   R=0.8337 (5900/7077)      P=0.8338 (5900/7076)      R miss none/path 1/1176  P miss none/path 0/1176  unaligned ref 0, json 26
+TOTAL annex lit   R=1.0000 (676/676)        P=1.0000 (676/676)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 13
+TOTAL annex tir   no reference units in the HTML, not scored; JSON nodes: 74
