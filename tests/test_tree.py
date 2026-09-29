@@ -16,10 +16,30 @@ def paths(nodes: list[dict]) -> list[str]:
 
 
 class Tree(unittest.TestCase):
+    def test_common_part_after_enumeration(self):
+        # text after a list continues the sentence of the unit above the list; a dash there is not a tiret
+        t = md_to_tree(md("##### § 1.", "1. Ogłasza się tekst jednolity, z uwzględnieniem zmian wprowadzonych:",
+                          "1) ustawą z dnia 1 lutego 2024 r. (Dz. U. poz. 1),", "2) ustawą z dnia 2 marca 2024 r. (Dz. U. poz. 2)",
+                          "oraz zmian wynikających z przepisów ogłoszonych przed dniem 1 kwietnia 2024 r.",
+                          "– w brzmieniu określonym w załączniku.", "2. Drugi ustęp."))
+        ust1 = t["body"][0]["children"][0]
+        self.assertEqual([c.get("path", c["type"]) for c in ust1["children"]],
+                         ["par_1/ust_1/pkt_1", "par_1/ust_1/pkt_2", "text", "text"])
+        self.assertEqual(paths(t["body"]), ["par_1", "par_1/ust_1", "par_1/ust_1/pkt_1", "par_1/ust_1/pkt_2", "par_1/ust_2"])
+
+    def test_item_text_split_by_layout_is_not_common_part(self):
+        # a boxed layout splits an item into lines; a lit that follows shows the line was the item's own text
+        t = md_to_tree(md("##### § 1.", "1. Wniosek zawiera:", "3) wdrożone środki mające na celu zapobieganie",
+                          "zakażeniom w stadzie, w tym:", "a) szczepienia,", "b) dezynfekcję;", "4) inne dane."))
+        self.assertEqual(paths(t["body"]), ["par_1", "par_1/ust_1", "par_1/ust_1/pkt_3", "par_1/ust_1/pkt_3/lit_a",
+                                            "par_1/ust_1/pkt_3/lit_b", "par_1/ust_1/pkt_4"])
+        pkt3 = t["body"][0]["children"][0]["children"][0]
+        self.assertEqual(pkt3["children"][0], {"type": "text", "text": "zakażeniom w stadzie, w tym:"})
+
     def test_statute_units_and_front_matter(self):
         doc = Document(blocks=[Block("p", "USTAWA", 1), Block("p", "Art. 1. 1. Ustawa określa:", 1),
                                Block("p", "1) zasady;", 1), Block("p", "2) tryb, w tym:", 1),
-                               Block("p", "a) terminy,", 1), Block("p", "– pierwszy,", 1), Block("p", "– drugi,", 1),
+                               Block("p", "a) terminy:", 1), Block("p", "– pierwszy,", 1), Block("p", "– drugi,", 1),
                                Block("p", "b) opłaty.", 1), Block("p", "2. Przepis ust. 1 stosuje się.", 1),
                                Block("p", "Art. 41¹. Ustawa wchodzi w życie po 14 dniach.", 1),
                                Block("signature", "Prezydent: A. B", 1)])

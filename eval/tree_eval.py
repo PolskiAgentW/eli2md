@@ -105,15 +105,31 @@ def _is_unit(tag: Tag) -> bool:
     return "unit" in tag.get("class", []) and bool(tag.get("id"))
 
 
+def _owner(node, none_types: dict[str, str]) -> tuple:
+    """Path of the unit a piece of text belongs to: the innermost typed unit that is not quoted and not
+    inside a quoted unit (text of a quoted unit belongs to the unit that quotes it)."""
+    chain = [t for t in node.parents if isinstance(t, Tag) and _is_unit(t)]  # innermost first
+    q = max((k for k, t in enumerate(chain) if QUOTED_CLASSES & set(t.get("class", []))), default=-1)
+    for t in chain[q + 1:]:
+        last = t["id"].split("-")[-1].partition("_")[0]
+        if last in HTML_TYPE or (last == "none" and t["id"] in none_types):
+            return html_path(t["id"], none_types)
+    return ()
+
+
 def _walk(roots: list[Tag]) -> dict:
     toks: list[str] = []
+    owners: list[tuple] = []  # per token: path of the unit it belongs to
     units: list[tuple[int, tuple, str]] = []  # (token index, path, type)
     quoted_n = none_n = 0
     none_types: dict[str, str] = {}  # parents come before children in document order
     for root in roots:
         for node in root.descendants:
             if isinstance(node, NavigableString):
-                toks.extend(tokens(str(node)))
+                new = tokens(str(node))
+                if new:
+                    toks.extend(new)
+                    owners.extend([_owner(node, none_types)] * len(new))
                 continue
             if not isinstance(node, Tag) or not _is_unit(node):
                 continue
@@ -132,7 +148,7 @@ def _walk(roots: list[Tag]) -> dict:
                 quoted_n += 1
                 continue
             units.append((len(toks), html_path(node["id"], none_types), typ))
-    return {"tokens": toks, "units": units, "quoted": quoted_n, "none_typed": none_n}
+    return {"tokens": toks, "owners": owners, "units": units, "quoted": quoted_n, "none_typed": none_n}
 
 
 def html_units(html: str) -> dict | None:
@@ -153,26 +169,36 @@ def html_units(html: str) -> dict | None:
     return {"main": main, "annex": annex}
 
 
-def _linear(nodes: list[dict], toks: list[str], units: list) -> None:
+def _linear(nodes: list[dict], part: dict, parent: tuple = ()) -> None:
+    toks, owners = part["tokens"], part["owners"]
     for n in nodes:
         t = n["type"]
         if t == "note":
             continue
+        own = parent
         if t in RANK:
-            units.append((len(toks), json_path(n["path"]), t))
-            toks.extend(tokens(LABEL[t].format(n["num"]) + " " + n["text"]))
+            own = json_path(n["path"])
+            part["units"].append((len(toks), own, t))
+            new = tokens(LABEL[t].format(n["num"]) + " " + n["text"])
         else:
-            toks.extend(tokens(n.get("label", "") + " " + n["text"]))
-        _linear(n.get("children", []), toks, units)
+            if t == "text" and n["text"].strip():
+                part["texts"].append((len(toks), parent))
+            new = tokens(n.get("label", "") + " " + n["text"])
+        toks.extend(new)
+        owners.extend([own] * len(new))
+        _linear(n.get("children", []), part, own)
 
 
 def json_units(tree: dict) -> dict:
-    main: dict = {"tokens": tokens(tree.get("title") or ""), "units": []}
-    _linear(tree["body"], main["tokens"], main["units"])
-    annex: dict = {"tokens": [], "units": []}
+    title = tokens(tree.get("title") or "")
+    main: dict = {"tokens": title, "owners": [()] * len(title), "units": [], "texts": []}
+    _linear(tree["body"], main)
+    annex: dict = {"tokens": [], "owners": [], "units": [], "texts": []}
     for a in tree["annexes"]:
-        annex["tokens"].extend(tokens(a["heading"]))
-        _linear(a["body"], annex["tokens"], annex["units"])
+        head = tokens(a["heading"])
+        annex["tokens"].extend(head)
+        annex["owners"].extend([()] * len(head))
+        _linear(a["body"], annex)
     return {"main": main, "annex": annex}
 
 
@@ -197,6 +223,25 @@ def score_part(ref: dict, hyp: dict, c: Counter, label: str, bad: list | None = 
     hyp_at: dict[int, set] = {}
     for j, p, _ in hyp["units"]:
         hyp_at.setdefault(j, set()).add(p)
+    # attachment: the unit a text paragraph (not a unit start) hangs under, and the unit of every word.
+    # Tirets are dropped from both paths: the HTML does not mark them (see above).
+    def notir(path: tuple) -> tuple:
+        return tuple(seg for seg in path if seg[0] != "tir")
+
+    for j, p in hyp.get("texts", []):
+        i = h2r[j] if j < len(h2r) else -1
+        if i < 0:
+            c[f"{label}.text_unal"] += 1
+            continue
+        c[f"{label}.text_n"] += 1
+        if notir(ref["owners"][i]) == notir(p):
+            c[f"{label}.text_hit"] += 1
+        elif bad is not None:
+            bad.append((label, "T", "attach", _fmt(p), [_fmt(ref["owners"][i])], i))
+    for i, j in enumerate(r2h):
+        if j >= 0:
+            c[f"{label}.word_n"] += 1
+            c[f"{label}.word_hit"] += notir(ref["owners"][i]) == notir(hyp["owners"][j])
     c[f"{label}.quoted_ref"] += ref.get("quoted", 0)
     c[f"{label}.none_typed_ref"] += ref.get("none_typed", 0)
     for side, units, m, other in (("R", ref["units"], r2h, hyp_at), ("P", hyp["units"], h2r, ref_at)):
@@ -242,7 +287,7 @@ def evaluate_act(pos: int, md_cache: Path | None = None, show: bool = False) -> 
     if show:
         for label, side, kind, p, got, i in bad[:200]:
             rt = ref[label]["tokens"]
-            what = "missed" if side == "R" else "false "
+            what = {"R": "missed", "P": "false ", "T": "text  "}[side]
             print(f"{label:5} {what} {kind:4} {p:32} other: {','.join(got) or '-':32} "
                   f"...{' '.join(rt[max(0, i - 6):i])} | {' '.join(rt[i:i + 8])}")
     return {"pos": pos, "counts": dict(c), "errors": [b[:5] for b in bad]}
@@ -269,6 +314,9 @@ def report(total: Counter, out) -> None:
               f"unaligned ref {agg['R_unal']}, json {agg['P_unal']}; quoted ref units left out: "
               f"{total[part + '.quoted_ref']}; untyped HTML units typed by label: "
               f"{total[part + '.none_typed_ref']}", file=out)
+        print(f"TOTAL {part:5} attach  text paragraphs under the right unit: {rate(total, part + '.text')} "
+              f"(unaligned {total[part + '.text_unal']}); words in the right unit: {rate(total, part + '.word')}",
+              file=out)
         for t in TYPES:
             r, p = f"{part}.R.{t}", f"{part}.P.{t}"
             if not (total[r + "_n"] or total[p + "_n"] or total[r + "_unal"] or total[p + "_unal"]):

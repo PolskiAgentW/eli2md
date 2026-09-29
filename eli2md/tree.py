@@ -42,7 +42,7 @@ from __future__ import annotations
 import json
 import re
 
-from .pdf import QUOTE_HEAD, SECONDS, SUP_DIGITS
+from .pdf import LOWER, QUOTE_HEAD, SECONDS, SUP_DIGITS
 
 SUP = SUP_DIGITS
 UPPER = "A-ZĄĆĘŁŃÓŚŹŻ"
@@ -62,6 +62,7 @@ HEADING = re.compile(
     r"^((?:DZIAŁ|Dział|ROZDZIAŁ|Rozdział|ODDZIAŁ|Oddział|TYTUŁ|Tytuł|KSIĘGA|Księga|CZĘŚĆ|Część)"
     rf"\s+(?:[0-9]+[a-z]*[{SUP}]*|[IVXLC]+[a-z]*[{SUP}]*))(?:\s+(.*))?$", re.S)
 FRONT = re.compile(r"^---\n(.*?)\n---\n", re.S)
+COMMON_PART = re.compile(rf"^(?:[{LOWER}]|–\s)")  # "część wspólna" after an enumeration
 ANNOUNCES_QUOTE = re.compile(r"(?:brzmienie|brzmieniu)\s*:\s*$")  # "… otrzymuje brzmienie:", "… w brzmieniu:"
 
 
@@ -145,18 +146,29 @@ class _Builder:
         self.stack: list[tuple[int, dict]] = []  # (rank, node) of open units
         self.fresh: dict | None = None  # unit with a bare number ("##### § 5.") still waiting for its text
         self.heading: dict | None = None  # heading still waiting for its title
+        self.common = False  # the last text was the common part after an enumeration
+        self.undo: tuple[list, list] | None = None  # (closed list item entries, common-part text nodes)
 
     def _parent_list(self) -> list[dict]:
         return self.stack[-1][1]["children"] if self.stack else self.body
 
     def close(self) -> None:
         self.stack.clear()
-        self.fresh = self.heading = None
+        self.fresh = self.heading = self.undo = None
 
     def add_unit(self, typ: str, num: str, text: str) -> None:
         rank = RANK[typ]
         if typ == "tir":
             rank += int(num) - 1  # "– –" nests under "–"
+        if self.undo and rank > self.undo[0][0][0]:
+            # a unit below the closed list item follows ("3) … zakażeń" / "w stadzie" / "a) …"): the text
+            # was the item's own text split by the layout, not the common part; put it back into the item
+            closed, texts = self.undo
+            parent = self._parent_list()
+            del parent[len(parent) - len(texts):]
+            closed[-1][1]["children"].extend(texts)
+            self.stack.extend(closed)
+        self.undo = None
         while self.stack and self.stack[-1][0] >= rank:
             self.stack.pop()
         siblings = self._parent_list()
@@ -165,6 +177,7 @@ class _Builder:
         seg = {"art": "art", "par": "par", "ust": "ust", "pkt": "pkt", "lit": "lit", "tir": "tir"}[typ]
         path = (self.stack[-1][1]["path"] + "/" if self.stack else "") + f"{seg}_{num}"
         node = {"type": typ, "num": num, "path": path, "text": text, "children": []}
+        self.common = False
         siblings.append(node)
         self.stack.append((rank, node))
         self.fresh = node if not text else None
@@ -183,6 +196,18 @@ class _Builder:
         node = {"type": "text", "text": text}
         if quoted:
             node["quoted"] = True
+        elif self.stack and (top := self.stack[-1][1])["type"] in ("pkt", "lit", "tir") and not top["children"] \
+                and not top["text"].rstrip().endswith(":") and COMMON_PART.match(text) and not self.common:
+            # text right after the last item of an enumeration that continues the sentence of the unit above
+            # the list ("…: 1) …, 2) …" / "– w wysokości …", "oraz zmian …") belongs to that unit, not to the
+            # item. Not after an item that ends with ":" (e.g. a legend of formula symbols follows)
+            rank, closed = self.stack[-1][0], []
+            while self.stack and self.stack[-1][0] >= rank:
+                closed.insert(0, self.stack.pop())
+            self.common = True  # further paragraphs of the common part stay with it
+            self.undo = (closed, [])
+        if self.undo:
+            self.undo[1].append(node)
         self._parent_list().append(node)
 
     def add_heading(self, label: str, text: str) -> None:
@@ -197,8 +222,15 @@ class _Builder:
             self.close()
             self.body.append({"type": typ, "text": text})
         else:
-            self.fresh = self.heading = None
+            self.fresh = self.heading = self.undo = None
             self._parent_list().append({"type": typ, "text": text})
+
+
+def _tiret_list(blocks: list[tuple[str, str]], n: int, b: "_Builder") -> bool:
+    """A "– " paragraph is a tiret when the paragraph before announces a list (ends with ":") or is itself
+    a tiret (a running list); otherwise the dash opens the common part after an enumeration."""
+    prev = blocks[n - 1][1].rstrip() if n else ""
+    return prev.endswith(":") or bool(b.stack and b.stack[-1][1]["type"] == "tir")
 
 
 def md_to_tree(md: str) -> dict:
@@ -255,6 +287,8 @@ def md_to_tree(md: str) -> dict:
         if u and kind == "p" and u[0] == "par" and not u[2] and n + 1 < len(blocks) \
                 and blocks[n + 1][1].startswith(("„", "“")):
             u, d = None, 1  # "§ 5." + "„1. …": the same split for a quoted §
+        if u and u[0] == "tir" and kind == "p" and not _tiret_list(blocks, n, b):
+            u = None  # "– …" after an enumeration that did not announce tirets: the common part, not a tiret
         if u:
             if notes and b.fresh is not None:  # "##### Art. 15c." + "[^7] 1. …": the marker belongs to Art.
                 b.fresh["text"] = notes
