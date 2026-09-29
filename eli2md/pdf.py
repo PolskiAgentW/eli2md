@@ -71,7 +71,8 @@ class Document:
     footnote_pages: list[int] = field(default_factory=list)  # page of each footnote (numbering may restart)
     no_text_pages: list[int] = field(default_factory=list)  # e.g. scanned pages: their content is lost
     image_pages: list[int] = field(default_factory=list)  # pages with text and large images (forms, drawings)
-    ocr_pages: list[int] = field(default_factory=list)  # pages without text whose OCR text is included
+    ocr_pages: list[int] = field(default_factory=list)
+    unmapped_pages: list[int] = field(default_factory=list)  # text layer mostly without Unicode, kept without it  # pages without text whose OCR text is included
     ocr_engine: str = ""  # e.g. "tesseract 5.5.0"
     ocr_langs: dict[int, str] = field(default_factory=dict)  # page -> tesseract language(s) used
 
@@ -342,7 +343,7 @@ def _segment(body: list[Line]) -> list[Block]:
             kind = "signature"
         if prev is None or cur is None:
             new = True
-        elif kind != "p" or cur.kind in ("signature", "notext", "image", "ocr"):
+        elif kind != "p" or cur.kind in ("signature", "notext", "image", "ocr", "unmapped"):
             new = not (kind == "annex" and cur.kind == "annex" and l.page == prev.page)
         elif cur.kind == "annex":
             # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
@@ -381,8 +382,9 @@ def convert(path: str, ocr: str | None = None) -> Document:
     with pdfplumber.open(path) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
             b, n = _page_lines(page, pno)
-            if _unmapped_share(page) > 0.1:  # the text layer is mostly glyphs without Unicode (forms, DU/2025/161)
-                b, n = [], []
+            layer = None  # text layer of a page mostly of glyphs without Unicode (forms, DU/2025/161): OCR first
+            if _unmapped_share(page) > 0.1:
+                layer, b, n = (b, n), [], []
             if pno == 1:
                 for i, l in enumerate(b):
                     if MASTHEAD_END.match(l.text):
@@ -392,13 +394,21 @@ def convert(path: str, ocr: str | None = None) -> Document:
             elif b and RUNNING_HEADER.match(b[0].text):
                 b = b[1:]
             if not b and not n:
-                doc.no_text_pages.append(pno)
                 read = ocr_mod.ocr_page(page, ocr) if ocr else None
                 if read and ocr_mod.usable(read):
+                    doc.no_text_pages.append(pno)
                     doc.ocr_pages.append(pno)
                     doc.ocr_langs[pno] = read.lang
                     b = [Line(pno, 0.0, 0.0, 0.0, 1.0, t, page.width, page.height, mark="ocr") for t in read.paragraphs]
+                elif layer and (layer[0] or layer[1]):
+                    # no OCR or an unreadable one: the text layer without the unmapped glyphs beats a bare note
+                    doc.unmapped_pages.append(pno)
+                    b, n = layer
+                    if b and RUNNING_HEADER.match(b[0].text):
+                        b = b[1:]
+                    b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="unmapped")] + b
                 else:
+                    doc.no_text_pages.append(pno)
                     b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="notext")]
             elif (img := _large_image(page)) is not None:
                 doc.image_pages.append(pno)
@@ -512,7 +522,8 @@ def _escape_ocr(text: str) -> str:
 
 
 def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[int] | None = None,
-                image_pages: list[int] | None = None, ocr_pages: list[int] | None = None, ocr_engine: str = "") -> str:
+                image_pages: list[int] | None = None, ocr_pages: list[int] | None = None, ocr_engine: str = "",
+                unmapped_pages: list[int] | None = None) -> str:
     """YAML front matter; keys follow legalize-pl where the meaning is the same."""
     from . import __version__
 
@@ -537,6 +548,7 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
         "text_source": "pdf",
         "pages_without_text": page_ranges(no_text_pages or []),
         "pages_with_images": page_ranges(image_pages or []),
+        "pages_unmapped_glyphs": page_ranges(unmapped_pages or []),
         "pages_ocr": page_ranges(ocr_pages or []),
         "ocr": ocr_engine if ocr_pages else "",
         "converter": f"eli2md {__version__}",
@@ -596,7 +608,8 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
     out = []
     if meta:
         out += [frontmatter(meta, no_text_pages=doc.no_text_pages, image_pages=doc.image_pages,
-                            ocr_pages=doc.ocr_pages, ocr_engine=doc.ocr_engine), "# " + meta["title"]]
+                            ocr_pages=doc.ocr_pages, ocr_engine=doc.ocr_engine, unmapped_pages=doc.unmapped_pages),
+                "# " + meta["title"]]
     run: list[int] = []  # consecutive pages without text get one note
     for i, b in enumerate(doc.blocks):
         if b.kind == "ocr":  # each OCR page starts with its own note
@@ -610,6 +623,9 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
             if not (nxt and nxt.kind == "notext" and nxt.page == b.page + 1):
                 out.append(no_text_note(run))
                 run = []
+        elif b.kind == "unmapped":
+            out.append(f"> [Na stronie {b.page} PDF większość znaków nie ma kodów Unicode (np. formularz). "
+                       "Tekst poniżej jest niepełny, pełna treść jest tylko w PDF.]")
         elif b.kind == "image":
             out.append(f"> [Na stronie {b.page} PDF jest obraz (np. wzór, rysunek, skan). "
                        "Jego treści tu nie ma, jest tylko w PDF.]")
