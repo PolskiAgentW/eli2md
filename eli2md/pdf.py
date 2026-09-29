@@ -43,11 +43,12 @@ class Line:
     text: str
     pw: float = 595.0
     ph: float = 842.0
+    mark: str = ""  # "notext" | "image": position marker for content that is not text
 
 
 @dataclass
 class Block:
-    kind: str  # "p" | "signature" | "annex" (annex header) | "notext" (page without a text layer)
+    kind: str  # "p" | "signature" | "annex" (annex header) | "notext" | "image" (see Line.mark)
     text: str
     page: int
 
@@ -58,6 +59,7 @@ class Document:
     blocks: list[Block] = field(default_factory=list)
     footnotes: list[str] = field(default_factory=list)
     no_text_pages: list[int] = field(default_factory=list)  # e.g. scanned pages: their content is lost
+    image_pages: list[int] = field(default_factory=list)  # pages with text and large images (forms, drawings)
 
     @property
     def paragraphs(self) -> list[str]:
@@ -149,6 +151,18 @@ def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
         words = extract_words(chars, extra_attrs=["size"], keep_blank_chars=False)
         frames.append((words, fw, fh, [_to_frame(r, rot, w, h) for r in page.rects]))
     return frames
+
+
+def _large_image(page, min_share: float = 0.1) -> float | None:
+    """Top of the largest image if images cover at least min_share of the page, else None."""
+    area, best = 0.0, None
+    for im in page.images:
+        w = max(0.0, min(page.width, im["x1"]) - max(0.0, im["x0"]))
+        h = max(0.0, min(page.height, im["bottom"]) - max(0.0, im["top"]))
+        area += w * h
+        if best is None or w * h > best[0]:
+            best = (w * h, max(0.0, im["top"]))
+    return best[1] if best and area >= min_share * page.width * page.height else None
 
 
 def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
@@ -279,7 +293,13 @@ def convert(path: str) -> Document:
                 b = b[1:]
             if not b and not n:
                 doc.no_text_pages.append(pno)
-                b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height)]  # position marker
+                b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="notext")]
+            elif (img := _large_image(page)) is not None:
+                doc.image_pages.append(pno)
+                m = Line(pno, img, img, 0.0, 1.0, "", page.width, page.height, mark="image")
+                upright = all(l.pw == page.width and l.ph == page.height for l in b)
+                i = next((k for k, l in enumerate(b) if l.top > img), len(b)) if upright else len(b)
+                b = b[:i] + [m] + b[i:]
             body.extend(b)
             notes.extend(n)
             page.close()  # pdfplumber caches every parsed page; 867-page acts exhausted 14 GB RAM
@@ -290,15 +310,15 @@ def convert(path: str) -> Document:
     prev: Line | None = None
     for l in body:
         kind = "p"
-        if not l.text:
-            kind = "notext"
+        if l.mark:
+            kind = l.mark
         elif ANNEX.match(l.text) and l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph:
             kind = "annex"
         elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
             kind = "signature"
         if prev is None or cur is None:
             new = True
-        elif kind != "p" or cur.kind in ("signature", "notext"):
+        elif kind != "p" or cur.kind in ("signature", "notext", "image"):
             new = not (kind == "annex" and cur.kind == "annex" and l.page == prev.page)
         elif cur.kind == "annex":
             # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
@@ -355,7 +375,8 @@ def no_text_note(pages: list[int]) -> str:
             "Ich treści tu nie ma, jest tylko w PDF.]")
 
 
-def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[int] | None = None) -> str:
+def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[int] | None = None,
+                image_pages: list[int] | None = None) -> str:
     """YAML front matter; keys follow legalize-pl where the meaning is the same."""
     from . import __version__
 
@@ -379,6 +400,7 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
         "keywords": ", ".join(meta.get("keywords") or []),
         "text_source": "pdf",
         "pages_without_text": page_ranges(no_text_pages or []),
+        "pages_with_images": page_ranges(image_pages or []),
         "converter": f"eli2md {__version__}",
         "disclaimer": "Nieoficjalny tekst z automatycznej konwersji PDF. Wiążący jest PDF w Dzienniku Ustaw.",
     }
@@ -395,7 +417,7 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
     unit = "Art." if any(b.text.startswith("Art.") for b in doc.blocks) else "§"
     out = []
     if meta:
-        out += [frontmatter(meta, no_text_pages=doc.no_text_pages), "# " + meta["title"]]
+        out += [frontmatter(meta, no_text_pages=doc.no_text_pages, image_pages=doc.image_pages), "# " + meta["title"]]
     run: list[int] = []  # consecutive pages without text get one note
     for i, b in enumerate(doc.blocks):
         if b.kind == "notext":
@@ -404,6 +426,9 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
             if not (nxt and nxt.kind == "notext" and nxt.page == b.page + 1):
                 out.append(no_text_note(run))
                 run = []
+        elif b.kind == "image":
+            out.append(f"> [Na stronie {b.page} PDF jest obraz (np. wzór, rysunek, skan). "
+                       "Jego treści tu nie ma, jest tylko w PDF.]")
         elif b.kind == "annex":
             out.append("## " + b.text)
         elif b.kind == "signature":

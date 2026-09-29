@@ -28,7 +28,7 @@ from .eli import API, fetch, get
 from .pdf import convert, to_markdown
 
 FIELDS = ["eli", "year", "pos", "type", "title", "announcement_date", "promulgation", "change_date",
-          "pdf_sha256", "pages", "words", "no_text_pages", "status", "error", "converter", "converted_at"]
+          "pdf_sha256", "pages", "words", "no_text_pages", "image_pages", "status", "error", "converter", "converted_at"]
 FIRST_PDF_ONLY_YEAR = 2025  # from 2025 the ELI API has no HTML text for DU (checked 2026-09-29)
 
 
@@ -77,7 +77,7 @@ def _convert_one(job: tuple[str, str, str]) -> dict:
             pages = len(p.pages)
         return {"eli": eli, "status": "ok", "error": "", "pages": pages,
                 "words": sum(len(b.text.split()) for b in doc.blocks), "no_text_pages": len(doc.no_text_pages),
-                "secs": round(time.time() - t0, 1)}
+                "image_pages": len(doc.image_pages), "secs": round(time.time() - t0, 1)}
     except MemoryError:
         pass  # report below, once the frames holding the large objects are released
     except Exception as e:  # keep going; the failure is recorded in the index
@@ -140,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
                              initargs=(a.mem_limit_gb,)) as ex:
         for res in ex.map(_convert_one, jobs):
             row = index[res["eli"]]
-            row.update({k: res[k] for k in ("status", "error", "pages", "words", "no_text_pages") if k in res})
+            row.update({k: res[k] for k in ("status", "error", "pages", "words", "no_text_pages", "image_pages") if k in res})
             row.update(converter=f"eli2md {__version__}",
                        converted_at=dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
             done += 1

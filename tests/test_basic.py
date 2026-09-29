@@ -69,6 +69,13 @@ class Basic(unittest.TestCase):
         self.assertIn("> [Strona 6 PDF nie ma warstwy tekstowej", md)
         self.assertEqual(md.count("> ["), 2)
 
+    def test_image_note(self):
+        doc = Document(blocks=[Block("p", "Wzór", 3), Block("image", "", 3), Block("p", "Opis.", 3)],
+                       image_pages=[3])
+        md = to_markdown(doc, META)
+        self.assertIn('pages_with_images: "3"', md)
+        self.assertIn("Wzór\n\n> [Na stronie 3 PDF jest obraz", md)
+
 
 if __name__ == "__main__":
     unittest.main()

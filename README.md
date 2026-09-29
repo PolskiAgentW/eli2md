@@ -50,6 +50,11 @@ Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który g
   (rozporządzenia).
 - Nagłówki załączników jako `## Załącznik nr …`, podpis kursywą.
 - Przypisy w składni Markdown: `[^1]` w tekście i `[^1]: …` na końcu.
+- Treść, której nie da się odczytać jako tekst, jest oznaczona notką w miejscu, gdzie występuje:
+  `> [Strony 2-28 PDF nie mają warstwy tekstowej …]` (skany) oraz
+  `> [Na stronie 7 PDF jest obraz …]` (obraz zajmujący ≥10% strony: wzór, rysunek, mapa).
+  We front matter te same strony są w polach `pages_without_text` i `pages_with_images`.
+  Tej treści nie ma w Markdown. Konwerter nie robi OCR.
 
 ## Jakość: jak mierzę i co wyszło
 

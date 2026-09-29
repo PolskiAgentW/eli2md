@@ -31,7 +31,7 @@ def md_body(md: str) -> str:
     md = re.sub(r"\A---\n.*?\n---\n", "", md, flags=re.S)
     md = re.sub(r"\A\s*# .*\n", "", md)  # title from metadata; the PDF has it in the body already
     md = re.sub(r"\[\^\d+\]:?", " ", md)
-    md = re.sub(r"^> \[Stron[ay] .*\]$", "", md, flags=re.M)  # note about pages without a text layer
+    md = re.sub(r"^> \[(Stron[ay]|Na stronie) .*\]$", "", md, flags=re.M)  # notes on non-text content
     return re.sub(r"^#+ ", "", md, flags=re.M)
 
 
