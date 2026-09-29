@@ -62,6 +62,7 @@ RANK = {"art": 0, "par": 1, "ust": 2, "pkt": 3, "lit": 4, "tir": 5}
 HEADING = re.compile(
     r"^((?:DZIAŁ|Dział|ROZDZIAŁ|Rozdział|ODDZIAŁ|Oddział|TYTUŁ|Tytuł|KSIĘGA|Księga|CZĘŚĆ|Część)"
     rf"\s+(?:[0-9]+[a-z]*[{SUP}]*|[IVXLC]+[a-z]*[{SUP}]*))(?:\s+(.*))?$", re.S)
+UNESCAPE = re.compile(r"^\\([>#|\[*+-])")  # the converter escapes Markdown syntax at a paragraph start
 FRONT = re.compile(r"^---\n(.*?)\n---\n", re.S)
 COMMON_PART = re.compile(rf"^(?:[{LOWER}]|–\s)")  # "część wspólna" after an enumeration
 ANNOUNCES_QUOTE = re.compile(r"(?:brzmienie|brzmieniu)\s*:\s*$")  # "… otrzymuje brzmienie:", "… w brzmieniu:"
@@ -264,11 +265,11 @@ def md_to_tree(md: str) -> dict:
         elif p.startswith("> [") and p.endswith("]"):
             blocks.append(("note", p[2:].strip()))
         elif p.startswith("> "):  # text read by OCR from a page without a text layer
-            blocks.append(("ocr", p[2:].strip()))
+            blocks.append(("ocr", UNESCAPE.sub(r"\1", p[2:].strip())))
         elif p.startswith("*") and p.endswith("*") and len(p) > 2:
             blocks.append(("signature", p[1:-1]))
         else:
-            blocks.append(("p", p))
+            blocks.append(("p", UNESCAPE.sub(r"\1", p)))
     depths = tree_depths(blocks)
 
     parts = [("main", None, _Builder())]

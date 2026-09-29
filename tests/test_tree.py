@@ -43,6 +43,14 @@ class Tree(unittest.TestCase):
         self.assertEqual(paths(t["body"]), ["art_1", "art_2"])
         self.assertEqual([c["type"] for c in t["body"][0]["children"]], ["note", "ocr", "ocr"])
 
+    def test_text_starting_with_gt_is_not_ocr(self):
+        doc = Document(blocks=[Block("p", "§ 1. Okres:", 1), Block("p", "> 90 dni ≤ 180 dni", 1), Block("p", "# 5", 1)])
+        md_text = to_markdown(doc)
+        self.assertIn("\n\n\\> 90 dni ≤ 180 dni\n\n\\# 5\n", md_text)
+        t = md_to_tree(md_text)
+        self.assertEqual([(c["type"], c["text"]) for c in t["body"][0]["children"]],
+                         [("text", "> 90 dni ≤ 180 dni"), ("text", "# 5")])
+
     def test_statute_units_and_front_matter(self):
         doc = Document(blocks=[Block("p", "USTAWA", 1), Block("p", "Art. 1. 1. Ustawa określa:", 1),
                                Block("p", "1) zasady;", 1), Block("p", "2) tryb, w tym:", 1),

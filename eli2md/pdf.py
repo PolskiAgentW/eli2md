@@ -499,6 +499,12 @@ def ocr_note(page: int, engine: str) -> str:
             "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
 
 
+def _escape_text(text: str) -> str:
+    """A text-layer paragraph that starts with > or # ("> 90 dni" in a table) must not become a quote block
+    (the mark of OCR text) or a heading."""
+    return "\\" + text if text[:1] in ">#" else text
+
+
 def _escape_ocr(text: str) -> str:
     """OCR text is plain text: a leading #, >, |, [ or bullet must not become Markdown syntax.
     ("1. Tekst" stays as it is, like ust. in the text layer.)"""
@@ -614,11 +620,11 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
                 and not m.group(2).startswith("„"):
             out.append("##### " + m.group(1))
             if m.group(2):
-                out.append(m.group(2))
+                out.append(_escape_text(m.group(2)))
         elif m := QUOTED_UNIT.match(b.text):
             out += [m.group(1), m.group(2)]
         else:
-            out.append(b.text)
+            out.append(_escape_text(b.text))
     seen: Counter = Counter()
     for f in doc.footnotes:
         if m := FN_LABEL.match(f):

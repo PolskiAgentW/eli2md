@@ -3,7 +3,7 @@
 Konwerter aktów z **Dziennika Ustaw** (PDF) do **Markdown**, z mierzoną jakością.
 *Converts Polish Journal of Laws PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.0**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.1**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw.
 
 ## Po co
@@ -52,12 +52,19 @@ Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który g
 - Cyfry w indeksie górnym i dolnym jako znaki Unicode: `Art. 41¹.`, `m²`, `P₂O₅` (od 0.5.0;
   wcześniej błędnie jako odnośniki do przypisów `[^1]`).
 - Nagłówki załączników jako `## Załącznik nr …`, podpis kursywą.
-- Przypisy w składni Markdown: `[^1]` w tekście i `[^1]: …` na końcu.
+- Przypisy w składni Markdown: `[^1]` w tekście i `[^1]: …` na końcu. Numeracja przypisów zaczyna się od nowa
+  w załącznikach i formularzach; od 0.6.1 kolejny przypis o tym samym numerze ma etykietę `[^1_2]`, `[^1_3]`…,
+  a odnośnik wskazuje przypis z tej samej strony (albo najbliższej dalszej). Wcześniej etykiety się powtarzały
+  (w zbiorze 0.5.3: 466 plików) i w JSON część przypisów ginęła.
+- Akapit z warstwy tekstowej zaczynający się od `>` albo `#` (np. `> 90 dni` w tabeli) jest poprzedzony `\`,
+  żeby nie był cytatem blokowym (tak oznaczam OCR) ani nagłówkiem (od 0.6.1).
 - Treść, której nie da się odczytać jako tekst, jest oznaczona notką w miejscu, gdzie występuje:
   `> [Strony 2-28 PDF nie mają warstwy tekstowej …]` (skany) oraz
   `> [Na stronie 7 PDF jest obraz …]` (obraz zajmujący ≥10% strony: wzór, rysunek, mapa).
   We front matter te same strony są w polach `pages_without_text` i `pages_with_images`.
-  Tej treści nie ma w Markdown. Domyślnie konwerter nie robi OCR (opcja `--ocr` niżej).
+  Tej treści nie ma w Markdown. Domyślnie konwerter nie robi OCR (opcja `--ocr` niżej). Od 0.6.1 stroną bez
+  czytelnej warstwy tekstowej jest też strona, na której ponad 10% znaków nie ma kodu Unicode (pdfminer daje wtedy
+  `(cid:N)`; formularze, np. DU/2025/161). Wcześniej te znaki trafiały do wyniku (w zbiorze 0.5.3: 27 plików).
 
 ### JSON: drzewo jednostek (od 0.5.3)
 
@@ -102,7 +109,14 @@ Próba odłożona s5104 zapisana w gicie przed oceną, oceniona raz. Na próbach
 tamte liczby są zawyżone. Niska precision załączników w seed 2024 to głównie DU/2024/1337 (karty akwenów:
 numerowane wiersze tabel, których HTML nie oznacza jako jednostek). W teście najsłabsze są lit. w załącznikach
 (R 0.978, P 0.937). Tiret HTML nie oznacza, więc nie są mierzone. Nagłówków rozdziałów miara nie sprawdza.
-Wyniki per akt: `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+**0.6.1, test s5106** (45 aktów, ocena jednorazowa; 0.6.0 i 0.6.1 dają tu identyczne słowa, strukturę i drzewo):
+treść główna 2517/2517 jednostek, przypięcie akapitów 1916/1916; załączniki R 0.976, P 0.974. Większość błędów
+w załącznikach to trzy teksty jednolite. W DU/2024/54 (113 błędów) PDF ma „Art. 3. Ilekroć w ustawie jest mowa o:
+1) …” bez numeru ustępu, a HTML i tak tworzy `ust_1`, więc ścieżki `art_3/pkt_1` i `art_3/ust_1/pkt_1` się różnią
+(sprawdzone w PDF). DU/2024/1366 (90: HTML zagnieżdża ust. 1a w ust. 1) i DU/2024/456 (237) nie sprawdzałem.
+Zdublowane etykiety przypisów na s5106: 9 w 0.6.0 → 0; tekst „(cid:N)”: 1 → 0. Escapowanie `>`/`#` dodałem po teście.
+
+Wyniki per akt: `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
 
 ## Jakość: jak mierzę i co wyszło
 
