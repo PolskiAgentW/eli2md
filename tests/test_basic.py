@@ -108,5 +108,16 @@ class Basic(unittest.TestCase):
         for t in ["treść b) dalej", "1998 r. poz. 1", "(1, 3) x"]:
             self.assertFalse(UNIT_START.match(t), t)
 
+    def test_quote_edge_cases(self):
+        # seconds sign in coordinates does not close a quote; "Art. 30. „1." quotes only its ust. 1
+        doc = Document(blocks=[Block("p", "„Art. 5. Granica biegnie południkiem 16°41’56,70” długości.", 1),
+                               Block("p", "Art. 6. Nadal w cytacie.”", 1),
+                               Block("p", "Art. 30. „1. Cytowany ustęp.”", 1),
+                               Block("p", "Art. 7. Nagłówek.", 1)])
+        md = to_markdown(doc)
+        self.assertEqual(md.count("##### "), 1)
+        self.assertIn("##### Art. 7.", md)
+        self.assertIn("\n\nArt. 30.\n\n„1. Cytowany ustęp.”\n\n", md)
+
 if __name__ == "__main__":
     unittest.main()

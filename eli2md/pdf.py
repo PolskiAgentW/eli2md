@@ -369,7 +369,9 @@ UNIT_HEAD = {
 # A quoted unit that opens with its ust. 1 or § 1 (codes): "„Art. 21. 1. Treść" -> "„Art. 21." + "1. Treść",
 # "Art. 14t. § 1. Treść" -> "Art. 14t." + "§ 1. Treść"
 QUOTED_UNIT = re.compile(
-    rf"^(„?(?:Art\.|§)\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s+((?:§\s*)?\d+[a-z]*[{SUP_DIGITS}]*\.\s.*)$", re.S)
+    rf"^(„?(?:Art\.|§)\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s+(„?(?:§\s*)?\d+[a-z]*[{SUP_DIGITS}]*\.\s.*)$", re.S)
+# ” after minutes is the seconds sign in coordinates (16°41’56,70”), not a closing quote
+SECONDS = re.compile(r"\d[’′']\s?\d+(?:[,.]\d+)?”")
 
 
 def quote_depths(blocks: list[Block]) -> list[int]:
@@ -383,7 +385,8 @@ def quote_depths(blocks: list[Block]) -> list[int]:
             d = 0
         depths.append(d)
         t = b.text
-        d = max(0, d + t.count("„") + t.count("“") - t.count("”") - t.count("ˮ"))
+        closing = t.count("”") - len(SECONDS.findall(t)) + t.count("ˮ")
+        d = max(0, d + t.count("„") + t.count("“") - closing)
     return depths
 
 
@@ -465,7 +468,7 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
             out.append("## " + b.text)
         elif b.kind == "signature":
             out.append("*" + b.text + "*")
-        elif depths[i] == 0 and (m := UNIT_HEAD[unit].match(b.text)):
+        elif depths[i] == 0 and (m := UNIT_HEAD[unit].match(b.text)) and not m.group(2).startswith("„"):
             out.append("##### " + m.group(1))
             if m.group(2):
                 out.append(m.group(2))
