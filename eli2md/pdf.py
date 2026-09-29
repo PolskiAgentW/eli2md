@@ -505,7 +505,13 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
 def to_markdown(doc: Document, meta: dict | None = None) -> str:
     """Markdown body: one block per paragraph, top-level units (Art. or, if none, §) as h5."""
     depths = quote_depths(doc.blocks)
-    unit = "Art." if any(b.text.startswith("Art.") and d == 0 for b, d in zip(doc.blocks, depths)) else "§"
+    # Top-level unit per part (main text, each annex): Art. if the part has an "Art. N." at depth 0, else §.
+    # A paragraph "Art. 42 ust. 1 ustawy określa…" in an annex does not count (DU/2024/553).
+    part, parts = 0, []
+    for b in doc.blocks:
+        part += b.kind == "annex"
+        parts.append(part)
+    with_art = {p for b, d, p in zip(doc.blocks, depths, parts) if d == 0 and UNIT_HEAD["Art."].match(b.text)}
     out = []
     if meta:
         out += [frontmatter(meta, no_text_pages=doc.no_text_pages, image_pages=doc.image_pages), "# " + meta["title"]]
@@ -524,7 +530,8 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
             out.append("## " + b.text)
         elif b.kind == "signature":
             out.append("*" + b.text + "*")
-        elif depths[i] == 0 and (m := UNIT_HEAD[unit].match(b.text)) and not m.group(2).startswith("„"):
+        elif depths[i] == 0 and (m := UNIT_HEAD["Art." if parts[i] in with_art else "§"].match(b.text)) \
+                and not m.group(2).startswith("„"):
             out.append("##### " + m.group(1))
             if m.group(2):
                 out.append(m.group(2))

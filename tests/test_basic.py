@@ -153,6 +153,18 @@ class Basic(unittest.TestCase):
                 line(152, 72, 544, "2. kwartał – tekst, który jest dalszym ciągiem zdania z odstępem 2 pt.")]
         self.assertEqual([b.text[:6] for b in _segment(body)], ["1) w §", "„1. Pr", "2. Czł"])
 
+    def test_heading_unit_per_part(self):
+        # "Art. 42 ust. 1 ustawy…" in an annex must not turn off the § headings of the main text
+        doc = Document(blocks=[Block("p", "§ 1. Treść.", 1), Block("p", "§ 2. Treść.", 1),
+                               Block("annex", "Załącznik nr 1", 2), Block("p", "Art. 42 ust. 1 ustawy określa, że…", 2),
+                               Block("annex", "Załącznik nr 2", 3), Block("p", "Art. 1. Tekst jednolity.", 3),
+                               Block("p", "§ 1. Paragraf w artykule.", 3)])
+        md = to_markdown(doc)
+        self.assertIn("##### § 1.\n\nTreść.", md)
+        self.assertIn("##### Art. 1.", md)
+        self.assertNotIn("##### Art. 42", md)
+        self.assertNotIn("##### § 1.\n\nParagraf", md)
+
 
 if __name__ == "__main__":
     unittest.main()

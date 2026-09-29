@@ -3,7 +3,7 @@
 Konwerter aktów z **Dziennika Ustaw** (PDF) do **Markdown**, z mierzoną jakością.
 *Converts Polish Journal of Laws PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wczesna wersja (0.1)**. Projekt prowadzi agent AI (Claude, model firmy Anthropic)
+> Status: **wersja 0.5.3**. Projekt prowadzi agent AI (Claude, model firmy Anthropic)
 > w ramach eksperymentu. Nadzór i odpowiedzialność: człowiek prowadzący eksperyment.
 > Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw.
 
@@ -49,7 +49,7 @@ Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który g
 - Jednostki najwyższego rzędu jako `##### Art. N.`, a gdy w akcie nie ma artykułów, `##### § N.`
   (rozporządzenia). Jednostki cytowane (nowelizacje, „przepisy nieobjęte tekstem jednolitym”)
   nie są nagłówkami. Ich numer jest osobnym akapitem: `„Art. 21.`, potem `1. Treść…` (od 0.5.0).
-- Ust., pkt i lit. zaczynają nowy akapit (`1.`, `1)`, `a)`). Jawnego drzewa jednostek nie ma.
+- Ust., pkt i lit. zaczynają nowy akapit (`1.`, `1)`, `a)`). Jawne drzewo jednostek jest w JSON (niżej, od 0.5.3).
 - Cyfry w indeksie górnym i dolnym jako znaki Unicode: `Art. 41¹.`, `m²`, `P₂O₅` (od 0.5.0;
   wcześniej błędnie jako odnośniki do przypisów `[^1]`).
 - Nagłówki załączników jako `## Załącznik nr …`, podpis kursywą.
@@ -60,7 +60,7 @@ Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który g
   We front matter te same strony są w polach `pages_without_text` i `pages_with_images`.
   Tej treści nie ma w Markdown. Konwerter nie robi OCR.
 
-### JSON: drzewo jednostek (wersja rozwojowa)
+### JSON: drzewo jednostek (od 0.5.3)
 
 `eli2md DU/2025/900 --json` (albo `--format json`) oraz `python -m eli2md.dataset … --json` (plik `.json`
 obok `.md`) dają drzewo jednostek zbudowane z Markdown (`eli2md/tree.py`; da się je odtworzyć
@@ -81,16 +81,19 @@ Akapit bez numeru trafia do najgłębszej otwartej jednostki, więc tekst kończ
 wisi pod ostatnim punktem. Markdown nie ma wcięć, po których dałoby się to rozróżnić.
 
 `eval/tree_eval.py` porównuje ścieżki (`art_5/ust_2/pkt_3`) z identyfikatorami jednostek w HTML 2024 (bez
-jednostek cytowanych) w tym samym miejscu tekstu. Tylko próby deweloperskie (na nich stroiłem, liczby zawyżone):
+jednostek cytowanych) w tym samym miejscu tekstu. **R**: odsetek jednostek HTML, dla których w JSON jest węzeł
+o tej samej ścieżce zaczynający się w tym samym słowie; **P**: odwrotnie.
 
-| art, §, ust., pkt, lit.  | seed 2024: R / P     | seed 7: R / P        |
-|--------------------------|----------------------|----------------------|
-| treść główna             | 1.000 / 1.000 (942)  | 0.992 / 0.996 (1830) |
-| załączniki               | 0.991 / 0.852 (4825) | 0.9998 / 0.994 (11946) |
+| art, §, ust., pkt, lit.  | **test s5104 (46)**, 0.5.3 | dev seed 2024 (49)     | dev seed 7 (50)        |
+|--------------------------|----------------------------|------------------------|------------------------|
+| treść główna             | **1.000 / 1.000** (1256)   | 1.000 / 1.000 (942)    | 0.992 / 0.996 (1830)   |
+| załączniki               | **0.998 / 0.994** (7217)   | 0.993 / 0.852 (4825)   | 1.000 / 0.994 (11946)  |
 
-Niska precision załączników w seed 2024 to głównie DU/2024/1337 (karty akwenów: numerowane wiersze tabel,
-których HTML nie oznacza jako jednostek); bez niego 0.993 (4561/4591). Tiret HTML nie oznacza, więc nie są mierzone.
-Wyniki per akt: `eval/tree_dev_s*.txt`. Na próbie odłożonej jeszcze nie mierzone.
+Próba odłożona s5104 zapisana w gicie przed oceną, oceniona raz. Na próbach deweloperskich stroiłem, więc
+tamte liczby są zawyżone. Niska precision załączników w seed 2024 to głównie DU/2024/1337 (karty akwenów:
+numerowane wiersze tabel, których HTML nie oznacza jako jednostek). W teście najsłabsze są lit. w załącznikach
+(R 0.978, P 0.937). Tiret HTML nie oznacza, więc nie są mierzone. Nagłówków rozdziałów miara nie sprawdza.
+Wyniki per akt: `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
 
 ## Jakość: jak mierzę i co wyszło
 
@@ -177,16 +180,51 @@ Co wyszło w testach i co z tym zrobiłem:
   (DU/2024/303), a „Art. 30. „1. …” (cytat zaczyna się po numerze) był nagłówkiem (DU/2024/1288).
   Poprawione w 0.5.2. Wynik 0.5.2 na próbach s20260929 i s5101 to 1.000 dla nagłówków, ale te próby
   nie są już dla tych poprawek niezależne.
-- s5102 (0.5.2, tej wersji używa zbiór danych): **regresja** nagłówków w załącznikach, 14 z 880.
+- s5102 (0.5.2): **regresja** nagłówków w załącznikach, 14 z 880.
   W DU/2024/610 w samym oficjalnym tekście brakuje cudzysłowu zamykającego („zwany dalej „kodem
   świadczenia;”), więc konwerter uznaje resztę załącznika za cytat i nie robi tam nagłówków.
-  Na razie niepoprawione. Śledzenie cudzysłowów ma tę wadę: jeden niedomknięty cudzysłów w źródle
-  wyłącza nagłówki do końca załącznika.
+  Śledzenie cudzysłowów ma tę wadę: jeden niedomknięty cudzysłów w źródle wyłączał nagłówki do końca
+  załącznika. W 0.5.3 cudzysłów otwarty w środku zdania i niedomknięty kończy się z akapitem
+  (DU/2024/610: 3/16 → 16/16; sprawdzone po fakcie na tej samej próbie, więc to nie jest niezależny wynik).
 - Słowa P spada, bo HTML pisze wzory chemiczne zwykłym tekstem („P2O5”, jeden token), a wynik ma
   „P₂O₅” (cztery tokeny). Wcześniej wynik miał tu „P[^2]O[^5]”.
 - Pozostałe miary (pkt, lit., podziały w załącznikach) się nie zmieniły. Najsłabsze są lit. w załącznikach
   (0.916 w s5101) i podziały w tabelach (P 0.87–0.97 w próbach deweloperskich; każda linia komórki
   tabeli jest osobnym akapitem).
+
+
+**0.5.3.** Próba s5103 (41 aktów) nie zawierała przypadku z DU/2024/610 i dała dla 0.5.2 i kandydata
+0.5.3 identyczne wyniki. Pokazała za to trzy nowe błędy: ust. R w treści głównej 0.936 (147/157),
+pkt 0.967, lit. 0.959, a słowa R w DU/2024/876 tylko 0.790:
+- niektóre rozporządzenia składane są z odstępem między jednostkami 2 pt zamiast 6 pt (DU/2024/1134, 591).
+  Próg 0.45 × rozmiar czcionki go nie widział, więc ust./pkt/lit. sklejały się w jeden akapit. W zbiorze
+  2025–2026 taki wzorzec („…: a) …; b) …” w jednym akapicie) miało 347 z 3168 plików. Teraz jednostka zaczyna
+  akapit także wtedy, gdy odstęp jest o >1,2 pt większy od zwykłego na tej stronie albo gdy poprzednia
+  linia kończy się przed prawym marginesem;
+- obramowanie tabeli o szerokości kreski nad przypisami (~144 pt) było brane za tę kreskę, więc dół
+  tabeli trafiał do przypisów (DU/2024/876). Teraz kreska musi być wolnostojąca;
+- wyraz złożony przeniesiony na dywizie („rolno-” / „-środowiskowy”) dawał „rolno- -środowiskowy”
+  (w danych 0.5.2: 421 plików). Miara słów tego nie widzi (dzieli na dywizach).
+
+Po poprawkach nowa próba s5104 (46 aktów), ocena jednorazowa:
+
+| s5104, 0.5.2 → 0.5.3              |                   |
+|-----------------------------------|-------------------|
+| nagłówki R / P, treść główna      | 0.980 → 0.980 / 1.000 → 1.000 |
+| nagłówki R, załączniki            | 0.999 → 0.999     |
+| ust. / pkt / lit. R, treść główna | 1.000 / 1.000 / 1.000 (bez zmian) |
+| podziały P, treść główna          | 0.9995 → 0.9995   |
+| słowa R / P, treść główna         | 0.9977 → 0.9984 / 0.9844 → 0.9837 |
+| przypisy P                        | 0.741 → 0.865     |
+| załączniki R (średnia po aktach)  | 0.917 → 0.975     |
+
+s5104 ma mało aktów składanych „na ciasno”, więc główna poprawka jest tu prawie niewidoczna; na próbach
+deweloperskich pkt R 0.995 → 1.000, lit. R 0.992 → 1.000, przypisy P 0.879 → 0.911 i 0.745 → 0.853.
+Test pokazał jeszcze jeden błąd, obecny też w 0.5.2: w DU/2024/553 akapit załącznika „Art. 42 ust. 1
+ustawy określa…” sprawiał, że cały akt dostawał nagłówki `##### Art.`, więc § w treści głównej ich nie
+miały (nagłówki R 0/3). Poprawione w 0.5.3 po teście: jednostka nagłówka jest wybierana osobno dla treści
+głównej i każdego załącznika. Na próbach deweloperskich nic to nie zmienia, a w DU/2024/553 daje 3/3,
+ale s5104 nie jest już dla tej poprawki niezależna. Kolejna wersja dostanie nową próbę.
 
 Wyniki per akt: `eval/structure_test_*.txt`, `eval/structure_dev_*.txt`, `eval/results_test_*.txt`.
 Po zmianie tokenizacji w 0.5.0 (`41¹` → `41 1`, jak w HTML) liczby słów różnią się od starszych
