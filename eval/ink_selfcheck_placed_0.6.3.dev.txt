@@ -1,0 +1,66 @@
+Thread A (ink test of placed chars): eli2md 0.6.3.dev vs 0.6.2, DU + MP 2025-26, selfcheck.check per act.
+
+== Cause of the bug (MP/2025/1128)
+Not a shifted render. pdfminer puts a char's box from baseline+descent to baseline+descent+size, with the
+descent from the font's /Descent. The placed fonts XRESBZ+Cambria / OCHBFR+Cambria (and every Cambria Math
+subset) declare Ascent 3117, Descent -2464, FontBBox [-1475 -2464 2868 3117] (the math glyphs' extent). For
+10.82 pt text the box therefore lies 15.8-26.7 pt below the baseline, i.e. on the next line. Page 21,
+"elektromobilnos": pdfminer box top 600.32 / bottom 611.14; pdfium's tight box of "e" top 579.26 / bottom 584.55
+(pdfium's loose box also ends at 611.14, same descent). The ink test sampled the next line's ink: "r" and "l"
+fell where the next line had a gap ("elekt omobinos ci"); page 4 "Przegląd": glyphs at 113-121, boxes at 137-148.
+Fix: _glyph_box() moves a box with more than 3/4 of it below the baseline (measured from the char matrix along
+the glyph's up direction; upright and 90/180/270 degree text) to 0.3 below it; used for both tests in
+_drop_hidden_placed. (Threshold 3/4, not 1/2: pdfminer adds a lowered subscript's text rise to the box but the
+matrix does not show it.)
+
+== Which acts
+Scan of all 5440 cached acts DU/MP 2025-26 (/tmp/threadA/scan_placed.py): 751 acts have chars tagged PlacedPDF
+(DU/2025 342, DU/2026 209, MP/2025 84, MP/2026 116; 21995 pages with placed chars): ink_placed_acts_du_mp_2025_2026.json.
+A box moves only for a font whose /Descent puts > 3/4 of the box below the baseline (or a subscript lowered by
+> ~0.4 em). Font descriptors (xref walk): 101 of the 751 acts have a font with Descent < -500 (CourierNewPSMT -680:
+49 acts, SegoeUISymbol -789: 41, CambriaMath -2464: 38, Cambria -2464: 6, Poppins -572: 3, others); base vs new
+was run on these 101. The other 650 acts: not converted with the new code (no font there can trigger the move;
+a subscript lowered by > ~0.4 em could; not checked).
+Base: 98 acts from the published 0.6.2 selfcheck (converter 0.6.2, no OCR pages; own base conversions of 4 of them
+are byte-identical to the published Markdown, and MP/2025/1128 gives the published values), 3 acts with OCR pages
+converted with 0.6.2 without OCR. New: converted without OCR. Per act: ink_selfcheck_placed_0.6.3.dev.json.
+
+== Result (101 acts)
+kept      micro base=0.9593 new=0.9658  up=21 down=0 same=80
+grounded  micro base=0.9817 new=0.9860  up=6 down=18 same=77
+kept<0.95: base 38 new 37;  grounded<0.95: base 13 new 12
+MP/2025/1128   kept 0.7225 -> 0.9808  grounded 0.7754 -> 0.9809  md tokens 27850 -> 29886
+  lines of the Markdown with words that are not in the PDF text layer (/tmp/threadA/broken.py; a token is known if
+  it, or a split of it into two PDF tokens, is a PDF token; sorted-letter keys as in selfcheck):
+  base 404 lines / 2455 tokens -> new 4 lines / 4 tokens. The 4 left ("ukon czenia", "włas ciwym", "przedłuz enie",
+  "Chronione") come from the text layer, which maps the accent glyph of ś/ń/ż/ó to a separate space
+  ("elektromobilnos ci" is in the PDF text as such). Not an ink problem; not fixed.
+Other kept gains are small: DU/2025/928 +0.0053, DU/2025/452 +0.0046, DU/2026/1236 +0.0035, DU/2025/978 +0.0035.
+
+== Grounded drops (18 acts) - all have Cambria Math placed formulas (Word equations)
+selfcheck compares the PDF's math italic letters (𝑘) with the converter's plain letters (k, _plain_math), so the
+formula text that is now kept counts as ungrounded. With NFKC on both sides (/tmp/threadA/selfcheck_nfkc.py):
+  DU/2026/40     grounded 0.9004 -> 0.8866 (-0.0138)   md 3744 -> 3809
+  DU/2026/1236   grounded 0.9868 -> 0.9731 (-0.0137)   md 9319 -> 9580
+  DU/2025/1548   grounded 0.9835 -> 0.9752 (-0.0083)   md 24418 -> 24673
+  DU/2025/452    grounded 0.9581 -> 0.9520 (-0.0061)   md 5468 -> 5539
+  DU/2026/1013   grounded 0.9796 -> 0.9768 (-0.0028)
+  DU/2025/932    grounded 0.9810 -> 0.9799 (-0.0011)
+  DU/2025/978    grounded 0.9553 -> 0.9544 (-0.0009)
+  DU/2025/441, 919, 748, 848, 1012: -0.0001 .. -0.0003;  DU/2025/454, 459, 597, 1555, DU/2026/447: >= 0;
+  MP/2025/541 -0.0000; MP/2025/1128 +0.2055.
+What the added text is (word diffs, renders):
+- DU/2026/1236 p.10 (rotated table): the formula "ΔQ0 = 0,302·k1·k2·Ap·(U0 - 1/(1/U0 + d/λ))" is visible on the
+  render; new has "0,302∙kk¹ ∙kk² ∙AA pp ∙(UU⁰ −¹ ...", base had "¹² AA pp⁰¹". The doubled letters are in the PDF
+  text layer itself (Word). Remaining ungrounded surplus = formula tokens split differently by extract_words
+  (e.g. "0pp", "rrś", "0oooo").
+- DU/2025/452 p.7: every line of a Word equation (fraction "Rzeczywisty poziom współczynnika kapitału ... /
+  Wymagany poziom ...") is in the text layer TWICE (pdfminer and pdfium text page: baselines 9.4-9.5 pt apart,
+  same font and colour), only one copy is visible. With the boxes now on the glyphs, the invisible copy passes the
+  ink test where it overlaps the next visible line ("eczywisty poziom współczynni" kept, its ends without ink
+  dropped). Base: all Cambria Math boxes 16-27 pt off, so both copies came out as random fragments
+  ("p kapitału podstawowego om Tier 1 iom albo ... staw a b z tału podstawowego T").
+  This is a leak of an invisible duplicate (not of the gazette's white-box/clipped copy), from a limit of the ink
+  test: it cannot tell text lying on other visible text. Not fixed.
+- DU/2026/40, DU/2025/1548: added text is formula text of the same kind ("∑ ii=1 DDDDᵢ", "ff cccc,dddddd ...");
+  renders not checked.

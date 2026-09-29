@@ -1,8 +1,8 @@
 import unittest
 
 from eli2md.eli import parse_eli
-from eli2md.pdf import (UNIT_START, Block, Document, Line, _char_angle, _frame_lines, _free, _join, _segment, _to_frame,
-                        page_ranges, to_markdown)
+from eli2md.pdf import (UNIT_START, Block, Document, Line, _char_angle, _frame_lines, _free, _glyph_box, _join, _segment,
+                        _to_frame, page_ranges, to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
         "pos": 1, "publisher": "DU", "keywords": ["a", "b"]}
@@ -45,6 +45,29 @@ class Basic(unittest.TestCase):
         self.assertTrue(f["upright"])
         # a later char in the same line (further up the page) must come later in the frame
         self.assertGreater(_to_frame({**c, "top": 737.5, "bottom": 747.0}, 90, 595, 842)["x0"], f["x0"])
+
+    def test_glyph_box(self):
+        # Cambria declares /Descent -2464: pdfminer's box of "r" (baseline 584.47 from the top, 10.82 pt) lies
+        # 16-27 pt below the glyph; the ink test looked at the next line (MP/2025/1128, page 21)
+        H, s, f = 841.89, 10.8192, 257.42
+        y0 = f - 2.464 * s
+        c = {"matrix": (s, 0.0, 0.0, s, 185.01, f), "x0": 185.01, "x1": 189.49, "y0": y0, "y1": y0 + s,
+             "top": H - y0 - s, "bottom": H - y0}
+        x0, top, x1, bottom = _glyph_box(c)
+        self.assertEqual((x0, x1), (185.01, 189.49))
+        self.assertAlmostEqual(bottom, H - f + 0.3 * s)
+        self.assertAlmostEqual(bottom - top, s)
+        # a usual descent (Times: -307/1000) is kept
+        y0 = f - 0.307 * s
+        times = {**c, "y0": y0, "y1": y0 + s, "top": H - y0 - s, "bottom": H - y0}
+        self.assertEqual(_glyph_box(times), (185.01, H - y0 - s, 189.49, H - y0))
+        # rotated 90 degrees (up is towards -x): the box is moved left, onto the glyph
+        rot = {"matrix": (0.0, s, -s, 0.0, 100.0, 400.0), "x0": 100.0 + 1.464 * s, "x1": 100.0 + 2.464 * s,
+               "y0": 400.0, "y1": 405.0, "top": H - 405.0, "bottom": H - 400.0}
+        x0, top, x1, bottom = _glyph_box(rot)
+        self.assertAlmostEqual(x0, 100.0 - 0.7 * s)
+        self.assertAlmostEqual(x1, 100.0 + 0.3 * s)
+        self.assertEqual((top, bottom), (H - 405.0, H - 400.0))
 
     def test_dataset_index_roundtrip(self):
         import tempfile

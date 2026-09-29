@@ -115,6 +115,32 @@ def _to_frame(o: dict, rot: int, w: float, h: float) -> dict:
     return out
 
 
+def _glyph_box(c: dict, mb_x0: float = 0.0) -> tuple[float, float, float, float]:
+    """(x0, top, x1, bottom) of a char, with its box moved onto the glyph if the font's descent is implausible.
+
+    pdfminer's box reaches from the baseline down by the font's /Descent. Cambria declares -2464/1000 (the
+    FontBBox of its math glyphs), so the box of a 10.8 pt char lies 16-27 pt below the baseline, on the next
+    line (MP/2025/1128). A box with more than 3/4 of it below the baseline is moved up to 0.3 below it (usual
+    descents are 0.2-0.4; a lowered subscript adds its rise, which the matrix does not show).
+    """
+    x0, t, x1, b = c["x0"], c["top"], c["x1"], c["bottom"]
+    _, _, u, v, e, f = c["matrix"]  # (u, v): the glyph's up direction on the page
+    if not (u or v) or (abs(u) > 1e-3 * abs(v) and abs(v) > 1e-3 * abs(u)):
+        return x0, t, x1, b  # neither upright nor turned by a multiple of 90 degrees
+    if abs(v) > abs(u):
+        lo, hi, base, up = c["y0"], c["y1"], f, v > 0
+    else:
+        lo, hi, base, up = x0 - mb_x0, x1 - mb_x0, e, u > 0
+    size = hi - lo
+    below = (base - lo if up else hi - base) / size if size > 0 else 0.0
+    if below <= 0.75:
+        return x0, t, x1, b
+    d = (below - 0.3) * size  # shift towards the glyph's top
+    if abs(v) > abs(u):
+        return (x0, t - d, x1, b - d) if up else (x0, t + d, x1, b + d)
+    return (x0 + d, t, x1 + d, b) if up else (x0 - d, t, x1 - d, b)
+
+
 def _drop_hidden_placed(page):
     """Drop text of a placed PDF (annex) that is not visible on the page.
 
@@ -133,15 +159,16 @@ def _drop_hidden_placed(page):
     header_bottom = max((w["bottom"] for w in own_words if w["bottom"] < 0.1 * page.height), default=0)
     scale = INK_DPI / 72
     img = page.to_image(resolution=INK_DPI).original.convert("L")
+    mb_x0 = page.mediabox[0]
 
     def hidden(c: dict) -> bool:
-        cx, cy = (c["x0"] + c["x1"]) / 2, (c["top"] + c["bottom"]) / 2
+        gx0, gt, gx1, gb = _glyph_box(c, mb_x0)
+        cx, cy = (gx0 + gx1) / 2, (gt + gb) / 2
         if cy < header_bottom or any(x0 <= cx <= x1 and t <= cy <= b for x0, t, x1, b in boxes):
             return True
         if not c["text"].strip():
             return False
-        crop = img.crop((int(c["x0"] * scale), int(c["top"] * scale),
-                         int(c["x1"] * scale) + 1, int(c["bottom"] * scale) + 1))
+        crop = img.crop((int(gx0 * scale), int(gt * scale), int(gx1 * scale) + 1, int(gb * scale) + 1))
         return crop.getextrema()[0] > INK_LEVEL
 
     drop = {id(c) for c in placed if hidden(c)}
