@@ -63,12 +63,14 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--out", type=Path)
     ap.add_argument("--jobs", type=int, default=1)
+    ap.add_argument("--publisher", choices=("DU", "MP"), default="DU")
     a = ap.parse_args()
     rows = [r for r in csv.DictReader(open(a.root / "index.csv", encoding="utf-8")) if r["status"] == "ok"]
     if a.limit:
         rows = rows[: a.limit]
-    files = [(a.root / "DU" / r["year"] / f"DU-{r['year']}-{r['pos']}.md",
-              CACHE / "DU" / r["year"] / r["pos"] / "text.pdf") for r in rows]
+    pub = a.publisher
+    files = [(a.root / pub / r["year"] / f"{pub}-{r['year']}-{r['pos']}.md",
+              CACHE / pub / r["year"] / r["pos"] / "text.pdf") for r in rows]
     with ProcessPoolExecutor(max(1, a.jobs)) as ex:
         res = [{"eli": r["eli"], "type": r["type"], "pages": int(r["pages"]), **c}
                for r, c in zip(rows, ex.map(check, *zip(*files), chunksize=8))]

@@ -540,7 +540,8 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
         "pages_ocr": page_ranges(ocr_pages or []),
         "ocr": ocr_engine if ocr_pages else "",
         "converter": f"eli2md {__version__}",
-        "disclaimer": "Nieoficjalny tekst z automatycznej konwersji PDF. Wiążący jest PDF w Dzienniku Ustaw.",
+        "disclaimer": "Nieoficjalny tekst z automatycznej konwersji PDF. Wiążący jest PDF w "
+                      + ("Monitorze Polskim." if meta.get("publisher") == "MP" else "Dzienniku Ustaw."),
     }
     lines = ["---"]
     for k, v in fields.items():
