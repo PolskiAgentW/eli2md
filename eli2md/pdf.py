@@ -66,7 +66,8 @@ class Document:
     no_text_pages: list[int] = field(default_factory=list)  # e.g. scanned pages: their content is lost
     image_pages: list[int] = field(default_factory=list)  # pages with text and large images (forms, drawings)
     ocr_pages: list[int] = field(default_factory=list)  # pages without text whose OCR text is included
-    ocr_engine: str = ""  # e.g. "tesseract 5.5.0, pol+eng"
+    ocr_engine: str = ""  # e.g. "tesseract 5.5.0"
+    ocr_langs: dict[int, str] = field(default_factory=dict)  # page -> tesseract language(s) used
 
     @property
     def paragraphs(self) -> list[str]:
@@ -299,7 +300,7 @@ def convert(path: str, ocr: str | None = None) -> Document:
     notes: list[Line] = []
     if ocr:
         from . import ocr as ocr_mod
-        doc.ocr_engine = f"tesseract {ocr_mod.check(ocr)}, {ocr}"
+        doc.ocr_engine = f"tesseract {ocr_mod.check(ocr)}"
     with pdfplumber.open(path) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
             b, n = _page_lines(page, pno)
@@ -316,6 +317,7 @@ def convert(path: str, ocr: str | None = None) -> Document:
                 read = ocr_mod.ocr_page(page, ocr) if ocr else None
                 if read and ocr_mod.usable(read):
                     doc.ocr_pages.append(pno)
+                    doc.ocr_langs[pno] = read.lang
                     b = [Line(pno, 0.0, 0.0, 0.0, 1.0, t, page.width, page.height, mark="ocr") for t in read.paragraphs]
                 else:
                     b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="notext")]
@@ -442,7 +444,8 @@ def no_text_note(pages: list[int]) -> str:
 
 
 def ocr_note(page: int, engine: str) -> str:
-    return f"> [Strona {page}: tekst odczytany przez OCR ({engine}), może zawierać błędy. Wiążący jest PDF.]"
+    return (f"> [Strona {page} PDF nie ma warstwy tekstowej. Tekst poniżej odczytał OCR ({engine}). "
+            "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
 
 
 def _escape_ocr(text: str) -> str:
@@ -503,7 +506,8 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
     for i, b in enumerate(doc.blocks):
         if b.kind == "ocr":  # each OCR page starts with its own note
             if i == 0 or doc.blocks[i - 1].kind != "ocr" or doc.blocks[i - 1].page != b.page:
-                out.append(ocr_note(b.page, doc.ocr_engine))
+                lang = doc.ocr_langs.get(b.page)
+                out.append(ocr_note(b.page, f"{doc.ocr_engine}, {lang}" if lang else doc.ocr_engine))
             out.append(_escape_ocr(b.text))
         elif b.kind == "notext":
             run.append(b.page)

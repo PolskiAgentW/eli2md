@@ -55,20 +55,40 @@ class Ocr(unittest.TestCase):
         with mock.patch.object(ocr, "tesseract", return_value=("/usr/bin/tesseract", "5.5.0", frozenset({"eng"}))):
             with self.assertRaisesRegex(ocr.OcrUnavailable, "tesseract-ocr-pol"):
                 ocr.check("pol+eng")
+            with self.assertRaisesRegex(ocr.OcrUnavailable, "tesseract-ocr-pol"):
+                ocr.check("auto")  # auto starts with pol+eng
             self.assertEqual(ocr.check("eng"), "5.5.0")
+
+    def test_header_other_script(self):
+        # the Greek model reads "Dziennik Ustaw – 15 – Poz. 968" as "ὨὈζίοηπίς Ὀδίανν 15 -- Ῥο7. 965"
+        page = ocr.parse_tsv(tsv([(1, 1, 1, 207, 90, "ὨὈζίοηπίς"), (1, 1, 1, 207, 90, "Ὀδίανν"), (1, 1, 1, 207, 90, "15"),
+                                  (1, 1, 1, 207, 90, "--"), (1, 1, 1, 207, 90, "Ῥο7."), (1, 1, 1, 207, 90, "965"),
+                                  (2, 1, 1, 400, 90, "Άρθρο"), (2, 1, 1, 400, 90, "15")]), 3508, page_number=15)
+        self.assertEqual(page.paragraphs, ["Άρθρο 15"])
+
+    def test_language_and_fixes(self):
+        self.assertEqual(ocr.language("o fato de que uma sociedade residente de um estado não".split()), "pt")
+        self.assertEqual(ocr.language("informacje niejawne są przekazywane w drodze dyplomatycznej i w inny sposób "
+                                      "oraz przez".split()), "pl")
+        self.assertEqual(ocr.language("240 250 kod cn".split()), "?")
+        self.assertEqual(ocr.fix_text("ust. | pkt 2 i art. |, w strefach | i 2; 240 | Oznaczenie"),
+                         "ust. 1 pkt 2 i art. 1, w strefach 1 i 2; 240 | Oznaczenie")
 
     def test_markdown(self):
         doc = Document(blocks=[Block("p", "Art. 1. Tekst.", 1), Block("ocr", "Art. 2. „Odczytane", 2),
                                Block("ocr", "# nie nagłówek", 2), Block("ocr", "- nie lista", 3),
                                Block("notext", "", 4), Block("p", "Art. 3. Dalej.", 5)],
-                       no_text_pages=[2, 3, 4], ocr_pages=[2, 3], ocr_engine="tesseract 5.5.0, pol+eng")
+                       no_text_pages=[2, 3, 4], ocr_pages=[2, 3], ocr_engine="tesseract 5.5.0",
+                       ocr_langs={2: "pol+eng", 3: "por+eng"})
         md = to_markdown(doc, META)
         self.assertIn('pages_without_text: "2-4"', md)
         self.assertIn('pages_ocr: "2-3"', md)
-        self.assertIn('ocr: "tesseract 5.5.0, pol+eng"', md)
-        self.assertIn("\n\n> [Strona 2: tekst odczytany przez OCR (tesseract 5.5.0, pol+eng), może zawierać błędy. "
-                      "Wiążący jest PDF.]\n\nArt. 2. „Odczytane\n\n\\# nie nagłówek\n\n> [Strona 3: ", md)
-        self.assertIn("\n\n\\- nie lista\n\n> [Strona 4 PDF nie ma warstwy tekstowej", md)
+        self.assertIn('ocr: "tesseract 5.5.0"', md)
+        self.assertIn("\n\n> [Strona 2 PDF nie ma warstwy tekstowej. Tekst poniżej odczytał OCR (tesseract 5.5.0, "
+                      "pol+eng). Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]\n\nArt. 2. „Odczytane\n\n"
+                      "\\# nie nagłówek\n\n> [Strona 3 PDF nie ma warstwy tekstowej. Tekst poniżej odczytał OCR "
+                      "(tesseract 5.5.0, por+eng).", md)
+        self.assertIn("\n\n\\- nie lista\n\n> [Strona 4 PDF nie ma warstwy tekstowej (np. skan", md)
         # OCR text is never a heading, and its unclosed quote does not swallow the next heading
         self.assertEqual(md.count("##### "), 2)
         self.assertIn("##### Art. 3.", md)

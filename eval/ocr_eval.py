@@ -34,25 +34,13 @@ from pathlib import Path
 import pdfplumber
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from eli2md.ocr import _run, check, fix_text, ocr_image, parse_tsv, render  # noqa: E402
+from eli2md.ocr import (MIN_CONF, MIN_WORDS, _run, check, fix_text, language, ocr_image, parse_tsv,  # noqa: E402
+                        render, usable)
 from eli2md.pdf import _drop_hidden_placed  # noqa: E402
 
 CACHE = Path(os.environ.get("ELI2MD_CACHE", Path.home() / "cache" / "eli"))
 AGREEMENT_TYPES = {"Umowa międzynarodowa", "Oświadczenie rządowe"}
 SCRIPTS = {ord(c): f" {i % 10} " for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉")}
-# a few very frequent function words per language; enough to tell the language of a page of text
-STOP = {
-    "pl": "i w z na się do że nie jest oraz lub przez dla od o który która które być może jego ich zgodnie art",
-    "en": "the of and to in a is that for by or be shall as with this any on which are from",
-    "fr": "le la les de des et du un une est en par pour dans que qui sur au aux ou être",
-    "de": "der die das und zu den des von mit ist im nicht auf für eine ein dem sich oder",
-    "pt": "o a os as de do da dos das e em um uma que para por com não ou no na se ao",
-    "es": "el la los las de del y en un una que por para con no o se al lo sus",
-    "sv": "och att det som en på är av för med till den har de inte om ett eller",
-    "el": "και το της του να των τα η ο με σε για που την στο οι από",
-    "ru": "и в не на что с по как к из о от для это или его",
-}
-STOP = {k: set(v.split()) for k, v in STOP.items()}
 
 
 def tokens(text: str) -> list[str]:
@@ -69,12 +57,6 @@ def score(ref: list[str], hyp: list[str]) -> dict:
     m = sum(b.size for b in difflib.SequenceMatcher(None, ref, hyp, autojunk=False).get_matching_blocks())
     return {"ref": len(ref), "hyp": len(hyp), "matched": m,
             "recall": m / len(ref) if ref else 1.0, "precision": m / len(hyp) if hyp else 1.0}
-
-
-def language(toks: list[str]) -> str:
-    c = Counter({lang: sum(1 for t in toks if t in words) for lang, words in STOP.items()})
-    lang, n = c.most_common(1)[0]
-    return lang if n >= 5 and n >= 0.1 * len(toks) else "?"
 
 
 def expand(ranges: str) -> list[int]:
@@ -282,6 +264,44 @@ def main_scans(a) -> None:
         print(f"{eli:13} {sum(c.values()):4} pages  {dict(c.most_common())}")
 
 
+def main_summary(a) -> None:
+    """Survey of the scanned pages from the TSV files written by `scans` (and its pages.json timings).
+    Language is guessed only for pages that ocr.usable() accepts: garbage from maps and upside-down
+    pages is full of one-letter "words" that look like stopwords."""
+    rows = []
+    for f in sorted(Path(a.out).glob(f"*.{a.lang}.tsv")):
+        eli_s, page_s = f.name.split(".")[0].rsplit("_p", 1)
+        page = parse_tsv(f.read_text(encoding="utf-8"), 3508)  # A4 at 300 dpi (header band only)
+        toks = tokens("\n".join(page.paragraphs))
+        ok = usable(page)
+        rows.append({"eli": eli_s.replace("-", "/"), "page": int(page_s), "words": page.words,
+                     "conf": page.confidence, "usable": ok, "lang": language(toks) if ok else "-"})
+    print(f"{len(rows)} pages in {len({r['eli'] for r in rows})} acts; usable() with MIN_WORDS={MIN_WORDS}, "
+          f"MIN_CONF={MIN_CONF}: {sum(r['usable'] for r in rows)} pages")
+    print("not usable: < MIN_WORDS words:", sum(r["words"] < MIN_WORDS for r in rows),
+          "| enough words but median confidence < MIN_CONF:",
+          sum(r["words"] >= MIN_WORDS and r["conf"] < MIN_CONF for r in rows))
+    print("pages by median word confidence (bucket: pages):",
+          dict(sorted(Counter(int(r["conf"] // 10 * 10) for r in rows).items())))
+    print("usable pages by guessed language:", dict(Counter(r["lang"] for r in rows if r["usable"]).most_common()))
+    timing = Path(a.out, "pages.json")
+    if timing.exists():
+        t = json.loads(timing.read_text())
+        ocr = [r["ocr_s"] for r in t]
+        print(f"timing ({len(t)} pages): tesseract wall mean {statistics.mean(ocr):.2f}s median "
+              f"{statistics.median(ocr):.2f}s max {max(ocr):.2f}s; render mean "
+              f"{statistics.mean(r['render_s'] for r in t):.2f}s"
+              + (f"; tesseract CPU mean {statistics.mean(r['ocr_cpu_s'] for r in t):.2f}s" if "ocr_cpu_s" in t[0] else ""))
+    by: dict[str, Counter] = {}
+    for r in rows:
+        by.setdefault(r["eli"], Counter())[r["lang"]] += 1
+    for eli in sorted(by, key=lambda e: tuple(int(x) for x in e.split("/")[1:])):
+        c = by[eli]
+        rs = [r for r in rows if r["eli"] == eli]
+        print(f"{eli:13} {len(rs):4} pages, conf median {statistics.median(r['conf'] for r in rs):5.1f}, "
+              f"words median {statistics.median(r['words'] for r in rs):5.0f}  {dict(c.most_common())}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -302,8 +322,11 @@ def main() -> None:
     s.add_argument("--jobs", type=int, default=1)
     s.add_argument("--sample", type=int, default=0, help="only this many random pages")
     s.add_argument("--seed", type=int, default=1)
+    m = sub.add_parser("summary")
+    m.add_argument("--out", required=True, help="directory written by `scans`")
+    m.add_argument("--lang", default="pol+eng")
     a = ap.parse_args()
-    main_digital(a) if a.cmd == "digital" else main_scans(a)
+    {"digital": main_digital, "scans": main_scans, "summary": main_summary}[a.cmd](a)
 
 
 if __name__ == "__main__":
