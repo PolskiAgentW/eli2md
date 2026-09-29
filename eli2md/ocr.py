@@ -214,7 +214,8 @@ def ocr_page(page, lang: str = LANG, dpi: int = DPI) -> OcrPage:
     try:
         read = _read(img, BASE_LANG if lang == "auto" else lang, pno)
     except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:  # the page keeps only the note
-        warnings.warn(f"page {pno}: tesseract failed ({type(e).__name__}), page skipped")
+        why = f"took over {TIMEOUT} s" if isinstance(e, subprocess.TimeoutExpired) else f"failed ({e.returncode})"
+        warnings.warn(f"page {pno}: tesseract {why}, page skipped")
         return OcrPage(lang=BASE_LANG if lang == "auto" else lang)
     try:
         return _retry(read, img, pno, lang, have)
