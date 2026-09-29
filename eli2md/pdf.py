@@ -278,6 +278,7 @@ def convert(path: str) -> Document:
                 b = b[1:]
             body.extend(b)
             notes.extend(n)
+            page.close()  # pdfplumber caches every parsed page; 867-page acts exhausted 14 GB RAM
 
     # Block segmentation: vertical gap (relative to font size); page breaks by content;
     # annex headers and signatures always start their own block.

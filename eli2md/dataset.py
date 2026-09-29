@@ -13,6 +13,7 @@ import csv
 import datetime as dt
 import hashlib
 import json
+import resource
 import sys
 import time
 import traceback
@@ -53,6 +54,14 @@ def md_path(root: Path, year: int, pos: int) -> Path:
     return root / "DU" / str(year) / f"DU-{year}-{pos}.md"
 
 
+def _limit_memory(gb: float) -> None:
+    """Worker initializer: an oversized PDF then raises MemoryError (recorded as an error row)
+    instead of the kernel OOM killer taking down the whole run."""
+    if gb > 0:
+        lim = int(gb * 2**30)
+        resource.setrlimit(resource.RLIMIT_AS, (lim, lim))
+
+
 def _convert_one(job: tuple[str, str, str]) -> dict:
     """Worker: convert one downloaded act. Returns the index row fields it determines."""
     eli, pdf_path, out_path = job
@@ -67,9 +76,13 @@ def _convert_one(job: tuple[str, str, str]) -> dict:
             pages = len(p.pages)
         return {"eli": eli, "status": "ok", "error": "", "pages": pages,
                 "words": sum(len(b.text.split()) for b in doc.blocks), "secs": round(time.time() - t0, 1)}
+    except MemoryError:
+        pass  # report below, once the frames holding the large objects are released
     except Exception as e:  # keep going; the failure is recorded in the index
         return {"eli": eli, "status": "error", "error": f"{type(e).__name__}: {e}"[:300],
                 "trace": traceback.format_exc(limit=3), "secs": round(time.time() - t0, 1)}
+    return {"eli": eli, "status": "error", "error": "MemoryError (over --mem-limit-gb)",
+            "secs": round(time.time() - t0, 1)}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -80,6 +93,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max", type=int, default=0, help="at most this many acts per run (0 = no limit)")
     ap.add_argument("--time-budget", type=float, default=0, help="stop downloading after this many seconds")
     ap.add_argument("--jobs", type=int, default=1)
+    ap.add_argument("--mem-limit-gb", type=float, default=3,
+                    help="address-space limit per conversion worker (0 = none)")
     a = ap.parse_args(argv)
     t_start = time.time()
     a.root.mkdir(parents=True, exist_ok=True)
@@ -118,7 +133,8 @@ def main(argv: list[str] | None = None) -> int:
         jobs.append((eli, str(pdf), str(md_path(a.root, year, pos))))
 
     done = 0
-    with ProcessPoolExecutor(max_workers=max(1, a.jobs)) as ex:
+    with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
+                             initargs=(a.mem_limit_gb,)) as ex:
         for res in ex.map(_convert_one, jobs):
             row = index[res["eli"]]
             row.update({k: res[k] for k in ("status", "error", "pages", "words") if k in res})

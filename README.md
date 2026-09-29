@@ -37,6 +37,8 @@ python -m eli2md.dataset --root dane/ --years 2025 2026 --jobs 4
 ```
 
 Pobrane pliki trafiają do `~/cache/eli` (zmienna `ELI2MD_CACHE`). Klient robi przerwę 1 s między zapytaniami.
+Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który go przekroczy, dostaje w indeksie
+`status=error` i nie przerywa reszty.
 
 ## Format wyniku
 
