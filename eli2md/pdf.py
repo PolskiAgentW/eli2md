@@ -372,21 +372,38 @@ QUOTED_UNIT = re.compile(
     rf"^(„?(?:Art\.|§)\s*\d+[a-z]*[{SUP_DIGITS}]*\.)\s+(„?(?:§\s*)?\d+[a-z]*[{SUP_DIGITS}]*\.\s.*)$", re.S)
 # ” after minutes is the seconds sign in coordinates (16°41’56,70”), not a closing quote
 SECONDS = re.compile(r"\d[’′']\s?\d+(?:[,.]\d+)?”")
+# a quote that opens a block, possibly after the unit number: "„Art. 5.", "Art. 30. „1.", "1) „a)"
+QUOTE_HEAD = re.compile(rf"^(?:(?:Art\.|§)\s*\d+[a-z]*[{SUP_DIGITS}]*\.\s*|\d+[a-z]*[{SUP_DIGITS}]*[.)]\s*|[a-z]{{1,3}}\)\s*)?[„“]")
 
 
 def quote_depths(blocks: list[Block]) -> list[int]:
     """Quotation depth (opening minus closing marks) at the start of each block. Units inside
     quotes are provisions of another act (amendments, "przepisy nieobjęte tekstem jednolitym"),
     not units of this one. Only the first quoted unit carries the opening „, so the depth has to
-    be carried over. Some PDFs close with ˮ (U+02EE); “ opens English quotes in forms."""
+    be carried over. Only a quote that opens the block (after an optional unit number) may run
+    into the next blocks; one opened mid-sentence and left open is a typo in the source
+    („zwany dalej „kodem;”) and ends with its block. Some PDFs close with ˮ (U+02EE);
+    “ opens English quotes in forms."""
     depths, d = [], 0
     for b in blocks:
         if b.kind == "annex":
             d = 0
         depths.append(d)
-        t = b.text
-        closing = t.count("”") - len(SECONDS.findall(t)) + t.count("ˮ")
-        d = max(0, d + t.count("„") + t.count("“") - closing)
+        t = SECONDS.sub("", b.text)
+        head = QUOTE_HEAD.match(t)
+        carry, local = d, 0  # quotes open from earlier blocks / opened mid-block in this one
+        for k, ch in enumerate(t):
+            if ch in "„“":
+                if head and k == head.end() - 1:
+                    carry += 1
+                else:
+                    local += 1
+            elif ch in "”ˮ":
+                if local:
+                    local -= 1
+                else:
+                    carry = max(0, carry - 1)
+        d = carry
     return depths
 
 

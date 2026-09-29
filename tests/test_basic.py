@@ -119,5 +119,13 @@ class Basic(unittest.TestCase):
         self.assertIn("##### Art. 7.", md)
         self.assertIn("\n\nArt. 30.\n\n„1. Cytowany ustęp.”\n\n", md)
 
+    def test_unclosed_quote_mid_sentence(self):
+        # the source forgot a closing quote inside a sentence: later headings must survive
+        doc = Document(blocks=[Block("p", "Art. 1. Zwany dalej „kodem świadczenia;", 1),
+                               Block("p", "Art. 2. Tekst.", 1),
+                               Block("p", "Art. 3. Zmiany: „Art. 9. Cytat.", 1)])
+        md = to_markdown(doc)
+        self.assertIn("##### Art. 2.", md)
+
 if __name__ == "__main__":
     unittest.main()
