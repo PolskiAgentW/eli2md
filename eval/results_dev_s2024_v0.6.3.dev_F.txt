@@ -1,0 +1,54 @@
+  963 Rozporządzenie main R=1.000 P=1.000 (ref 111, hyp 111)  notes R=0.992 P=1.000   0.1s
+  373 Obwieszczenie  main R=1.000 P=1.000 (ref 197, hyp 197)  notes R=0.963 P=0.892 annex R=1.000*  0.4s
+ 1492 Rozporządzenie main R=1.000 P=1.000 (ref 202, hyp 202)  notes R=0.983 P=1.000   0.1s
+ 1185 Obwieszczenie  main R=1.000 P=1.000 (ref 303, hyp 303)  notes R=0.955 P=1.000 annex R=1.000  0.8s
+  623 Rozporządzenie main R=1.000 P=1.000 (ref 571, hyp 571)  notes R=0.977 P=1.000   0.1s
+  411 Obwieszczenie  main R=1.000 P=1.000 (ref 173, hyp 173)  notes R=0.973 P=1.000 annex R=1.000*  0.2s
+ 1818 Rozporządzenie main R=1.000 P=1.000 (ref 374, hyp 374)  notes R=0.992 P=1.000   0.1s
+ 1482 Rozporządzenie main R=1.000 P=1.000 (ref 150, hyp 150)  notes R=1.000 P=1.000   0.0s
+  840 Rozporządzenie main R=1.000 P=1.000 (ref 739, hyp 739)  notes R=0.975 P=0.757 annex R=1.000*  1.6s
+ 1551 Rozporządzenie main R=1.000 P=1.000 (ref 180, hyp 180)  notes R=0.973 P=1.000   0.1s
+ 1468 Rozporządzenie main R=1.000 P=0.975 (ref 268, hyp 275)  notes R=0.987 P=1.000   0.1s
+ 1554 Obwieszczenie  main R=1.000 P=1.000 (ref 454, hyp 454)  notes R=0.978 P=1.000 annex R=1.000  0.6s
+  544 Rozporządzenie main R=1.000 P=0.995 (ref 1284, hyp 1291)  notes R=1.000 P=0.000 annex R=0.993*  0.6s
+ 1092 Ustawa         main R=1.000 P=1.000 (ref 96, hyp 96)  notes R=1.000 P=1.000   0.0s
+  503 Rozporządzenie main R=1.000 P=1.000 (ref 443, hyp 443)  notes R=0.977 P=0.913 annex R=1.000*  1.1s
+ 1303 Rozporządzenie main R=1.000 P=0.987 (ref 705, hyp 714)  notes R=0.976 P=1.000   0.3s
+ 1665 Obwieszczenie  main R=1.000 P=1.000 (ref 219, hyp 219)  notes R=0.962 P=1.000 annex R=1.000  7.0s
+ 1506 Rozporządzenie main R=1.000 P=1.000 (ref 2871, hyp 2871)  notes R=0.992 P=1.000   1.2s
+ 1021 Obwieszczenie  main R=1.000 P=1.000 (ref 405, hyp 405)  notes R=0.972 P=1.000 annex R=1.000*  0.8s
+  726 Rozporządzenie main R=1.000 P=1.000 (ref 898, hyp 898)  notes R=0.986 P=1.000 annex R=1.000*  0.3s
+  852 Ustawa         main R=1.000 P=1.000 (ref 454, hyp 454)  notes R=1.000 P=1.000   0.1s
+ 1080 Rozporządzenie main R=1.000 P=1.000 (ref 103, hyp 103)  notes R=0.975 P=1.000 annex R=1.000  0.1s
+ 1491 Obwieszczenie  main R=1.000 P=1.000 (ref 956, hyp 956)  notes R=0.971 P=1.000 annex R=1.000  3.3s
+ 1261 Rozporządzenie main R=0.997 P=0.991 (ref 4395, hyp 4425)  notes R=0.993 P=1.000   1.1s
+ 1973 Rozporządzenie main R=0.999 P=0.959 (ref 1828, hyp 1904)  notes R=0.374 P=0.057 annex R=0.924*  4.4s
+  447 Rozporządzenie main R=0.974 P=0.973 (ref 549, hyp 550)  notes R=0.977 P=1.000 annex R=1.000  0.2s
+  634 Obwieszczenie  main R=1.000 P=0.977 (ref 378, hyp 387)  notes R=0.977 P=0.948 annex R=0.983  0.6s
+ 1114 Rozporządzenie main R=0.997 P=0.691 (ref 726, hyp 1047)  notes R=0.981 P=1.000   0.3s
+ 1442 Rozporządzenie main R=1.000 P=1.000 (ref 380, hyp 380)  notes R=0.972 P=0.285 annex R=0.980  1.8s
+  677 Rozporządzenie main R=1.000 P=0.999 (ref 3271, hyp 3272)  notes R=0.994 P=1.000   0.8s
+ 1064 SKIPPED: HTML reference unusable (placeholder/empty)
+  153 Obwieszczenie  main R=1.000 P=1.000 (ref 177, hyp 177)  notes R=0.967 P=1.000 annex R=1.000  0.5s
+ 1498 Rozporządzenie main R=1.000 P=1.000 (ref 367, hyp 367)  notes R=0.977 P=1.000   0.1s
+ 1586 Rozporządzenie main R=1.000 P=1.000 (ref 178, hyp 178)  notes R=0.973 P=1.000   0.1s
+ 1776 Rozporządzenie main R=1.000 P=1.000 (ref 344, hyp 344)  notes R=0.977 P=1.000 annex R=0.877*  0.3s
+  423 Obwieszczenie  main R=1.000 P=1.000 (ref 1280, hyp 1280)  notes R=0.952 P=1.000 annex R=1.000  2.7s
+ 1412 Rozporządzenie main R=1.000 P=1.000 (ref 155, hyp 155)  notes R=1.000 P=1.000   0.0s
+ 1542 Obwieszczenie  main R=1.000 P=1.000 (ref 421, hyp 421)  notes R=0.719 P=0.901 annex R=1.000*  2.0s
+  960 Rozporządzenie main R=1.000 P=1.000 (ref 1196, hyp 1196)  notes R=0.988 P=1.000   0.3s
+ 1894 Rozporządzenie main R=1.000 P=1.000 (ref 135, hyp 135)  notes R=0.973 P=1.000   0.0s
+ 1453 Rozporządzenie main R=1.000 P=1.000 (ref 367, hyp 367)  notes R=1.000 P=1.000   0.1s
+ 1703 Obwieszczenie  main R=0.996 P=1.000 (ref 254, hyp 253)  notes R=0.896 P=0.919 annex R=1.000  0.5s
+ 1786 Obwieszczenie  main R=1.000 P=1.000 (ref 731, hyp 731)  notes R=0.984 P=1.000 annex R=1.000  3.2s
+ 1337 Rozporządzenie main R=1.000 P=1.000 (ref 189, hyp 189)  notes R=1.000 P=0.000 annex R=0.773*  9.4s
+  304 Obwieszczenie  main R=1.000 P=1.000 (ref 611, hyp 611)  notes R=0.964 P=1.000 annex R=1.000  2.8s
+ 1089 Ustawa         main R=0.976 P=0.979 (ref 8916, hyp 8889)  notes R=0.989 P=1.000   1.6s
+  436 Obwieszczenie  main R=1.000 P=1.000 (ref 372, hyp 372)  notes R=0.969 P=1.000 annex R=1.000  0.9s
+ 1777 Obwieszczenie  main R=1.000 P=1.000 (ref 180, hyp 180)  notes R=0.974 P=0.528 annex R=0.965*  0.9s
+  844 Rozporządzenie main R=0.995 P=0.956 (ref 196, hyp 204)  notes R=1.000 P=1.000   0.1s
+  120 Rozporządzenie main R=1.000 P=1.000 (ref 220, hyp 220)  notes R=0.990 P=1.000   0.1s
+scored 49/50 acts
+TOTAL body  (n=49): micro R=0.9939 P=0.9830  macro R=0.9987  R<0.95: 0  | P on complete refs (n=48): 0.9908
+TOTAL notes (n=41): micro R=0.9539 P=0.9105  macro R=0.9541  R<0.95: 3  | P on complete refs (n=41): 0.9105
+TOTAL annex (n=24): micro R=0.9349 P=0.8247  macro R=0.9789  R<0.95: 3  | P on complete refs (n=14): 0.9931

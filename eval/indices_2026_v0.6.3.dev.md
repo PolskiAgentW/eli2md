@@ -28,6 +28,7 @@ na początek, 3 MP): `[N]` 2828, `[Na]` 210, `Na` 4, `]` 4, `[` 3 (MP/2025/352, 
   zakończonym literą lub cyfrą (odstęp od −1 do 1,5 pt) i leży nad środkiem tego wyrazu, jest indeksem. Nie liczy
   się do wiersza drobnego druku, jest doklejany jak cyfra `script`. Nawiasy są pomijane, cyfry i litery zamieniane
   na znaki górne: `479³⁰ᶠ`. Gdy litera nie ma znaku górnego (q), indeks zostaje w nawiasach: `5[1q]`.
+  Pozostałe małe słowa wiersza zostają w kolejności `_rows`.
 - `SUP_LETTERS`, `SUP_CHARS` (cyfry + litery górne) w wyrażeniach numerów jednostek (`UNIT_START`, `UNIT_HEAD`,
   `QUOTED_UNIT`, `QUOTE_HEAD`, `tree.UNIT_RES`).
 - Miary: `tree_eval.norm_num` `22¹ᵃ` → `22_1a` (styl id HTML). `evaluate.tokens`: indeks z literą to jeden token
@@ -168,5 +169,35 @@ Selfcheck 12 zmienionych plików (pozostałe 138 są identyczne): kept 0.9619 �
 
 ## Pomiar 5: próby deweloperskie 2024 (s2024, s7)
 
-Na obu próbach tylko DU/2024/1491 ma indeksy, same cyfry bez nawiasów (id HTML `arti_41_1`…). Liter w indeksach
-w tych próbach nie ma.
+Druk 2024 jak 2025: indeks małym pismem bez nawiasów. W HTML: `182<SUP>1a</SUP>`, id `arti_41_1`. Indeksy
+z literą w próbach dev są tylko w odwołaniach w tekście, nie w numerach jednostek. Wszystkie 100 aktów obu prób
+skonwertowałem bazą i nową wersją. Różnią się 2 pliki, oba z s7:
+
+- DU/2024/127: 4 × `art. 182 1a § 4` → `art. 182¹ᵃ § 4`;
+- DU/2024/177: 1 × `art. 119 1a ustawy` → `art. 119¹ᵃ ustawy`.
+
+Wyniki narzędzi (nowa wersja z nowymi miarami, baza z miarami 0.6.2):
+
+| próba | evaluate (słowa) | structure | tree_eval |
+|---|---|---|---|
+| s2024 | identyczne co do znaku poza czasem (body R=0.9939 P=0.9830) | plik identyczny z `structure_dev_s2024_v0.6.2.txt` | plik identyczny z `tree_dev_s2024_v0.6.2.txt` |
+| s7 | identyczne co do znaku poza czasem (body R=0.9991 P=0.9983) | plik identyczny z `structure_dev_s7_v0.6.2.txt` | plik identyczny z `tree_dev_s7_v0.6.2.txt` |
+
+W evaluate `182¹ᵃ` daje tokeny `182`, `1a`, tak jak HTML i tak jak `182 1a` w 0.6.2, więc wynik się nie zmienia.
+Pliki: `results_dev_s{2024,7}_v0.6.2_F.txt` (baza), `results_dev_s{2024,7}_v0.6.3.dev_F.txt`,
+`structure_dev_s{2024,7}_v0.6.3.dev_F.txt`, `tree_dev_s{2024,7}_v0.6.3.dev_F.txt`.
+
+Błąd znaleziony tą kontrolą: pierwsza wersja `_index_words` zwracała małe słowa posortowane po x0, a nie
+w kolejności `_rows`. To zmieniało kolejność doklejania i kolejność linii o tym samym `top` we wzorze
+w DU/2024/1089 (s2024, bez indeksów). Poprawione (`rest.sort` po (top, x0)). Po poprawce DU/2024/1089 jest
+identyczny z bazą. Wyniki 26 aktów z pomiarów 1–3 i 150 z pomiaru 4 są bajt w bajt takie same przed poprawką
+i po niej.
+
+## Czego nie sprawdziłem
+
+- Prób testowych 2024 i innych aktów 2024 (zgodnie z zasadami).
+- Pełnego zbioru DU/MP 2025–2026 (poza regexami skali na opublikowanych plikach 0.6.2 i próbą 150 aktów).
+- Renderu stron. Zapis w PDF sprawdzałem na słowach pdfplumber (wielkość i położenie), nie wzrokowo.
+- Indeksów z literą q ani wielkimi literami. W sprawdzonych PDF-ach ich nie było, a ścieżkę awaryjną (`5[1q]`)
+  sprawdza tylko test jednostkowy.
+- Wyświetlania liter modyfikujących (`ᶠ`, `ᵍ`) w różnych fontach i przeglądarkach.
