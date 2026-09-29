@@ -105,7 +105,7 @@ Odtworzenie wyników:
 pip install -e '.[eval]'
 python eval/fetch_sample.py 50 99                 # pobiera PDF + HTML do ~/cache/eli
 python eval/evaluate.py eval/test_2024_s99.json
-python eval/fetch_sample.py 50 5101 && python eval/structure.py eval/test_2024_s5101.json
+python eval/fetch_sample.py 50 5102 && python eval/structure.py eval/test_2024_s5102.json
 ```
 
 ### Struktura: nagłówki i akapity (od 0.5.0)
@@ -121,29 +121,40 @@ HTML aktów z 2024 r. oznacza każdą jednostkę redakcyjną (`id` z `arti`, `pa
 - **podziały P**: odsetek początków akapitów, które w HTML są początkiem bloku (jednostki,
   akapitu, komórki tabeli). Podziały w tytule aktu liczę osobno.
 
-Wersja 0.5.0 powstała po tym pomiarze. Znalazł on dwa błędy, których miara słów nie widziała:
+Wersje 0.5.x powstały po tym pomiarze. Znalazł on błędy, których miara słów nie widziała:
 cyfry w indeksie górnym (`Art. 41¹`, `m²`) zamieniane na odnośniki do przypisów oraz cytowane
 artykuły nowelizacji oznaczane jako nagłówki. Próby deweloperskie (seed 2024 i 7) posłużyły do
-poprawek. Dwie próby odłożone, każda zapisana w gicie przed oceną i oceniona jeden raz:
+poprawek. Każdą próbę odłożoną zapisałem w gicie przed oceną i oceniłem jeden raz. Każdy test
+wykazał błąd, który poprawiłem w kolejnej wersji, więc następną wersję mierzyłem już na nowej próbie:
 
-| treść główna / załączniki                    | test s20260929 (47 aktów)<br>0.4.0 → 0.5.0 | test s5101 (44 akty)<br>0.4.0 → 0.5.1 |
-|----------------------------------------------|---------------------|---------------------|
-| nagłówki R, treść główna                     | 1.000 → 1.000       | 1.000 → 1.000       |
-| nagłówki P, treść główna                     | 0.821 → **1.000**   | 0.710 → **0.791**   |
-| nagłówki R, załączniki (teksty jednolite)    | 0.901 → **1.000**   | 1.000 → 1.000       |
-| ust. R, treść główna                         | 0.975 → 0.997       | 0.951 → 1.000       |
-| pkt R, treść główna / załączniki             | 1.000 / 0.996 → bez zmian | 0.981 / 0.971 → bez zmian |
-| lit. R, treść główna / załączniki            | 1.000 / 0.999 → bez zmian | 1.000 / 0.916 → bez zmian |
-| cytowane § R, treść główna                   | 0.987 → **0.789**   | 1.000 → 1.000       |
-| podziały P, treść główna / załączniki        | 1.000 / 1.000       | 1.000 / 1.000       |
-| słowa R, treść główna                        | 0.9959 → 0.9960     | 0.9987 → 0.9995     |
+| treść główna / załączniki                    | test s20260929 (47)<br>0.4.0 → 0.5.0 | test s5101 (44)<br>0.4.0 → 0.5.1 | test s5102 (42)<br>0.4.0 → **0.5.2** |
+|----------------------------------------------|---------------------|-------------------|-------------------|
+| nagłówki R, treść główna                     | 1.000 → 1.000       | 1.000 → 1.000     | 1.000 → 1.000     |
+| nagłówki P, treść główna                     | 0.821 → 1.000       | 0.710 → 0.791     | 0.918 → **1.000** |
+| nagłówki R, załączniki (teksty jednolite)    | 0.901 → 1.000       | 1.000 → 1.000     | 0.999 → **0.984** |
+| ust. R, treść główna                         | 0.975 → 0.997       | 0.951 → 1.000     | 0.929 → **0.997** |
+| cytowane § R, treść główna                   | 0.987 → 0.789       | 1.000 → 1.000     | 1.000 → 1.000     |
+| podziały P, treść główna                     | 1.000 → 1.000       | 0.999 → 1.000     | 1.000 → 1.000     |
+| słowa R, treść główna                        | 0.9959 → 0.9960     | 0.9987 → 0.9995   | 0.9967 → 0.9984   |
+| słowa P, treść główna                        | 0.9996 → 0.9996     | 0.9987 → 0.9983   | 0.9989 → 0.9969   |
 
-- Regresja cytowanych § w 0.5.0 pochodzi z jednego aktu (DU/2024/1685): artykuły kodeksu w nowelizacji
-  („Art. 14t. § 1. …”). Poprawka w 0.5.1. Sprawdziłem ją na tym akcie i na próbach deweloperskich,
-  więc próba s20260929 nie jest już dla niej niezależna. Próbę s5101 oceniłem dopiero wersją 0.5.1.
-- W próbie s5101 zostało 29 fałszywych nagłówków w treści głównej. Przyczyny jeszcze nie znam.
-- Tabele: w próbach deweloperskich podziały P w załącznikach to 0.87 i 0.97, bo każda linia
-  komórki tabeli jest osobnym akapitem.
+Co wyszło w testach i co z tym zrobiłem:
+- s20260929: cytowane § w kodeksach („Art. 14t. § 1. …”, DU/2024/1685) przestały zaczynać akapit.
+  Poprawione w 0.5.1.
+- s5101: 29 fałszywych nagłówków. „”” jako znak sekund we współrzędnych (16°41’56,70”) zamykał cytat
+  (DU/2024/303), a „Art. 30. „1. …” (cytat zaczyna się po numerze) był nagłówkiem (DU/2024/1288).
+  Poprawione w 0.5.2. Wynik 0.5.2 na próbach s20260929 i s5101 to 1.000 dla nagłówków, ale te próby
+  nie są już dla tych poprawek niezależne.
+- s5102 (0.5.2, tej wersji używa zbiór danych): **regresja** nagłówków w załącznikach, 14 z 880.
+  W DU/2024/610 w samym oficjalnym tekście brakuje cudzysłowu zamykającego („zwany dalej „kodem
+  świadczenia;”), więc konwerter uznaje resztę załącznika za cytat i nie robi tam nagłówków.
+  Na razie niepoprawione. Śledzenie cudzysłowów ma tę wadę: jeden niedomknięty cudzysłów w źródle
+  wyłącza nagłówki do końca załącznika.
+- Słowa P spada, bo HTML pisze wzory chemiczne zwykłym tekstem („P2O5”, jeden token), a wynik ma
+  „P₂O₅” (cztery tokeny). Wcześniej wynik miał tu „P[^2]O[^5]”.
+- Pozostałe miary (pkt, lit., podziały w załącznikach) się nie zmieniły. Najsłabsze są lit. w załącznikach
+  (0.916 w s5101) i podziały w tabelach (P 0.87–0.97 w próbach deweloperskich; każda linia komórki
+  tabeli jest osobnym akapitem).
 
 Wyniki per akt: `eval/structure_test_*.txt`, `eval/structure_dev_*.txt`, `eval/results_test_*.txt`.
 Po zmianie tokenizacji w 0.5.0 (`41¹` → `41 1`, jak w HTML) liczby słów różnią się od starszych
