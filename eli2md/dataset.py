@@ -1,6 +1,7 @@
 """Build or update a directory of Markdown texts of Dziennik Ustaw acts that have only PDF text.
 
     python -m eli2md.dataset --root DIR [--years 2025 2026] [--max N] [--time-budget SEC] [--jobs N] [--all] [--json]
+        [--ocr [LANG]]
 
 Layout: DIR/DU/<year>/DU-<year>-<pos>.md and DIR/index.csv (one row per act, including failures).
 With --json also DIR/DU/<year>/DU-<year>-<pos>.json (tree of units, eli2md.tree) next to each .md.
@@ -26,6 +27,7 @@ import pdfplumber
 
 from . import __version__
 from .eli import API, fetch, get
+from .ocr import LANG as OCR_LANG, OcrUnavailable, check as check_ocr
 from .pdf import convert, to_markdown
 from .tree import md_to_tree
 
@@ -73,14 +75,13 @@ def write_json(md: str, md_file: Path) -> None:
     json_path(md_file).write_text(json.dumps(md_to_tree(md), ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
-def _convert_one(job: tuple) -> dict:
+def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
     """Worker: convert one downloaded act. Returns the index row fields it determines."""
-    eli, pdf_path, out_path, *opt = job
-    with_json = bool(opt and opt[0])
+    eli, pdf_path, out_path, with_json, ocr = job
     meta = json.loads((Path(pdf_path).parent / "meta.json").read_text())
     t0 = time.time()
     try:
-        doc = convert(pdf_path)
+        doc = convert(pdf_path, ocr=ocr)
         md = to_markdown(doc, meta)
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
         Path(out_path).write_text(md, encoding="utf-8")
@@ -112,7 +113,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--mem-limit-gb", type=float, default=3,
                     help="address-space limit per conversion worker (0 = none)")
     ap.add_argument("--json", action="store_true", help="also write the tree of units as .json next to each .md")
+    ap.add_argument("--ocr", nargs="?", const=OCR_LANG, metavar="LANG",
+                    help=f"OCR pages without a text layer with tesseract (off by default; LANG default {OCR_LANG})")
     a = ap.parse_args(argv)
+    if a.ocr:
+        try:
+            check_ocr(a.ocr)
+        except OcrUnavailable as e:
+            ap.error(str(e))
     t_start = time.time()
     a.root.mkdir(parents=True, exist_ok=True)
     index = load_index(a.root)
@@ -150,7 +158,7 @@ def main(argv: list[str] | None = None) -> int:
             continue
         sha = hashlib.sha256(pdf.read_bytes()).hexdigest()
         index[eli] = {**_base_row(it), "pdf_sha256": sha}
-        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos)), a.json))
+        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos)), a.json, a.ocr))
 
     done = 0
     with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,

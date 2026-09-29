@@ -1,0 +1,44 @@
+Kontrola wzrokowa OCR na prawdziwych skanach (2026-09-29). To NIE jest pomiar: porównałem wynik
+OCR z tym, co sam odczytałem z wyrenderowanej strony (100 dpi cała strona, 160-170 dpi wycinki).
+Strony renderowane w 300 dpi, tesseract 5.5.0 (dane językowe z pakietów Ubuntu 1:4.1.0, modele "fast"
+LSTM), --psm 3, surowy tekst przed fix_text, jeśli nie napisano inaczej.
+
+Próbka do obejrzenia (co to za strony): 10 stron, losowanie jednostajne po 1734 stronach bez tekstu,
+różne akty, seed 2929 (/tmp skrypt: random.Random(2929).shuffle(listy stron), pierwsze 10 z różnych aktów):
+  DU/2025/593 p19   pl  strona tytułowa części ("CZĘŚĆ 1 PRZEPISY OGÓLNE"), czysta
+  DU/2025/975 p58   pl  gęsty tekst ADN z przypisami, szarawy skan
+  DU/2025/370 p116  pl  tabela celna (kod CN, stawki), linie tabeli
+  DU/2025/1604 p34  pt  tekst umowy z Brazylią (portugalski), czysty
+  DU/2026/1015 p10  pl  tekst umowy IDA, czysty
+  DU/2026/1176 p139 en  poprawka do statutu MFW, czysty
+  DU/2026/518 p75   pl  pomarańczowy formularz ZUS RCA (drobny druk w polach)
+  DU/2026/286 p17   en  umowa z Kanadą, czysty
+  DU/2026/818 p6    pl  umowa ze Szwecją, czysty (szwedzkie klauzule w tekście)
+  DU/2025/634 p20   en  poprawki MARPOL, czysty
+Poza próbką obejrzałem środkowe strony skanów: DU/2025/145 p455 i DU/2025/57 p121 (mapy planów
+morskich, kolor, tekst tylko w legendzie i etykietach), DU/2025/1072 p27 (wzór dokumentu z piktogramami),
+DU/2026/968 p15 (grecki), DU/2026/189 p19 (francuski), DU/2025/29 p15 (pl, skład jak w Dz.U. UE).
+Wszystkie oglądane strony mają nagłówek "Dziennik Ustaw – N – Poz. N" w obrazie.
+
+Porównania:
+1. DU/2025/975 p58 (pl, pol+eng), ok. 15 pierwszych wierszy (~200 słów): treść bez błędów, ale
+   wszystkie 8 odnośników przypisów w indeksie górnym zniekształcone ("WE³³)" -> "WE*))", "*»)", "*%" ...),
+   "w strefach 1 i 2" -> "w strefach | i 2" (fix_text poprawia), jedna linia śmieci "yp I p y 8 £",
+   cudzysłów „Ga” czasem jako ,,Ga”.
+2. DU/2026/1015 p10 (pl, pol+eng), ok. 15 pierwszych wierszy (~180 słów): "Artykułu II" -> "Artykułu H",
+   "Ustęp 1 nie dają" -> "Ustęp | nie dają" (fix_text poprawia); dalej na stronie "Radę Gubernatorów" ->
+   "Radę Gubermatorów".
+3. DU/2026/818 p6 (pl, pol+eng), cała strona (~230 słów): "odnoszących się" -> "odnoszących sie",
+   "BEGRÄNSAT" -> "BEGRANSAT" (szwedzkie Ä). Poza tym zgodne.
+4. DU/2026/286 p17 (en, pol+eng), cała strona (~110 słów): nie znalazłem różnic.
+5. DU/2025/1604 p34 (pt): pol+eng gubi lub psuje diakrytyki portugalskie w wielu słowach
+   (não -> nao, é -> ć, circunstâncias -> circunstancias, participações -> participacóes,
+   poderão -> poderdo, expressão -> expressdo). Z -l por dwa pierwsze akapity bez różnic.
+6. DU/2026/189 p19 (fr): pol+eng: française -> francaise, ci-après -> ci-apres, dénommées -> dénommeées.
+   Z -l fra ok. 8 pierwszych wierszy bez różnic.
+7. DU/2026/968 p15 (el): pol+eng daje łacińskie śmieci (mediana pewności słów 50.8). Z -l ell grecki
+   tekst, mediana pewności 92.7; nie sprawdzałem litera po literze. Nagłówek odczytany przez model
+   grecki jako "ὨὈζίοηπίς Ὀδίανν 15 -- Ῥο7. 965" (stąd reguła z numerem strony w parse_tsv).
+8. Strony obrócone: DU/2025/15 p14 (formularz w poziomie) pol+eng mediana pewności 46.7, po obrocie
+   wg OSD (90°) 96.3. Mapy (DU/2025/57 p107, DU/2025/430 p19) po obrocie nadal < 35.
+   DU/2025/299 p11 to nuty hymnu (pewność 77.5, poniżej progu).

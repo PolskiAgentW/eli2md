@@ -18,6 +18,7 @@ Unit node: {"type": "art"|"par"|"ust"|"pkt"|"lit"|"tir", "num": "41¹", "path": 
 Other nodes: {"type": "text", "text": ..., "quoted": true?}   paragraph that is not a unit start
              {"type": "heading", "label": "Rozdział 2", "text": "title"}   dział/rozdział/oddział/...
              {"type": "signature", "text": ...}   {"type": "note", "text": ...}  (content missing in PDF text)
+             {"type": "ocr", "text": ...}  paragraph read by OCR from a page without a text layer (`> ` in Markdown)
 
 Rules:
 - A unit is only recognised at quotation depth 0. Units quoted in amendments ("„Art. 5. …",
@@ -121,6 +122,8 @@ def tree_depths(blocks: list[tuple[str, str]]) -> list[int]:
         if announced and d == 0 and kind == "p" and not head and _closed_later(blocks, i - 1):
             d = 1
         out.append(d)
+        if kind == "ocr":  # OCR misreads quotes; the converter ignores them too
+            continue
         carry, local = d, 0
         for k, ch in enumerate(t):
             if ch in "„“":
@@ -260,6 +263,8 @@ def md_to_tree(md: str) -> dict:
             blocks.append(("head", p[6:].strip()))
         elif p.startswith("> [") and p.endswith("]"):
             blocks.append(("note", p[2:].strip()))
+        elif p.startswith("> "):  # text read by OCR from a page without a text layer
+            blocks.append(("ocr", p[2:].strip()))
         elif p.startswith("*") and p.endswith("*") and len(p) > 2:
             blocks.append(("signature", p[1:-1]))
         else:
@@ -272,7 +277,7 @@ def md_to_tree(md: str) -> dict:
         if kind == "annex":
             parts.append(("annex", text, _Builder()))
             continue
-        if kind in ("signature", "note"):
+        if kind in ("signature", "note", "ocr"):
             b.add_flat(kind, text)
             continue
         notes, body = "", text
