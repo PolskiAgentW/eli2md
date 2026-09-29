@@ -1,5 +1,3 @@
-# tree_eval.py on dev sample seed 2024, eli2md 0.5.3.dev0, 2026-09-29
-# per act: R/P over art, par, ust, pkt, lit (tirets are not marked in the HTML); then totals
   963 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
   373 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (65/65) P=1.0000 (65/65)
  1492 Rozporządzenie main: R=1.0000 (3/3) P=1.0000 (3/3)
@@ -8,7 +6,7 @@
   411 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (5/5) P=1.0000 (5/5)
  1818 Rozporządzenie main: R=1.0000 (12/12) P=1.0000 (12/12)
  1482 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
-  840 Rozporządzenie main: R=1.0000 (86/86) P=1.0000 (86/86)  annex: R=0.6500 (39/60) P=0.8667 (39/45)
+  840 Rozporządzenie main: R=1.0000 (86/86) P=1.0000 (86/86)  annex: R=0.8667 (52/60) P=0.8814 (52/59)
  1551 Rozporządzenie main: R=1.0000 (3/3) P=1.0000 (3/3)
  1468 Rozporządzenie main: R=1.0000 (7/7) P=1.0000 (7/7)
  1554 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (156/156) P=1.0000 (156/156)
@@ -58,10 +56,10 @@ TOTAL main  ust   R=1.0000 (187/187)        P=1.0000 (187/187)        R miss non
 TOTAL main  pkt   R=1.0000 (380/380)        P=1.0000 (380/380)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 3
 TOTAL main  lit   R=1.0000 (181/181)        P=1.0000 (181/181)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
 TOTAL main  tir   no reference units in the HTML, not scored; JSON nodes: 32
-TOTAL annex all (art,par,ust,pkt,lit)  R=0.9907 (4780/4825)  P=0.8519 (4780/5611)  R miss none/path 20/25  P miss none/path 806/25  unaligned ref 3, json 207; quoted ref units left out: 2; untyped HTML units typed by label: 52
+TOTAL annex all (art,par,ust,pkt,lit)  R=0.9934 (4793/4825)  P=0.8521 (4793/5625)  R miss none/path 6/26  P miss none/path 806/26  unaligned ref 3, json 399; quoted ref units left out: 2; untyped HTML units typed by label: 52
 TOTAL annex art   R=1.0000 (480/480)        P=1.0000 (480/480)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
 TOTAL annex par   R=1.0000 (145/145)        P=1.0000 (145/145)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
-TOTAL annex ust   R=0.9994 (1624/1625)      P=0.8908 (1624/1823)      R miss none/path 1/0  P miss none/path 199/0  unaligned ref 0, json 107
-TOTAL annex pkt   R=0.9872 (2158/2186)      P=0.7793 (2158/2769)      R miss none/path 17/11  P miss none/path 600/11  unaligned ref 3, json 81
-TOTAL annex lit   R=0.9589 (373/389)        P=0.9467 (373/394)        R miss none/path 2/14  P miss none/path 7/14  unaligned ref 0, json 19
+TOTAL annex ust   R=0.9994 (1624/1625)      P=0.8908 (1624/1823)      R miss none/path 1/0  P miss none/path 199/0  unaligned ref 0, json 127
+TOTAL annex pkt   R=0.9931 (2171/2186)      P=0.7801 (2171/2783)      R miss none/path 3/12  P miss none/path 600/12  unaligned ref 3, json 239
+TOTAL annex lit   R=0.9589 (373/389)        P=0.9467 (373/394)        R miss none/path 2/14  P miss none/path 7/14  unaligned ref 0, json 33
 TOTAL annex tir   no reference units in the HTML, not scored; JSON nodes: 93
