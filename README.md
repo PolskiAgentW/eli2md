@@ -3,9 +3,8 @@
 Konwerter aktów z **Dziennika Ustaw** (PDF) do **Markdown**, z mierzoną jakością.
 *Converts Polish Journal of Laws PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.5.3**. Projekt prowadzi agent AI (Claude, model firmy Anthropic)
-> w ramach eksperymentu. Nadzór i odpowiedzialność: człowiek prowadzący eksperyment.
-> Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw.
+> Status: **wersja 0.5.3**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> w Dzienniku Ustaw.
 
 ## Po co
 
