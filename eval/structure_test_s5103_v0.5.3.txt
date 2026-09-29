@@ -1,0 +1,58 @@
+  876 Rozporządzenie para  main: head R=1.0000 (1/1) P=1.0000 (1/1) break P=1.0000 (45/45)
+  392 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (7/7)
+ 1134 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (65/65)
+ 1522 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (10/10)
+  722 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (46/46)  annex: head R=1.0000 (553/553) P=1.0000 (553/553) break P=0.9998 (5103/5104)
+  697 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (33/33)  annex: head R=1.0000 (301/301) P=1.0000 (301/301) break P=0.9991 (3249/3252)
+  856 Rozporządzenie para  main: head R=1.0000 (4/4) P=1.0000 (4/4) break P=1.0000 (20/20)
+  147 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (4/4)  annex: head R=1.0000 (16/16) P=1.0000 (16/16) break P=1.0000 (106/106)
+ 1137 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (7/7)  annex: head R=1.0000 (9/9) P=1.0000 (9/9) break P=1.0000 (45/45)
+  902 Rozporządzenie para  main: head R=1.0000 (25/25) P=1.0000 (25/25) break P=1.0000 (129/129)
+  239 Rozporządzenie para  main: head R=1.0000 (5/5) P=1.0000 (5/5) break P=1.0000 (61/61)
+ 1235 Rozporządzenie para  main: head R=1.0000 (4/4) P=1.0000 (4/4) break P=1.0000 (9/9)  annex: head R=- P=- break P=1.0000 (16/16)
+ 1400 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (7/7)
+  300 Orzeczenie     para  main: head R=- P=- break P=1.0000 (12/12)
+  109 Rozporządzenie para  main: head R=1.0000 (4/4) P=1.0000 (4/4) break P=1.0000 (9/9)  annex: head R=- P=- break P=1.0000 (18/18)
+  925 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (8/8)  annex: head R=1.0000 (119/119) P=1.0000 (119/119) break P=1.0000 (1054/1054)
+ 1263 Rozporządzenie para  main: head R=1.0000 (4/4) P=1.0000 (4/4) break P=1.0000 (17/17)
+  838 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (44/44)  annex: head R=1.0000 (492/492) P=1.0000 (492/492) break P=1.0000 (3928/3928)
+ 1978 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (8/8)
+ 1449 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (3/3)  annex: head R=1.0000 (5/5) P=1.0000 (5/5) break P=1.0000 (19/19)
+  585 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (13/13)  annex: head R=1.0000 (40/40) P=1.0000 (40/40) break P=1.0000 (215/215)
+  491 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (3/3)  annex: head R=1.0000 (6/6) P=1.0000 (6/6) break P=1.0000 (16/16)
+  322 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (12/12)
+  878 Ustawa         arti  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (20/20)
+  768 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (24/24)
+  166 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (12/12)
+  523 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (7/7)  annex: head R=- P=- break P=1.0000 (34/34)
+  591 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (10/10)
+  314 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (3/3)  annex: head R=1.0000 (14/14) P=1.0000 (14/14) break P=1.0000 (86/86)
+ 1336 Rozporządzenie para  main: head R=1.0000 (6/6) P=1.0000 (6/6) break P=1.0000 (47/47)
+ 1853 Ustawa         arti  main: head R=1.0000 (6/6) P=1.0000 (6/6) break P=1.0000 (60/60)
+ 1421 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (49/49)  annex: head R=- P=- break P=1.0000 (11/11)
+ 1280 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (88/88)
+  989 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (3/3)  annex: head R=1.0000 (14/14) P=1.0000 (14/14) break P=1.0000 (118/118)
+  336 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (8/8)  annex: head R=1.0000 (18/18) P=1.0000 (18/18) break P=1.0000 (194/194)
+ 1454 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (7/7)
+  541 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (5/5)
+  115 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (16/16)  annex: head R=1.0000 (42/42) P=1.0000 (42/42) break P=1.0000 (243/243)
+ 1608 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (10/10)  annex: head R=- P=- break P=1.0000 (54/54)
+   73 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (13/13)  annex: head R=1.0000 (45/45) P=1.0000 (45/45) break P=1.0000 (312/312)
+ 1892 Rozporządzenie para  main: head R=1.0000 (4/4) P=1.0000 (4/4) break P=1.0000 (11/11)  annex: head R=- P=- break P=1.0000 (24/24)
+scored 41/41 acts
+TOTAL main  heading  R=1.0000 (108/108)  P=1.0000 (108/108)  unaligned: ref 1, md 0
+TOTAL main  sub pass   R=0.9363 (147/157)  unaligned 0
+TOTAL main  sub pint   R=0.9671 (323/334)  unaligned 0
+TOTAL main  sub lett   R=0.9592 (94/98)  unaligned 2
+TOTAL main  sub arti_q R=1.0000 (34/34)  unaligned 0
+TOTAL main  sub para_q R=1.0000 (28/28)  unaligned 0
+TOTAL main  sub chpt   R=1.0000 (7/7)  unaligned 0
+TOTAL main  break    P=1.0000 (965/965)  unaligned 42  (title breaks, not in P: 119)
+TOTAL annex heading  R=1.0000 (1674/1674)  P=1.0000 (1674/1674)  unaligned: ref 0, md 0
+TOTAL annex sub pass   R=0.9993 (5910/5914)  unaligned 34
+TOTAL annex sub pint   R=0.9996 (5217/5219)  unaligned 4
+TOTAL annex sub lett   R=0.9989 (909/910)  unaligned 1
+TOTAL annex sub chpt   R=1.0000 (90/90)  unaligned 0
+TOTAL annex break    P=0.9997 (14845/14849)  unaligned 1320
+acts with main heading R<1: 0/26
+acts with annex heading R<1: 0/14

@@ -26,6 +26,7 @@ SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 
 UNIT_START = re.compile(
     rf"^(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_DIGITS}]*\.\s|\d+[a-z]*[{SUP_DIGITS}]*\)\s|[a-z]{{1,3}}\)\s|–\s|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
 )
+UNIT_START_Q = re.compile("^„?" + UNIT_START.pattern[1:])  # also a quoted unit of an amendment: „1. Treść
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
@@ -49,6 +50,9 @@ class Line:
     pw: float = 595.0
     ph: float = 842.0
     mark: str = ""  # "notext" | "image": position marker for content that is not text
+    x1: float = 0.0
+    right: float = 0.0  # right edge of justified text in this frame (0 = unknown)
+    lead: float = -1.0  # usual gap between lines in this frame (-1 = unknown)
 
 
 @dataclass
@@ -235,7 +239,8 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
 
     rule_top = None
     for r in rects:
-        if r["height"] < 1.5 and 130 < r["width"] < 160 and r["x0"] < pw * 0.2 and r["top"] > ph * 0.3:
+        if r["height"] < 1.5 and 130 < r["width"] < 160 and r["x0"] < pw * 0.2 and r["top"] > ph * 0.3 \
+                and _free(r, rects):
             rule_top = r["top"] if rule_top is None else min(rule_top, r["top"])
 
     body, notes = [], []
@@ -268,6 +273,7 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             text=_plain_math(text),
             pw=pw,
             ph=ph,
+            x1=max(w["x1"] for w in normal_words),
         )
         is_note = (rule_top is not None and line.top > rule_top) or (
             rule_top is None and line.size < body_size - 0.5 and line.top > ph * 0.6
@@ -275,7 +281,25 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
         (notes if is_note else body).append(line)
     body.sort(key=lambda l: l.top)
     notes.sort(key=lambda l: l.top)
+    ends = Counter(round(l.x1) for l in body if len(l.text) >= 40)
+    gaps = Counter(round(2 * (b.top - a.bottom)) / 2 for a, b in zip(body, body[1:])
+                   if abs(a.size - b.size) < 0.5 and 0 <= b.top - a.bottom < a.size)
+    for l in body:
+        if ends and ends.most_common(1)[0][1] >= 3:
+            l.right = ends.most_common(1)[0][0]
+        if gaps and gaps.most_common(1)[0][1] >= 3:
+            l.lead = gaps.most_common(1)[0][0]
     return body, notes
+
+
+def _free(r: dict, rects: list[dict]) -> bool:
+    """The footnote rule stands alone. A table border of the same size meets other borders at its ends."""
+    for x in rects:
+        if x is r or not x["top"] - 2 <= r["top"] <= x["bottom"] + 2:
+            continue
+        if min(abs(x["x0"] - r["x1"]), abs(x["x1"] - r["x0"]), abs(x["x0"] - r["x0"]), abs(x["x1"] - r["x1"])) < 2:
+            return False
+    return True
 
 
 def _plain_math(text: str) -> str:
@@ -286,7 +310,52 @@ def _plain_math(text: str) -> str:
 def _join(prev: str, nxt: str) -> str:
     if re.search(rf"[{LOWER}]-$", prev) and re.match(rf"[{LOWER}]", nxt):
         return prev[:-1] + nxt
+    if re.search(r"\w-$", prev) and re.match(r"-\w", nxt):  # "rolno-" "-środowiskowy": the hyphen is repeated
+        return prev + nxt[1:]
     return prev + " " + nxt
+
+
+def _segment(body: list[Line]) -> list[Block]:
+    """Group lines into blocks (paragraphs): by the vertical gap (relative to font size and to the usual
+    gap on the page), at page breaks by content. Annex headers and signatures always start a block."""
+    blocks: list[Block] = []
+    cur: Block | None = None
+    prev: Line | None = None
+    for l in body:
+        kind = "p"
+        if l.mark:
+            kind = l.mark
+        elif ANNEX.match(l.text) and l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph:
+            kind = "annex"
+        elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
+            kind = "signature"
+        if prev is None or cur is None:
+            new = True
+        elif kind != "p" or cur.kind in ("signature", "notext", "image"):
+            new = not (kind == "annex" and cur.kind == "annex" and l.page == prev.page)
+        elif cur.kind == "annex":
+            # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
+            new = not (l.page == prev.page and l.x0 > 0.4 * l.pw and l.top - prev.bottom < 0.8 * l.size)
+        elif l.page != prev.page:
+            new = bool(UNIT_START.match(l.text)) or bool(re.search(r"[.:;”]$", prev.text))
+        else:
+            # Some PDFs set units with little extra space (2 pt over the usual gap between lines, not 6),
+            # or none: then a unit starts after a line that ends short of the right margin (the last line
+            # of a justified paragraph).
+            gap = l.top - prev.bottom
+            new = gap > 0.45 * l.size or bool(UNIT_START_Q.match(l.text)) and (
+                (prev.lead >= 0 and gap > prev.lead + 1.2)
+                or (0 < prev.x1 < prev.right - 2 * prev.size and bool(re.search(r"[.:;,”]$", prev.text))))
+        if new:
+            if cur is not None:
+                blocks.append(cur)
+            cur = Block(kind, l.text, l.page)
+        else:
+            cur.text = _join(cur.text, l.text)
+        prev = l
+    if cur is not None:
+        blocks.append(cur)
+    return blocks
 
 
 def convert(path: str) -> Document:
@@ -317,38 +386,7 @@ def convert(path: str) -> Document:
             notes.extend(n)
             page.close()  # pdfplumber caches every parsed page; 867-page acts exhausted 14 GB RAM
 
-    # Block segmentation: vertical gap (relative to font size); page breaks by content;
-    # annex headers and signatures always start their own block.
-    cur: Block | None = None
-    prev: Line | None = None
-    for l in body:
-        kind = "p"
-        if l.mark:
-            kind = l.mark
-        elif ANNEX.match(l.text) and l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph:
-            kind = "annex"
-        elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
-            kind = "signature"
-        if prev is None or cur is None:
-            new = True
-        elif kind != "p" or cur.kind in ("signature", "notext", "image"):
-            new = not (kind == "annex" and cur.kind == "annex" and l.page == prev.page)
-        elif cur.kind == "annex":
-            # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
-            new = not (l.page == prev.page and l.x0 > 0.4 * l.pw and l.top - prev.bottom < 0.8 * l.size)
-        elif l.page != prev.page:
-            new = bool(UNIT_START.match(l.text)) or bool(re.search(r"[.:;”]$", prev.text))
-        else:
-            new = l.top - prev.bottom > 0.45 * l.size
-        if new:
-            if cur is not None:
-                doc.blocks.append(cur)
-            cur = Block(kind, l.text, l.page)
-        else:
-            cur.text = _join(cur.text, l.text)
-        prev = l
-    if cur is not None:
-        doc.blocks.append(cur)
+    doc.blocks = _segment(body)
 
     cur = None
     for l in notes:

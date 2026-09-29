@@ -1,7 +1,8 @@
 import unittest
 
 from eli2md.eli import parse_eli
-from eli2md.pdf import UNIT_START, Block, Document, _char_angle, _frame_lines, _to_frame, page_ranges, to_markdown
+from eli2md.pdf import (UNIT_START, Block, Document, Line, _char_angle, _frame_lines, _free, _join, _segment, _to_frame,
+                        page_ranges, to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
         "pos": 1, "publisher": "DU", "keywords": ["a", "b"]}
@@ -126,6 +127,32 @@ class Basic(unittest.TestCase):
                                Block("p", "Art. 3. Zmiany: „Art. 9. Cytat.", 1)])
         md = to_markdown(doc)
         self.assertIn("##### Art. 2.", md)
+
+    def test_join_repeated_hyphen(self):
+        # a compound broken at its hyphen repeats the hyphen on the next line; a plain break adds one
+        self.assertEqual(_join("gospodarstwa rolno-", "-środowiskowe"), "gospodarstwa rolno-środowiskowe")
+        self.assertEqual(_join("metylo-17-", "-metylomorfinan"), "metylo-17-metylomorfinan")
+        self.assertEqual(_join("wyna-", "grodzenie"), "wynagrodzenie")
+        self.assertEqual(_join("wartość -", "- 5"), "wartość - - 5")
+
+    def test_footnote_rule_stands_alone(self):
+        rule = {"x0": 51.0, "x1": 195.1, "top": 764.3, "bottom": 764.8}
+        border = {"x0": 81.0, "x1": 236.4, "top": 563.3, "bottom": 563.8}
+        next_cell = {"x0": 236.9, "x1": 373.0, "top": 563.3, "bottom": 563.8}
+        self.assertTrue(_free(rule, [rule, border, next_cell]))
+        self.assertFalse(_free(border, [rule, border, next_cell]))
+
+    def test_segment_small_gap_units(self):
+        # line pitch 12 pt (gap 2), units 14 pt (gap 4): below the 0.45 * size threshold, above the usual gap
+        def line(top, x0, x1, text):
+            return Line(1, top, top + 10, x0, 10.0, text, x1=x1, right=544, lead=2.0)
+        body = [line(100, 51, 544, "1) w § 2 ust. 1–3 otrzymują brzmienie:"),  # full line: no break by length
+                line(114, 96, 544, "„1. Przewodniczącemu przysługuje miesięczne wynagrodzenie w wysokości"),
+                line(126, 72, 253, "9500 zł."),
+                line(140, 96, 544, "2. Członkom przysługuje wynagrodzenie w wysokości 625 zł, a pozostałym"),
+                line(152, 72, 544, "2. kwartał – tekst, który jest dalszym ciągiem zdania z odstępem 2 pt.")]
+        self.assertEqual([b.text[:6] for b in _segment(body)], ["1) w §", "„1. Pr", "2. Czł"])
+
 
 if __name__ == "__main__":
     unittest.main()
