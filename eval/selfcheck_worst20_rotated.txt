@@ -1,0 +1,53 @@
+20 worst acts (kept) of selfcheck_{du,mp}_2025_2026_v0.6.2.json; published 0.6.2 Markdown.
+sc = selfcheck 0.6.2 reading; sc2 = rotated pages read upright in stream order (this change);
+new = converter with _dedupe (sc2), where the act was converted (old or new dedupe removed chars).
+mechanism: 'rotated: measure' if sc2 kept - sc kept >= 0.02; 'rotated: dedupe' if new kept > base kept (sc2);
+'rotated pages, loss elsewhere' otherwise for acts with pages read in a rotated frame; '-' = no such pages.
+
+act           pages  rot | sc kept  sc2 kept  new kept | mechanism
+DU/2025/243       8    0 | 0.346    0.346       -   | -
+DU/2025/653       8    0 | 0.394    0.394       -   | -
+DU/2026/40        6    0 | 0.473    0.473       -   | -
+DU/2025/1031     10    0 | 0.545    0.545       -   | -
+DU/2026/1184      3    2 | 0.585    0.618       -   | rotated: measure
+DU/2025/1097      2    0 | 0.611    0.611       -   | -
+DU/2026/1038      4    0 | 0.642    0.642       -   | -
+DU/2025/662       8    0 | 0.672    0.672       -   | -
+DU/2026/1163      2    1 | 0.679    0.885       -   | rotated: measure
+DU/2025/848      15    6 | 0.696    0.696     0.696 | rotated pages, loss elsewhere
+DU/2025/687       3    0 | 0.702    0.702       -   | -
+DU/2026/1134      8    0 | 0.737    0.737       -   | -
+DU/2025/1278     10    0 | 0.741    0.741       -   | -
+DU/2026/922       5    0 | 0.747    0.747       -   | -
+DU/2025/984     163   68 | 0.753    0.908     0.918 | rotated: measure + rotated: dedupe
+DU/2026/643       4    0 | 0.753    0.753       -   | -
+DU/2025/873       2    0 | 0.761    0.761       -   | -
+DU/2025/612       8    0 | 0.769    0.769       -   | -
+DU/2026/659       3    0 | 0.772    0.772       -   | -
+DU/2026/604      21    0 | 0.774    0.774       -   | -
+MP/2025/1128    106   42 | 0.722    0.721       -   | rotated pages, loss elsewhere
+MP/2025/541      49    4 | 0.785    0.976     0.990 | rotated: measure + rotated: dedupe
+MP/2026/172       2    0 | 0.800    0.800       -   | -
+MP/2025/1133      7    0 | 0.835    0.835       -   | -
+MP/2026/240       3    0 | 0.840    0.840       -   | -
+MP/2025/1017      3    2 | 0.848    0.876     0.876 | rotated: measure
+MP/2025/613       2    0 | 0.852    0.852       -   | -
+MP/2025/715       2    0 | 0.853    0.853       -   | -
+MP/2025/1243      2    0 | 0.860    0.860       -   | -
+MP/2025/523       3    0 | 0.860    0.860       -   | -
+MP/2025/538       2    0 | 0.864    0.864       -   | -
+MP/2026/856       2    0 | 0.864    0.864       -   | -
+MP/2025/1210      2    0 | 0.864    0.864       -   | -
+MP/2025/1092      2    0 | 0.865    0.865       -   | -
+MP/2026/553       2    0 | 0.870    0.870       -   | -
+MP/2026/347       3    0 | 0.871    0.871       -   | -
+MP/2025/1007      3    0 | 0.871    0.871       -   | -
+MP/2025/297       4    0 | 0.874    0.874       -   | -
+MP/2025/1130      2    0 | 0.874    0.874       -   | -
+MP/2026/615       2    0 | 0.874    0.874       -   | -
+
+counts: -: 33; rotated pages, loss elsewhere: 2; rotated: measure: 3; rotated: measure + rotated: dedupe: 2
+DU/2025/848 and MP/2025/1128 have rotated pages, but their losses are not specific to them (per-page selfcheck, 0.6.2
+reading): DU/2025/848 upright pp. 4, 6-9 kept 0.25-0.78, rotated pp. 10-15 kept 0.94-1.0; MP/2025/1128 upright
+pp. 1-64 kept 0.685 (7784 PDF tokens missed), rotated pp. 65-106 kept 0.72 (1445), and sc2 does not change it.
+Not investigated. The 33 acts without rotated pages are not investigated here.

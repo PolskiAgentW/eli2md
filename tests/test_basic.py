@@ -1,8 +1,8 @@
 import unittest
 
 from eli2md.eli import parse_eli
-from eli2md.pdf import (UNIT_START, Block, Document, Line, _char_angle, _frame_lines, _free, _join, _segment, _to_frame,
-                        page_ranges, to_markdown)
+from eli2md.pdf import (UNIT_START, Block, Document, Line, _char_angle, _dedupe, _frame_lines, _free, _join, _segment,
+                        _to_frame, page_ranges, to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
         "pos": 1, "publisher": "DU", "keywords": ["a", "b"]}
@@ -45,6 +45,19 @@ class Basic(unittest.TestCase):
         self.assertTrue(f["upright"])
         # a later char in the same line (further up the page) must come later in the frame
         self.assertGreater(_to_frame({**c, "top": 737.5, "bottom": 747.0}, 90, 595, 842)["x0"], f["x0"])
+
+    def test_dedupe(self):
+        # a char drawn twice goes; distinct letters of small print stay, also where same letters of
+        # neighbouring lines chain them within 1pt (pdfplumber's dedupe_chars dropped them, MP/2025/541),
+        # and so does overlapping text of another size (MP/2025/1142)
+        def ch(t, x0, top, size=3.9):
+            return {"text": t, "fontname": "F", "size": size, "x0": x0, "x1": x0 + 1.7, "top": top, "bottom": top + size}
+        chars = [ch("e", 10.0, 100.0), ch("e", 10.1, 100.0), ch("i", 20.0, 100.0), ch("i", 20.9, 100.0),
+                 ch("e", 12.9, 100.0), ch("e", 12.2, 100.8), ch("e", 11.5, 100.0), ch("a", 10.0, 100.0),
+                 ch("e", 10.2, 100.2, 4.2)]
+        self.assertEqual([(c["text"], c["x0"]) for c in _dedupe(chars)],
+                         [("e", 10.0), ("i", 20.0), ("i", 20.9), ("e", 12.9), ("e", 12.2), ("e", 11.5), ("a", 10.0),
+                          ("e", 10.2)])
 
     def test_dataset_index_roundtrip(self):
         import tempfile

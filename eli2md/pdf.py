@@ -31,6 +31,7 @@ ITEM_START = re.compile(rf"^„?(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_DIGITS}]*\)\s
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
+DUP_TOL = 0.3  # pt; a char drawn twice repeats within this distance (<= 0.1pt in DU/2025/1095; see _dedupe)
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
 CID = re.compile(r"\(cid:\d+\)")  # a glyph the PDF font does not map to Unicode (pdfminer's placeholder)
 FOOTNOTE_MARK = re.compile(r"^\d{1,3}\)?[,.;:]?$")
@@ -148,6 +149,23 @@ def _drop_hidden_placed(page):
     return page.filter(lambda o: id(o) not in drop) if drop else page
 
 
+def _dedupe(chars: list[dict], tol: float = DUP_TOL) -> list[dict]:
+    """Drop chars drawn twice (bold is sometimes drawn twice; seen on rotated table pages): the same
+    glyph (text, font, size) within `tol` of a kept one in both axes. pdfplumber's dedupe_chars chains
+    positions within 1pt across the page, which in small rotated print (3.9pt) merged distinct letters
+    and spaces of a line (MP/2025/541: "wyposażnie", "ratownicyi personelsą"). Overlapping text of
+    another size is not a copy (MP/2025/1142: "decyzję" over a 'd' of 10.9pt)."""
+    kept: dict[tuple, list[dict]] = {}
+    out = []
+    for c in chars:
+        key = (c["text"], c.get("fontname"), round(c["size"], 1), round(c["x0"]), round(c["top"]))
+        near = (o for dx in (-1, 0, 1) for dy in (-1, 0, 1) for o in kept.get((*key[:3], key[3] + dx, key[4] + dy), ()))
+        if not any(abs(o["x0"] - c["x0"]) <= tol and abs(o["top"] - c["top"]) <= tol for o in near):
+            kept.setdefault(key, []).append(c)
+            out.append(c)
+    return out
+
+
 def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
     """(words, width, height, rects) per writing direction, dominant direction first.
 
@@ -159,10 +177,9 @@ def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
         return [(page.extract_words(extra_attrs=["size"], keep_blank_chars=False),
                  float(page.width), float(page.height), page.rects)]
     frames = []
-    page = page.dedupe_chars()  # bold is sometimes drawn twice; seen on rotated table pages
     w, h = float(page.width), float(page.height)
     for rot, _ in angles.most_common():
-        chars = [_to_frame(c, rot, w, h) for c in page.chars if _char_angle(c) == rot]
+        chars = _dedupe([_to_frame(c, rot, w, h) for c in page.chars if _char_angle(c) == rot])
         fw, fh = (h, w) if rot in (90, 270) else (w, h)
         words = extract_words(chars, extra_attrs=["size"], keep_blank_chars=False)
         frames.append((words, fw, fh, [_to_frame(r, rot, w, h) for r in page.rects]))

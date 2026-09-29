@@ -13,12 +13,14 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import re
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import pdfplumber
+from pdfplumber.utils import extract_words
 
 CACHE = Path.home() / "cache" / "eli"
 TOKEN = re.compile(r"\w+")
@@ -32,6 +34,35 @@ def tokens(text: str) -> Counter:
     """Tokens keyed by their sorted letters: plain extract_words reads text on rotated pages
     (landscape tables) backwards ("isw" for "wsi"), which the converter reads correctly."""
     return Counter("".join(sorted(t.lower())) for t in TOKEN.findall(text.translate(SCRIPTS)))
+
+
+def _angle(c: dict) -> int:
+    return round(math.degrees(math.atan2(c["matrix"][1], c["matrix"][0])) / 90) % 4 * 90
+
+
+def _upright(c: dict, rot: int, w: float, h: float) -> dict:
+    """The char's box in a frame where text written at `rot` degrees runs left-to-right."""
+    x0, x1, t, b = c["x0"], c["x1"], c["top"], c["bottom"]
+    if rot == 90:
+        x0, x1, t, b = h - b, h - t, x0, x1
+    elif rot == 270:
+        x0, x1, t, b = t, b, w - x1, w - x0
+    elif rot == 180:
+        x0, x1, t, b = w - x1, w - x0, h - b, h - t
+    return {**c, "x0": x0, "x1": x1, "top": t, "bottom": b, "upright": True}
+
+
+def page_text(p) -> str:
+    """Words of a page. On a page of mostly rotated text (landscape tables in small print) extract_words
+    joins lines of neighbouring table columns (it clusters lines transitively within 3pt) and interleaves
+    their letters (MP/2025/541 p. 47: "WY P P O O D SA M Ż ..."); such a page is read upright in stream
+    order (on pp. 46-49 there 3602 words; pdfium's text of those pages has 3600)."""
+    angles = Counter(_angle(c) for c in p.chars)
+    if not angles or angles.most_common(1)[0][0] == 0:
+        return " ".join(w["text"] for w in p.extract_words())
+    w, h = float(p.width), float(p.height)
+    return " ".join(x["text"] for rot in angles for x in extract_words(
+        [_upright(c, rot, w, h) for c in p.chars if _angle(c) == rot], use_text_flow=True))
 
 
 def md_body(md: str) -> str:
@@ -61,7 +92,7 @@ def check(md_file: Path, pdf_file: Path) -> dict:
     with pdfplumber.open(pdf_file) as pdf:
         parts = []
         for n, p in enumerate(pdf.pages, start=1):
-            parts.append("" if n in skip else " ".join(w["text"] for w in p.extract_words()))
+            parts.append("" if n in skip else page_text(p))
             p.close()
     # the output deliberately drops the masthead (page 1, up to "Poz. N") and running headers
     parts[0] = re.sub(r"\A.*?Poz\.\s*\d+", "", parts[0], count=1, flags=re.S)
