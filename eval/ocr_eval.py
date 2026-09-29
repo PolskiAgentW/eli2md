@@ -22,6 +22,7 @@ import json
 import os
 import random
 import re
+import resource
 import statistics
 import sys
 import time
@@ -33,7 +34,7 @@ from pathlib import Path
 import pdfplumber
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from eli2md.ocr import _run, check, ocr_image, parse_tsv, render  # noqa: E402
+from eli2md.ocr import _run, check, fix_text, ocr_image, parse_tsv, render  # noqa: E402
 from eli2md.pdf import _drop_hidden_placed  # noqa: E402
 
 CACHE = Path(os.environ.get("ELI2MD_CACHE", Path.home() / "cache" / "eli"))
@@ -131,7 +132,8 @@ def run_digital(job: tuple[dict, list[str], str]) -> dict:
     it, langs, cache = job
     with pdfplumber.open(it["pdf"]) as pdf:
         page = _drop_hidden_placed(pdf.pages[it["page"] - 1])
-        ref_text = page.extract_text() or ""
+        # bold masthead text is drawn twice ("Poz. 1010" -> "11001100"); dedupe the reference
+        ref_text = page.dedupe_chars().extract_text() or ""
         t0 = time.time()
         img = render(page)
         t_render = time.time() - t0
@@ -146,13 +148,16 @@ def run_digital(job: tuple[dict, list[str], str]) -> dict:
             hyp_text = ocr_image(img, lang)
             secs = round(time.time() - t0, 2)
             f.write_text(hyp_text, encoding="utf-8")
-        hyp = tokens(hyp_text)
-        s = score(ref, hyp)
-        s["recall_noacc"] = score(strip_accents(ref), strip_accents(hyp))["recall"]
-        rd, hd = [t for t in ref if re.search(r"\d", t)], [t for t in hyp if re.search(r"\d", t)]
-        s["digits"] = score(rd, hd)
-        s["secs"] = secs
-        row["ocr"][lang] = s
+        for variant, text in ((lang, hyp_text), (lang + " fix_text", fix_text(hyp_text))):
+            hyp = tokens(text)
+            s = score(ref, hyp)
+            s["recall_noacc"] = score(strip_accents(ref), strip_accents(hyp))["recall"]
+            s["bag_matched"] = sum((Counter(ref) & Counter(hyp)).values())  # ignoring order (tables, columns)
+            rd, hd = [t for t in ref if re.search(r"\d", t)], [t for t in hyp if re.search(r"\d", t)]
+            s["digits"] = score(rd, hd)
+            s["digits"]["bag_matched"] = sum((Counter(rd) & Counter(hd)).values())
+            s["secs"] = secs
+            row["ocr"][variant] = s
     return row
 
 
@@ -164,20 +169,25 @@ def summary(rows: list[dict], lang: str, label: str) -> str:
     pre = [s["precision"] for s in ss]
     m, ref, hyp = sum(s["matched"] for s in ss), sum(s["ref"] for s in ss), sum(s["hyp"] for s in ss)
     dm, dr = sum(s["digits"]["matched"] for s in ss), sum(s["digits"]["ref"] for s in ss)
+    db = sum(s["digits"]["bag_matched"] for s in ss)
     noacc = sum(s["recall_noacc"] * s["ref"] for s in ss) / max(ref, 1)
-    return (f"{label:28} n={len(ss):3}  R median {statistics.median(rec):.4f} micro {m / max(ref, 1):.4f}  "
+    bag = sum(s["bag_matched"] for s in ss) / max(ref, 1)
+    return (f"{label:24} n={len(ss):3}  R median {statistics.median(rec):.4f} micro {m / max(ref, 1):.4f}  "
             f"P median {statistics.median(pre):.4f} micro {m / max(hyp, 1):.4f}  "
             f"pages R<0.99 {sum(r < 0.99 for r in rec)}, R<0.95 {sum(r < 0.95 for r in rec)}, "
-            f"R<0.90 {sum(r < 0.90 for r in rec)}  | R without accents {noacc:.4f}  "
-            f"| number tokens R {dm / max(dr, 1):.4f} (n={dr})")
+            f"R<0.90 {sum(r < 0.90 for r in rec)}\n{'':24} R ignoring order {bag:.4f}, without accents {noacc:.4f}"
+            f" | number tokens (n={dr}): R {dm / max(dr, 1):.4f}, ignoring order {db / max(dr, 1):.4f}")
 
 
 def main_digital(a) -> None:
     for lang in a.langs:
         print(f"tesseract {check(lang)} lang {lang}")
-    items = pick_digital(a.root, a.seed, a.agreements, a.other)
+    if a.pages:  # explicit list [{"eli", "type", "page", "pdf"}, ...] instead of a random sample
+        items = [{k: it[k] for k in ("eli", "type", "page", "pdf")} for it in json.loads(Path(a.pages).read_text())]
+    else:
+        items = pick_digital(a.root, a.seed, a.agreements, a.other)
     Path(a.cache).mkdir(parents=True, exist_ok=True)
-    print(f"sample: seed {a.seed}, {len(items)} pages "
+    print(f"sample: {a.pages or f'seed {a.seed}'}, {len(items)} pages "
           f"({sum(i['type'] in AGREEMENT_TYPES for i in items)} from agreements/government statements)", flush=True)
     rows = []
     with ProcessPoolExecutor(max_workers=a.jobs) as ex:
@@ -185,8 +195,8 @@ def main_digital(a) -> None:
             rows.append(r)
             print(f"{r['eli']:13} p{r['page']:<4} {r['type'][:12]:12} {r['lang_text']:2} ref {r['ocr'][a.langs[0]]['ref']:4}  "
                   + "  ".join(f"{l}: R {s['recall']:.3f} P {s['precision']:.3f} {s['secs'] or '-'}s"
-                              for l, s in r["ocr"].items()), flush=True)
-    for lang in a.langs:
+                              for l, s in r["ocr"].items() if "fix" not in l), flush=True)
+    for lang in rows[0]["ocr"]:
         print(f"\n== {lang}")
         print(summary(rows, lang, "all"))
         print(summary([r for r in rows if r["type"] in AGREEMENT_TYPES], lang, "agreements/statements"))
@@ -213,7 +223,9 @@ def run_scan(job: tuple[str, str, list[int], str, str]) -> list[dict]:
             t0 = time.time()
             img = render(pdf.pages[p - 1])
             t1 = time.time()
+            c0 = resource.getrusage(resource.RUSAGE_CHILDREN)
             tsv = _run(img, lang, "tsv")
+            c1 = resource.getrusage(resource.RUSAGE_CHILDREN)
             t2 = time.time()
             page = parse_tsv(tsv, img.height)
             Path(out, f"{eli.replace('/', '-')}_p{p}.{lang}.tsv").write_text(tsv, encoding="utf-8")
@@ -221,6 +233,7 @@ def run_scan(job: tuple[str, str, list[int], str, str]) -> list[dict]:
             Path(out, f"{eli.replace('/', '-')}_p{p}.{lang}.txt").write_text(text, encoding="utf-8")
             toks = tokens(text)
             rows.append({"eli": eli, "page": p, "render_s": round(t1 - t0, 2), "ocr_s": round(t2 - t1, 2),
+                         "ocr_cpu_s": round(c1.ru_utime + c1.ru_stime - c0.ru_utime - c0.ru_stime, 2),
                          "words": len(toks), "conf": round(page.confidence, 1), "lang": language(toks)})
             pdf.pages[p - 1].close()
     return rows
@@ -233,9 +246,16 @@ def main_scans(a) -> None:
     for r in acts(a.root):
         if r["no_text_pages"] in ("", "0"):
             continue
-        pages = expand(front(r["md"]).get("pages_without_text", ""))
-        for k in range(0, len(pages), 25):
-            jobs.append((r["eli"], r["pdf"], pages[k:k + 25], a.lang, a.out))
+        jobs += [(r["eli"], r["pdf"], p) for p in expand(front(r["md"]).get("pages_without_text", ""))]
+    if a.sample:  # a random subset of pages, e.g. for timing
+        jobs = random.Random(a.seed).sample(jobs, a.sample)
+    by_act: dict[tuple[str, str], list[int]] = {}
+    for eli, pdf, p in jobs:
+        by_act.setdefault((eli, pdf), []).append(p)
+    jobs = []
+    for (eli, pdf), pages in by_act.items():
+        pages.sort()
+        jobs += [(eli, pdf, pages[k:k + 25], a.lang, a.out) for k in range(0, len(pages), 25)]
     print(f"{sum(len(j[2]) for j in jobs)} pages without text in {len({j[0] for j in jobs})} acts", flush=True)
     t0 = time.time()
     rows = []
@@ -246,10 +266,11 @@ def main_scans(a) -> None:
     wall = time.time() - t0
     Path(a.out, "pages.json").write_text(json.dumps(rows, ensure_ascii=False, indent=0))
     ocr = [r["ocr_s"] for r in rows]
-    print(f"wall {wall:.0f}s with {a.jobs} processes; per page (1 thread): OCR mean {statistics.mean(ocr):.2f}s "
-          f"median {statistics.median(ocr):.2f}s max {max(ocr):.2f}s, render mean "
-          f"{statistics.mean(r['render_s'] for r in rows):.2f}s; CPU-seconds total "
-          f"{sum(ocr) + sum(r['render_s'] for r in rows):.0f}")
+    cpu = [r["ocr_cpu_s"] for r in rows]
+    print(f"wall {wall:.0f}s with {a.jobs} processes (load average at end: {os.getloadavg()[0]:.1f}); per page, "
+          f"tesseract 1 thread: wall mean {statistics.mean(ocr):.2f}s median {statistics.median(ocr):.2f}s "
+          f"max {max(ocr):.2f}s; CPU mean {statistics.mean(cpu):.2f}s median {statistics.median(cpu):.2f}s; "
+          f"render (300 dpi) wall mean {statistics.mean(r['render_s'] for r in rows):.2f}s")
     print("pages by guessed language:", dict(Counter(r["lang"] for r in rows).most_common()))
     print("pages with < 20 words:", sum(r["words"] < 20 for r in rows))
     print("pages by median word confidence:",
@@ -272,12 +293,15 @@ def main() -> None:
     d.add_argument("--langs", nargs="+", default=["pol", "pol+eng"])
     d.add_argument("--jobs", type=int, default=1)
     d.add_argument("--cache", default="/tmp/eli2md-ocr-digital", help="OCR texts are kept here")
+    d.add_argument("--pages", help="JSON list of pages to use instead of a random sample")
     d.add_argument("--json")
     s = sub.add_parser("scans")
     s.add_argument("--root", type=Path, required=True)
     s.add_argument("--lang", default="pol+eng")
     s.add_argument("--out", required=True)
     s.add_argument("--jobs", type=int, default=1)
+    s.add_argument("--sample", type=int, default=0, help="only this many random pages")
+    s.add_argument("--seed", type=int, default=1)
     a = ap.parse_args()
     main_digital(a) if a.cmd == "digital" else main_scans(a)
 

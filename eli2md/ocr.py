@@ -29,6 +29,20 @@ MIN_WORDS, MIN_CONF = 20, 80.0  # below either, the page keeps only the note (TO
 LOWER = "a-ząćęłńóśźżàâçéèêëîïôûùüÿñæœäöåõãíúýøα-ωά-ώ"
 
 
+# tesseract (pol) often reads a lone "1" as "|": "ust. | pkt 2", "Ustęp |". Fixed only after a unit
+# word, where a table rule "|" cannot stand (eval/ocr_eval_*.txt: number tokens with and without this).
+LONE_ONE = re.compile(r"((?:\b(?:art|ust|pkt|poz|nr|lit|rozdz|par|str|ustęp|ustępie|ustępu|ustępach|artykuł|artykułu|"
+                      r"artykule|punkt|punkcie|punktu|załącznik|załącznika|załączniku|rozdział|rozdziału|część|"
+                      r"części|article|paragraph|section)\.?|§)) \|(?=$|[\s,.;:)–-])", re.I)
+
+
+ONE_IN_LIST = re.compile(r"(?<=\s)\|(?=(?:,| i| lub| oraz| and| or| [-–]) \d)")  # "strefach | i 2", "|, 2 i 3"
+
+
+def fix_text(text: str) -> str:
+    return ONE_IN_LIST.sub("1", LONE_ONE.sub(r"\1 1", text))
+
+
 class OcrUnavailable(RuntimeError):
     """tesseract or a requested language is not installed."""
 
@@ -99,6 +113,7 @@ def parse_tsv(tsv: str, height: int) -> OcrPage:
         text = " ".join(w for _, w, _ in words)
         if min(t for t, _, _ in words) < HEADER_BAND * height and OCR_HEADER.match(text):
             continue
+        text = fix_text(text)
         confs += [c for _, _, c in words]
         prev = paras.get((blk, par), "")
         if re.search(rf"[{LOWER}]-$", prev) and re.match(rf"[{LOWER}]", text):

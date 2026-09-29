@@ -1,6 +1,6 @@
 """Build or update a directory of Markdown texts of Dziennik Ustaw acts that have only PDF text.
 
-    python -m eli2md.dataset --root DIR [--years 2025 2026] [--max N] [--time-budget SEC] [--jobs N] [--all]
+    python -m eli2md.dataset --root DIR [--years 2025 2026] [--max N] [--time-budget SEC] [--jobs N] [--all] [--ocr [LANG]]
 
 Layout: DIR/DU/<year>/DU-<year>-<pos>.md and DIR/index.csv (one row per act, including failures).
 An act is (re)converted when it is new, when its ELI `changeDate` differs from the index, or when
@@ -25,6 +25,7 @@ import pdfplumber
 
 from . import __version__
 from .eli import API, fetch, get
+from .ocr import LANG as OCR_LANG, OcrUnavailable, check as check_ocr
 from .pdf import convert, to_markdown
 
 FIELDS = ["eli", "year", "pos", "type", "title", "announcement_date", "promulgation", "change_date",
@@ -63,13 +64,13 @@ def _limit_memory(gb: float) -> None:
         resource.setrlimit(resource.RLIMIT_AS, (lim, lim))
 
 
-def _convert_one(job: tuple[str, str, str]) -> dict:
+def _convert_one(job: tuple[str, str, str, str | None]) -> dict:
     """Worker: convert one downloaded act. Returns the index row fields it determines."""
-    eli, pdf_path, out_path = job
+    eli, pdf_path, out_path, ocr = job
     meta = json.loads((Path(pdf_path).parent / "meta.json").read_text())
     t0 = time.time()
     try:
-        doc = convert(pdf_path)
+        doc = convert(pdf_path, ocr=ocr)
         md = to_markdown(doc, meta)
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
         Path(out_path).write_text(md, encoding="utf-8")
@@ -98,7 +99,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--all", action="store_true", help="reconvert every act (e.g. after a converter change)")
     ap.add_argument("--mem-limit-gb", type=float, default=3,
                     help="address-space limit per conversion worker (0 = none)")
+    ap.add_argument("--ocr", nargs="?", const=OCR_LANG, metavar="LANG",
+                    help=f"OCR pages without a text layer with tesseract (off by default; LANG default {OCR_LANG})")
     a = ap.parse_args(argv)
+    if a.ocr:
+        try:
+            check_ocr(a.ocr)
+        except OcrUnavailable as e:
+            ap.error(str(e))
     t_start = time.time()
     a.root.mkdir(parents=True, exist_ok=True)
     index = load_index(a.root)
@@ -133,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
             continue
         sha = hashlib.sha256(pdf.read_bytes()).hexdigest()
         index[eli] = {**_base_row(it), "pdf_sha256": sha}
-        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos))))
+        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos)), a.ocr))
 
     done = 0
     with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
