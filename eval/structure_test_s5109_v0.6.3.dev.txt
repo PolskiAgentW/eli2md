@@ -1,0 +1,59 @@
+  793 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (15/15) R=1.0000 (15/15)  annex: head R=1.0000 (12/12) P=1.0000 (12/12) break P=1.0000 (84/84) R=1.0000 (78/78)
+ 1441 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (3/3) R=1.0000 (3/3)  annex: head R=1.0000 (31/31) P=1.0000 (31/31) break P=1.0000 (349/349) R=0.9969 (324/325)
+  692 Rozporządzenie para  main: head R=1.0000 (32/32) P=1.0000 (32/32) break P=1.0000 (151/151) R=1.0000 (124/124)
+  593 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (8/8) R=1.0000 (8/8)  annex: head R=1.0000 (249/249) P=1.0000 (249/249) break P=1.0000 (1012/1012) R=1.0000 (827/827)
+ 1751 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (10/10) R=1.0000 (10/10)  annex: head R=1.0000 (16/16) P=1.0000 (16/16) break P=1.0000 (73/73) R=1.0000 (63/63)
+  774 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (10/10) R=1.0000 (6/6)
+  158 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (18/18) R=1.0000 (18/18)  annex: head R=1.0000 (21/21) P=1.0000 (21/21) break P=1.0000 (302/302) R=1.0000 (295/295)
+  636 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (14/14) R=1.0000 (14/14)
+  459 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (17/17) R=1.0000 (17/17)  annex: head R=1.0000 (41/41) P=1.0000 (41/41) break P=1.0000 (290/290) R=0.9963 (269/270)
+  999 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (5/5) R=1.0000 (3/3)
+ 1981 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (6/6) R=1.0000 (4/4)
+  260 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (6/6) R=1.0000 (5/5)
+Ignoring (part of) ToUnicode map because the PDF data does not conform to the format. This could result in (cid) values in the output. The start and end byte have different lengths.
+Ignoring (part of) ToUnicode map because the PDF data does not conform to the format. This could result in (cid) values in the output. The start and end byte have different lengths.
+Ignoring (part of) ToUnicode map because the PDF data does not conform to the format. This could result in (cid) values in the output. The start and end byte have different lengths.
+Ignoring (part of) ToUnicode map because the PDF data does not conform to the format. This could result in (cid) values in the output. The start and end byte have different lengths.
+  398 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (3/3) R=1.0000 (3/3)  annex: head R=1.0000 (17/17) P=1.0000 (17/17) break P=1.0000 (69/69) R=1.0000 (60/60)
+ 1728 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (5/5) R=1.0000 (3/3)
+ 1122 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (5/5) R=1.0000 (3/3)
+ 1948 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (28/28) R=1.0000 (26/26)
+  573 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (3/3) R=1.0000 (3/3)  annex: head R=1.0000 (131/131) P=1.0000 (131/131) break P=0.9989 (945/946) R=0.9843 (880/894)
+  164 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (7/7) R=1.0000 (5/5)
+  806 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (6/6) R=1.0000 (6/6)  annex: head R=1.0000 (122/122) P=1.0000 (122/122) break P=1.0000 (581/581) R=1.0000 (504/504)
+  471 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (5/5) R=1.0000 (3/3)  annex: head R=- P=- break P=1.0000 (32/32) R=1.0000 (1/1)
+  700 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (3/3) R=1.0000 (3/3)  annex: head R=1.0000 (25/25) P=1.0000 (25/25) break P=1.0000 (213/213) R=1.0000 (210/210)
+  404 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (6/6) R=1.0000 (5/5)  annex: head R=- P=- break P=1.0000 (21/21) R=-
+ 1262 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (8/8) R=1.0000 (8/8)  annex: head R=1.0000 (101/101) P=1.0000 (101/101) break P=1.0000 (496/496) R=1.0000 (442/442)
+  364 Oświadczenie r para  main: head R=- P=- break P=1.0000 (3/3) R=1.0000 (3/3)
+ 1308 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (7/7) R=1.0000 (4/4)
+ 1674 Ustawa         arti  main: head R=1.0000 (16/16) P=1.0000 (16/16) break P=1.0000 (91/91) R=1.0000 (83/83)
+ 1659 Rozporządzenie para  main: head R=1.0000 (8/8) P=1.0000 (8/8) break P=1.0000 (23/23) R=1.0000 (15/15)
+ 1714 Rozporządzenie para  main: head R=1.0000 (3/3) P=1.0000 (3/3) break P=1.0000 (9/9) R=1.0000 (6/6)
+ 1833 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (13/13) R=1.0000 (11/11)
+  347 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (28/28) R=1.0000 (26/26)
+  935 Obwieszczenie  arti  main: head R=- P=- break P=1.0000 (17/17) R=1.0000 (17/17)  annex: head R=1.0000 (349/349) P=1.0000 (349/349) break P=1.0000 (1369/1369) R=1.0000 (1173/1173)
+ 1148 Ustawa         arti  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (4/4) R=1.0000 (2/2)
+ 1518 Rozporządzenie para  main: head R=1.0000 (4/4) P=1.0000 (4/4) break P=1.0000 (18/18) R=1.0000 (14/14)
+ 1018 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (8/8) R=1.0000 (6/6)  annex: head R=- P=- break P=0.8125 (65/80) R=0.0000 (0/2)
+  308 Obwieszczenie  para  main: head R=- P=- break P=1.0000 (3/3) R=1.0000 (3/3)  annex: head R=1.0000 (14/14) P=1.0000 (14/14) break P=1.0000 (53/53) R=1.0000 (44/44)
+  834 Ustawa         arti  main: head R=1.0000 (84/84) P=1.0000 (84/84) break P=1.0000 (528/528) R=1.0000 (457/457)
+ 1950 Rozporządzenie para  main: head R=1.0000 (2/2) P=1.0000 (2/2) break P=1.0000 (28/28) R=1.0000 (26/26)
+scored 37/37 acts
+TOTAL main  heading  R=1.0000 (180/180)  P=1.0000 (180/180)  unaligned: ref 0, md 0
+TOTAL main  sub pass   R=1.0000 (203/203)  unaligned 0
+TOTAL main  sub pint   R=1.0000 (393/393)  unaligned 0
+TOTAL main  sub lett   R=1.0000 (93/93)  unaligned 0
+TOTAL main  sub arti_q R=1.0000 (16/16)  unaligned 0
+TOTAL main  sub para_q R=1.0000 (17/17)  unaligned 0
+TOTAL main  sub chpt   R=1.0000 (10/10)  unaligned 0
+TOTAL main  break    P=1.0000 (1122/1122)  R=1.0000 (968/968)  unaligned 38  (title breaks, not in P: 107)
+TOTAL annex heading  R=1.0000 (1129/1129)  P=1.0000 (1129/1129)  unaligned: ref 0, md 0
+TOTAL annex sub pass   R=1.0000 (1246/1246)  unaligned 4
+TOTAL annex sub pint   R=1.0000 (1373/1373)  unaligned 1
+TOTAL annex sub lett   R=1.0000 (234/234)  unaligned 0
+TOTAL annex sub para_q R=1.0000 (939/939)  unaligned 9
+TOTAL annex sub chpt   R=1.0000 (100/100)  unaligned 0
+TOTAL annex break    P=0.9973 (5954/5970)  R=0.9965 (5170/5188)  unaligned 1188
+acts with main heading R<1: 0/22
+acts with annex heading R<1: 0/13

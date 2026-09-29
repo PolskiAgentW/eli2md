@@ -1,0 +1,58 @@
+  793 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (76/76) P=1.0000 (76/76)
+ 1441 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=0.9771 (299/306) P=0.9771 (299/306)
+  692 Rozporządzenie main: R=1.0000 (109/109) P=1.0000 (109/109)
+  593 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (783/783) P=1.0000 (783/783)
+ 1751 Obwieszczenie  main: R=1.0000 (6/6) P=1.0000 (6/6)  annex: R=1.0000 (63/63) P=1.0000 (63/63)
+  774 Rozporządzenie main: R=1.0000 (4/4) P=1.0000 (4/4)
+  158 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (272/272) P=1.0000 (272/272)
+  636 Obwieszczenie  main: R=1.0000 (6/6) P=1.0000 (6/6)
+  459 Obwieszczenie  main: R=1.0000 (6/6) P=1.0000 (6/6)  annex: R=1.0000 (259/259) P=1.0000 (259/259)
+  999 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
+ 1981 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
+  260 Rozporządzenie main: R=1.0000 (4/4) P=1.0000 (4/4)
+Ignoring (part of) ToUnicode map because the PDF data does not conform to the format. This could result in (cid) values in the output. The start and end byte have different lengths.
+Ignoring (part of) ToUnicode map because the PDF data does not conform to the format. This could result in (cid) values in the output. The start and end byte have different lengths.
+Ignoring (part of) ToUnicode map because the PDF data does not conform to the format. This could result in (cid) values in the output. The start and end byte have different lengths.
+Ignoring (part of) ToUnicode map because the PDF data does not conform to the format. This could result in (cid) values in the output. The start and end byte have different lengths.
+  398 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (60/60) P=1.0000 (60/60)
+ 1728 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
+ 1122 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
+ 1948 Rozporządzenie main: R=1.0000 (12/12) P=1.0000 (12/12)
+  573 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (819/819) P=1.0000 (819/819)
+  164 Rozporządzenie main: R=1.0000 (4/4) P=1.0000 (4/4)
+  806 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (482/482) P=1.0000 (482/482)
+  471 Rozporządzenie main: R=1.0000 (2/2) P=1.0000 (2/2)
+  700 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (210/210) P=1.0000 (210/210)
+  404 Rozporządzenie main: R=1.0000 (4/4) P=1.0000 (4/4)  annex: R=- P=0.0000 (0/11)
+ 1262 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (424/424) P=1.0000 (424/424)
+  364 Oświadczenie r 
+ 1308 Rozporządzenie main: R=1.0000 (3/3) P=1.0000 (3/3)
+ 1674 Ustawa         main: R=1.0000 (80/80) P=1.0000 (80/80)
+ 1659 Rozporządzenie main: R=1.0000 (14/14) P=1.0000 (14/14)
+ 1714 Rozporządzenie main: R=1.0000 (3/3) P=1.0000 (3/3)
+ 1833 Rozporządzenie main: R=1.0000 (6/6) P=1.0000 (6/6)
+  347 Rozporządzenie main: R=1.0000 (12/12) P=1.0000 (12/12)
+  935 Obwieszczenie  main: R=1.0000 (6/6) P=1.0000 (6/6)  annex: R=1.0000 (1137/1137) P=1.0000 (1137/1137)
+ 1148 Ustawa         main: R=1.0000 (2/2) P=1.0000 (2/2)
+ 1518 Rozporządzenie main: R=1.0000 (13/13) P=1.0000 (13/13)
+ 1018 Rozporządzenie main: R=1.0000 (5/5) P=1.0000 (5/5)
+  308 Obwieszczenie  main: R=1.0000 (2/2) P=1.0000 (2/2)  annex: R=1.0000 (44/44) P=1.0000 (44/44)
+  834 Ustawa         main: R=1.0000 (315/315) P=1.0000 (315/315)
+ 1950 Rozporządzenie main: R=1.0000 (12/12) P=1.0000 (12/12)
+scored 37/37 acts
+TOTAL main  all (art,par,ust,pkt,lit)  R=1.0000 (656/656)  P=1.0000 (656/656)  R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0; quoted ref units left out: 246; untyped HTML units typed by label: 0
+TOTAL main  attach  text paragraphs under the right unit: 1.0000 (437/437) (unaligned 5); words in the right unit: 0.9997 (27557/27566)
+TOTAL main  art   R=1.0000 (102/102)        P=1.0000 (102/102)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL main  par   R=1.0000 (78/78)          P=1.0000 (78/78)          R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL main  ust   R=1.0000 (127/127)        P=1.0000 (127/127)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL main  pkt   R=1.0000 (263/263)        P=1.0000 (263/263)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL main  lit   R=1.0000 (86/86)          P=1.0000 (86/86)          R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL main  tir   no reference units in the HTML, not scored; JSON nodes: 11
+TOTAL annex all (art,par,ust,pkt,lit)  R=0.9986 (4928/4935)  P=0.9964 (4928/4946)  R miss none/path 0/7  P miss none/path 11/7  unaligned ref 0, json 101; quoted ref units left out: 0; untyped HTML units typed by label: 0
+TOTAL annex attach  text paragraphs under the right unit: 0.8708 (182/209) (unaligned 988); words in the right unit: 0.9906 (109304/110337)
+TOTAL annex art   R=1.0000 (896/896)        P=1.0000 (896/896)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL annex par   R=1.0000 (1181/1181)      P=1.0000 (1181/1181)      R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL annex ust   R=1.0000 (1250/1250)      P=0.9913 (1250/1261)      R miss none/path 0/0  P miss none/path 11/0  unaligned ref 0, json 72
+TOTAL annex pkt   R=0.9949 (1367/1374)      P=0.9949 (1367/1374)      R miss none/path 0/7  P miss none/path 0/7  unaligned ref 0, json 29
+TOTAL annex lit   R=1.0000 (234/234)        P=1.0000 (234/234)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
+TOTAL annex tir   no reference units in the HTML, not scored; JSON nodes: 36
