@@ -102,9 +102,25 @@ python eval/fetch_sample.py 50 99                 # pobiera PDF + HTML do ~/cach
 python eval/evaluate.py eval/test_2024_s99.json
 ```
 
+### Kontrola bez wzorca: akty 2025–2026
+
+Dla aktów z 2025 r. i później nie ma oficjalnego HTML, więc nie ma wzorca. `eval/selfcheck.py`
+porównuje słowa z Markdown ze słowami z warstwy tekstowej PDF (bez winiety i nagłówków stron).
+Sprawdza tylko, czy tekst nie ginie. Poprawności kolejności i struktury nie sprawdza. Wynik dla
+wszystkich 3155 aktów (wersja 0.4.0, 2026-09-29):
+
+- odsetek słów PDF obecnych w wyniku (kept): mediana 0.975, 225 aktów poniżej 0.95, 24 poniżej 0.8;
+- odsetek słów wyniku obecnych w PDF (grounded): mediana 0.989, 41 aktów poniżej 0.95.
+
+Obejrzałem tylko najgorszy przypadek, DU/2025/243. To wzór formularza z kilkoma nakładającymi się
+warstwami tekstu, a wynik jest tam częściowo pomieszany. Pozostałych nie przeglądałem.
+Strony bez warstwy tekstowej (skany) są dla tej kontroli niewidoczne. Wynik je tylko oznacza.
+
 ## Znane ograniczenia
 
-- Tabele są spłaszczane do akapitów (komórki wierszami), wzory do zwykłego tekstu, grafiki pomijane.
+- Tabele są spłaszczane do akapitów (komórki wierszami), wzory do zwykłego tekstu. Grafik i skanów
+  nie ma w wyniku (od 0.4.0 miejsce jest oznaczone notką).
+- Wzory formularzy z kilkoma warstwami tekstu bywają pomieszane (np. DU/2025/243).
 - Strony z tekstem obróconym (tabele w poziomie na stronie pionowej) czytam w obróconym układzie
   (od 0.2). Tekst w innym kierunku niż reszta strony, np. pionowe nagłówki kolumn, trafia na
   koniec strony.
@@ -112,7 +128,8 @@ python eval/evaluate.py eval/test_2024_s99.json
   Taki ukryty tekst wykrywam heurystycznie: renderuję stronę i sprawdzam, czy pod znakiem jest tusz.
   Mogą zostać pojedyncze duplikaty.
 - Objaśnienia pod formularzami w załącznikach bywają brane za przypisy (niska precision przypisów).
-- Tylko PDF-y z warstwą tekstową (Dz.U. je ma). Bez OCR.
+- Bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 52 905 stron),
+  głównie umowy międzynarodowe.
 
 ## Licencja
 
