@@ -48,12 +48,12 @@ class Line:
     text: str
     pw: float = 595.0
     ph: float = 842.0
-    mark: str = ""  # "notext" | "image": position marker for content that is not text
+    mark: str = ""  # "notext" | "image": position marker for content that is not text; "ocr": text read by OCR
 
 
 @dataclass
 class Block:
-    kind: str  # "p" | "signature" | "annex" (annex header) | "notext" | "image" (see Line.mark)
+    kind: str  # "p" | "signature" | "annex" (annex header) | "notext" | "image" | "ocr" (see Line.mark)
     text: str
     page: int
 
@@ -65,6 +65,8 @@ class Document:
     footnotes: list[str] = field(default_factory=list)
     no_text_pages: list[int] = field(default_factory=list)  # e.g. scanned pages: their content is lost
     image_pages: list[int] = field(default_factory=list)  # pages with text and large images (forms, drawings)
+    ocr_pages: list[int] = field(default_factory=list)  # pages without text whose OCR text is included
+    ocr_engine: str = ""  # e.g. "tesseract 5.5.0, pol+eng"
 
     @property
     def paragraphs(self) -> list[str]:
@@ -289,10 +291,15 @@ def _join(prev: str, nxt: str) -> str:
     return prev + " " + nxt
 
 
-def convert(path: str) -> Document:
+def convert(path: str, ocr: str | None = None) -> Document:
+    """ocr: tesseract language(s), e.g. "pol+eng", to read pages without a text layer (see ocr.py);
+    None (default) = no OCR, such pages only get a note."""
     doc = Document()
     body: list[Line] = []
     notes: list[Line] = []
+    if ocr:
+        from . import ocr as ocr_mod
+        doc.ocr_engine = f"tesseract {ocr_mod.check(ocr)}, {ocr}"
     with pdfplumber.open(path) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
             b, n = _page_lines(page, pno)
@@ -306,7 +313,12 @@ def convert(path: str) -> Document:
                 b = b[1:]
             if not b and not n:
                 doc.no_text_pages.append(pno)
-                b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="notext")]
+                read = ocr_mod.ocr_page(page, ocr) if ocr else None
+                if read and ocr_mod.usable(read):
+                    doc.ocr_pages.append(pno)
+                    b = [Line(pno, 0.0, 0.0, 0.0, 1.0, t, page.width, page.height, mark="ocr") for t in read.paragraphs]
+                else:
+                    b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="notext")]
             elif (img := _large_image(page)) is not None:
                 doc.image_pages.append(pno)
                 m = Line(pno, img, img, 0.0, 1.0, "", page.width, page.height, mark="image")
@@ -331,7 +343,7 @@ def convert(path: str) -> Document:
             kind = "signature"
         if prev is None or cur is None:
             new = True
-        elif kind != "p" or cur.kind in ("signature", "notext", "image"):
+        elif kind != "p" or cur.kind in ("signature", "notext", "image", "ocr"):
             new = not (kind == "annex" and cur.kind == "annex" and l.page == prev.page)
         elif cur.kind == "annex":
             # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
@@ -390,6 +402,8 @@ def quote_depths(blocks: list[Block]) -> list[int]:
         if b.kind == "annex":
             d = 0
         depths.append(d)
+        if b.kind == "ocr":  # OCR misreads quotes; its text is never a heading anyway
+            continue
         t = SECONDS.sub("", b.text)
         head = QUOTE_HEAD.match(t)
         carry, local = d, 0  # quotes open from earlier blocks / opened mid-block in this one
@@ -427,8 +441,18 @@ def no_text_note(pages: list[int]) -> str:
             "Ich treści tu nie ma, jest tylko w PDF.]")
 
 
+def ocr_note(page: int, engine: str) -> str:
+    return f"> [Strona {page}: tekst odczytany przez OCR ({engine}), może zawierać błędy. Wiążący jest PDF.]"
+
+
+def _escape_ocr(text: str) -> str:
+    """OCR text is plain text: a leading #, >, |, [^ or bullet must not become Markdown syntax.
+    ("1. Tekst" stays as it is, like ust. in the text layer.)"""
+    return "\\" + text if re.match(r"^([#>|]|[-*+]\s|\[\^)", text) else text
+
+
 def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[int] | None = None,
-                image_pages: list[int] | None = None) -> str:
+                image_pages: list[int] | None = None, ocr_pages: list[int] | None = None, ocr_engine: str = "") -> str:
     """YAML front matter; keys follow legalize-pl where the meaning is the same."""
     from . import __version__
 
@@ -453,6 +477,8 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
         "text_source": "pdf",
         "pages_without_text": page_ranges(no_text_pages or []),
         "pages_with_images": page_ranges(image_pages or []),
+        "pages_ocr": page_ranges(ocr_pages or []),
+        "ocr": ocr_engine if ocr_pages else "",
         "converter": f"eli2md {__version__}",
         "disclaimer": "Nieoficjalny tekst z automatycznej konwersji PDF. Wiążący jest PDF w Dzienniku Ustaw.",
     }
@@ -467,13 +493,19 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
 def to_markdown(doc: Document, meta: dict | None = None) -> str:
     """Markdown body: one block per paragraph, top-level units (Art. or, if none, §) as h5."""
     depths = quote_depths(doc.blocks)
-    unit = "Art." if any(b.text.startswith("Art.") and d == 0 for b, d in zip(doc.blocks, depths)) else "§"
+    unit = "Art." if any(b.text.startswith("Art.") and d == 0 and b.kind != "ocr"
+                         for b, d in zip(doc.blocks, depths)) else "§"
     out = []
     if meta:
-        out += [frontmatter(meta, no_text_pages=doc.no_text_pages, image_pages=doc.image_pages), "# " + meta["title"]]
+        out += [frontmatter(meta, no_text_pages=doc.no_text_pages, image_pages=doc.image_pages,
+                            ocr_pages=doc.ocr_pages, ocr_engine=doc.ocr_engine), "# " + meta["title"]]
     run: list[int] = []  # consecutive pages without text get one note
     for i, b in enumerate(doc.blocks):
-        if b.kind == "notext":
+        if b.kind == "ocr":  # each OCR page starts with its own note
+            if i == 0 or doc.blocks[i - 1].kind != "ocr" or doc.blocks[i - 1].page != b.page:
+                out.append(ocr_note(b.page, doc.ocr_engine))
+            out.append(_escape_ocr(b.text))
+        elif b.kind == "notext":
             run.append(b.page)
             nxt = doc.blocks[i + 1] if i + 1 < len(doc.blocks) else None
             if not (nxt and nxt.kind == "notext" and nxt.page == b.page + 1):

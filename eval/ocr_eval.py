@@ -1,0 +1,286 @@
+"""How good is tesseract OCR on Dziennik Ustaw pages, and what does it cost? No hand-made reference.
+
+digital: born-digital pages (with a text layer) of 2025-2026 acts are rendered at 300 dpi, OCRed and
+  compared with the page's own text layer: word tokens as in evaluate.py (case-folded \\w+),
+  difflib alignment. recall = text-layer words recovered in order, precision = OCR words that
+  are in the text layer. Rendered digital pages are cleaner than real scans, so this is an UPPER
+  bound for scans. Pages with large images (pages_with_images) are excluded, their image text
+  is not in the text layer.
+scans: OCR of every page without a text layer (pages_without_text in the dataset); records time
+  per page and a guess of the language (stopword counts) for the survey. Texts are kept in --out.
+
+Usage:
+  python eval/ocr_eval.py digital --root DATA --seed 1 --agreements 60 --other 40 --langs pol pol+eng [--jobs 3]
+  python eval/ocr_eval.py scans --root DATA --lang pol+eng --out DIR [--jobs 2]
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import difflib
+import json
+import os
+import random
+import re
+import statistics
+import sys
+import time
+import unicodedata
+from collections import Counter
+from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
+
+import pdfplumber
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from eli2md.ocr import _run, check, ocr_image, parse_tsv, render  # noqa: E402
+from eli2md.pdf import _drop_hidden_placed  # noqa: E402
+
+CACHE = Path(os.environ.get("ELI2MD_CACHE", Path.home() / "cache" / "eli"))
+AGREEMENT_TYPES = {"Umowa międzynarodowa", "Oświadczenie rządowe"}
+SCRIPTS = {ord(c): f" {i % 10} " for i, c in enumerate("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉")}
+# a few very frequent function words per language; enough to tell the language of a page of text
+STOP = {
+    "pl": "i w z na się do że nie jest oraz lub przez dla od o który która które być może jego ich zgodnie art",
+    "en": "the of and to in a is that for by or be shall as with this any on which are from",
+    "fr": "le la les de des et du un une est en par pour dans que qui sur au aux ou être",
+    "de": "der die das und zu den des von mit ist im nicht auf für eine ein dem sich oder",
+    "pt": "o a os as de do da dos das e em um uma que para por com não ou no na se ao",
+    "es": "el la los las de del y en un una que por para con no o se al lo sus",
+    "sv": "och att det som en på är av för med till den har de inte om ett eller",
+    "el": "και το της του να των τα η ο με σε για που την στο οι από",
+    "ru": "и в не на что с по как к из о от для это или его",
+}
+STOP = {k: set(v.split()) for k, v in STOP.items()}
+
+
+def tokens(text: str) -> list[str]:
+    """As in evaluate.py: NFC, script digits as separate tokens, case-folded \\w+."""
+    text = unicodedata.normalize("NFC", text).translate(SCRIPTS)
+    return re.findall(r"\w+", text.lower())
+
+
+def strip_accents(toks: list[str]) -> list[str]:
+    return ["".join(c for c in unicodedata.normalize("NFD", t) if not unicodedata.combining(c)) for t in toks]
+
+
+def score(ref: list[str], hyp: list[str]) -> dict:
+    m = sum(b.size for b in difflib.SequenceMatcher(None, ref, hyp, autojunk=False).get_matching_blocks())
+    return {"ref": len(ref), "hyp": len(hyp), "matched": m,
+            "recall": m / len(ref) if ref else 1.0, "precision": m / len(hyp) if hyp else 1.0}
+
+
+def language(toks: list[str]) -> str:
+    c = Counter({lang: sum(1 for t in toks if t in words) for lang, words in STOP.items()})
+    lang, n = c.most_common(1)[0]
+    return lang if n >= 5 and n >= 0.1 * len(toks) else "?"
+
+
+def expand(ranges: str) -> list[int]:
+    out: list[int] = []
+    for part in filter(None, (p.strip() for p in ranges.split(","))):
+        a, _, b = part.partition("-")
+        out += range(int(a), int(b or a) + 1)
+    return out
+
+
+def front(md: Path) -> dict:
+    head = md.read_text(encoding="utf-8").split("\n---\n", 1)[0]
+    return {m.group(1): json.loads(m.group(2)) for m in re.finditer(r"^(\w+): (.*)$", head, re.M)}
+
+
+def acts(root: Path) -> list[dict]:
+    with (root / "index.csv").open(newline="", encoding="utf-8") as fh:
+        rows = [r for r in csv.DictReader(fh) if r["status"] == "ok"]
+    for r in rows:
+        r["pdf"] = str(CACHE / "DU" / r["year"] / r["pos"] / "text.pdf")
+        r["md"] = root / "DU" / r["year"] / f"DU-{r['year']}-{r['pos']}.md"
+    return rows
+
+
+# ---------------------------------------------------------------- digital pages
+
+def pick_digital(root: Path, seed: int, n_agr: int, n_other: int, min_words: int = 50) -> list[dict]:
+    """One random page per randomly chosen act; the page must have >= min_words text-layer words
+    and no large image. Acts are drawn without replacement from each pool."""
+    rng = random.Random(seed)
+    rows = acts(root)
+    out = []
+    for pool, n in ((True, n_agr), (False, n_other)):
+        cand = [r for r in rows if (r["type"] in AGREEMENT_TYPES) == pool]
+        rng.shuffle(cand)
+        got = 0
+        for r in cand:
+            if got == n:
+                break
+            fm = front(r["md"])
+            skip = set(expand(fm.get("pages_without_text", ""))) | set(expand(fm.get("pages_with_images", "")))
+            pages = [p for p in range(1, int(r["pages"]) + 1) if p not in skip]
+            rng.shuffle(pages)
+            with pdfplumber.open(r["pdf"]) as pdf:
+                for p in pages[:5]:  # a few tries for a page with enough text
+                    page = pdf.pages[p - 1]
+                    if len(tokens(page.extract_text() or "")) >= min_words:
+                        out.append({"eli": r["eli"], "type": r["type"], "page": p, "pdf": r["pdf"]})
+                        got += 1
+                        break
+    return out
+
+
+def run_digital(job: tuple[dict, list[str], str]) -> dict:
+    it, langs, cache = job
+    with pdfplumber.open(it["pdf"]) as pdf:
+        page = _drop_hidden_placed(pdf.pages[it["page"] - 1])
+        ref_text = page.extract_text() or ""
+        t0 = time.time()
+        img = render(page)
+        t_render = time.time() - t0
+    ref = tokens(ref_text)
+    row = {**it, "lang_text": language(ref), "render_s": round(t_render, 2), "ocr": {}}
+    for lang in langs:
+        f = Path(cache) / f"{it['eli'].replace('/', '-')}_p{it['page']}.{lang}.txt"
+        t0 = time.time()
+        if f.exists():
+            hyp_text, secs = f.read_text(encoding="utf-8"), None
+        else:
+            hyp_text = ocr_image(img, lang)
+            secs = round(time.time() - t0, 2)
+            f.write_text(hyp_text, encoding="utf-8")
+        hyp = tokens(hyp_text)
+        s = score(ref, hyp)
+        s["recall_noacc"] = score(strip_accents(ref), strip_accents(hyp))["recall"]
+        rd, hd = [t for t in ref if re.search(r"\d", t)], [t for t in hyp if re.search(r"\d", t)]
+        s["digits"] = score(rd, hd)
+        s["secs"] = secs
+        row["ocr"][lang] = s
+    return row
+
+
+def summary(rows: list[dict], lang: str, label: str) -> str:
+    if not rows:
+        return f"{label:28} n=0"
+    ss = [r["ocr"][lang] for r in rows]
+    rec = [s["recall"] for s in ss]
+    pre = [s["precision"] for s in ss]
+    m, ref, hyp = sum(s["matched"] for s in ss), sum(s["ref"] for s in ss), sum(s["hyp"] for s in ss)
+    dm, dr = sum(s["digits"]["matched"] for s in ss), sum(s["digits"]["ref"] for s in ss)
+    noacc = sum(s["recall_noacc"] * s["ref"] for s in ss) / max(ref, 1)
+    return (f"{label:28} n={len(ss):3}  R median {statistics.median(rec):.4f} micro {m / max(ref, 1):.4f}  "
+            f"P median {statistics.median(pre):.4f} micro {m / max(hyp, 1):.4f}  "
+            f"pages R<0.99 {sum(r < 0.99 for r in rec)}, R<0.95 {sum(r < 0.95 for r in rec)}, "
+            f"R<0.90 {sum(r < 0.90 for r in rec)}  | R without accents {noacc:.4f}  "
+            f"| number tokens R {dm / max(dr, 1):.4f} (n={dr})")
+
+
+def main_digital(a) -> None:
+    for lang in a.langs:
+        print(f"tesseract {check(lang)} lang {lang}")
+    items = pick_digital(a.root, a.seed, a.agreements, a.other)
+    Path(a.cache).mkdir(parents=True, exist_ok=True)
+    print(f"sample: seed {a.seed}, {len(items)} pages "
+          f"({sum(i['type'] in AGREEMENT_TYPES for i in items)} from agreements/government statements)", flush=True)
+    rows = []
+    with ProcessPoolExecutor(max_workers=a.jobs) as ex:
+        for r in ex.map(run_digital, [(it, a.langs, a.cache) for it in items]):
+            rows.append(r)
+            print(f"{r['eli']:13} p{r['page']:<4} {r['type'][:12]:12} {r['lang_text']:2} ref {r['ocr'][a.langs[0]]['ref']:4}  "
+                  + "  ".join(f"{l}: R {s['recall']:.3f} P {s['precision']:.3f} {s['secs'] or '-'}s"
+                              for l, s in r["ocr"].items()), flush=True)
+    for lang in a.langs:
+        print(f"\n== {lang}")
+        print(summary(rows, lang, "all"))
+        print(summary([r for r in rows if r["type"] in AGREEMENT_TYPES], lang, "agreements/statements"))
+        print(summary([r for r in rows if r["type"] not in AGREEMENT_TYPES], lang, "other acts"))
+        for lt, n in Counter(r["lang_text"] for r in rows).most_common():
+            print(summary([r for r in rows if r["lang_text"] == lt], lang, f"text language {lt}"))
+        secs = [r["ocr"][lang]["secs"] for r in rows if r["ocr"][lang]["secs"] is not None]
+        if secs:
+            print(f"OCR seconds/page (1 thread, 300 dpi): mean {statistics.mean(secs):.2f} "
+                  f"median {statistics.median(secs):.2f} max {max(secs):.2f} (n={len(secs)}); "
+                  f"render mean {statistics.mean(r['render_s'] for r in rows):.2f}")
+    if a.json:
+        Path(a.json).write_text(json.dumps(rows, ensure_ascii=False, indent=0))
+
+
+# ---------------------------------------------------------------- scanned pages
+
+def run_scan(job: tuple[str, str, list[int], str, str]) -> list[dict]:
+    """OCR some pages of one act (the PDF is opened once: page trees of 484-page acts are slow)."""
+    eli, pdf_path, pages, lang, out = job
+    rows = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for p in pages:
+            t0 = time.time()
+            img = render(pdf.pages[p - 1])
+            t1 = time.time()
+            tsv = _run(img, lang, "tsv")
+            t2 = time.time()
+            page = parse_tsv(tsv, img.height)
+            Path(out, f"{eli.replace('/', '-')}_p{p}.{lang}.tsv").write_text(tsv, encoding="utf-8")
+            text = "\n\n".join(page.paragraphs)
+            Path(out, f"{eli.replace('/', '-')}_p{p}.{lang}.txt").write_text(text, encoding="utf-8")
+            toks = tokens(text)
+            rows.append({"eli": eli, "page": p, "render_s": round(t1 - t0, 2), "ocr_s": round(t2 - t1, 2),
+                         "words": len(toks), "conf": round(page.confidence, 1), "lang": language(toks)})
+            pdf.pages[p - 1].close()
+    return rows
+
+
+def main_scans(a) -> None:
+    print(f"tesseract {check(a.lang)} lang {a.lang}")
+    Path(a.out).mkdir(parents=True, exist_ok=True)
+    jobs = []
+    for r in acts(a.root):
+        if r["no_text_pages"] in ("", "0"):
+            continue
+        pages = expand(front(r["md"]).get("pages_without_text", ""))
+        for k in range(0, len(pages), 25):
+            jobs.append((r["eli"], r["pdf"], pages[k:k + 25], a.lang, a.out))
+    print(f"{sum(len(j[2]) for j in jobs)} pages without text in {len({j[0] for j in jobs})} acts", flush=True)
+    t0 = time.time()
+    rows = []
+    with ProcessPoolExecutor(max_workers=a.jobs) as ex:
+        for res in ex.map(run_scan, jobs):
+            rows += res
+            print(f"{len(rows)} pages {time.time() - t0:.0f}s", flush=True)
+    wall = time.time() - t0
+    Path(a.out, "pages.json").write_text(json.dumps(rows, ensure_ascii=False, indent=0))
+    ocr = [r["ocr_s"] for r in rows]
+    print(f"wall {wall:.0f}s with {a.jobs} processes; per page (1 thread): OCR mean {statistics.mean(ocr):.2f}s "
+          f"median {statistics.median(ocr):.2f}s max {max(ocr):.2f}s, render mean "
+          f"{statistics.mean(r['render_s'] for r in rows):.2f}s; CPU-seconds total "
+          f"{sum(ocr) + sum(r['render_s'] for r in rows):.0f}")
+    print("pages by guessed language:", dict(Counter(r["lang"] for r in rows).most_common()))
+    print("pages with < 20 words:", sum(r["words"] < 20 for r in rows))
+    print("pages by median word confidence:",
+          dict(sorted(Counter(int(r["conf"] // 10 * 10) for r in rows).items())))
+    by: dict[str, Counter] = {}
+    for r in rows:
+        by.setdefault(r["eli"], Counter())[r["lang"]] += 1
+    for eli, c in by.items():
+        print(f"{eli:13} {sum(c.values()):4} pages  {dict(c.most_common())}")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    d = sub.add_parser("digital")
+    d.add_argument("--root", type=Path, required=True, help="dataset directory (index.csv, DU/)")
+    d.add_argument("--seed", type=int, default=1)
+    d.add_argument("--agreements", type=int, default=60)
+    d.add_argument("--other", type=int, default=40)
+    d.add_argument("--langs", nargs="+", default=["pol", "pol+eng"])
+    d.add_argument("--jobs", type=int, default=1)
+    d.add_argument("--cache", default="/tmp/eli2md-ocr-digital", help="OCR texts are kept here")
+    d.add_argument("--json")
+    s = sub.add_parser("scans")
+    s.add_argument("--root", type=Path, required=True)
+    s.add_argument("--lang", default="pol+eng")
+    s.add_argument("--out", required=True)
+    s.add_argument("--jobs", type=int, default=1)
+    a = ap.parse_args()
+    main_digital(a) if a.cmd == "digital" else main_scans(a)
+
+
+if __name__ == "__main__":
+    main()
