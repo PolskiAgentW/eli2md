@@ -93,6 +93,38 @@ class Ocr(unittest.TestCase):
         self.assertEqual(md.count("##### "), 2)
         self.assertIn("##### Art. 3.", md)
 
+    def test_auto_language(self):
+        pt = [(1, 1, 1, 400 + 40 * k, 95, w) for k, w in enumerate(
+            "o fato de que uma sociedade residente de um estado nao seja da outra por".split() * 2)]
+        el = [(1, 1, 1, 400 + 40 * k, 93, w) for k, w in enumerate("και το της του να των τα η ο με σε για".split() * 2)]
+        garbage = [(1, 1, 1, 400 + 40 * k, 40, w) for k, w in enumerate("Ilapahafńc sev 8a anokaAdyei".split() * 6)]
+
+        class Img:
+            height = 3508
+
+            def rotate(self, *a, **k):
+                return self
+
+        def run(img, lang, fmt="txt", psm=3):
+            calls.append(lang)
+            return tsv({"pol+eng": page_words, "por+eng": pt, "ell": el}.get(lang, garbage))
+
+        for page_words, script, want in ((pt, "Latin", "por+eng"), (garbage, "Greek", "ell")):
+            calls = []
+            with mock.patch.object(ocr, "tesseract", return_value=("t", "5.5.0", frozenset({"pol", "eng", "por", "ell", "osd"}))), \
+                    mock.patch.object(ocr, "render", return_value=Img()), mock.patch.object(ocr, "_run", run), \
+                    mock.patch.object(ocr, "osd", return_value=(0, script)):
+                read = ocr.ocr_page(mock.Mock(page_number=5))
+            self.assertEqual(read.lang, want)
+            self.assertTrue(ocr.usable(read))
+            self.assertEqual(calls, ["pol+eng", want])
+        # an explicit language is used as it is
+        calls, page_words = [], pt
+        with mock.patch.object(ocr, "tesseract", return_value=("t", "5.5.0", frozenset({"pol", "eng", "por"}))), \
+                mock.patch.object(ocr, "render", return_value=Img()), mock.patch.object(ocr, "_run", run):
+            self.assertEqual(ocr.ocr_page(mock.Mock(page_number=5), "pol+eng").lang, "pol+eng")
+        self.assertEqual(calls, ["pol+eng"])
+
     def test_no_ocr_fields_without_ocr(self):
         md = to_markdown(Document(blocks=[Block("notext", "", 1)], no_text_pages=[1]), META)
         self.assertNotIn("pages_ocr", md)

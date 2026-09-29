@@ -5,13 +5,18 @@ digital: born-digital pages (with a text layer) of 2025-2026 acts are rendered a
   difflib alignment. recall = text-layer words recovered in order, precision = OCR words that
   are in the text layer. Rendered digital pages are cleaner than real scans, so this is an UPPER
   bound for scans. Pages with large images (pages_with_images) are excluded, their image text
-  is not in the text layer.
-scans: OCR of every page without a text layer (pages_without_text in the dataset); records time
-  per page and a guess of the language (stopword counts) for the survey. Texts are kept in --out.
+  is not in the text layer. Also reported: recall ignoring order (multiset overlap; tables and
+  columns are read in another order), without accents, for number tokens only, and after
+  ocr.fix_text ("ust. | pkt" -> "ust. 1 pkt"). The reference has its own artefacts: footnote
+  markers glued to words ("wsi1"), which OCR drops, count as OCR misses.
+scans: OCR (one language, no "auto") of every page without a text layer (pages_without_text in the
+  dataset), TSV and text kept in --out; time per page (wall and tesseract CPU).
+summary: survey of a `scans` directory: confidence, ocr.usable(), guessed language per act.
 
 Usage:
-  python eval/ocr_eval.py digital --root DATA --seed 1 --agreements 60 --other 40 --langs pol pol+eng [--jobs 3]
-  python eval/ocr_eval.py scans --root DATA --lang pol+eng --out DIR [--jobs 2]
+  python eval/ocr_eval.py digital --root DATA --seed 7310 --agreements 60 --other 40 --langs pol pol+eng eng
+  python eval/ocr_eval.py scans --root DATA --lang pol+eng --out DIR [--jobs 2] [--sample 40 --seed 5]
+  python eval/ocr_eval.py summary --out DIR
 """
 from __future__ import annotations
 
@@ -196,12 +201,14 @@ def main_digital(a) -> None:
 
 # ---------------------------------------------------------------- scanned pages
 
-def run_scan(job: tuple[str, str, list[int], str, str]) -> list[dict]:
+def run_scan(job: tuple[str, str, list[int], str, str, bool]) -> list[dict]:
     """OCR some pages of one act (the PDF is opened once: page trees of 484-page acts are slow)."""
-    eli, pdf_path, pages, lang, out = job
+    eli, pdf_path, pages, lang, out, skip = job
     rows = []
     with pdfplumber.open(pdf_path) as pdf:
         for p in pages:
+            if skip and Path(out, f"{eli.replace('/', '-')}_p{p}.{lang}.tsv").exists():
+                continue
             t0 = time.time()
             img = render(pdf.pages[p - 1])
             t1 = time.time()
@@ -237,7 +244,9 @@ def main_scans(a) -> None:
     jobs = []
     for (eli, pdf), pages in by_act.items():
         pages.sort()
-        jobs += [(eli, pdf, pages[k:k + 25], a.lang, a.out) for k in range(0, len(pages), 25)]
+        jobs += [(eli, pdf, pages[k:k + 25], a.lang, a.out, a.skip_existing) for k in range(0, len(pages), 25)]
+    if a.reverse:  # a second run can start from the other end (with --skip-existing)
+        jobs.reverse()
     print(f"{sum(len(j[2]) for j in jobs)} pages without text in {len({j[0] for j in jobs})} acts", flush=True)
     t0 = time.time()
     rows = []
@@ -321,6 +330,8 @@ def main() -> None:
     s.add_argument("--out", required=True)
     s.add_argument("--jobs", type=int, default=1)
     s.add_argument("--sample", type=int, default=0, help="only this many random pages")
+    s.add_argument("--skip-existing", action="store_true", help="skip pages whose TSV is already in --out")
+    s.add_argument("--reverse", action="store_true", help="last acts first")
     s.add_argument("--seed", type=int, default=1)
     m = sub.add_parser("summary")
     m.add_argument("--out", required=True, help="directory written by `scans`")
