@@ -165,10 +165,16 @@ plików w czwartym miejscu po przecinku.
 Dla aktów z 2025 r. i później nie ma oficjalnego HTML, więc nie ma wzorca. `eval/selfcheck.py`
 porównuje słowa z Markdown ze słowami z warstwy tekstowej PDF (bez winiety i nagłówków stron).
 Sprawdza tylko, czy tekst nie ginie. Poprawności kolejności i struktury nie sprawdza. Wynik dla
-wszystkich 3155 aktów (wersja 0.4.0, 2026-09-29):
+wszystkich 3155 aktów (2026-09-29):
 
-- odsetek słów PDF obecnych w wyniku (kept): mediana 0.975, 225 aktów poniżej 0.95, 24 poniżej 0.8;
-- odsetek słów wyniku obecnych w PDF (grounded): mediana 0.989, 41 aktów poniżej 0.95.
+| wersja | kept: mediana, <0.95, <0.8 | grounded: mediana, <0.95 |
+|--------|----------------------------|--------------------------|
+| 0.4.0  | 0.975, 225, 24             | 0.989, 41                |
+| 0.5.2  | 0.9755, 220, 23            | 0.9894, 40               |
+
+kept to odsetek słów PDF obecnych w wyniku, grounded to odsetek słów wyniku obecnych w PDF.
+Od 0.5.2 indeksy (`41¹`) liczę jako cyfry doklejone do słowa, bo tak czyta je `extract_words`
+(„411”). Bez tego grounded spadał w aktach z wieloma indeksami, choć wynik był poprawniejszy.
 
 Obejrzałem tylko najgorszy przypadek, DU/2025/243. To wzór formularza z kilkoma nakładającymi się
 warstwami tekstu, a wynik jest tam częściowo pomieszany. Pozostałych nie przeglądałem.
