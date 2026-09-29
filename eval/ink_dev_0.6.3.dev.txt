@@ -1,0 +1,31 @@
+Thread A (ink test of placed chars): eli2md 0.6.3.dev vs 0.6.2 (base = main d95cdc2), dev samples DU 2024.
+Change: _drop_hidden_placed runs its ink / own-text tests on _glyph_box(c): a char box with more than 3/4 of it
+below the baseline (implausible font /Descent, e.g. Cambria and Cambria Math -2464/1000) is moved up to 0.3 below it.
+
+== evaluate.py per act, base vs new (timings ignored; /tmp/threadA/cmp_eval.py)
+s2024: 50 acts, 1 differs: DU/2024/840 annex hyp 7693 -> 7699 tokens (matched 2725 -> 2725; annex ref incomplete,
+       linked PDF). The 6 tokens are the Cambria Math formula "ŚSPR = (∑ sp_i)/N" on p.16, visible on the render
+       (text layer "Ś𝑆𝑆𝑆𝑆𝑆𝑆=(∑𝑠𝑠𝑠𝑠𝑖𝑖𝑁𝑁𝑖𝑖−1)/𝑁𝑁", Word's doubled letters); base kept only "𝑁𝑁" of it.
+s7:    50 acts, 0 differ.
+s2024 base: TOTAL body  (n=49): micro R=0.9939 P=0.9830  macro R=0.9987 | annex (n=24): micro R=0.9349 P=0.8247
+s2024 new:  TOTAL body  (n=49): micro R=0.9939 P=0.9830  macro R=0.9987 | annex (n=24): micro R=0.9349 P=0.8247
+s7 base:    TOTAL body  (n=50): micro R=0.9991 P=0.9983  macro R=0.9991 | annex (n=29): micro R=0.9965 P=0.8265
+s7 new:     TOTAL body  (n=50): micro R=0.9991 P=0.9983  macro R=0.9991 | annex (n=29): micro R=0.9965 P=0.8265
+(notes totals identical as well: s2024 R=0.9539 P=0.9105, s7 R=0.9709 P=0.8528, both versions)
+
+== tree_eval.py (Markdown cached per version, compared byte by byte)
+s2024: Markdown differs only for 840; per-act counts differ only in annex.text_unal 143 -> 142;
+       all TOTAL lines identical except "annex attach ... (unaligned 976)" -> 975.
+s7:    Markdown differs for 870 (annex formula text "omiar" -> "pomiar") and 1040 (formula symbols "()  × (−)×"
+       kept); per-act counts differ only for 1040 annex.text_unal 134 -> 133; TOTAL lines identical except
+       "(unaligned 10295)" -> 10294.
+
+== structure.py
+DU/2024/840: identical except "TOTAL annex break ... unaligned 242" -> 241. Other s2024 acts have byte-identical
+Markdown. s7 structure.py: not run (870 and 1040 have changed Markdown; not checked).
+
+== DU/2024/144 and DU/2024/458 (the acts the test was written for), evaluate.py vs HTML
+base vs new: identical per-act results (0 of 2 differ):
+  144 main R=1.000 P=1.000 (ref 211, hyp 211)  notes R=0.972 P=1.000 annex R=0.795
+  458 main R=1.000 P=0.999 (ref 10436, hyp 10443)  notes R=0.981 P=0.412 annex R=1.000*
+Their placed fonts (Times, Arial) have usual descents (0.31-0.38 of the box below the baseline), so no box moves.

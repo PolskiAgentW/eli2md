@@ -1,0 +1,1631 @@
+[
+{
+"eli": "MP/2025/1128",
+"pdf_tokens": 29891,
+"base": {
+"kept": 0.7224917199156937,
+"grounded": 0.775439856373429,
+"md_tokens": 27850
+},
+"base_src": "published",
+"new": {
+"kept": 0.9807634405004851,
+"grounded": 0.9809275245934551,
+"md_tokens": 29886
+},
+"nfkc": {
+"kept_base": 0.7225,
+"kept_new": 0.9808,
+"grounded_base": 0.7754,
+"grounded_new": 0.9809
+}
+},
+{
+"eli": "DU/2025/928",
+"pdf_tokens": 2828,
+"base": {
+"kept": 0.9331683168316832,
+"grounded": 0.9445239799570508,
+"md_tokens": 2794
+},
+"base_src": "published",
+"new": {
+"kept": 0.9384724186704385,
+"grounded": 0.9454934093338083,
+"md_tokens": 2807
+}
+},
+{
+"eli": "DU/2025/452",
+"pdf_tokens": 5671,
+"base": {
+"kept": 0.9097160994533592,
+"grounded": 0.9434893928310168,
+"md_tokens": 5468
+},
+"base_src": "published",
+"new": {
+"kept": 0.9143008287779933,
+"grounded": 0.9360895468496119,
+"md_tokens": 5539
+},
+"nfkc": {
+"kept_base": 0.9238,
+"kept_new": 0.9298,
+"grounded_base": 0.9581,
+"grounded_new": 0.952
+}
+},
+{
+"eli": "DU/2026/1236",
+"pdf_tokens": 9915,
+"base": {
+"kept": 0.9249621785173979,
+"grounded": 0.9841184676467433,
+"md_tokens": 9319
+},
+"base_src": "published",
+"new": {
+"kept": 0.9284921835602622,
+"grounded": 0.9609603340292275,
+"md_tokens": 9580
+},
+"nfkc": {
+"kept_base": 0.9275,
+"kept_new": 0.9402,
+"grounded_base": 0.9868,
+"grounded_new": 0.9731
+}
+},
+{
+"eli": "DU/2025/978",
+"pdf_tokens": 2602,
+"base": {
+"kept": 0.9285165257494236,
+"grounded": 0.9397121742512641,
+"md_tokens": 2571
+},
+"base_src": "published",
+"new": {
+"kept": 0.9319754035357417,
+"grounded": 0.9370170015455951,
+"md_tokens": 2588
+},
+"nfkc": {
+"kept_base": 0.9439,
+"kept_new": 0.9493,
+"grounded_base": 0.9553,
+"grounded_new": 0.9544
+}
+},
+{
+"eli": "DU/2026/1013",
+"pdf_tokens": 11948,
+"base": {
+"kept": 0.9376464680281219,
+"grounded": 0.9796257432668766,
+"md_tokens": 11436
+},
+"base_src": "published",
+"new": {
+"kept": 0.9394040843655842,
+"grounded": 0.9768494342906876,
+"md_tokens": 11490
+},
+"nfkc": {
+"kept_base": 0.9376,
+"kept_new": 0.9394,
+"grounded_base": 0.9796,
+"grounded_new": 0.9768
+}
+},
+{
+"eli": "DU/2025/1548",
+"pdf_tokens": 25074,
+"base": {
+"kept": 0.9546542234984446,
+"grounded": 0.9803014169874683,
+"md_tokens": 24418
+},
+"base_src": "published",
+"new": {
+"kept": 0.9556512722341868,
+"grounded": 0.971183074615977,
+"md_tokens": 24673
+},
+"nfkc": {
+"kept_base": 0.9578,
+"kept_new": 0.9596,
+"grounded_base": 0.9835,
+"grounded_new": 0.9752
+}
+},
+{
+"eli": "DU/2025/1555",
+"pdf_tokens": 10881,
+"base": {
+"kept": 0.9738075544527157,
+"grounded": 0.9949295774647887,
+"md_tokens": 10650
+},
+"base_src": "published",
+"new": {
+"kept": 0.9746346843121036,
+"grounded": 0.9948405253283302,
+"md_tokens": 10660
+},
+"nfkc": {
+"kept_base": 0.9738,
+"kept_new": 0.9748,
+"grounded_base": 0.9949,
+"grounded_new": 0.995
+}
+},
+{
+"eli": "DU/2025/932",
+"pdf_tokens": 5091,
+"base": {
+"kept": 0.8008249852681202,
+"grounded": 0.9802837220485694,
+"md_tokens": 4159
+},
+"base_src": "published",
+"new": {
+"kept": 0.8016106855234728,
+"grounded": 0.9772509578544061,
+"md_tokens": 4176
+},
+"nfkc": {
+"kept_base": 0.8014,
+"kept_new": 0.8038,
+"grounded_base": 0.981,
+"grounded_new": 0.9799
+}
+},
+{
+"eli": "DU/2025/919",
+"pdf_tokens": 32316,
+"base": {
+"kept": 0.938451541032306,
+"grounded": 0.9866289283622878,
+"md_tokens": 30738
+},
+"base_src": "published",
+"new": {
+"kept": 0.939163262780047,
+"grounded": 0.9865106452137169,
+"md_tokens": 30765
+},
+"nfkc": {
+"kept_base": 0.9385,
+"kept_new": 0.9393,
+"grounded_base": 0.9867,
+"grounded_new": 0.9866
+}
+},
+{
+"eli": "DU/2025/1477",
+"pdf_tokens": 1444,
+"base": {
+"kept": 0.961218836565097,
+"grounded": 0.9914285714285714,
+"md_tokens": 1400
+},
+"base_src": "published",
+"new": {
+"kept": 0.9619113573407202,
+"grounded": 0.9914346895074947,
+"md_tokens": 1401
+}
+},
+{
+"eli": "DU/2026/40",
+"pdf_tokens": 6864,
+"base": {
+"kept": 0.4731934731934732,
+"grounded": 0.8675213675213675,
+"md_tokens": 3744
+},
+"base_src": "published",
+"new": {
+"kept": 0.4737762237762238,
+"grounded": 0.8537673930165398,
+"md_tokens": 3809
+},
+"nfkc": {
+"kept_base": 0.4911,
+"kept_new": 0.492,
+"grounded_base": 0.9004,
+"grounded_new": 0.8866
+}
+},
+{
+"eli": "MP/2025/541",
+"pdf_tokens": 21048,
+"base": {
+"kept": 0.7848726719878373,
+"grounded": 0.9579588286459844,
+"md_tokens": 17245
+},
+"base_src": "published",
+"new": {
+"kept": 0.7854427974154314,
+"grounded": 0.9579325530188898,
+"md_tokens": 17258
+},
+"nfkc": {
+"kept_base": 0.7849,
+"kept_new": 0.7854,
+"grounded_base": 0.958,
+"grounded_new": 0.9579
+}
+},
+{
+"eli": "DU/2025/441",
+"pdf_tokens": 7275,
+"base": {
+"kept": 0.9496907216494845,
+"grounded": 0.9850299401197605,
+"md_tokens": 7014
+},
+"base_src": "published",
+"new": {
+"kept": 0.9499656357388316,
+"grounded": 0.9844729344729345,
+"md_tokens": 7020
+},
+"nfkc": {
+"kept_base": 0.9497,
+"kept_new": 0.9502,
+"grounded_base": 0.985,
+"grounded_new": 0.9848
+}
+},
+{
+"eli": "DU/2026/748",
+"pdf_tokens": 9186,
+"base": {
+"kept": 0.9506858262573481,
+"grounded": 0.9871142760257714,
+"md_tokens": 8847
+},
+"base_src": "published",
+"new": {
+"kept": 0.9509035488787285,
+"grounded": 0.9866711849090704,
+"md_tokens": 8853
+},
+"nfkc": {
+"kept_base": 0.9509,
+"kept_new": 0.9513,
+"grounded_base": 0.9873,
+"grounded_new": 0.9871
+}
+},
+{
+"eli": "DU/2026/848",
+"pdf_tokens": 22743,
+"base": {
+"kept": 0.9905025722200237,
+"grounded": 0.999024346977693,
+"md_tokens": 22549
+},
+"base_src": "published",
+"new": {
+"kept": 0.9906784505122456,
+"grounded": 0.9988473644544931,
+"md_tokens": 22557
+},
+"nfkc": {
+"kept_base": 0.9905,
+"kept_new": 0.9907,
+"grounded_base": 0.999,
+"grounded_new": 0.9988
+}
+},
+{
+"eli": "DU/2025/1743",
+"pdf_tokens": 9266,
+"base": {
+"kept": 0.9308223613209583,
+"grounded": 0.9338458207016024,
+"md_tokens": 9236
+},
+"base_src": "published",
+"new": {
+"kept": 0.930930282754155,
+"grounded": 0.9338529825700985,
+"md_tokens": 9237
+}
+},
+{
+"eli": "DU/2026/710",
+"pdf_tokens": 10484,
+"base": {
+"kept": 0.9736741701640595,
+"grounded": 0.9985327203364961,
+"md_tokens": 10223
+},
+"base_src": "published",
+"new": {
+"kept": 0.9737695536054941,
+"grounded": 0.9986305389807297,
+"md_tokens": 10223
+}
+},
+{
+"eli": "DU/2026/1012",
+"pdf_tokens": 48646,
+"base": {
+"kept": 0.9926407104386794,
+"grounded": 0.9989656171128305,
+"md_tokens": 48338
+},
+"base_src": "published",
+"new": {
+"kept": 0.9927229371376886,
+"grounded": 0.9986351792878118,
+"md_tokens": 48358
+},
+"nfkc": {
+"kept_base": 0.9929,
+"kept_new": 0.9932,
+"grounded_base": 0.9993,
+"grounded_new": 0.9992
+}
+},
+{
+"eli": "DU/2025/597",
+"pdf_tokens": 17398,
+"base": {
+"kept": 0.9432693413035981,
+"grounded": 0.9864751142101467,
+"md_tokens": 16636
+},
+"base_src": "published",
+"new": {
+"kept": 0.9433268191746178,
+"grounded": 0.9864166366149778,
+"md_tokens": 16638
+},
+"nfkc": {
+"kept_base": 0.9439,
+"kept_new": 0.9442,
+"grounded_base": 0.9871,
+"grounded_new": 0.9874
+}
+},
+{
+"eli": "DU/2026/719",
+"pdf_tokens": 27921,
+"base": {
+"kept": 0.9952365602951184,
+"grounded": 0.9983832141702296,
+"md_tokens": 27833
+},
+"base_src": "published",
+"new": {
+"kept": 0.9952723756312453,
+"grounded": 0.9983832722569519,
+"md_tokens": 27834
+}
+},
+{
+"eli": "DU/2025/78",
+"pdf_tokens": 10738,
+"base": {
+"kept": 0.9705718010802756,
+"grounded": 0.9914383561643836,
+"md_tokens": 10512
+},
+"base_src": "published",
+"new": {
+"kept": 0.9705718010802756,
+"grounded": 0.9914383561643836,
+"md_tokens": 10512
+}
+},
+{
+"eli": "DU/2025/87",
+"pdf_tokens": 1746,
+"base": {
+"kept": 0.9599083619702177,
+"grounded": 0.9876252209781968,
+"md_tokens": 1697
+},
+"base_src": "published",
+"new": {
+"kept": 0.9599083619702177,
+"grounded": 0.9876252209781968,
+"md_tokens": 1697
+}
+},
+{
+"eli": "DU/2025/127",
+"pdf_tokens": 4699,
+"base": {
+"kept": 0.9612683549691424,
+"grounded": 0.9905701754385965,
+"md_tokens": 4560
+},
+"base_src": "published",
+"new": {
+"kept": 0.9612683549691424,
+"grounded": 0.9905701754385965,
+"md_tokens": 4560
+}
+},
+{
+"eli": "DU/2025/131",
+"pdf_tokens": 1639,
+"base": {
+"kept": 0.9786455155582673,
+"grounded": 0.9913473423980222,
+"md_tokens": 1618
+},
+"base_src": "published",
+"new": {
+"kept": 0.9786455155582673,
+"grounded": 0.9913473423980222,
+"md_tokens": 1618
+}
+},
+{
+"eli": "DU/2025/133",
+"pdf_tokens": 37871,
+"base": {
+"kept": 0.9058118349132581,
+"grounded": 0.9622170486101371,
+"md_tokens": 35651
+},
+"base_src": "published",
+"new": {
+"kept": 0.9058118349132581,
+"grounded": 0.9622170486101371,
+"md_tokens": 35651
+}
+},
+{
+"eli": "DU/2025/231",
+"pdf_tokens": 1266,
+"base": {
+"kept": 0.9510268562401264,
+"grounded": 0.9852700490998363,
+"md_tokens": 1222
+},
+"base_src": "published",
+"new": {
+"kept": 0.9510268562401264,
+"grounded": 0.9852700490998363,
+"md_tokens": 1222
+}
+},
+{
+"eli": "DU/2025/436",
+"pdf_tokens": 3057,
+"base": {
+"kept": 0.9892051030421982,
+"grounded": 1.0,
+"md_tokens": 3024
+},
+"base_src": "published",
+"new": {
+"kept": 0.9892051030421982,
+"grounded": 1.0,
+"md_tokens": 3024
+}
+},
+{
+"eli": "DU/2025/454",
+"pdf_tokens": 10841,
+"base": {
+"kept": 0.930172493312425,
+"grounded": 0.941022769690183,
+"md_tokens": 10716
+},
+"base_src": "published",
+"new": {
+"kept": 0.930172493312425,
+"grounded": 0.9409349631426706,
+"md_tokens": 10717
+},
+"nfkc": {
+"kept_base": 0.9851,
+"kept_new": 0.9855,
+"grounded_base": 0.9965,
+"grounded_new": 0.9969
+}
+},
+{
+"eli": "DU/2025/459",
+"pdf_tokens": 10760,
+"base": {
+"kept": 0.9335501858736059,
+"grounded": 0.940983606557377,
+"md_tokens": 10675
+},
+"base_src": "published",
+"new": {
+"kept": 0.9335501858736059,
+"grounded": 0.9408954664668415,
+"md_tokens": 10676
+},
+"nfkc": {
+"kept_base": 0.9897,
+"kept_new": 0.9899,
+"grounded_base": 0.9976,
+"grounded_new": 0.9977
+}
+},
+{
+"eli": "DU/2025/463",
+"pdf_tokens": 11942,
+"base": {
+"kept": 0.9893652654496734,
+"grounded": 0.9978042395067984,
+"md_tokens": 11841
+},
+"base_src": "published",
+"new": {
+"kept": 0.9893652654496734,
+"grounded": 0.9978042395067984,
+"md_tokens": 11841
+}
+},
+{
+"eli": "DU/2025/507",
+"pdf_tokens": 5342,
+"base": {
+"kept": 0.932983901160614,
+"grounded": 0.9473484128492682,
+"md_tokens": 5261
+},
+"base_src": "published",
+"new": {
+"kept": 0.932983901160614,
+"grounded": 0.9473484128492682,
+"md_tokens": 5261
+}
+},
+{
+"eli": "DU/2025/609",
+"pdf_tokens": 4405,
+"base": {
+"kept": 0.7797956867196367,
+"grounded": 0.8347509113001215,
+"md_tokens": 4115
+},
+"base_src": "published",
+"new": {
+"kept": 0.7797956867196367,
+"grounded": 0.8347509113001215,
+"md_tokens": 4115
+}
+},
+{
+"eli": "DU/2025/665",
+"pdf_tokens": 1375,
+"base": {
+"kept": 0.9687272727272728,
+"grounded": 0.9903345724907063,
+"md_tokens": 1345
+},
+"base_src": "published",
+"new": {
+"kept": 0.9687272727272728,
+"grounded": 0.9903345724907063,
+"md_tokens": 1345
+}
+},
+{
+"eli": "DU/2025/698",
+"pdf_tokens": 10227,
+"base": {
+"kept": 0.8807079299892442,
+"grounded": 0.9730985306828004,
+"md_tokens": 9256
+},
+"base_src": "published",
+"new": {
+"kept": 0.8807079299892442,
+"grounded": 0.9730985306828004,
+"md_tokens": 9256
+}
+},
+{
+"eli": "DU/2025/822",
+"pdf_tokens": 1574,
+"base": {
+"kept": 0.9682337992376112,
+"grounded": 0.9896103896103896,
+"md_tokens": 1540
+},
+"base_src": "published",
+"new": {
+"kept": 0.9682337992376112,
+"grounded": 0.9896103896103896,
+"md_tokens": 1540
+}
+},
+{
+"eli": "DU/2025/845",
+"pdf_tokens": 12518,
+"base": {
+"kept": 0.9674069340150184,
+"grounded": 0.9848731294729993,
+"md_tokens": 12296
+},
+"base_src": "published",
+"new": {
+"kept": 0.9674069340150184,
+"grounded": 0.9848731294729993,
+"md_tokens": 12296
+}
+},
+{
+"eli": "DU/2025/847",
+"pdf_tokens": 5109,
+"base": {
+"kept": 0.9757291055000978,
+"grounded": 0.9952086244759433,
+"md_tokens": 5009
+},
+"base_src": "published",
+"new": {
+"kept": 0.9757291055000978,
+"grounded": 0.9952086244759433,
+"md_tokens": 5009
+}
+},
+{
+"eli": "DU/2025/861",
+"pdf_tokens": 13066,
+"base": {
+"kept": 0.9765039032603704,
+"grounded": 0.9896835246664598,
+"md_tokens": 12892
+},
+"base_src": "published",
+"new": {
+"kept": 0.9765039032603704,
+"grounded": 0.9896835246664598,
+"md_tokens": 12892
+}
+},
+{
+"eli": "DU/2025/972",
+"pdf_tokens": 2576,
+"base": {
+"kept": 0.9805900621118012,
+"grounded": 0.9940968122786304,
+"md_tokens": 2541
+},
+"base_src": "published",
+"new": {
+"kept": 0.9805900621118012,
+"grounded": 0.9940968122786304,
+"md_tokens": 2541
+}
+},
+{
+"eli": "DU/2025/979",
+"pdf_tokens": 2417,
+"base": {
+"kept": 0.9669011170872983,
+"grounded": 0.9902542372881356,
+"md_tokens": 2360
+},
+"base_src": "published",
+"new": {
+"kept": 0.9669011170872983,
+"grounded": 0.9902542372881356,
+"md_tokens": 2360
+}
+},
+{
+"eli": "DU/2025/1147",
+"pdf_tokens": 6163,
+"base": {
+"kept": 0.9045919195197144,
+"grounded": 0.9354026845637584,
+"md_tokens": 5960
+},
+"base_src": "published",
+"new": {
+"kept": 0.9045919195197144,
+"grounded": 0.9354026845637584,
+"md_tokens": 5960
+}
+},
+{
+"eli": "DU/2025/1270",
+"pdf_tokens": 8588,
+"base": {
+"kept": 0.9434094084769445,
+"grounded": 0.965443279313632,
+"md_tokens": 8392
+},
+"base_src": "published",
+"new": {
+"kept": 0.9434094084769445,
+"grounded": 0.965443279313632,
+"md_tokens": 8392
+}
+},
+{
+"eli": "DU/2025/1489",
+"pdf_tokens": 5813,
+"base": {
+"kept": 0.9748838809564768,
+"grounded": 0.9919481883423771,
+"md_tokens": 5713
+},
+"base_src": "published",
+"new": {
+"kept": 0.9748838809564768,
+"grounded": 0.9919481883423771,
+"md_tokens": 5713
+}
+},
+{
+"eli": "DU/2025/1647",
+"pdf_tokens": 28073,
+"base": {
+"kept": 0.9933031738681295,
+"grounded": 0.9984245766049625,
+"md_tokens": 27929
+},
+"base_src": "published",
+"new": {
+"kept": 0.9933031738681295,
+"grounded": 0.9984245766049625,
+"md_tokens": 27929
+}
+},
+{
+"eli": "DU/2025/1681",
+"pdf_tokens": 2978,
+"base": {
+"kept": 0.9714573539288113,
+"grounded": 0.9866984993178718,
+"md_tokens": 2932
+},
+"base_src": "published",
+"new": {
+"kept": 0.9714573539288113,
+"grounded": 0.9866984993178718,
+"md_tokens": 2932
+}
+},
+{
+"eli": "DU/2025/1722",
+"pdf_tokens": 431,
+"base": {
+"kept": 0.9489559164733179,
+"grounded": 0.9855421686746988,
+"md_tokens": 415
+},
+"base_src": "published",
+"new": {
+"kept": 0.9489559164733179,
+"grounded": 0.9855421686746988,
+"md_tokens": 415
+}
+},
+{
+"eli": "DU/2025/1723",
+"pdf_tokens": 1936,
+"base": {
+"kept": 0.9901859504132231,
+"grounded": 1.0,
+"md_tokens": 1917
+},
+"base_src": "published",
+"new": {
+"kept": 0.9901859504132231,
+"grounded": 1.0,
+"md_tokens": 1917
+}
+},
+{
+"eli": "DU/2025/1724",
+"pdf_tokens": 1871,
+"base": {
+"kept": 0.9711384286477819,
+"grounded": 0.9972557628979144,
+"md_tokens": 1822
+},
+"base_src": "published",
+"new": {
+"kept": 0.9711384286477819,
+"grounded": 0.9972557628979144,
+"md_tokens": 1822
+}
+},
+{
+"eli": "DU/2025/1744",
+"pdf_tokens": 9311,
+"base": {
+"kept": 0.9255719041993341,
+"grounded": 0.9334922010398613,
+"md_tokens": 9232
+},
+"base_src": "published",
+"new": {
+"kept": 0.9255719041993341,
+"grounded": 0.9334922010398613,
+"md_tokens": 9232
+}
+},
+{
+"eli": "DU/2025/1748",
+"pdf_tokens": 765,
+"base": {
+"kept": 0.9294117647058824,
+"grounded": 0.9820441988950276,
+"md_tokens": 724
+},
+"base_src": "published",
+"new": {
+"kept": 0.9294117647058824,
+"grounded": 0.9820441988950276,
+"md_tokens": 724
+}
+},
+{
+"eli": "DU/2025/1815",
+"pdf_tokens": 6573,
+"base": {
+"kept": 0.9742887570363609,
+"grounded": 0.9861410532799507,
+"md_tokens": 6494
+},
+"base_src": "published",
+"new": {
+"kept": 0.9742887570363609,
+"grounded": 0.9861410532799507,
+"md_tokens": 6494
+}
+},
+{
+"eli": "DU/2025/1821",
+"pdf_tokens": 6503,
+"base": {
+"kept": 0.9558665231431647,
+"grounded": 0.9887068554159376,
+"md_tokens": 6287
+},
+"base_src": "published",
+"new": {
+"kept": 0.9558665231431647,
+"grounded": 0.9887068554159376,
+"md_tokens": 6287
+}
+},
+{
+"eli": "DU/2025/1829",
+"pdf_tokens": 116780,
+"base": {
+"kept": 0.9997088542558658,
+"grounded": 0.9999143512967213,
+"md_tokens": 116756
+},
+"base_src": "published",
+"new": {
+"kept": 0.9997088542558658,
+"grounded": 0.9999143512967213,
+"md_tokens": 116756
+}
+},
+{
+"eli": "DU/2025/1856",
+"pdf_tokens": 1141,
+"base": {
+"kept": 0.9456617002629273,
+"grounded": 0.980909090909091,
+"md_tokens": 1100
+},
+"base_src": "published",
+"new": {
+"kept": 0.9456617002629273,
+"grounded": 0.980909090909091,
+"md_tokens": 1100
+}
+},
+{
+"eli": "DU/2026/127",
+"pdf_tokens": 1926,
+"base": {
+"kept": 0.9428868120456906,
+"grounded": 0.9907255864702673,
+"md_tokens": 1833
+},
+"base_src": "published",
+"new": {
+"kept": 0.9428868120456906,
+"grounded": 0.9907255864702673,
+"md_tokens": 1833
+}
+},
+{
+"eli": "DU/2026/223",
+"pdf_tokens": 816,
+"base": {
+"kept": 0.9583333333333334,
+"grounded": 0.988621997471555,
+"md_tokens": 791
+},
+"base_src": "published",
+"new": {
+"kept": 0.9583333333333334,
+"grounded": 0.988621997471555,
+"md_tokens": 791
+}
+},
+{
+"eli": "DU/2026/224",
+"pdf_tokens": 764,
+"base": {
+"kept": 0.943717277486911,
+"grounded": 0.9756427604871448,
+"md_tokens": 739
+},
+"base_src": "published",
+"new": {
+"kept": 0.943717277486911,
+"grounded": 0.9756427604871448,
+"md_tokens": 739
+}
+},
+{
+"eli": "DU/2026/226",
+"pdf_tokens": 720,
+"base": {
+"kept": 0.9444444444444444,
+"grounded": 0.9742120343839542,
+"md_tokens": 698
+},
+"base_src": "published",
+"new": {
+"kept": 0.9444444444444444,
+"grounded": 0.9742120343839542,
+"md_tokens": 698
+}
+},
+{
+"eli": "DU/2026/237",
+"pdf_tokens": 740,
+"base": {
+"kept": 0.9540540540540541,
+"grounded": 0.9874125874125874,
+"md_tokens": 715
+},
+"base_src": "published",
+"new": {
+"kept": 0.9540540540540541,
+"grounded": 0.9874125874125874,
+"md_tokens": 715
+}
+},
+{
+"eli": "DU/2026/248",
+"pdf_tokens": 1847,
+"base": {
+"kept": 0.9702219815917704,
+"grounded": 0.9856985698569857,
+"md_tokens": 1818
+},
+"base_src": "published",
+"new": {
+"kept": 0.9702219815917704,
+"grounded": 0.9856985698569857,
+"md_tokens": 1818
+}
+},
+{
+"eli": "DU/2026/254",
+"pdf_tokens": 753,
+"base": {
+"kept": 0.952191235059761,
+"grounded": 0.9848901098901099,
+"md_tokens": 728
+},
+"base_src": "published",
+"new": {
+"kept": 0.952191235059761,
+"grounded": 0.9848901098901099,
+"md_tokens": 728
+}
+},
+{
+"eli": "DU/2026/255",
+"pdf_tokens": 763,
+"base": {
+"kept": 0.9488859764089121,
+"grounded": 0.9863760217983651,
+"md_tokens": 734
+},
+"base_src": "published",
+"new": {
+"kept": 0.9488859764089121,
+"grounded": 0.9863760217983651,
+"md_tokens": 734
+}
+},
+{
+"eli": "DU/2026/256",
+"pdf_tokens": 729,
+"base": {
+"kept": 0.9478737997256516,
+"grounded": 0.985734664764622,
+"md_tokens": 701
+},
+"base_src": "published",
+"new": {
+"kept": 0.9478737997256516,
+"grounded": 0.985734664764622,
+"md_tokens": 701
+}
+},
+{
+"eli": "DU/2026/262",
+"pdf_tokens": 637,
+"base": {
+"kept": 0.957613814756672,
+"grounded": 0.9807073954983923,
+"md_tokens": 622
+},
+"base_src": "published",
+"new": {
+"kept": 0.957613814756672,
+"grounded": 0.9807073954983923,
+"md_tokens": 622
+}
+},
+{
+"eli": "DU/2026/271",
+"pdf_tokens": 660,
+"base": {
+"kept": 0.953030303030303,
+"grounded": 0.9843505477308294,
+"md_tokens": 639
+},
+"base_src": "published",
+"new": {
+"kept": 0.953030303030303,
+"grounded": 0.9843505477308294,
+"md_tokens": 639
+}
+},
+{
+"eli": "DU/2026/282",
+"pdf_tokens": 1228,
+"base": {
+"kept": 0.9543973941368078,
+"grounded": 0.987363100252738,
+"md_tokens": 1187
+},
+"base_src": "published",
+"new": {
+"kept": 0.9543973941368078,
+"grounded": 0.987363100252738,
+"md_tokens": 1187
+}
+},
+{
+"eli": "DU/2026/378",
+"pdf_tokens": 96241,
+"base": {
+"kept": 0.9923109693373926,
+"grounded": 0.9992989285116357,
+"md_tokens": 95568
+},
+"base_src": "published",
+"new": {
+"kept": 0.9923109693373926,
+"grounded": 0.9992989285116357,
+"md_tokens": 95568
+}
+},
+{
+"eli": "DU/2026/411",
+"pdf_tokens": 3740,
+"base": {
+"kept": 0.9660427807486631,
+"grounded": 0.9858117326057299,
+"md_tokens": 3665
+},
+"base_src": "published",
+"new": {
+"kept": 0.9660427807486631,
+"grounded": 0.9858117326057299,
+"md_tokens": 3665
+}
+},
+{
+"eli": "DU/2026/447",
+"pdf_tokens": 8683,
+"base": {
+"kept": 0.9717839456409075,
+"grounded": 0.9812768926619374,
+"md_tokens": 8599
+},
+"base_src": "published",
+"new": {
+"kept": 0.9717839456409075,
+"grounded": 0.9811627906976744,
+"md_tokens": 8600
+},
+"nfkc": {
+"kept_base": 0.9719,
+"kept_new": 0.972,
+"grounded_base": 0.9814,
+"grounded_new": 0.9814
+}
+},
+{
+"eli": "DU/2026/449",
+"pdf_tokens": 7560,
+"base": {
+"kept": 0.9212962962962963,
+"grounded": 0.9779556304408874,
+"md_tokens": 7122
+},
+"base_src": "published",
+"new": {
+"kept": 0.9212962962962963,
+"grounded": 0.9779556304408874,
+"md_tokens": 7122
+}
+},
+{
+"eli": "DU/2026/456",
+"pdf_tokens": 2879,
+"base": {
+"kept": 0.9718652309829802,
+"grounded": 0.9897417757339936,
+"md_tokens": 2827
+},
+"base_src": "published",
+"new": {
+"kept": 0.9718652309829802,
+"grounded": 0.9897417757339936,
+"md_tokens": 2827
+}
+},
+{
+"eli": "DU/2026/487",
+"pdf_tokens": 8686,
+"base": {
+"kept": 0.9886023486069537,
+"grounded": 0.9975604089219331,
+"md_tokens": 8608
+},
+"base_src": "published",
+"new": {
+"kept": 0.9886023486069537,
+"grounded": 0.9975604089219331,
+"md_tokens": 8608
+}
+},
+{
+"eli": "DU/2026/523",
+"pdf_tokens": 4352,
+"base": {
+"kept": 0.98046875,
+"grounded": 0.9932495344506518,
+"md_tokens": 4296
+},
+"base_src": "published",
+"new": {
+"kept": 0.98046875,
+"grounded": 0.9932495344506518,
+"md_tokens": 4296
+}
+},
+{
+"eli": "DU/2026/675",
+"pdf_tokens": 5355,
+"base": {
+"kept": 0.9779645191409897,
+"grounded": 0.9980941490375452,
+"md_tokens": 5247
+},
+"base_src": "published",
+"new": {
+"kept": 0.9779645191409897,
+"grounded": 0.9980941490375452,
+"md_tokens": 5247
+}
+},
+{
+"eli": "DU/2026/763",
+"pdf_tokens": 1125,
+"base": {
+"kept": 0.9706666666666667,
+"grounded": 0.9963503649635036,
+"md_tokens": 1096
+},
+"base_src": "published",
+"new": {
+"kept": 0.9706666666666667,
+"grounded": 0.9963503649635036,
+"md_tokens": 1096
+}
+},
+{
+"eli": "DU/2026/806",
+"pdf_tokens": 7598,
+"base": {
+"kept": 0.9885496183206107,
+"grounded": 0.9986703895758543,
+"md_tokens": 7521
+},
+"base_src": "published",
+"new": {
+"kept": 0.9885496183206107,
+"grounded": 0.9986703895758543,
+"md_tokens": 7521
+}
+},
+{
+"eli": "DU/2026/872",
+"pdf_tokens": 21266,
+"base": {
+"kept": 0.9541991911972162,
+"grounded": 0.9877817261354233,
+"md_tokens": 20543
+},
+"base_src": "published",
+"new": {
+"kept": 0.9541991911972162,
+"grounded": 0.9877817261354233,
+"md_tokens": 20543
+}
+},
+{
+"eli": "DU/2026/898",
+"pdf_tokens": 15742,
+"base": {
+"kept": 0.985135306822513,
+"grounded": 0.9956343091936313,
+"md_tokens": 15576
+},
+"base_src": "published",
+"new": {
+"kept": 0.985135306822513,
+"grounded": 0.9956343091936313,
+"md_tokens": 15576
+}
+},
+{
+"eli": "DU/2026/918",
+"pdf_tokens": 23871,
+"base": {
+"kept": 0.9660257215868627,
+"grounded": 0.9855122013761272,
+"md_tokens": 23399
+},
+"base_src": "published",
+"new": {
+"kept": 0.9660257215868627,
+"grounded": 0.9855122013761272,
+"md_tokens": 23399
+}
+},
+{
+"eli": "DU/2026/1027",
+"pdf_tokens": 3575,
+"base": {
+"kept": 0.9434965034965035,
+"grounded": 0.987123207491952,
+"md_tokens": 3417
+},
+"base_src": "published",
+"new": {
+"kept": 0.9434965034965035,
+"grounded": 0.987123207491952,
+"md_tokens": 3417
+}
+},
+{
+"eli": "DU/2026/1037",
+"pdf_tokens": 1940,
+"base": {
+"kept": 0.9757731958762886,
+"grounded": 0.986451276706618,
+"md_tokens": 1919
+},
+"base_src": "published",
+"new": {
+"kept": 0.9757731958762886,
+"grounded": 0.986451276706618,
+"md_tokens": 1919
+}
+},
+{
+"eli": "DU/2026/1045",
+"pdf_tokens": 3478,
+"base": {
+"kept": 0.975848188614146,
+"grounded": 0.9849100406268136,
+"md_tokens": 3446
+},
+"base_src": "published",
+"new": {
+"kept": 0.975848188614146,
+"grounded": 0.9849100406268136,
+"md_tokens": 3446
+}
+},
+{
+"eli": "DU/2026/1054",
+"pdf_tokens": 4803,
+"base": {
+"kept": 0.9741828024151572,
+"grounded": 0.984223811527135,
+"md_tokens": 4754
+},
+"base_src": "published",
+"new": {
+"kept": 0.9741828024151572,
+"grounded": 0.984223811527135,
+"md_tokens": 4754
+}
+},
+{
+"eli": "DU/2026/1128",
+"pdf_tokens": 1239,
+"base": {
+"kept": 0.9249394673123487,
+"grounded": 0.9828473413379074,
+"md_tokens": 1166
+},
+"base_src": "published",
+"new": {
+"kept": 0.9249394673123487,
+"grounded": 0.9828473413379074,
+"md_tokens": 1166
+}
+},
+{
+"eli": "DU/2026/1152",
+"pdf_tokens": 5539,
+"base": {
+"kept": 0.9413251489438527,
+"grounded": 0.9828463713477851,
+"md_tokens": 5305
+},
+"base_src": "published",
+"new": {
+"kept": 0.9413251489438527,
+"grounded": 0.9828463713477851,
+"md_tokens": 5305
+}
+},
+{
+"eli": "DU/2026/1179",
+"pdf_tokens": 6963,
+"base": {
+"kept": 0.8751974723538705,
+"grounded": 0.9526340472096295,
+"md_tokens": 6397
+},
+"base_src": "published",
+"new": {
+"kept": 0.8751974723538705,
+"grounded": 0.9526340472096295,
+"md_tokens": 6397
+}
+},
+{
+"eli": "DU/2026/1220",
+"pdf_tokens": 3009,
+"base": {
+"kept": 0.9534729145895646,
+"grounded": 0.9633982538616521,
+"md_tokens": 2978
+},
+"base_src": "published",
+"new": {
+"kept": 0.9534729145895646,
+"grounded": 0.9633982538616521,
+"md_tokens": 2978
+}
+},
+{
+"eli": "DU/2026/1224",
+"pdf_tokens": 19617,
+"base": {
+"kept": 0.949635520212061,
+"grounded": 0.9863398104516334,
+"md_tokens": 18887
+},
+"base_src": "published",
+"new": {
+"kept": 0.949635520212061,
+"grounded": 0.9863398104516334,
+"md_tokens": 18887
+}
+},
+{
+"eli": "MP/2025/781",
+"pdf_tokens": 74844,
+"base": {
+"kept": 0.9965929132595799,
+"grounded": 0.9900055745799156,
+"md_tokens": 75342
+},
+"base_src": "published",
+"new": {
+"kept": 0.9965929132595799,
+"grounded": 0.9900055745799156,
+"md_tokens": 75342
+}
+},
+{
+"eli": "MP/2025/1255",
+"pdf_tokens": 9459,
+"base": {
+"kept": 0.9980970504281637,
+"grounded": 0.9998940902351197,
+"md_tokens": 9442
+},
+"base_src": "published",
+"new": {
+"kept": 0.9980970504281637,
+"grounded": 0.9998940902351197,
+"md_tokens": 9442
+}
+},
+{
+"eli": "MP/2025/1276",
+"pdf_tokens": 14606,
+"base": {
+"kept": 0.9969875393673833,
+"grounded": 0.9992451794414328,
+"md_tokens": 14573
+},
+"base_src": "published",
+"new": {
+"kept": 0.9969875393673833,
+"grounded": 0.9992451794414328,
+"md_tokens": 14573
+}
+},
+{
+"eli": "MP/2026/168",
+"pdf_tokens": 30926,
+"base": {
+"kept": 0.9893940373795512,
+"grounded": 0.9932803116377211,
+"md_tokens": 30805
+},
+"base_src": "published",
+"new": {
+"kept": 0.9893940373795512,
+"grounded": 0.9932803116377211,
+"md_tokens": 30805
+}
+},
+{
+"eli": "MP/2026/200",
+"pdf_tokens": 9834,
+"base": {
+"kept": 0.9947122229001424,
+"grounded": 0.9986727922409393,
+"md_tokens": 9795
+},
+"base_src": "published",
+"new": {
+"kept": 0.9947122229001424,
+"grounded": 0.9986727922409393,
+"md_tokens": 9795
+}
+},
+{
+"eli": "MP/2026/343",
+"pdf_tokens": 12578,
+"base": {
+"kept": 0.9893464779774209,
+"grounded": 0.9936122644522517,
+"md_tokens": 12524
+},
+"base_src": "published",
+"new": {
+"kept": 0.9893464779774209,
+"grounded": 0.9936122644522517,
+"md_tokens": 12524
+}
+},
+{
+"eli": "MP/2026/413",
+"pdf_tokens": 20217,
+"base": {
+"kept": 0.9859524162833259,
+"grounded": 0.9971984591525339,
+"md_tokens": 19989
+},
+"base_src": "published",
+"new": {
+"kept": 0.9859524162833259,
+"grounded": 0.9971984591525339,
+"md_tokens": 19989
+}
+},
+{
+"eli": "MP/2026/672",
+"pdf_tokens": 12904,
+"base": {
+"kept": 0.9150650960942344,
+"grounded": 0.9043424982767864,
+"md_tokens": 13057
+},
+"base_src": "published",
+"new": {
+"kept": 0.9150650960942344,
+"grounded": 0.9043424982767864,
+"md_tokens": 13057
+}
+},
+{
+"eli": "MP/2026/909",
+"pdf_tokens": 22020,
+"base": {
+"kept": 0.9957765667574932,
+"grounded": 0.998906655733224,
+"md_tokens": 21951
+},
+"base_src": "published",
+"new": {
+"kept": 0.9957765667574932,
+"grounded": 0.998906655733224,
+"md_tokens": 21951
+}
+},
+{
+"eli": "DU/2025/59",
+"pdf_tokens": 3262,
+"base": {
+"kept": 0.9399141630901288,
+"grounded": 0.978614746249601,
+"md_tokens": 3133
+},
+"base_src": "converted 0.6.2",
+"new": {
+"kept": 0.9399141630901288,
+"grounded": 0.978614746249601,
+"md_tokens": 3133
+}
+},
+{
+"eli": "MP/2025/29",
+"pdf_tokens": 12190,
+"base": {
+"kept": 0.9882690730106645,
+"grounded": 0.9949620085893625,
+"md_tokens": 12108
+},
+"base_src": "converted 0.6.2",
+"new": {
+"kept": 0.9882690730106645,
+"grounded": 0.9949620085893625,
+"md_tokens": 12108
+}
+},
+{
+"eli": "MP/2025/193",
+"pdf_tokens": 54331,
+"base": {
+"kept": 0.9982698643500028,
+"grounded": 0.9981412639405205,
+"md_tokens": 54338
+},
+"base_src": "converted 0.6.2",
+"new": {
+"kept": 0.9982698643500028,
+"grounded": 0.9981412639405205,
+"md_tokens": 54338
+}
+}
+]
