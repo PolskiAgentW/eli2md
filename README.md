@@ -1,10 +1,11 @@
 # eli2md
 
-Konwerter aktów z **Dziennika Ustaw** (PDF) do **Markdown**, z mierzoną jakością.
-*Converts Polish Journal of Laws PDFs to Markdown; accuracy is measured against official HTML.*
+Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markdown** i drzewa jednostek w JSON,
+z mierzoną jakością.
+*Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.1**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
-> w Dzienniku Ustaw.
+> Status: **wersja 0.6.2**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
 
@@ -26,6 +27,7 @@ w którym artykuły, ustępy i punkty są w osobnych akapitach, a przypisy są p
 ```sh
 pip install git+https://github.com/PolskiAgentW/eli2md
 eli2md DU/2025/900 -o DU-2025-900.md      # pobiera metadane i PDF z API ELI
+eli2md MP/2025/148                         # Monitor Polski (od 0.6.2)
 eli2md plik.pdf                            # lokalny PDF, wynik na stdout
 ```
 
@@ -33,7 +35,11 @@ Cały rocznik (nowe i zmienione akty; indeks w `index.csv`):
 
 ```sh
 python -m eli2md.dataset --root dane/ --years 2025 2026 --jobs 4
+python -m eli2md.dataset --publisher MP --root dane-mp/ --years 2025 2026 --jobs 4   # Monitor Polski (od 0.6.2)
 ```
+
+Dla Dziennika Ustaw zbiór obejmuje akty bez tekstu HTML w API (od 2025 r. wszystkie, wcześniej luki);
+w Monitorze Polskim HTML-a nie ma dla żadnego aktu (sprawdzone dla lat 2012–2026), więc obejmuje wszystkie.
 
 Pobrane pliki trafiają do `~/cache/eli` (zmienna `ELI2MD_CACHE`). Klient robi przerwę 1 s między zapytaniami.
 Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który go przekroczy, dostaje w indeksie
@@ -116,7 +122,21 @@ w załącznikach to trzy teksty jednolite. W DU/2024/54 (113 błędów) PDF ma �
 (sprawdzone w PDF). DU/2024/1366 (90: HTML zagnieżdża ust. 1a w ust. 1) i DU/2024/456 (237) nie sprawdzałem.
 Zdublowane etykiety przypisów na s5106: 9 w 0.6.0 → 0; tekst „(cid:N)”: 1 → 0. Escapowanie `>`/`#` dodałem po teście.
 
-Wyniki per akt: `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+**0.6.2, test s5108** (41 aktów, zapisana w gicie przed oceną, oceniona raz, 0.6.1 i 0.6.2 tą samą miarą):
+treść główna bez zmian, 1455/1455 jednostek i przypięcie 761/761 w obu wersjach; załączniki R 0.995 → 0.995,
+P 0.920 → **0.937** (fałszywe ust.: 269 → 199; z 236 fałszywych jednostek 225 to numerowane wiersze tabeli
+współrzędnych w DU/2024/1594), przypięcie akapitów 0.837 → **0.961**,
+słów 0.954 → 0.957. Co zmieniło się w 0.6.2 (znalezione na teście s5107, potem sprawdzone na próbach deweloperskich
+i zużytych testach):
+- „Rozdział 2. Tytuł” w jednej linii (z kropką po numerze) nie był nagłówkiem, więc pkt z rozdziału 2 wisiały
+  pod ust. 2 z rozdziału 1 (DU/2024/853). Na s5107 pkt w treści głównej R 0.974 → 0.997;
+- sekcje załącznika „I.”, „II.”, „III.” … (w JSON węzły `heading` z etykietą „III.”) zamykają jednostki poprzedniej
+  sekcji. Wcześniej lista „1) …” z sekcji III wisiała pod „6.” z sekcji II (DU/2024/629, 456). Tylko w załącznikach
+  i tylko jako ciąg od „I.” zaczęty poza jednostką: „I. METALE” w tabeli wewnątrz „1.” (DU/2024/1657) to wiersz tabeli,
+  a w treści głównej takie linie to zwykle wiersze tabel zmienianych przez nowelizację. Na s5107 pkt w załącznikach
+  R 0.834 → 1.000, na s5106 0.953 → 0.982.
+
+Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
 
 ## Jakość: jak mierzę i co wyszło
 
@@ -177,7 +197,10 @@ HTML aktów z 2024 r. oznacza każdą jednostkę redakcyjną (`id` z `arti`, `pa
   stoją na początku takiej jednostki (fałszywy nagłówek to np. cytowany artykuł nowelizacji);
 - **ust./pkt/lit. R**: odsetek jednostek danego rodzaju, od których zaczyna się akapit;
 - **podziały P**: odsetek początków akapitów, które w HTML są początkiem bloku (jednostki,
-  akapitu, komórki tabeli). Podziały w tytule aktu liczę osobno.
+  akapitu, komórki tabeli). Podziały w tytule aktu liczę osobno;
+- **podziały R** (od 0.6.2): odsetek początków bloków HTML poza tabelami, w których zaczyna się akapit.
+  Pomijam komórki tabel (tabele są spłaszczone wiersz po wierszu) i początek tekstu jednostki tuż po jej numerze
+  (HTML trzyma numer „1)” i tekst w osobnych blokach). Bez tej miary zlewanie akapitów poprawiało wynik P.
 
 Wersje 0.5.x powstały po tym pomiarze. Znalazł on błędy, których miara słów nie widziała:
 cyfry w indeksie górnym (`Art. 41¹`, `m²`) zamieniane na odnośniki do przypisów oraz cytowane
@@ -252,6 +275,30 @@ ale s5104 nie jest już dla tej poprawki niezależna. Kolejna wersja dostanie no
 Wyniki per akt: `eval/structure_test_*.txt`, `eval/structure_dev_*.txt`, `eval/results_test_*.txt`.
 Po zmianie tokenizacji w 0.5.0 (`41¹` → `41 1`, jak w HTML) liczby słów różnią się od starszych
 plików w czwartym miejscu po przecinku.
+
+**0.6.2: interlinia.** Niektóre akty są składane z odstępem między liniami akapitu większym niż 0,45 rozmiaru
+czcionki (DU/2024/853: 7 pt przy 12 pt; załączniki DU/2024/440, 1337, 1442), a stały próg robił z każdej linii osobny
+akapit (podziały P w załączniku 440: 0.35). Teraz próg jest liczony dla każdej strony: dolny kwartyl odstępu przed
+liniami zaczynającymi się małą literą (kontynuacje akapitu) + 0,1 rozmiaru, co najmniej 0,45. Na stronach z takim
+podniesionym progiem „1)”, „a)”, „Art.”, „§” na początku linii zaczynają jednostkę, „1.” i „– ” tylko po końcu zdania,
+a linia kończąca się przed prawym marginesem kończy akapit (bez tego w 440 nagłówki sekcji zlewały się z tekstem;
+wykryła to dopiero miara R, poprawione przed testem). Mediana zamiast kwartyla psuła uchwałę SN DU/2024/1883 (kolejne
+klauzule „po rozpoznaniu…”, „z udziałem…” zaczynają się małą literą).
+
+| podziały (s5108: 0.6.1 → 0.6.2, pozostałe: 0.6.2.dev0 → 0.6.2) | P | R |
+|---|---|---|
+| **test s5108**, załączniki (41 aktów, ocena jednorazowa) | 0.953 → **0.989** | 0.997 → 0.997 |
+| test s5108, treść główna | 0.999 → 0.999 | 0.999 → 0.999 |
+| test s5107 (zużyty), treść główna | 0.878 → 0.936 | 0.999 → 0.999 |
+| dev seed 2024, załączniki | 0.870 → 0.972 | 0.985 → 0.985 |
+| dev seed 7, załączniki | 0.969 → 0.999 | 0.9938 → 0.9933 |
+
+Na próbach zużytych i deweloperskich (s5107 i s2024, s7 też) porównuję 0.6.2.dev0 (0.6.1 + zmiana dla stron „cid”,
+te same słowa i struktura) z 0.6.2. Słowa (evaluate.py) nie zmieniły się w żadnej próbie. ust./pkt/lit. R bez zmian.
+Koszt: w DU/2024/440 7 z 264 prawdziwych podziałów zginęło (za to 533 fałszywe mniej), a przypięcie słów
+w załącznikach s7 spadło 0.980 → 0.976 (ten sam akt: tabela pod pkt 2 trafia do ust. 1).
+
+Wyniki per akt: `eval/structure_test_s5108_v0.6.*.txt`, `eval/structure_dev_s*_v0.6.2.txt`.
 
 ### Kontrola bez wzorca: akty 2025–2026
 
@@ -351,7 +398,12 @@ renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część st
 - Załączniki bywają wklejonymi PDF-ami, a ich pierwotny nagłówek jest w Dzienniku Ustaw zakryty.
   Taki ukryty tekst wykrywam heurystycznie: renderuję stronę i sprawdzam, czy pod znakiem jest tusz.
   Mogą zostać pojedyncze duplikaty.
-- Objaśnienia pod formularzami w załącznikach bywają brane za przypisy (niska precision przypisów).
+- Objaśnienia pod formularzami w załącznikach bywają brane za przypisy. Niska precision przypisów to jednak
+  w dużej części cecha wzorca: w obwieszczeniach z tekstem jednolitym HTML podaje przypisy tego tekstu jako zwykły
+  tekst załącznika, a wynik jako przypisy (DU/2024/1580: 106 ze 112 przypisów wyniku jest w HTML tylko w treści,
+  DU/2024/1442: 11 z 12). Wtedy spada też recall załącznika.
+- Ciasno złożone tabele: pozycja „2) …” w komórce po krótkiej linii bez „;” dokleja się do „1) …”
+  (np. MP/2025/121). Tekst jest pełny, brakuje tylko podziału.
 - Domyślnie bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 53 356 stron
   w indeksie z 29.09.2026), głównie umowy międzynarodowe. OCR (`--ocr`, od 0.6.0) opisany niżej.
 

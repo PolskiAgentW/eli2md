@@ -57,11 +57,11 @@ TOTAL main  ust   R=0.9928 (416/419)        P=1.0000 (416/416)        R miss non
 TOTAL main  pkt   R=0.9906 (845/853)        P=0.9953 (845/849)        R miss none/path 4/4  P miss none/path 0/4  unaligned ref 0, json 0
 TOTAL main  lit   R=0.9895 (284/287)        P=0.9895 (284/287)        R miss none/path 0/3  P miss none/path 0/3  unaligned ref 0, json 0
 TOTAL main  tir   no reference units in the HTML, not scored; JSON nodes: 66
-TOTAL annex all (art,par,ust,pkt,lit)  R=1.0000 (11946/11946)  P=0.9937 (11946/12022)  R miss none/path 0/0  P miss none/path 76/0  unaligned ref 0, json 916; quoted ref units left out: 0; untyped HTML units typed by label: 11
-TOTAL annex attach  text paragraphs under the right unit: 0.8990 (4120/4583) (unaligned 10257); words in the right unit: 0.9804 (278841/284421)
+TOTAL annex all (art,par,ust,pkt,lit)  R=1.0000 (11946/11946)  P=0.9937 (11946/12022)  R miss none/path 0/0  P miss none/path 76/0  unaligned ref 0, json 924; quoted ref units left out: 0; untyped HTML units typed by label: 11
+TOTAL annex attach  text paragraphs under the right unit: 0.9169 (3707/4043) (unaligned 10295); words in the right unit: 0.9755 (277438/284420)
 TOTAL annex art   R=1.0000 (1529/1529)      P=1.0000 (1529/1529)      R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
 TOTAL annex par   R=1.0000 (118/118)        P=1.0000 (118/118)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
-TOTAL annex ust   R=1.0000 (4698/4698)      P=0.9886 (4698/4752)      R miss none/path 0/0  P miss none/path 54/0  unaligned ref 0, json 580
+TOTAL annex ust   R=1.0000 (4698/4698)      P=0.9886 (4698/4752)      R miss none/path 0/0  P miss none/path 54/0  unaligned ref 0, json 588
 TOTAL annex pkt   R=1.0000 (4807/4807)      P=0.9988 (4807/4813)      R miss none/path 0/0  P miss none/path 6/0  unaligned ref 0, json 251
 TOTAL annex lit   R=1.0000 (794/794)        P=0.9802 (794/810)        R miss none/path 0/0  P miss none/path 16/0  unaligned ref 0, json 85
-TOTAL annex tir   no reference units in the HTML, not scored; JSON nodes: 234
+TOTAL annex tir   no reference units in the HTML, not scored; JSON nodes: 236

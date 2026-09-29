@@ -58,7 +58,7 @@ TOTAL main  pkt   R=1.0000 (380/380)        P=1.0000 (380/380)        R miss non
 TOTAL main  lit   R=1.0000 (181/181)        P=1.0000 (181/181)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
 TOTAL main  tir   no reference units in the HTML, not scored; JSON nodes: 19
 TOTAL annex all (art,par,ust,pkt,lit)  R=0.9934 (4793/4825)  P=0.8521 (4793/5625)  R miss none/path 6/26  P miss none/path 806/26  unaligned ref 3, json 399; quoted ref units left out: 2; untyped HTML units typed by label: 52
-TOTAL annex attach  text paragraphs under the right unit: 0.6603 (2350/3559) (unaligned 1155); words in the right unit: 0.8713 (128095/147024)
+TOTAL annex attach  text paragraphs under the right unit: 0.8247 (2103/2550) (unaligned 976); words in the right unit: 0.8697 (127864/147024)
 TOTAL annex art   R=1.0000 (480/480)        P=1.0000 (480/480)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
 TOTAL annex par   R=1.0000 (145/145)        P=1.0000 (145/145)        R miss none/path 0/0  P miss none/path 0/0  unaligned ref 0, json 0
 TOTAL annex ust   R=0.9994 (1624/1625)      P=0.8908 (1624/1823)      R miss none/path 1/0  P miss none/path 199/0  unaligned ref 0, json 127
