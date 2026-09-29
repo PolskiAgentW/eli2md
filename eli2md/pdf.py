@@ -20,7 +20,8 @@ import pdfplumber
 from pdfplumber.utils import extract_words
 
 RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
-MASTHEAD_END = re.compile(r"^Poz\.\s*\d+\s*$")
+# "Pozycja 19": MP 2012 up to poz. 130; ") Poz. 1024*": the last act of a year has a note "*) Ostatnia pozycja"
+MASTHEAD_END = re.compile(r"^[*)\s]*Poz(?:\.|ycja)\s*\d+[*)\s]*$")
 SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 41¹., 5²)
 # Lines that start a new unit even without a vertical gap (used at page breaks).
 UNIT_START = re.compile(
@@ -98,6 +99,22 @@ def _char_angle(c: dict) -> int:
     """Writing direction of a char in degrees (0, 90, 180, 270), from its text matrix."""
     a, b = c["matrix"][0], c["matrix"][1]
     return round(math.degrees(math.atan2(b, a)) / 90) % 4 * 90
+
+
+def _watermark(c: dict) -> bool:
+    """A char of the invisible diagonal stamp "www.rcl.gov.pl" over pages of MP 2012 (MP/2012/596, 988):
+    marked as an Artifact and written at ~55 degrees. Its letters landed inside words and paragraphs and
+    hid the running header ("l Monitor Polski – 2 – Poz. 596 p"). Text of the act is never diagonal."""
+    if c.get("tag") != "Artifact" or "matrix" not in c:
+        return False
+    deg = math.degrees(math.atan2(c["matrix"][1], c["matrix"][0])) % 90
+    return 10 < deg < 80
+
+
+def _drop_watermark(page):
+    if not any(_watermark(c) for c in page.chars):
+        return page
+    return page.filter(lambda o: not (o.get("object_type") == "char" and _watermark(o)))
 
 
 def _to_frame(o: dict, rot: int, w: float, h: float) -> dict:
@@ -189,7 +206,7 @@ def _large_image(page, min_share: float = 0.1) -> float | None:
 def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
     """Return (body_lines, footnote_lines) for one page."""
     body, notes = [], []
-    for k, (words, fw, fh, rects) in enumerate(_frames(_drop_hidden_placed(page))):
+    for k, (words, fw, fh, rects) in enumerate(_frames(_drop_hidden_placed(_drop_watermark(page)))):
         b, n = _frame_lines(words, fw, fh, rects, pno)
         if k > 0:
             b = [l for l in b if not RUNNING_HEADER.match(l.text)]

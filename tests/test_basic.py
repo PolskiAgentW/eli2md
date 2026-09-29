@@ -1,8 +1,8 @@
 import unittest
 
 from eli2md.eli import parse_eli
-from eli2md.pdf import (UNIT_START, Block, Document, Line, _char_angle, _frame_lines, _free, _join, _segment, _to_frame,
-                        page_ranges, to_markdown)
+from eli2md.pdf import (MASTHEAD_END, UNIT_START, Block, Document, Line, _char_angle, _drop_watermark, _frame_lines, _free,
+                        _join, _segment, _to_frame, _watermark, page_ranges, to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
         "pos": 1, "publisher": "DU", "keywords": ["a", "b"]}
@@ -211,6 +211,38 @@ class Basic(unittest.TestCase):
         self.assertIn("Formularz[^1_3].", md)
         for d in ("[^1]: Przypis aktu.", "[^1_2]: Niepotrzebne skreślić.", "[^2]: Objaśnienie.", "[^1_3]: Na stronie 3."):
             self.assertIn(d, md)
+
+    def test_masthead_end(self):
+        for line in ("Poz. 5", "Poz. 1021", "Pozycja 19", ") Poz. 1024*", "Poz. 1024*)"):  # MP/2012/19, MP/2012/1024
+            self.assertTrue(MASTHEAD_END.match(line), line)
+        for line in ("poz. 5", "Poz. 5 i 6", "Pozycja nr 3 tabeli", "Monitor Polski – 2 – Poz. 5"):
+            self.assertFalse(MASTHEAD_END.match(line), line)
+
+    def test_watermark(self):
+        # the invisible "www.rcl.gov.pl" over MP 2012 pages: Artifact chars written at ~55 degrees (MP/2012/988)
+        wm = {"object_type": "char", "text": "w", "tag": "Artifact", "matrix": (3.09, 4.42, -4.42, 3.09, 94.4, 54.1)}
+        self.assertTrue(_watermark(wm))
+        self.assertFalse(_watermark({**wm, "tag": None}))  # diagonal text that is not an artifact stays
+        self.assertFalse(_watermark({**wm, "matrix": (48.0, 0.0, 0.0, 48.0, 0, 0)}))  # Word masthead, an Artifact
+        self.assertFalse(_watermark({**wm, "matrix": (0.0, 10.0, -10.0, 0.0, 0, 0)}))  # rotated table
+
+        class Page:
+            def __init__(self, objs):
+                self.objs = objs
+
+            @property
+            def chars(self):
+                return [o for o in self.objs if o["object_type"] == "char"]
+
+            def filter(self, keep):
+                return Page([o for o in self.objs if keep(o)])
+
+        text = {"object_type": "char", "text": "a", "tag": None, "matrix": (10.0, 0.0, 0.0, 10.0, 0, 0)}
+        rect = {"object_type": "rect"}
+        page = Page([text, wm, rect])
+        self.assertEqual(_drop_watermark(page).objs, [text, rect])
+        clean = Page([text, rect])
+        self.assertIs(_drop_watermark(clean), clean)
 
 
 if __name__ == "__main__":
