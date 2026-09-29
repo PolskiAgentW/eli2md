@@ -3,7 +3,7 @@
 Konwerter aktów z **Dziennika Ustaw** (PDF) do **Markdown**, z mierzoną jakością.
 *Converts Polish Journal of Laws PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.5.3**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.0**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw.
 
 ## Po co
@@ -74,25 +74,35 @@ z opublikowanych plików `.md`):
  "footnotes": {"1": "…"}}
 ```
 
-Typy: `art`, `par` (§), `ust`, `pkt`, `lit`, `tir` oraz `text`, `heading` (rozdział, dział…), `signature`, `note`.
-Jednostki cytowane w nowelizacjach nie są węzłami, tylko tekstem (`"quoted": true`) jednostki, która je zawiera.
-Akapit bez numeru trafia do najgłębszej otwartej jednostki, więc tekst kończący wyliczenie („część wspólna”)
-wisi pod ostatnim punktem. Markdown nie ma wcięć, po których dałoby się to rozróżnić.
+Typy: `art`, `par` (§), `ust`, `pkt`, `lit`, `tir` oraz `text`, `heading` (rozdział, dział…), `signature`, `note`,
+`ocr` (akapit odczytany przez OCR, od 0.6.0). Jednostki cytowane w nowelizacjach nie są węzłami, tylko tekstem
+(`"quoted": true`) jednostki, która je zawiera. Akapit bez numeru trafia do najgłębszej otwartej jednostki.
+Wyjątek (od 0.6.0): tekst tuż po ostatnim punkcie wyliczenia, zaczynający się małą literą albo od „– ”
+(„część wspólna”: „oraz zmian wynikających…”, „– w wysokości…”), trafia do jednostki nad wyliczeniem. Jeśli
+potem przychodzi jednostka niższego rzędu (np. lit. po takim akapicie), akapit wraca do punktu: był dalszym
+ciągiem jego tekstu rozbitym przez układ strony. „– ” po wyliczeniu nie jest tiretem, chyba że poprzedni akapit
+kończy się dwukropkiem albo sam jest tiretem.
 
 `eval/tree_eval.py` porównuje ścieżki (`art_5/ust_2/pkt_3`) z identyfikatorami jednostek w HTML 2024 (bez
 jednostek cytowanych) w tym samym miejscu tekstu. **R**: odsetek jednostek HTML, dla których w JSON jest węzeł
-o tej samej ścieżce zaczynający się w tym samym słowie; **P**: odwrotnie.
+o tej samej ścieżce zaczynający się w tym samym słowie; **P**: odwrotnie. Od 0.6.0 miara sprawdza też
+**przypięcie**: czy akapit bez numeru wisi pod tą jednostką, do której należy w HTML, i jaki odsetek słów
+jest we właściwej jednostce (tirety pomijam po obu stronach, bo HTML ich nie oznacza).
 
-| art, §, ust., pkt, lit.  | **test s5104 (46)**, 0.5.3 | dev seed 2024 (49)     | dev seed 7 (50)        |
-|--------------------------|----------------------------|------------------------|------------------------|
-| treść główna             | **1.000 / 1.000** (1256)   | 1.000 / 1.000 (942)    | 0.992 / 0.996 (1830)   |
-| załączniki               | **0.998 / 0.994** (7217)   | 0.993 / 0.852 (4825)   | 1.000 / 0.994 (11946)  |
+| art, §, ust., pkt, lit.  | **test s5105 (38)**, 0.6.0 | test s5104 (46), 0.5.3 | dev seed 2024 (49)     | dev seed 7 (50)        |
+|--------------------------|----------------------------|------------------------|------------------------|------------------------|
+| treść główna             | **1.000 / 1.000** (774)    | 1.000 / 1.000 (1256)   | 1.000 / 1.000 (942)    | 0.992 / 0.996 (1830)   |
+| załączniki               | **0.991 / 0.992** (3459)   | 0.998 / 0.994 (7217)   | 0.993 / 0.852 (4825)   | 1.000 / 0.994 (11946)  |
+
+Przypięcie na teście s5105, 0.5.3 → 0.6.0 (jednostki bez zmian): akapity bez numeru we właściwej jednostce
+w treści głównej 0.995 → **1.000** (385), w załącznikach 0.876 → **0.969** (195); słowa we właściwej jednostce
+0.9905 → **1.000** i 0.985 → **0.991**. s5105 zapisana w gicie przed oceną, oceniona raz, obie wersje tą samą miarą.
 
 Próba odłożona s5104 zapisana w gicie przed oceną, oceniona raz. Na próbach deweloperskich stroiłem, więc
 tamte liczby są zawyżone. Niska precision załączników w seed 2024 to głównie DU/2024/1337 (karty akwenów:
 numerowane wiersze tabel, których HTML nie oznacza jako jednostek). W teście najsłabsze są lit. w załącznikach
 (R 0.978, P 0.937). Tiret HTML nie oznacza, więc nie są mierzone. Nagłówków rozdziałów miara nie sprawdza.
-Wyniki per akt: `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+Wyniki per akt: `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
 
 ## Jakość: jak mierzę i co wyszło
 
@@ -240,6 +250,7 @@ wszystkich 3155 aktów (2026-09-29):
 |--------|----------------------------|--------------------------|
 | 0.4.0  | 0.975, 225, 24             | 0.989, 41                |
 | 0.5.2  | 0.9755, 220, 23            | 0.9894, 40               |
+| 0.5.3  | 0.9755, 220, 23 (3168 aktów) | 0.9894, 40             |
 
 kept to odsetek słów PDF obecnych w wyniku, grounded to odsetek słów wyniku obecnych w PDF.
 Od 0.5.2 indeksy (`41¹`) liczę jako cyfry doklejone do słowa, bo tak czyta je `extract_words`
@@ -249,20 +260,20 @@ Obejrzałem tylko najgorszy przypadek, DU/2025/243. To wzór formularza z kilkom
 warstwami tekstu, a wynik jest tam częściowo pomieszany. Pozostałych nie przeglądałem.
 Strony bez warstwy tekstowej (skany) są dla tej kontroli niewidoczne. Wynik je tylko oznacza.
 
-## OCR stron bez warstwy tekstowej (prototyp, opcja `--ocr`)
+## OCR stron bez warstwy tekstowej (od 0.6.0, opcja `--ocr`)
 
 ```sh
 sudo apt install tesseract-ocr tesseract-ocr-pol      # wymagane; opcjonalnie np. -por -fra -ell
 eli2md DU/2025/1604 --ocr -o DU-2025-1604.md           # język dobierany dla każdej strony (auto)
 eli2md DU/2025/1604 --ocr pol+eng                      # jeden zestaw języków dla wszystkich stron
-python -m eli2md.dataset --root dane/ --ocr --all      # zbiór danych (domyślnie bez OCR)
+python -m eli2md.dataset --root dane/ --ocr            # zbiór: nowe akty i akty ze skanami jeszcze bez OCR
 ```
 
 Domyślnie wyłączone. Strona bez warstwy tekstowej jest renderowana w 300 dpi i czytana przez
 tesseract (`eli2md/ocr.py`). W Markdown przed jej tekstem stoi notka
 `> [Strona 5 PDF nie ma warstwy tekstowej. Tekst poniżej odczytał OCR (tesseract 5.5.0, pol+eng). Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]`,
 a każdy akapit OCR jest cytatem blokowym (`> tekst`), żeby nie mylił się z tekstem z warstwy PDF
-(od 0.5.4; w JSON to węzły `ocr`, nigdy jednostki). We front matter są pola `pages_ocr` i `ocr`.
+(w JSON to węzły `ocr`, nigdy jednostki). We front matter są pola `pages_ocr` i `ocr`.
 `pages_without_text` zostaje (opisuje PDF).
 Strona, z której OCR daje mniej niż 20 słów albo medianę pewności słów poniżej 80
 (mapy, nuty, podpisy), dostaje tylko dawną notkę. Tekst OCR nigdy nie jest nagłówkiem `#####`.
@@ -328,7 +339,7 @@ renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część st
   Mogą zostać pojedyncze duplikaty.
 - Objaśnienia pod formularzami w załącznikach bywają brane za przypisy (niska precision przypisów).
 - Domyślnie bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 53 356 stron
-  w indeksie z 29.09.2026), głównie umowy międzynarodowe. OCR (`--ocr`) to prototyp, opis niżej.
+  w indeksie z 29.09.2026), głównie umowy międzynarodowe. OCR (`--ocr`, od 0.6.0) opisany niżej.
 
 ## Licencja
 

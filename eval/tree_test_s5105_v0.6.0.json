@@ -1,0 +1,2553 @@
+[
+ {
+  "pos": 1925,
+  "counts": {
+   "main.text_n": 6,
+   "main.text_hit": 6,
+   "main.word_n": 1881,
+   "main.word_hit": 1881,
+   "main.quoted_ref": 1,
+   "main.none_typed_ref": 0,
+   "main.R.art_n": 18,
+   "main.R.art_hit": 18,
+   "main.R.ust_n": 28,
+   "main.R.ust_hit": 28,
+   "main.R.pkt_n": 15,
+   "main.R.pkt_hit": 15,
+   "main.P.art_n": 18,
+   "main.P.art_hit": 18,
+   "main.P.ust_n": 28,
+   "main.P.ust_hit": 28,
+   "main.P.pkt_n": 15,
+   "main.P.pkt_hit": 15,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Ustawa"
+ },
+ {
+  "pos": 464,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 142,
+   "main.word_hit": 142,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.R.pkt_n": 3,
+   "main.R.pkt_hit": 3,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "main.P.pkt_n": 3,
+   "main.P.pkt_hit": 3,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1296,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.text_unal": 1,
+   "main.word_n": 758,
+   "main.word_hit": 758,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 4,
+   "main.R.par_hit": 4,
+   "main.R.pkt_n": 7,
+   "main.R.pkt_hit": 7,
+   "main.R.lit_n": 5,
+   "main.R.lit_hit": 5,
+   "main.P.par_n": 4,
+   "main.P.par_hit": 4,
+   "main.P.pkt_n": 7,
+   "main.P.pkt_hit": 7,
+   "main.P.lit_n": 5,
+   "main.P.lit_hit": 5,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 875,
+  "counts": {
+   "main.text_n": 19,
+   "main.text_hit": 19,
+   "main.word_n": 857,
+   "main.word_hit": 857,
+   "main.quoted_ref": 15,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.R.pkt_n": 16,
+   "main.R.pkt_hit": 16,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "main.P.pkt_n": 16,
+   "main.P.pkt_hit": 16,
+   "annex.text_unal": 18,
+   "annex.text_n": 155,
+   "annex.text_hit": 153,
+   "annex.word_n": 8575,
+   "annex.word_hit": 7883,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 16,
+   "annex.R.par_n": 38,
+   "annex.R.par_hit": 38,
+   "annex.R.pkt_n": 147,
+   "annex.R.pkt_hit": 137,
+   "annex.R.lit_n": 9,
+   "annex.R.lit_hit": 7,
+   "annex.R.ust_n": 106,
+   "annex.R.ust_hit": 89,
+   "annex.R.pkt_none": 2,
+   "annex.R.ust_none": 1,
+   "annex.R.ust_path": 16,
+   "annex.R.pkt_path": 8,
+   "annex.R.lit_path": 2,
+   "annex.P.par_n": 38,
+   "annex.P.par_hit": 38,
+   "annex.P.pkt_n": 148,
+   "annex.P.pkt_hit": 137,
+   "annex.P.lit_n": 9,
+   "annex.P.lit_hit": 7,
+   "annex.P.ust_n": 105,
+   "annex.P.ust_hit": 89,
+   "annex.P.ust_path": 16,
+   "annex.P.pkt_path": 8,
+   "annex.P.lit_path": 2,
+   "annex.P.pkt_none": 3
+  },
+  "errors": [
+   [
+    "annex",
+    "T",
+    "attach",
+    "par_11/ust_11",
+    [
+     "par_11/ust_12"
+    ]
+   ],
+   [
+    "annex",
+    "T",
+    "attach",
+    "par_22/ust_1b/pkt_10e",
+    [
+     "par_22/ust_1b/pkt_10f"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "none",
+    "par_11/ust_10/pkt_2",
+    []
+   ],
+   [
+    "annex",
+    "R",
+    "none",
+    "par_11/ust_12",
+    []
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_1a",
+    [
+     "par_16/ust_1a"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_2",
+    [
+     "par_16/ust_2"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_2/pkt_1",
+    [
+     "par_16/ust_2/pkt_1"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_2/pkt_1/lit_a",
+    [
+     "par_16/ust_2/pkt_1/lit_a"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_2/pkt_1/lit_b",
+    [
+     "par_16/ust_2/pkt_1/lit_b"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_2/pkt_2",
+    [
+     "par_16/ust_2/pkt_2"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_2a",
+    [
+     "par_16/ust_2a"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_2b",
+    [
+     "par_16/ust_2b"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_3",
+    [
+     "par_16/ust_3"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_4",
+    [
+     "par_16/ust_4"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_4a",
+    [
+     "par_16/ust_4a"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_5",
+    [
+     "par_16/ust_5"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_5a",
+    [
+     "par_16/ust_5a"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_5b",
+    [
+     "par_16/ust_5b"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_5c",
+    [
+     "par_16/ust_5c"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_5d",
+    [
+     "par_16/ust_5d"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_6",
+    [
+     "par_16/ust_6"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_6/pkt_1",
+    [
+     "par_16/ust_6/pkt_1"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_6/pkt_2",
+    [
+     "par_16/ust_6/pkt_2"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_6/pkt_3",
+    [
+     "par_16/ust_6/pkt_3"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_16/ust_1/ust_6/pkt_4",
+    [
+     "par_16/ust_6/pkt_4"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "none",
+    "par_22/ust_1b/pkt_10f",
+    []
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_24/ust_1/ust_1a",
+    [
+     "par_24/ust_1a"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_24/ust_1/ust_2",
+    [
+     "par_24/ust_2"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_24/ust_1/ust_3",
+    [
+     "par_24/ust_3"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_24/ust_1/ust_3/pkt_1",
+    [
+     "par_24/ust_3/pkt_1"
+    ]
+   ],
+   [
+    "annex",
+    "R",
+    "path",
+    "par_24/ust_1/ust_3/pkt_2",
+    [
+     "par_24/ust_3/pkt_2"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_1a",
+    [
+     "par_16/ust_1/ust_1a"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_2",
+    [
+     "par_16/ust_1/ust_2"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_2/pkt_1",
+    [
+     "par_16/ust_1/ust_2/pkt_1"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_2/pkt_1/lit_a",
+    [
+     "par_16/ust_1/ust_2/pkt_1/lit_a"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_2/pkt_1/lit_b",
+    [
+     "par_16/ust_1/ust_2/pkt_1/lit_b"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_2/pkt_2",
+    [
+     "par_16/ust_1/ust_2/pkt_2"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_2a",
+    [
+     "par_16/ust_1/ust_2a"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_2b",
+    [
+     "par_16/ust_1/ust_2b"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_3",
+    [
+     "par_16/ust_1/ust_3"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_4",
+    [
+     "par_16/ust_1/ust_4"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_4a",
+    [
+     "par_16/ust_1/ust_4a"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_5",
+    [
+     "par_16/ust_1/ust_5"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_5a",
+    [
+     "par_16/ust_1/ust_5a"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_5b",
+    [
+     "par_16/ust_1/ust_5b"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_5c",
+    [
+     "par_16/ust_1/ust_5c"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_5d",
+    [
+     "par_16/ust_1/ust_5d"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_6",
+    [
+     "par_16/ust_1/ust_6"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_6/pkt_1",
+    [
+     "par_16/ust_1/ust_6/pkt_1"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_6/pkt_2",
+    [
+     "par_16/ust_1/ust_6/pkt_2"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_6/pkt_3",
+    [
+     "par_16/ust_1/ust_6/pkt_3"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_16/ust_6/pkt_4",
+    [
+     "par_16/ust_1/ust_6/pkt_4"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_24/ust_1a",
+    [
+     "par_24/ust_1/ust_1a"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_24/ust_2",
+    [
+     "par_24/ust_1/ust_2"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_24/ust_3",
+    [
+     "par_24/ust_1/ust_3"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_24/ust_3/pkt_1",
+    [
+     "par_24/ust_1/ust_3/pkt_1"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "path",
+    "par_24/ust_3/pkt_2",
+    [
+     "par_24/ust_1/ust_3/pkt_2"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "pkt_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "pkt_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "pkt_3",
+    []
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1213,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 168,
+   "main.word_hit": 168,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 3,
+   "main.R.par_hit": 3,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.P.par_n": 3,
+   "main.P.par_hit": 3,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 426,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 518,
+   "main.word_hit": 518,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 3,
+   "main.R.par_hit": 3,
+   "main.R.pkt_n": 16,
+   "main.R.pkt_hit": 16,
+   "main.R.lit_n": 4,
+   "main.R.lit_hit": 4,
+   "main.P.par_n": 3,
+   "main.P.par_hit": 3,
+   "main.P.pkt_n": 16,
+   "main.P.pkt_hit": 16,
+   "main.P.lit_n": 4,
+   "main.P.lit_hit": 4,
+   "annex.text_unal": 584,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.P.pkt_unal": 7,
+   "annex.P.tir_unal": 101,
+   "annex.P.ust_unal": 2
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 205,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 1354,
+   "main.word_hit": 1354,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 16,
+   "main.R.par_hit": 16,
+   "main.R.pkt_n": 33,
+   "main.R.pkt_hit": 33,
+   "main.R.ust_n": 17,
+   "main.R.ust_hit": 17,
+   "main.P.par_n": 16,
+   "main.P.par_hit": 16,
+   "main.P.pkt_n": 33,
+   "main.P.pkt_hit": 33,
+   "main.P.ust_n": 17,
+   "main.P.ust_hit": 17,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1048,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 1179,
+   "main.word_hit": 1179,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 13,
+   "main.R.par_hit": 13,
+   "main.R.pkt_n": 31,
+   "main.R.pkt_hit": 31,
+   "main.R.lit_n": 4,
+   "main.R.lit_hit": 4,
+   "main.R.ust_n": 16,
+   "main.R.ust_hit": 16,
+   "main.P.par_n": 13,
+   "main.P.par_hit": 13,
+   "main.P.pkt_n": 31,
+   "main.P.pkt_hit": 31,
+   "main.P.lit_n": 4,
+   "main.P.lit_hit": 4,
+   "main.P.ust_n": 16,
+   "main.P.ust_hit": 16,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 341,
+  "counts": {
+   "main.text_n": 10,
+   "main.text_hit": 10,
+   "main.word_n": 261,
+   "main.word_hit": 261,
+   "main.quoted_ref": 2,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.R.pkt_n": 2,
+   "main.R.pkt_hit": 2,
+   "main.R.lit_n": 4,
+   "main.R.lit_hit": 4,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "main.P.pkt_n": 2,
+   "main.P.pkt_hit": 2,
+   "main.P.lit_n": 4,
+   "main.P.lit_hit": 4,
+   "main.P.tir_n": 3,
+   "main.P.tir_none": 3,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/pkt_1/lit_d/tir_1",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/pkt_1/lit_d/tir_2",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/pkt_1/lit_d/tir_3",
+    []
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 621,
+  "counts": {
+   "main.text_n": 20,
+   "main.text_hit": 20,
+   "main.word_n": 1066,
+   "main.word_hit": 1066,
+   "main.quoted_ref": 16,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.R.pkt_n": 8,
+   "main.R.pkt_hit": 8,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "main.P.pkt_n": 8,
+   "main.P.pkt_hit": 8,
+   "annex.text_unal": 5,
+   "annex.text_n": 6,
+   "annex.text_hit": 6,
+   "annex.word_n": 7367,
+   "annex.word_hit": 7367,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.par_n": 20,
+   "annex.R.par_hit": 20,
+   "annex.R.pkt_n": 105,
+   "annex.R.pkt_hit": 105,
+   "annex.R.lit_n": 56,
+   "annex.R.lit_hit": 56,
+   "annex.R.ust_n": 62,
+   "annex.R.ust_hit": 62,
+   "annex.P.par_n": 20,
+   "annex.P.par_hit": 20,
+   "annex.P.pkt_n": 105,
+   "annex.P.pkt_hit": 105,
+   "annex.P.lit_n": 56,
+   "annex.P.lit_hit": 56,
+   "annex.P.tir_n": 12,
+   "annex.P.tir_none": 12,
+   "annex.P.ust_n": 62,
+   "annex.P.ust_hit": 62,
+   "annex.P.pkt_unal": 9
+  },
+  "errors": [
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/pkt_2/lit_a/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/pkt_2/lit_a/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_3/ust_1/pkt_4/lit_a/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_3/ust_1/pkt_4/lit_a/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_3/ust_1/pkt_4/lit_a/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_3/ust_1/pkt_4/lit_a/tir_4",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_3/ust_1/pkt_4/lit_a/tir_5",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_3/ust_1/pkt_4/lit_b/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_3/ust_1/pkt_4/lit_b/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_12/ust_2/pkt_1/lit_c/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_12/ust_2/pkt_1/lit_c/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_12/ust_2/pkt_1/lit_c/tir_3",
+    []
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1445,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 156,
+   "main.word_hit": 156,
+   "main.quoted_ref": 1,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "annex.text_unal": 4,
+   "annex.text_n": 1,
+   "annex.text_hit": 1,
+   "annex.word_n": 596,
+   "annex.word_hit": 596,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.par_n": 6,
+   "annex.R.par_hit": 6,
+   "annex.R.ust_n": 10,
+   "annex.R.ust_hit": 10,
+   "annex.R.pkt_n": 12,
+   "annex.R.pkt_hit": 12,
+   "annex.R.lit_n": 9,
+   "annex.R.lit_hit": 9,
+   "annex.P.par_n": 6,
+   "annex.P.par_hit": 6,
+   "annex.P.ust_n": 10,
+   "annex.P.ust_hit": 10,
+   "annex.P.pkt_n": 12,
+   "annex.P.pkt_hit": 12,
+   "annex.P.lit_n": 9,
+   "annex.P.lit_hit": 9
+  },
+  "errors": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1500,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 285,
+   "main.word_hit": 285,
+   "main.quoted_ref": 1,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "annex.text_unal": 4,
+   "annex.text_n": 1,
+   "annex.text_hit": 1,
+   "annex.word_n": 474,
+   "annex.word_hit": 474,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.par_n": 6,
+   "annex.R.par_hit": 6,
+   "annex.R.ust_n": 11,
+   "annex.R.ust_hit": 11,
+   "annex.R.pkt_n": 10,
+   "annex.R.pkt_hit": 10,
+   "annex.P.par_n": 6,
+   "annex.P.par_hit": 6,
+   "annex.P.ust_n": 11,
+   "annex.P.ust_hit": 11,
+   "annex.P.pkt_n": 10,
+   "annex.P.pkt_hit": 10
+  },
+  "errors": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 74,
+  "counts": {
+   "main.text_n": 7,
+   "main.text_hit": 7,
+   "main.word_n": 151,
+   "main.word_hit": 151,
+   "main.quoted_ref": 2,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1389,
+  "counts": {
+   "main.text_n": 17,
+   "main.text_hit": 17,
+   "main.text_unal": 2,
+   "main.word_n": 3034,
+   "main.word_hit": 3034,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 17,
+   "main.R.par_hit": 17,
+   "main.R.pkt_n": 53,
+   "main.R.pkt_hit": 53,
+   "main.R.ust_n": 39,
+   "main.R.ust_hit": 39,
+   "main.R.lit_n": 6,
+   "main.R.lit_hit": 6,
+   "main.P.par_n": 17,
+   "main.P.par_hit": 17,
+   "main.P.pkt_n": 53,
+   "main.P.pkt_hit": 53,
+   "main.P.ust_n": 39,
+   "main.P.ust_hit": 39,
+   "main.P.lit_n": 6,
+   "main.P.lit_hit": 6,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1246,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 746,
+   "main.word_hit": 746,
+   "main.quoted_ref": 2,
+   "main.none_typed_ref": 0,
+   "main.R.art_n": 5,
+   "main.R.art_hit": 5,
+   "main.R.pkt_n": 4,
+   "main.R.pkt_hit": 4,
+   "main.R.lit_n": 2,
+   "main.R.lit_hit": 2,
+   "main.P.art_n": 5,
+   "main.P.art_hit": 5,
+   "main.P.pkt_n": 4,
+   "main.P.pkt_hit": 4,
+   "main.P.lit_n": 2,
+   "main.P.lit_hit": 2,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Ustawa"
+ },
+ {
+  "pos": 481,
+  "counts": {
+   "main.text_n": 21,
+   "main.text_hit": 21,
+   "main.word_n": 360,
+   "main.word_hit": 360,
+   "main.quoted_ref": 16,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.R.pkt_n": 4,
+   "main.R.pkt_hit": 4,
+   "main.R.lit_n": 2,
+   "main.R.lit_hit": 2,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "main.P.pkt_n": 4,
+   "main.P.pkt_hit": 4,
+   "main.P.lit_n": 2,
+   "main.P.lit_hit": 2,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1268,
+  "counts": {
+   "main.text_n": 14,
+   "main.text_hit": 14,
+   "main.word_n": 536,
+   "main.word_hit": 536,
+   "main.quoted_ref": 8,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.R.pkt_n": 4,
+   "main.R.pkt_hit": 4,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "main.P.pkt_n": 4,
+   "main.P.pkt_hit": 4,
+   "annex.text_unal": 4,
+   "annex.text_n": 1,
+   "annex.text_hit": 1,
+   "annex.word_n": 5003,
+   "annex.word_hit": 4982,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.par_n": 18,
+   "annex.R.par_hit": 18,
+   "annex.R.pkt_n": 70,
+   "annex.R.pkt_hit": 70,
+   "annex.R.ust_n": 89,
+   "annex.R.ust_hit": 88,
+   "annex.R.lit_n": 88,
+   "annex.R.lit_hit": 88,
+   "annex.R.ust_none": 1,
+   "annex.P.par_n": 18,
+   "annex.P.par_hit": 18,
+   "annex.P.pkt_n": 70,
+   "annex.P.pkt_hit": 70,
+   "annex.P.ust_n": 88,
+   "annex.P.ust_hit": 88,
+   "annex.P.lit_n": 88,
+   "annex.P.lit_hit": 88,
+   "annex.P.tir_n": 33,
+   "annex.P.tir_none": 33
+  },
+  "errors": [
+   [
+    "annex",
+    "R",
+    "none",
+    "par_10/ust_14",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_a/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_a/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_a/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_a/tir_4",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_4",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_5",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_6",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_7",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_8",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_9",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_10",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_1/lit_d/tir_11",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_a/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_a/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_a/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_a/tir_4",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_a/tir_5",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_a/tir_6",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_4",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_5",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_6",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_7",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_8",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_9",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_10",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_11",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "par_2/ust_7/pkt_2/lit_d/tir_12",
+    []
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 512,
+  "counts": {
+   "main.text_n": 37,
+   "main.text_hit": 37,
+   "main.word_n": 1111,
+   "main.word_hit": 1111,
+   "main.quoted_ref": 32,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.R.pkt_n": 8,
+   "main.R.pkt_hit": 8,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "main.P.pkt_n": 8,
+   "main.P.pkt_hit": 8,
+   "annex.text_unal": 3,
+   "annex.text_n": 6,
+   "annex.text_hit": 3,
+   "annex.word_n": 24505,
+   "annex.word_hit": 24490,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.art_n": 177,
+   "annex.R.art_hit": 177,
+   "annex.R.pkt_n": 328,
+   "annex.R.pkt_hit": 328,
+   "annex.R.lit_n": 31,
+   "annex.R.lit_hit": 31,
+   "annex.R.ust_n": 464,
+   "annex.R.ust_hit": 464,
+   "annex.P.art_n": 177,
+   "annex.P.art_hit": 177,
+   "annex.P.pkt_n": 328,
+   "annex.P.pkt_hit": 328,
+   "annex.P.lit_n": 31,
+   "annex.P.lit_hit": 31,
+   "annex.P.ust_n": 464,
+   "annex.P.ust_hit": 464,
+   "annex.P.tir_n": 11,
+   "annex.P.tir_none": 11
+  },
+  "errors": [
+   [
+    "annex",
+    "T",
+    "attach",
+    "art_16b",
+    [
+     ""
+    ]
+   ],
+   [
+    "annex",
+    "T",
+    "attach",
+    "art_16b",
+    [
+     ""
+    ]
+   ],
+   [
+    "annex",
+    "T",
+    "attach",
+    "art_71/ust_5/pkt_2",
+    [
+     "art_71/ust_5"
+    ]
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_a/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_a/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_a/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_a/tir_4",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_b/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_b/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_b/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_b/tir_4",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_c/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_c/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_24/ust_2/pkt_4/lit_c/tir_3",
+    []
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 718,
+  "counts": {
+   "main.text_n": 7,
+   "main.text_hit": 7,
+   "main.word_n": 1259,
+   "main.word_hit": 1259,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 10,
+   "main.R.par_hit": 10,
+   "main.R.pkt_n": 24,
+   "main.R.pkt_hit": 24,
+   "main.R.ust_n": 10,
+   "main.R.ust_hit": 10,
+   "main.P.par_n": 10,
+   "main.P.par_hit": 10,
+   "main.P.pkt_n": 24,
+   "main.P.pkt_hit": 24,
+   "main.P.ust_n": 10,
+   "main.P.ust_hit": 10,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 891,
+  "counts": {
+   "main.text_n": 13,
+   "main.text_hit": 13,
+   "main.word_n": 378,
+   "main.word_hit": 378,
+   "main.quoted_ref": 9,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "annex.text_unal": 3,
+   "annex.text_n": 2,
+   "annex.text_hit": 1,
+   "annex.word_n": 1758,
+   "annex.word_hit": 1754,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.art_n": 17,
+   "annex.R.art_hit": 17,
+   "annex.R.ust_n": 20,
+   "annex.R.ust_hit": 20,
+   "annex.R.pkt_n": 27,
+   "annex.R.pkt_hit": 27,
+   "annex.P.art_n": 17,
+   "annex.P.art_hit": 17,
+   "annex.P.ust_n": 20,
+   "annex.P.ust_hit": 20,
+   "annex.P.pkt_n": 27,
+   "annex.P.pkt_hit": 27
+  },
+  "errors": [
+   [
+    "annex",
+    "T",
+    "attach",
+    "art_15",
+    [
+     ""
+    ]
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1397,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 225,
+   "main.word_hit": 225,
+   "main.quoted_ref": 1,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "annex.text_unal": 4,
+   "annex.text_n": 1,
+   "annex.text_hit": 1,
+   "annex.word_n": 651,
+   "annex.word_hit": 651,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.par_n": 8,
+   "annex.R.par_hit": 8,
+   "annex.R.pkt_n": 19,
+   "annex.R.pkt_hit": 19,
+   "annex.R.ust_n": 16,
+   "annex.R.ust_hit": 16,
+   "annex.P.par_n": 8,
+   "annex.P.par_hit": 8,
+   "annex.P.pkt_n": 19,
+   "annex.P.pkt_hit": 19,
+   "annex.P.ust_n": 16,
+   "annex.P.ust_hit": 16
+  },
+  "errors": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1640,
+  "counts": {
+   "main.text_n": 6,
+   "main.text_hit": 6,
+   "main.word_n": 1029,
+   "main.word_hit": 1029,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 8,
+   "main.R.par_hit": 8,
+   "main.R.pkt_n": 18,
+   "main.R.pkt_hit": 18,
+   "main.R.ust_n": 12,
+   "main.R.ust_hit": 12,
+   "main.P.par_n": 8,
+   "main.P.par_hit": 8,
+   "main.P.pkt_n": 18,
+   "main.P.pkt_hit": 18,
+   "main.P.ust_n": 12,
+   "main.P.ust_hit": 12,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1007,
+  "counts": {
+   "main.text_n": 16,
+   "main.text_hit": 16,
+   "main.word_n": 488,
+   "main.word_hit": 488,
+   "main.quoted_ref": 9,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.R.pkt_n": 5,
+   "main.R.pkt_hit": 5,
+   "main.R.lit_n": 4,
+   "main.R.lit_hit": 4,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "main.P.pkt_n": 5,
+   "main.P.pkt_hit": 5,
+   "main.P.lit_n": 4,
+   "main.P.lit_hit": 4,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1691,
+  "counts": {
+   "main.text_n": 9,
+   "main.text_hit": 9,
+   "main.word_n": 285,
+   "main.word_hit": 285,
+   "main.quoted_ref": 4,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.R.pkt_n": 4,
+   "main.R.pkt_hit": 4,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "main.P.pkt_n": 4,
+   "main.P.pkt_hit": 4,
+   "annex.text_unal": 3,
+   "annex.text_n": 8,
+   "annex.text_hit": 8,
+   "annex.word_n": 10718,
+   "annex.word_hit": 10718,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.art_n": 84,
+   "annex.R.art_hit": 84,
+   "annex.R.ust_n": 218,
+   "annex.R.ust_hit": 218,
+   "annex.R.pkt_n": 177,
+   "annex.R.pkt_hit": 177,
+   "annex.R.lit_n": 9,
+   "annex.R.lit_hit": 9,
+   "annex.P.art_n": 84,
+   "annex.P.art_hit": 84,
+   "annex.P.ust_n": 218,
+   "annex.P.ust_hit": 218,
+   "annex.P.pkt_n": 177,
+   "annex.P.pkt_hit": 177,
+   "annex.P.lit_n": 9,
+   "annex.P.lit_hit": 9
+  },
+  "errors": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1812,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 172,
+   "main.word_hit": 172,
+   "main.quoted_ref": 1,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "annex.text_unal": 1783,
+   "annex.text_n": 2,
+   "annex.text_hit": 2,
+   "annex.word_n": 189,
+   "annex.word_hit": 189,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.par_n": 5,
+   "annex.R.par_hit": 5,
+   "annex.R.ust_n": 2,
+   "annex.R.ust_hit": 2,
+   "annex.R.pkt_n": 4,
+   "annex.R.pkt_hit": 4,
+   "annex.R.lit_n": 2,
+   "annex.R.lit_hit": 2,
+   "annex.P.par_n": 5,
+   "annex.P.par_hit": 5,
+   "annex.P.ust_n": 2,
+   "annex.P.ust_hit": 2,
+   "annex.P.pkt_n": 4,
+   "annex.P.pkt_hit": 4,
+   "annex.P.lit_n": 2,
+   "annex.P.lit_hit": 2
+  },
+  "errors": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 729,
+  "counts": {
+   "main.text_n": 10,
+   "main.text_hit": 10,
+   "main.word_n": 724,
+   "main.word_hit": 724,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.R.ust_n": 6,
+   "main.R.ust_hit": 6,
+   "main.R.pkt_n": 8,
+   "main.R.pkt_hit": 8,
+   "main.R.lit_n": 7,
+   "main.R.lit_hit": 7,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "main.P.ust_n": 6,
+   "main.P.ust_hit": 6,
+   "main.P.pkt_n": 8,
+   "main.P.pkt_hit": 8,
+   "main.P.lit_n": 7,
+   "main.P.lit_hit": 7,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 103,
+  "counts": {
+   "main.text_n": 6,
+   "main.text_hit": 6,
+   "main.word_n": 222,
+   "main.word_hit": 222,
+   "main.quoted_ref": 2,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "annex.text_unal": 4,
+   "annex.text_n": 1,
+   "annex.text_hit": 1,
+   "annex.word_n": 322,
+   "annex.word_hit": 322,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.par_n": 3,
+   "annex.R.par_hit": 3,
+   "annex.R.pkt_n": 5,
+   "annex.R.pkt_hit": 5,
+   "annex.R.lit_n": 5,
+   "annex.R.lit_hit": 5,
+   "annex.P.par_n": 3,
+   "annex.P.par_hit": 3,
+   "annex.P.pkt_n": 5,
+   "annex.P.pkt_hit": 5,
+   "annex.P.lit_n": 5,
+   "annex.P.lit_hit": 5
+  },
+  "errors": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1313,
+  "counts": {
+   "main.text_n": 6,
+   "main.text_hit": 6,
+   "main.word_n": 213,
+   "main.word_hit": 213,
+   "main.quoted_ref": 1,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.R.pkt_n": 3,
+   "main.R.pkt_hit": 3,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "main.P.pkt_n": 3,
+   "main.P.pkt_hit": 3,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1970,
+  "counts": {
+   "main.text_n": 8,
+   "main.text_hit": 8,
+   "main.word_n": 211,
+   "main.word_hit": 211,
+   "main.quoted_ref": 3,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 3,
+   "main.R.par_hit": 3,
+   "main.R.pkt_n": 3,
+   "main.R.pkt_hit": 3,
+   "main.P.par_n": 3,
+   "main.P.par_hit": 3,
+   "main.P.pkt_n": 3,
+   "main.P.pkt_hit": 3,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1051,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 194,
+   "main.word_hit": 194,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 3,
+   "main.R.par_hit": 3,
+   "main.P.par_n": 3,
+   "main.P.par_hit": 3,
+   "annex.text_unal": 18,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.P.pkt_unal": 16
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1217,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 935,
+   "main.word_hit": 935,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.R.pkt_n": 6,
+   "main.R.pkt_hit": 6,
+   "main.R.lit_n": 36,
+   "main.R.lit_hit": 36,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "main.P.pkt_n": 6,
+   "main.P.pkt_hit": 6,
+   "main.P.lit_n": 36,
+   "main.P.lit_hit": 36,
+   "main.P.tir_n": 17,
+   "main.P.tir_none": 17,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_b/tir_1",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_b/tir_2",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_b/tir_3",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_c/tir_1",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_c/tir_2",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_c/tir_3",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_1",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_1/tir_1",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_1/tir_2",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_1/tir_3",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_1/tir_4",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_2",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_2/tir_1",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_2/tir_2",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_2/tir_3",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_2/tir_4",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_1/ust_2/pkt_6/lit_d/tir_3",
+    []
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 919,
+  "counts": {
+   "main.text_n": 8,
+   "main.text_hit": 8,
+   "main.word_n": 327,
+   "main.word_hit": 327,
+   "main.quoted_ref": 3,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.R.pkt_n": 4,
+   "main.R.pkt_hit": 4,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "main.P.pkt_n": 4,
+   "main.P.pkt_hit": 4,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 229,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 452,
+   "main.word_hit": 452,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 7,
+   "main.R.par_hit": 7,
+   "main.R.pkt_n": 38,
+   "main.R.pkt_hit": 38,
+   "main.P.par_n": 7,
+   "main.P.par_hit": 7,
+   "main.P.pkt_n": 38,
+   "main.P.pkt_hit": 38,
+   "annex.text_unal": 251,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.P.lit_unal": 419,
+   "annex.P.pkt_unal": 18,
+   "annex.P.tir_unal": 2
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1059,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.word_n": 176,
+   "main.word_hit": 176,
+   "main.quoted_ref": 1,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "annex.text_unal": 2556,
+   "annex.text_n": 2,
+   "annex.text_hit": 2,
+   "annex.word_n": 194,
+   "annex.word_hit": 194,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.par_n": 5,
+   "annex.R.par_hit": 5,
+   "annex.R.ust_n": 2,
+   "annex.R.ust_hit": 2,
+   "annex.R.pkt_n": 4,
+   "annex.R.pkt_hit": 4,
+   "annex.R.lit_n": 2,
+   "annex.R.lit_hit": 2,
+   "annex.P.par_n": 5,
+   "annex.P.par_hit": 5,
+   "annex.P.ust_n": 2,
+   "annex.P.ust_hit": 2,
+   "annex.P.pkt_n": 4,
+   "annex.P.pkt_hit": 4,
+   "annex.P.lit_n": 2,
+   "annex.P.lit_hit": 2,
+   "annex.P.pkt_unal": 3
+  },
+  "errors": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1943,
+  "counts": {
+   "main.text_n": 20,
+   "main.text_hit": 20,
+   "main.word_n": 459,
+   "main.word_hit": 459,
+   "main.quoted_ref": 15,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 2,
+   "main.R.par_hit": 2,
+   "main.R.pkt_n": 2,
+   "main.R.pkt_hit": 2,
+   "main.R.lit_n": 15,
+   "main.R.lit_hit": 15,
+   "main.P.par_n": 2,
+   "main.P.par_hit": 2,
+   "main.P.pkt_n": 2,
+   "main.P.pkt_hit": 2,
+   "main.P.lit_n": 15,
+   "main.P.lit_hit": 15,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 633,
+  "counts": {
+   "main.text_n": 42,
+   "main.text_hit": 42,
+   "main.word_n": 833,
+   "main.word_hit": 833,
+   "main.quoted_ref": 36,
+   "main.none_typed_ref": 0,
+   "main.R.ust_n": 2,
+   "main.R.ust_hit": 2,
+   "main.P.ust_n": 2,
+   "main.P.ust_hit": 2,
+   "annex.text_unal": 3,
+   "annex.text_n": 9,
+   "annex.text_hit": 9,
+   "annex.word_n": 20804,
+   "annex.word_hit": 20804,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.R.art_n": 158,
+   "annex.R.art_hit": 158,
+   "annex.R.pkt_n": 344,
+   "annex.R.pkt_hit": 344,
+   "annex.R.lit_n": 137,
+   "annex.R.lit_hit": 137,
+   "annex.R.ust_n": 314,
+   "annex.R.ust_hit": 314,
+   "annex.P.art_n": 158,
+   "annex.P.art_hit": 158,
+   "annex.P.pkt_n": 344,
+   "annex.P.pkt_hit": 344,
+   "annex.P.lit_n": 137,
+   "annex.P.lit_hit": 137,
+   "annex.P.tir_n": 22,
+   "annex.P.tir_none": 22,
+   "annex.P.ust_n": 314,
+   "annex.P.ust_hit": 314
+  },
+  "errors": [
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_a/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_a/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_a/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_a/tir_4",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_1/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_1/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_1/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_3/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_3/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_3/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_4",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_4/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_4/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_4/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_5",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_5/tir_1",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_5/tir_2",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_5/tir_3",
+    []
+   ],
+   [
+    "annex",
+    "P",
+    "none",
+    "art_2/pkt_4/lit_b/tir_5/tir_4",
+    []
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1974,
+  "counts": {
+   "main.text_n": 3,
+   "main.text_hit": 3,
+   "main.word_n": 68,
+   "main.word_hit": 68,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.art_n": 2,
+   "main.R.art_hit": 2,
+   "main.P.art_n": 2,
+   "main.P.art_hit": 2,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0
+  },
+  "errors": [],
+  "type": "Ustawa"
+ },
+ {
+  "pos": 358,
+  "counts": {
+   "main.text_n": 5,
+   "main.text_hit": 5,
+   "main.text_unal": 2,
+   "main.word_n": 2144,
+   "main.word_hit": 2144,
+   "main.quoted_ref": 0,
+   "main.none_typed_ref": 0,
+   "main.R.par_n": 14,
+   "main.R.par_hit": 14,
+   "main.R.pkt_n": 26,
+   "main.R.pkt_hit": 26,
+   "main.R.lit_n": 6,
+   "main.R.lit_hit": 6,
+   "main.R.ust_n": 30,
+   "main.R.ust_hit": 30,
+   "main.P.par_n": 14,
+   "main.P.par_hit": 14,
+   "main.P.pkt_n": 26,
+   "main.P.pkt_hit": 26,
+   "main.P.lit_n": 6,
+   "main.P.lit_hit": 6,
+   "main.P.tir_n": 10,
+   "main.P.tir_none": 10,
+   "main.P.ust_n": 30,
+   "main.P.ust_hit": 30,
+   "main.P.pkt_unal": 2,
+   "annex.text_unal": 50,
+   "annex.quoted_ref": 0,
+   "annex.none_typed_ref": 0,
+   "annex.P.pkt_unal": 15,
+   "annex.P.lit_unal": 80,
+   "annex.P.ust_unal": 20
+  },
+  "errors": [
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_b/tir_1",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_b/tir_2",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_b/tir_3",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_b/tir_4",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_b/tir_5",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_b/tir_6",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_c/tir_1",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_c/tir_2",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_c/tir_3",
+    []
+   ],
+   [
+    "main",
+    "P",
+    "none",
+    "par_2/pkt_1/lit_c/tir_4",
+    []
+   ]
+  ],
+  "type": "Rozporządzenie"
+ }
+]
