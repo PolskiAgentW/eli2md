@@ -37,7 +37,7 @@ class Tree(unittest.TestCase):
         self.assertEqual(pkt3["children"][0], {"type": "text", "text": "zakażeniom w stadzie, w tym:"})
 
     def test_ocr_paragraphs_are_not_units(self):
-        t = md_to_tree(md("##### Art. 1.", "Tekst.", "> [Strona 2 PDF nie ma warstwy tekstowej. Tekst poniżej odczytał OCR "
+        t = md_to_tree(md("##### Art. 1.", "Tekst.", "> [Strona 2 PDF nie ma czytelnej warstwy tekstowej. Tekst poniżej odczytał OCR "
                           "(tesseract 5.5.0, pol+eng). Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]",
                           "> 1. Odczytany ustęp.", "> „Art. 5. cytat", "##### Art. 2.", "Dalej."))
         self.assertEqual(paths(t["body"]), ["art_1", "art_2"])

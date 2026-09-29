@@ -36,8 +36,9 @@ def tokens(text: str) -> Counter:
 def md_body(md: str) -> str:
     md = re.sub(r"\A---\n.*?\n---\n", "", md, flags=re.S)
     md = re.sub(r"\A\s*# .*\n", "", md)  # title from metadata; the PDF has it in the body already
-    md = re.sub(r"\[\^\d+\]:?", " ", md)
+    md = re.sub(r"\[\^\w+\]:?", " ", md)
     md = re.sub(r"^> \[(Stron[ay]|Na stronie) .*\]$", "", md, flags=re.M)  # notes on non-text content
+    md = re.sub(r"^> .*$", "", md, flags=re.M)  # OCR text (0.6.0): its pages have no text layer to compare with
     return re.sub(r"^#+ ", "", md, flags=re.M)
 
 

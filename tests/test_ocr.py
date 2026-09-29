@@ -84,11 +84,11 @@ class Ocr(unittest.TestCase):
         self.assertIn('pages_without_text: "2-4"', md)
         self.assertIn('pages_ocr: "2-3"', md)
         self.assertIn('ocr: "tesseract 5.5.0"', md)
-        self.assertIn("\n\n> [Strona 2 PDF nie ma warstwy tekstowej. Tekst poniżej odczytał OCR (tesseract 5.5.0, "
+        self.assertIn("\n\n> [Strona 2 PDF nie ma czytelnej warstwy tekstowej. Tekst poniżej odczytał OCR (tesseract 5.5.0, "
                       "pol+eng). Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]\n\n> Art. 2. „Odczytane\n\n"
-                      "> \\# nie nagłówek\n\n> [Strona 3 PDF nie ma warstwy tekstowej. Tekst poniżej odczytał OCR "
+                      "> \\# nie nagłówek\n\n> [Strona 3 PDF nie ma czytelnej warstwy tekstowej. Tekst poniżej odczytał OCR "
                       "(tesseract 5.5.0, por+eng).", md)
-        self.assertIn("\n\n> \\- nie lista\n\n> [Strona 4 PDF nie ma warstwy tekstowej (np. skan", md)
+        self.assertIn("\n\n> \\- nie lista\n\n> [Strona 4 PDF nie ma czytelnej warstwy tekstowej (np. skan", md)
         # OCR text is never a heading, and its unclosed quote does not swallow the next heading
         self.assertEqual(md.count("##### "), 2)
         self.assertIn("##### Art. 3.", md)

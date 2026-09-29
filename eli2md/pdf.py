@@ -14,7 +14,7 @@ import math
 import re
 import unicodedata
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import pdfplumber
 from pdfplumber.utils import extract_words
@@ -31,6 +31,7 @@ LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
+CID = re.compile(r"\(cid:\d+\)")  # a glyph the PDF font does not map to Unicode (pdfminer's placeholder)
 FOOTNOTE_MARK = re.compile(r"^\d{1,3}\)?[,.;:]?$")
 # Small digits without ")" are not footnote markers but unit numbers (Art. 41¹), units (m²)
 # or chemical subscripts (P₂O₅). Kept as Unicode super/subscript digits.
@@ -67,6 +68,7 @@ class Document:
     masthead: list[str] = field(default_factory=list)
     blocks: list[Block] = field(default_factory=list)
     footnotes: list[str] = field(default_factory=list)
+    footnote_pages: list[int] = field(default_factory=list)  # page of each footnote (numbering may restart)
     no_text_pages: list[int] = field(default_factory=list)  # e.g. scanned pages: their content is lost
     image_pages: list[int] = field(default_factory=list)  # pages with text and large images (forms, drawings)
     ocr_pages: list[int] = field(default_factory=list)  # pages without text whose OCR text is included
@@ -163,6 +165,11 @@ def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
         words = extract_words(chars, extra_attrs=["size"], keep_blank_chars=False)
         frames.append((words, fw, fh, [_to_frame(r, rot, w, h) for r in page.rects]))
     return frames
+
+
+def _unmapped_share(page) -> float:
+    chars = page.chars
+    return sum(1 for c in chars if c["text"].startswith("(cid:")) / len(chars) if chars else 0.0
 
 
 def _large_image(page, min_share: float = 0.1) -> float | None:
@@ -273,7 +280,7 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             bottom=max(w["bottom"] for w in normal_words),
             x0=min(w["x0"] for w in r),
             size=Counter(round(w["size"], 1) for w in normal_words).most_common(1)[0][0],
-            text=_plain_math(text),
+            text=" ".join(_plain_math(CID.sub(" ", text)).split()),
             pw=pw,
             ph=ph,
             x1=max(w["x1"] for w in normal_words),
@@ -281,7 +288,8 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
         is_note = (rule_top is not None and line.top > rule_top) or (
             rule_top is None and line.size < body_size - 0.5 and line.top > ph * 0.6
         )
-        (notes if is_note else body).append(line)
+        if line.text:  # a line of unmapped glyphs only is empty now
+            (notes if is_note else body).append(line)
     body.sort(key=lambda l: l.top)
     notes.sort(key=lambda l: l.top)
     ends = Counter(round(l.x1) for l in body if len(l.text) >= 40)
@@ -373,6 +381,8 @@ def convert(path: str, ocr: str | None = None) -> Document:
     with pdfplumber.open(path) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
             b, n = _page_lines(page, pno)
+            if _unmapped_share(page) > 0.1:  # the text layer is mostly glyphs without Unicode (forms, DU/2025/161)
+                b, n = [], []
             if pno == 1:
                 for i, l in enumerate(b):
                     if MASTHEAD_END.match(l.text):
@@ -402,16 +412,19 @@ def convert(path: str, ocr: str | None = None) -> Document:
 
     doc.blocks = _segment(body)
 
-    cur = None
+    cur, cur_page = None, 0
     for l in notes:
         if re.match(r"^\[\^\d+\]", l.text) or re.match(r"^\d+\)\s", l.text):
             if cur is not None:
                 doc.footnotes.append(cur)
-            cur = l.text
+                doc.footnote_pages.append(cur_page)
+            cur, cur_page = l.text, l.page
         else:
             cur = l.text if cur is None else _join(cur, l.text)
+            cur_page = cur_page or l.page
     if cur is not None:
         doc.footnotes.append(cur)
+        doc.footnote_pages.append(cur_page)
     return doc
 
 
@@ -475,14 +488,14 @@ def page_ranges(pages: list[int]) -> str:
 
 def no_text_note(pages: list[int]) -> str:
     if len(pages) == 1:
-        return (f"> [Strona {pages[0]} PDF nie ma warstwy tekstowej (np. skan lub grafika). "
+        return (f"> [Strona {pages[0]} PDF nie ma czytelnej warstwy tekstowej (np. skan lub grafika). "
                 "Jej treści tu nie ma, jest tylko w PDF.]")
-    return (f"> [Strony {page_ranges(pages)} PDF nie mają warstwy tekstowej (np. skan lub grafika). "
+    return (f"> [Strony {page_ranges(pages)} PDF nie mają czytelnej warstwy tekstowej (np. skan lub grafika). "
             "Ich treści tu nie ma, jest tylko w PDF.]")
 
 
 def ocr_note(page: int, engine: str) -> str:
-    return (f"> [Strona {page} PDF nie ma warstwy tekstowej. Tekst poniżej odczytał OCR ({engine}). "
+    return (f"> [Strona {page} PDF nie ma czytelnej warstwy tekstowej. Tekst poniżej odczytał OCR ({engine}). "
             "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
 
 
@@ -531,8 +544,39 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
     return "\n".join(lines)
 
 
+FN_LABEL = re.compile(r"^\[\^(\d+)\]\s*(.*)$", re.S)
+
+
+def _footnote_pages(doc: Document) -> dict[str, list[int]]:
+    """Footnote number -> pages on which a footnote with that number is printed, in order."""
+    occ: dict[str, list[int]] = {}
+    for f, pg in zip(doc.footnotes, doc.footnote_pages or [0] * len(doc.footnotes)):
+        if m := FN_LABEL.match(f):
+            occ.setdefault(m.group(1), []).append(pg)
+    return occ
+
+
+def _fn_label(n: str, j: int) -> str:
+    return n if j == 0 else f"{n}_{j + 1}"  # the 2nd footnote numbered 1 is [^1_2]
+
+
+def _fix_refs(text: str, page: int, occ: dict[str, list[int]]) -> str:
+    """Footnote numbering restarts in annexes and forms, so one number can label several footnotes.
+    A marker refers to the one printed on the page where its block starts, or the nearest later one."""
+    def sub(m: re.Match) -> str:
+        pages = occ.get(m.group(1), [])
+        if len(pages) < 2:
+            return m.group(0)
+        j = next((k for k, pg in enumerate(pages) if pg >= page), len(pages) - 1)
+        return f"[^{_fn_label(m.group(1), j)}]"
+    return re.sub(r"\[\^(\d+)\]", sub, text)
+
+
 def to_markdown(doc: Document, meta: dict | None = None) -> str:
     """Markdown body: one block per paragraph, top-level units (Art. or, if none, §) as h5."""
+    occ = _footnote_pages(doc)
+    if any(len(v) > 1 for v in occ.values()):
+        doc = replace(doc, blocks=[replace(b, text=_fix_refs(b.text, b.page, occ)) for b in doc.blocks])
     depths = quote_depths(doc.blocks)
     # Top-level unit per part (main text, each annex): Art. if the part has an "Art. N." at depth 0, else §.
     # A paragraph "Art. 42 ust. 1 ustawy określa…" in an annex does not count (DU/2024/553).
@@ -575,7 +619,11 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
             out += [m.group(1), m.group(2)]
         else:
             out.append(b.text)
+    seen: Counter = Counter()
     for f in doc.footnotes:
-        m = re.match(r"^\[\^(\d+)\]\s*(.*)$", f, re.S)
-        out.append(f"[^{m.group(1)}]: {m.group(2)}" if m else f)
+        if m := FN_LABEL.match(f):
+            out.append(f"[^{_fn_label(m.group(1), seen[m.group(1)])}]: {m.group(2)}")
+            seen[m.group(1)] += 1
+        else:
+            out.append(f)
     return "\n\n".join(out) + "\n"

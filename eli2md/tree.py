@@ -47,8 +47,8 @@ from .pdf import LOWER, QUOTE_HEAD, SECONDS, SUP_DIGITS
 
 SUP = SUP_DIGITS
 UPPER = "A-ZĄĆĘŁŃÓŚŹŻ"
-NOTE = r"(?:\[\^\d+\])*"  # footnote markers glued to a unit number: "1a)[^2] treść", "Art. 5.[^3]"
-LEAD_NOTES = re.compile(r"^((?:\[\^\d+\]\s*)+)(.*)$", re.S)  # "[^7] 1. Treść" (marker of the Art. heading)
+NOTE = r"(?:\[\^\d+(?:_\d+)?\])*"  # footnote markers glued to a unit number: "1a)[^2] treść", "Art. 5.[^3]"
+LEAD_NOTES = re.compile(r"^((?:\[\^\d+(?:_\d+)?\]\s*)+)(.*)$", re.S)  # "[^7] 1. Treść" (marker of the Art. heading)
 UNIT_RES = [  # (type, regex); groups: number, footnote markers, rest
     ("art", re.compile(rf"^Art\.\s*(\d+[a-z]*[{SUP}]*)\.({NOTE})\s*(.*)$", re.S)),
     ("par", re.compile(rf"^§\s*(\d+[a-z]*[{SUP}]*)\.({NOTE})\s*(.*)$", re.S)),
@@ -254,7 +254,7 @@ def md_to_tree(md: str) -> dict:
     footnotes: dict[str, str] = {}
     blocks: list[tuple[str, str]] = []  # (kind, text) in the converter's block kinds
     for p in paras:
-        fm = re.match(r"^\[\^(\d+)\]:\s*(.*)$", p, re.S)
+        fm = re.match(r"^\[\^(\d+(?:_\d+)?)\]:\s*(.*)$", p, re.S)
         if fm:
             footnotes[fm.group(1)] = fm.group(2)
         elif p.startswith("## "):

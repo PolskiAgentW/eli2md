@@ -66,8 +66,8 @@ class Basic(unittest.TestCase):
                                Block("p", "Dalej.", 4), Block("notext", "", 6)], no_text_pages=[2, 3, 6])
         md = to_markdown(doc, META)
         self.assertIn('pages_without_text: "2-3, 6"', md)
-        self.assertIn("> [Strony 2-3 PDF nie mają warstwy tekstowej", md)
-        self.assertIn("> [Strona 6 PDF nie ma warstwy tekstowej", md)
+        self.assertIn("> [Strony 2-3 PDF nie mają czytelnej warstwy tekstowej", md)
+        self.assertIn("> [Strona 6 PDF nie ma czytelnej warstwy tekstowej", md)
         self.assertEqual(md.count("> ["), 2)
 
     def test_image_note(self):
@@ -164,6 +164,19 @@ class Basic(unittest.TestCase):
         self.assertIn("##### Art. 1.", md)
         self.assertNotIn("##### Art. 42", md)
         self.assertNotIn("##### § 1.\n\nParagraf", md)
+
+    def test_footnote_numbering_restarts(self):
+        # the annex numbers its footnotes from 1 again: labels must stay unique and markers find their footnote
+        doc = Document(blocks=[Block("p", "§ 1. Tekst[^1].", 1), Block("annex", "Załącznik nr 1", 2),
+                               Block("p", "Wzór[^1] i dalej[^2].", 2), Block("p", "Formularz[^1].", 3)],
+                       footnotes=["[^1] Przypis aktu.", "[^1] Niepotrzebne skreślić.", "[^2] Objaśnienie.",
+                                  "[^1] Na stronie 3."], footnote_pages=[1, 2, 2, 3])
+        md = to_markdown(doc)
+        self.assertIn("Tekst[^1].", md)
+        self.assertIn("Wzór[^1_2] i dalej[^2].", md)
+        self.assertIn("Formularz[^1_3].", md)
+        for d in ("[^1]: Przypis aktu.", "[^1_2]: Niepotrzebne skreślić.", "[^2]: Objaśnienie.", "[^1_3]: Na stronie 3."):
+            self.assertIn(d, md)
 
 
 if __name__ == "__main__":
