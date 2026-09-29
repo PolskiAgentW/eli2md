@@ -1,8 +1,9 @@
 """Build or update a directory of Markdown texts of Dziennik Ustaw acts that have only PDF text.
 
-    python -m eli2md.dataset --root DIR [--years 2025 2026] [--max N] [--time-budget SEC] [--jobs N] [--all]
+    python -m eli2md.dataset --root DIR [--years 2025 2026] [--max N] [--time-budget SEC] [--jobs N] [--all] [--json]
 
 Layout: DIR/DU/<year>/DU-<year>-<pos>.md and DIR/index.csv (one row per act, including failures).
+With --json also DIR/DU/<year>/DU-<year>-<pos>.json (tree of units, eli2md.tree) next to each .md.
 An act is (re)converted when it is new, when its ELI `changeDate` differs from the index, or when
 it previously failed (or always, with --all). Downloads are sequential and polite (see eli.fetch);
 conversion can be parallel.
@@ -26,6 +27,7 @@ import pdfplumber
 from . import __version__
 from .eli import API, fetch, get
 from .pdf import convert, to_markdown
+from .tree import md_to_tree
 
 FIELDS = ["eli", "year", "pos", "type", "title", "announcement_date", "promulgation", "change_date",
           "pdf_sha256", "pages", "words", "no_text_pages", "image_pages", "status", "error", "converter", "converted_at"]
@@ -63,9 +65,18 @@ def _limit_memory(gb: float) -> None:
         resource.setrlimit(resource.RLIMIT_AS, (lim, lim))
 
 
-def _convert_one(job: tuple[str, str, str]) -> dict:
+def json_path(md_file: Path) -> Path:
+    return md_file.with_suffix(".json")
+
+
+def write_json(md: str, md_file: Path) -> None:
+    json_path(md_file).write_text(json.dumps(md_to_tree(md), ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
+def _convert_one(job: tuple) -> dict:
     """Worker: convert one downloaded act. Returns the index row fields it determines."""
-    eli, pdf_path, out_path = job
+    eli, pdf_path, out_path, *opt = job
+    with_json = bool(opt and opt[0])
     meta = json.loads((Path(pdf_path).parent / "meta.json").read_text())
     t0 = time.time()
     try:
@@ -73,6 +84,8 @@ def _convert_one(job: tuple[str, str, str]) -> dict:
         md = to_markdown(doc, meta)
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
         Path(out_path).write_text(md, encoding="utf-8")
+        if with_json:
+            write_json(md, Path(out_path))
         with pdfplumber.open(pdf_path) as p:
             pages = len(p.pages)
         return {"eli": eli, "status": "ok", "error": "", "pages": pages,
@@ -98,6 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--all", action="store_true", help="reconvert every act (e.g. after a converter change)")
     ap.add_argument("--mem-limit-gb", type=float, default=3,
                     help="address-space limit per conversion worker (0 = none)")
+    ap.add_argument("--json", action="store_true", help="also write the tree of units as .json next to each .md")
     a = ap.parse_args(argv)
     t_start = time.time()
     a.root.mkdir(parents=True, exist_ok=True)
@@ -112,6 +126,9 @@ def main(argv: list[str] | None = None) -> int:
             old = index.get(it["ELI"])
             if not a.all and old and old["change_date"] == it["changeDate"] and old["status"] == "ok" \
                     and md_path(a.root, year, it["pos"]).exists():
+                mdf = md_path(a.root, year, it["pos"])
+                if a.json and not json_path(mdf).exists():  # up-to-date .md: the tree needs no reconversion
+                    write_json(mdf.read_text(encoding="utf-8"), mdf)
                 continue
             todo.append((it, old))
         time.sleep(1)
@@ -133,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
             continue
         sha = hashlib.sha256(pdf.read_bytes()).hexdigest()
         index[eli] = {**_base_row(it), "pdf_sha256": sha}
-        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos))))
+        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos)), a.json))
 
     done = 0
     with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
