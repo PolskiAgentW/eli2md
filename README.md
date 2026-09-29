@@ -339,6 +339,10 @@ wszystkich 3155 aktów (2026-09-29):
 kept to odsetek słów PDF obecnych w wyniku, grounded to odsetek słów wyniku obecnych w PDF.
 Od 0.5.2 indeksy (`41¹`) liczę jako cyfry doklejone do słowa, bo tak czyta je `extract_words`
 („411”). Bez tego grounded spadał w aktach z wieloma indeksami, choć wynik był poprawniejszy.
+Od 0.6.3 tak samo indeks z literą (`22¹ᵃ` → „221a”). Indeks w nawiasach z PDF-ów z 2026 r. (`479[30f]`) sklejam
+po stronie PDF ze słowem przed nim („47930f”), bo wynik ma go bez nawiasów (`479³⁰ᶠ`). Bez tego poprawiony
+wynik wypadał gorzej (średni kept w 20 aktach z takimi indeksami: 0.9754 → 0.9674 w starej mierze,
+0.9719 → 0.9753 w nowej; `eval/indices_2026_v0.6.3.dev.md`).
 
 Obejrzałem tylko najgorszy przypadek, DU/2025/243. To wzór formularza z kilkoma nakładającymi się
 warstwami tekstu, a wynik jest tam częściowo pomieszany. Pozostałych nie przeglądałem.

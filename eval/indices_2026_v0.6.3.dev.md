@@ -162,7 +162,9 @@ DU/2025/277, 480. Pięć losowych zmian (seed 6150) obejrzałem:
 
 Pozostałe zmiany też obejrzałem: 367, 1168, 927, 595. Wszystkie to indeksy. W DU/2026/367 znika też
 śmieć `2 2 7 8 11 11a` z końca przypisu 20. W 0.6.2 wiersz indeksów trafiał tam jako linia drobnego druku.
-Selfcheck 12 zmienionych plików: zob. niżej.
+
+Selfcheck 12 zmienionych plików (pozostałe 138 są identyczne): kept 0.9619 → 0.9635, grounded 0.9834 → 0.9872
+(nowa miara; stara: kept 0.9633 → 0.9598, grounded 0.9867 → 0.9853). W nowej mierze żaden plik nie spada.
 
 ## Pomiar 5: próby deweloperskie 2024 (s2024, s7)
 

@@ -244,6 +244,7 @@ def _index_words(r: list[dict], big: list[dict]) -> tuple[list[dict], list[dict]
             idx.append({**w, "text": m.group(1) or m.group(2)})
         else:
             rest.append(w)
+    rest.sort(key=lambda w: (w["top"], w["x0"]))  # the order of _rows: attach order decides ties (DU/2024/1089)
     return rest, idx
 
 
