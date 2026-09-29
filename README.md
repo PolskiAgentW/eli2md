@@ -47,7 +47,11 @@ Każdy proces konwersji ma limit pamięci 3 GB (`--mem-limit-gb`). Akt, który g
   oraz `disclaimer`.
 - `# Tytuł`, potem akapity w kolejności z PDF-a.
 - Jednostki najwyższego rzędu jako `##### Art. N.`, a gdy w akcie nie ma artykułów, `##### § N.`
-  (rozporządzenia).
+  (rozporządzenia). Jednostki cytowane (nowelizacje, „przepisy nieobjęte tekstem jednolitym”)
+  nie są nagłówkami. Ich numer jest osobnym akapitem: `„Art. 21.`, potem `1. Treść…` (od 0.5.0).
+- Ust., pkt i lit. zaczynają nowy akapit (`1.`, `1)`, `a)`). Jawnego drzewa jednostek nie ma.
+- Cyfry w indeksie górnym i dolnym jako znaki Unicode: `Art. 41¹.`, `m²`, `P₂O₅` (od 0.5.0;
+  wcześniej błędnie jako odnośniki do przypisów `[^1]`).
 - Nagłówki załączników jako `## Załącznik nr …`, podpis kursywą.
 - Przypisy w składni Markdown: `[^1]` w tekście i `[^1]: …` na końcu.
 - Treść, której nie da się odczytać jako tekst, jest oznaczona notką w miejscu, gdzie występuje:
@@ -81,7 +85,8 @@ Wynik jest lepszy niż na próbach deweloperskich poniżej. W tej próbie trafi�
 dużych tabel. Traktuj to jako jeden pomiar, nie jako gwarancję.
 
 **Czego ta miara nie sprawdza:** podziału na akapity, nagłówków (`##### Art.`), tabel ani
-kolejności tekstu wewnątrz tabel. Porównuje tylko ciąg słów.
+kolejności tekstu wewnątrz tabel. Porównuje tylko ciąg słów. Strukturę mierzy osobno
+`eval/structure.py` (niżej).
 
 Próby deweloperskie (na nich stroiłem, więc liczby są zawyżone), wersja 0.2:
 
@@ -100,7 +105,49 @@ Odtworzenie wyników:
 pip install -e '.[eval]'
 python eval/fetch_sample.py 50 99                 # pobiera PDF + HTML do ~/cache/eli
 python eval/evaluate.py eval/test_2024_s99.json
+python eval/fetch_sample.py 50 5101 && python eval/structure.py eval/test_2024_s5101.json
 ```
+
+### Struktura: nagłówki i akapity (od 0.5.0)
+
+HTML aktów z 2024 r. oznacza każdą jednostkę redakcyjną (`id` z `arti`, `para` (§), `pass` (ust.),
+`pint` (pkt), `lett` (lit.), `chpt` …). `eval/structure.py` wyrównuje słowa HTML i Markdown
+(jak wyżej) i sprawdza:
+
+- **nagłówki R**: odsetek artykułów (w aktach bez artykułów: §) najwyższego rzędu, które w Markdown
+  są nagłówkiem `#####` w tym samym miejscu; **nagłówki P**: odsetek nagłówków `#####`, które
+  stoją na początku takiej jednostki (fałszywy nagłówek to np. cytowany artykuł nowelizacji);
+- **ust./pkt/lit. R**: odsetek jednostek danego rodzaju, od których zaczyna się akapit;
+- **podziały P**: odsetek początków akapitów, które w HTML są początkiem bloku (jednostki,
+  akapitu, komórki tabeli). Podziały w tytule aktu liczę osobno.
+
+Wersja 0.5.0 powstała po tym pomiarze. Znalazł on dwa błędy, których miara słów nie widziała:
+cyfry w indeksie górnym (`Art. 41¹`, `m²`) zamieniane na odnośniki do przypisów oraz cytowane
+artykuły nowelizacji oznaczane jako nagłówki. Próby deweloperskie (seed 2024 i 7) posłużyły do
+poprawek. Dwie próby odłożone, każda zapisana w gicie przed oceną i oceniona jeden raz:
+
+| treść główna / załączniki                    | test s20260929 (47 aktów)<br>0.4.0 → 0.5.0 | test s5101 (44 akty)<br>0.4.0 → 0.5.1 |
+|----------------------------------------------|---------------------|---------------------|
+| nagłówki R, treść główna                     | 1.000 → 1.000       | 1.000 → 1.000       |
+| nagłówki P, treść główna                     | 0.821 → **1.000**   | 0.710 → **0.791**   |
+| nagłówki R, załączniki (teksty jednolite)    | 0.901 → **1.000**   | 1.000 → 1.000       |
+| ust. R, treść główna                         | 0.975 → 0.997       | 0.951 → 1.000       |
+| pkt R, treść główna / załączniki             | 1.000 / 0.996 → bez zmian | 0.981 / 0.971 → bez zmian |
+| lit. R, treść główna / załączniki            | 1.000 / 0.999 → bez zmian | 1.000 / 0.916 → bez zmian |
+| cytowane § R, treść główna                   | 0.987 → **0.789**   | 1.000 → 1.000       |
+| podziały P, treść główna / załączniki        | 1.000 / 1.000       | 1.000 / 1.000       |
+| słowa R, treść główna                        | 0.9959 → 0.9960     | 0.9987 → 0.9995     |
+
+- Regresja cytowanych § w 0.5.0 pochodzi z jednego aktu (DU/2024/1685): artykuły kodeksu w nowelizacji
+  („Art. 14t. § 1. …”). Poprawka w 0.5.1. Sprawdziłem ją na tym akcie i na próbach deweloperskich,
+  więc próba s20260929 nie jest już dla niej niezależna. Próbę s5101 oceniłem dopiero wersją 0.5.1.
+- W próbie s5101 zostało 29 fałszywych nagłówków w treści głównej. Przyczyny jeszcze nie znam.
+- Tabele: w próbach deweloperskich podziały P w załącznikach to 0.87 i 0.97, bo każda linia
+  komórki tabeli jest osobnym akapitem.
+
+Wyniki per akt: `eval/structure_test_*.txt`, `eval/structure_dev_*.txt`, `eval/results_test_*.txt`.
+Po zmianie tokenizacji w 0.5.0 (`41¹` → `41 1`, jak w HTML) liczby słów różnią się od starszych
+plików w czwartym miejscu po przecinku.
 
 ### Kontrola bez wzorca: akty 2025–2026
 
