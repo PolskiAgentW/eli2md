@@ -1,3 +1,3 @@
-  985 Ustawa         main R=0.978 P=0.975 (ref 6527, hyp 6546)  notes R=1.000 P=1.000   69.7s
+  985 Ustawa         main R=0.963 P=0.958 (ref 6527, hyp 6559)  notes R=1.000 P=1.000   87.6s
 scored 1/1 acts
-TOTAL body  (n=1): micro R=0.9781 P=0.9753  macro R=0.9781  R<0.95: 0  | P on complete refs (n=1): 0.9753
+TOTAL body  (n=1): micro R=0.9631 P=0.9584  macro R=0.9631  R<0.95: 0  | P on complete refs (n=1): 0.9584
