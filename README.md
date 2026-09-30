@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.2**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.3**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -160,6 +160,34 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.3** (2026-09-30). Zmiany znalezione przy kontroli danych 2025–2026, bez wzorca HTML:
+- indeksy przy numerach jednostek jako znaki górne, także w nawiasach i z literą (`Art. 479³⁰ᶠ.`, opis wyżej).
+  W danych DU 2012–2026 nagłówków art./§ 91 151 → 92 626; k.p.c. (DU/2026/468) 1169 → 2015 nagłówków artykułów;
+- test tuszu (ukryty tekst pod wklejonymi załącznikami) sprawdza sam glif, a nie ramkę pdfminera. Fonty z błędnym
+  `/Descent` (Cambria) dawały ramkę sięgającą 16–27 pt pod glif, więc widoczne litery uchodziły za ukryte:
+  MP/2025/1128 z odsetkiem słów 0.72 („elekt omobinos ci”) → 0.997. Skutek uboczny: widać teraz wzory Worda
+  zapisane tym fontem (DU/2026/1236). Litery we wzorach bywają podwojone („kk”), bo w PDF-ie jeden glif ma w mapie
+  ToUnicode dwa znaki (`𝑘𝑘`). W DU/2025/452 s. 7 do wyniku trafia też niewidoczna kopia wzoru;
+- na stronach obróconych znaki zdublowane usuwam tylko wtedy, gdy to ten sam glif w tym samym miejscu (≤ 0,3 pt).
+  Deduplikacja pdfplumbera zlewała też różne litery drobnego druku (MP/2025/541, obrócona tabela: 0.976 → 0.991);
+- w ciasnych tabelach pozycja „2)”/„b)” po krótkiej linii bez interpunkcji zaczyna nowy akapit (MP/2025/121:
+  229 → 535 akapitów);
+- Monitor Polski 2012: pomijam ukośny znak wodny „www.rcl.gov.pl” i winietę „Pozycja N”.
+
+Zmiana w danych (wszystkie akty od nowa, 0.6.2 → 0.6.3): tekst zmienił się w 352 z 3266 plików DU i 37 z 2272
+MP (w pozostałych tylko pole `converter`). Na tych plikach selfcheck (niżej; ta sama, nowa miara dla obu wersji):
+odsetek słów PDF w wyniku lepszy w 154 DU i 12 MP, gorszy w 14 DU (najwięcej o 0.0002). Odsetek słów wyniku
+obecnych w PDF gorszy w 27 DU. W obejrzanych (DU/2026/1236, DU/2026/40) to wzory Cambria Math, które wcześniej
+ginęły: miara porównuje kursywę matematyczną z PDF (`𝑘`) ze zwykłą literą w wyniku i liczy ją jako obcą.
+
+**0.6.3, test s5109** (37 aktów; 0.6.3 oceniona raz przed wydaniem, 0.6.2 potem tymi samymi skryptami):
+słowa bez zmian (treść główna R 0.9997, P 0.9807; przypisy R 0.900, P 0.925; załączniki R 0.9977, P 0.9536),
+drzewo w treści głównej 656/656 w obu wersjach, w załącznikach R 0.9986, P 0.9964 w obu. Przypięcie akapitów
+w załącznikach 181/208 → 182/209, podziały w załącznikach P 0.9975 → 0.9973 (jeden fałszywy podział więcej,
+DU/2024/1018). Zmiany 0.6.3 dotyczą układów, których w aktach z 2024 r. prawie nie ma, więc ta próba ich
+nie mierzy. Wyniki: `eval/*_test_s5109_v0.6.3.dev.*`, `eval/*_test_s5109_v0.6.2.txt`, porównanie selfchecku
+`eval/selfcheck_changed_0.6.2_vs_0.6.3.json`.
 
 ## Jakość: jak mierzę i co wyszło
 
@@ -429,8 +457,14 @@ renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część st
   w dużej części cecha wzorca: w obwieszczeniach z tekstem jednolitym HTML podaje przypisy tego tekstu jako zwykły
   tekst załącznika, a wynik jako przypisy (DU/2024/1580: 106 ze 112 przypisów wyniku jest w HTML tylko w treści,
   DU/2024/1442: 11 z 12). Wtedy spada też recall załącznika.
-- Ciasno złożone tabele: pozycja „2) …” w komórce po krótkiej linii bez „;” dokleja się do „1) …”
-  (np. MP/2025/121). Tekst jest pełny, brakuje tylko podziału.
+- Ciasno złożone tabele: do 0.6.2 pozycja „2) …” w komórce po krótkiej linii bez „;” doklejała się do „1) …”
+  (MP/2025/121). Od 0.6.3 taka pozycja zaczyna nowy akapit (opis niżej, w zmianach 0.6.3). Mogą zostać inne
+  układy komórek, w których podział ginie. Tekst jest wtedy pełny, brakuje tylko podziału.
+- Wklejone wzory z Worda: niewidoczna kopia wzoru bywa w PDF-ie pod widocznym wzorem i trafia do wyniku
+  jako powtórzony tekst (DU/2025/452 s. 7).
+- Umowy międzynarodowe: pierwsza strona (preambuła, art. 1) bywa obrazem tekstu na stronie, która ma warstwę
+  tekstową z samym tytułem. Taka strona nie jest „bez tekstu”, więc OCR jej nie czyta i w wyniku brakuje treści
+  (np. MP/2026/869).
 - Domyślnie bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 53 356 stron
   w indeksie z 29.09.2026), głównie umowy międzynarodowe. OCR (`--ocr`, od 0.6.0) opisany niżej.
 
