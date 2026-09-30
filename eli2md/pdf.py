@@ -919,6 +919,35 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
     return body[start + 1: end], notes, first.page, last.page if last else math.inf
 
 
+# an act starting on a page of an old issue read by OCR: its number and type in one paragraph ("56 ROZPORZĄDZENIE
+# PREZESA RADY MINISTRÓW z dnia …", DU/2000/56) or the number alone before the type ("57" + "ROZPORZĄDZENIE MINISTRA
+# FINANSÓW"); the number is not a line of its own as in the text layer (ACT_NUMBER)
+OCR_ACT_TYPE = (r"(?:ROZPORZĄDZENIE|USTAWA|OBWIESZCZENIE|UCHWAŁA|POSTANOWIENIE|ZARZĄDZENIE|OŚWIADCZENIE|UMOWA"
+                r"|KONWENCJA|PROTOKÓŁ|WYROK|ORZECZENIE|TRAKTAT|POROZUMIENIE|KOMUNIKAT|DEKRET|INFORMACJA|AKT|STATUT"
+                r"|REGULAMIN|ZAŁĄCZNIK)\b")
+OCR_ACT_START = re.compile(rf"^(\d{{1,4}})(?:\s+(?={OCR_ACT_TYPE})|$)")
+
+
+def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: int | None) -> list[Line]:
+    """Lines of a page read by OCR. On a page of an old issue the running header ("Dziennik Ustaw Nr 5 Poz. 55 i 56")
+    is dropped, and the number of this act or of one after it becomes a line of its own (act=N), so that _own_act
+    cuts the act out as on pages with a text layer (DU/2000/56: the page held all of act 55 before it)."""
+    if paragraphs and OLD_HEADER.match(paragraphs[0]):
+        paragraphs = paragraphs[1:]
+    out = []
+    for k, t in enumerate(paragraphs):
+        m = OCR_ACT_START.match(t) if position is not None else None
+        if m and not t[m.end():] and not (k + 1 < len(paragraphs) and re.match(OCR_ACT_TYPE, paragraphs[k + 1])):
+            m = None  # a bare number not followed by an act type
+        if m and position <= int(m.group(1)) <= position + ACT_NUMBER_NEXT:
+            out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, m.group(1), pw, ph, mark="ocr", act=int(m.group(1))))
+            t = t[m.end():].strip()
+            if not t:
+                continue
+        out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, t, pw, ph, mark="ocr"))
+    return out
+
+
 def convert(path: str, ocr: str | None = None, position: int | None = None,
             _doc_gutter: tuple[float, float] | None = None) -> Document:
     """ocr: "auto" or tesseract language(s), e.g. "pol+eng", to read pages without a text layer
@@ -958,7 +987,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None,
                     doc.no_text_pages.append(pno)
                     doc.ocr_pages.append(pno)
                     doc.ocr_langs[pno] = read.lang
-                    b = [Line(pno, 0.0, 0.0, 0.0, 1.0, t, page.width, page.height, mark="ocr") for t in read.paragraphs]
+                    b = _ocr_lines(read.paragraphs, pno, page.width, page.height, position)
                 elif layer and (layer[0] or layer[1]):
                     # no OCR or an unreadable one: the text layer without the unmapped glyphs beats a bare note
                     doc.unmapped_pages.append(pno)

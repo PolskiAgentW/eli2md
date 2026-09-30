@@ -11,7 +11,7 @@ Footnotes are also scored leniently ("notes*" line; the numbers above are unchan
 ("[^3]") count as the HTML's "3)", and our footnote tokens that the HTML has outside its footnotes (main
 text or any annex, incl. link-only ones) count as matched for precision. The HTML gives footnotes of
 annexes and of consolidated texts as annex text (DU/2024/781, DU/2024/1580).
-Usage: python eval/evaluate.py SAMPLE_JSON [--show POS] [--out FILE]
+Usage: python eval/evaluate.py SAMPLE_JSON [--show POS] [--out FILE] [--ocr [LANG]] [--only POS,POS]
 """
 from __future__ import annotations
 
@@ -121,10 +121,10 @@ def show_diff(ref: list[str], hyp: list[str], limit: int = 40) -> None:
             break
 
 
-def evaluate_act(pos: int, show: bool = False, year: int = 2024) -> dict:
+def evaluate_act(pos: int, show: bool = False, year: int = 2024, ocr: str | None = None) -> dict:
     d = CACHE / "DU" / str(year) / str(pos)
     t0 = time.time()
-    doc = convert(str(d / "text.pdf"), position=pos)
+    doc = convert(str(d / "text.pdf"), position=pos, ocr=ocr)
     dt = time.time() - t0
     ref = html_reference((d / "text.html").read_text(encoding="utf-8"))
     if not ref["usable"]:
@@ -154,13 +154,17 @@ def main() -> None:
     ap.add_argument("sample")
     ap.add_argument("--show", type=int, help="print differences for one act (pos)")
     ap.add_argument("--out", help="write per-act results JSON here")
+    ap.add_argument("--ocr", nargs="?", const="pol+eng", help="OCR pages without a text layer (as the data sets do)")
+    ap.add_argument("--only", help="comma-separated positions to score (e.g. the acts without a text layer)")
     a = ap.parse_args()
     items = json.loads(Path(a.sample).read_text())
     if a.show:
         items = [i for i in items if i["pos"] == a.show]
+    if a.only:
+        items = [i for i in items if str(i["pos"]) in a.only.split(",")]
     rows = []
     for it in items:
-        r = evaluate_act(it["pos"], show=bool(a.show), year=it.get("year", 2024))  # year: samples of other years
+        r = evaluate_act(it["pos"], show=bool(a.show), year=it.get("year", 2024), ocr=a.ocr)  # year: other samples
         r["type"] = it["type"]
         rows.append(r)
         if "skipped" in r:

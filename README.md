@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.13**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.14**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -174,6 +174,18 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.14** (2026-09-30). Dz.U. 2000–2011, strony bez warstwy tekstowej czytane przez OCR (`--ocr`). W roczniku 2000
+takich aktów jest dużo (15 z pierwszych 50 przekonwertowanych). Wycinanie aktu (0.6.8) działało tylko na warstwie
+tekstowej, więc do aktu z OCR trafiały sąsiednie akty z tych samych stron i nagłówek zeszytu (DU/2000/56: cały akt 55).
+Teraz akapit OCR „56 ROZPORZĄDZENIE …” daje numer aktu jak na stronie z tekstem, a nagłówek „Dziennik Ustaw Nr 5 Poz. …”
+na początku strony OCR jest pomijany. Sam numer w osobnym akapicie liczy się tylko wtedy, gdy następny akapit to typ
+aktu: na stronach dwułamowych OCR potrafi wstawić numer następnego aktu w środek reszty tego aktu (DU/2000/56 s. 2:
+„57” przed „§ 3. …”), więc koniec aktu z OCR bywa nieodcięty. `eval/evaluate.py` ma opcje `--ocr` i `--only`.
+Pomiar na 3 aktach bez warstwy tekstowej z prób s5202 i s5205 (z OCR; próby już zużyte, więc to nie jest pomiar
+niezależny): DU/2000/70 R 0.937, P 0.863 → 0.912; DU/2000/179 R 0.991, P 0.823 → 0.987; DU/2000/985 R 0.986,
+P 0.910 → 0.984. Błędy samego OCR zostają (np. „8 1.” zamiast „§ 1.”). Bez OCR wynik bez zmian (93 PDF-y 2012+
+identyczne, dev bez zmian). Wyniki: `eval/ocr_textless_s520{2,5}_v0.6.{11,14}.txt`.
 
 **0.6.13** (2026-09-30). Tylko `eli2md.dataset`, konwersja bez zmian. Po `MemoryError` (limit `--mem-limit-gb`)
 proces roboczy zostaje z pamięcią przy limicie: jego kolejne akty kończyły się fałszywym `PdfminerException`,

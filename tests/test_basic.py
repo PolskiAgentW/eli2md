@@ -3,7 +3,7 @@ import unittest
 from eli2md.eli import parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
                         _QuarkWords, _drop_colophon, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
-                        _gutter, _plain_math, _quark_gap, _rows, _segment, quote_depths, _single_glyphs, _to_frame, _watermark, page_ranges,
+                        _gutter, _ocr_lines, _plain_math, _quark_gap, _rows, _segment, quote_depths, _single_glyphs, _to_frame, _watermark, page_ranges,
                         to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
@@ -666,6 +666,17 @@ class Basic(unittest.TestCase):
         # a quoted "„Art. 3." (of the amended act) goes on with its "Art. 4.", which stays quoted
         self.assertEqual(quote_depths(blocks[:6] + [Block("p", "„Art. 3. Tekst.", 1)] + blocks[6:7]),
                          [0, 0, 0, 1, 0, 0, 0, 1])
+
+    def test_ocr_lines_of_old_issue(self):
+        # DU/2000/56 p. 1 read by OCR: the running header goes, the act's number becomes a line of its own
+        paras = ["Dziennik Ustaw Nr 5 Poz. 55 i 56", "55 ROZPORZĄDZENIE RADY MINISTRÓW", "Tekst aktu 55.",
+                 "56 ROZPORZĄDZENIE PREZESA RADY MINISTRÓW z dnia 19 stycznia 2000 r.", "§ 1. Tekst.", "57", "Poz. 56, 57",
+                 "58", "ROZPORZĄDZENIE MINISTRA GOSPODARKI"]
+        lines = _ocr_lines(paras, 1, 595, 842, 56)
+        self.assertEqual([(l.act, l.text[:16]) for l in lines],
+                         [(0, "55 ROZPORZĄDZENI"), (0, "Tekst aktu 55."), (56, "56"), (0, "ROZPORZĄDZENIE P"),
+                          (0, "§ 1. Tekst."), (0, "57"), (0, "Poz. 56, 57"), (58, "58"), (0, "ROZPORZĄDZENIE M")])
+        self.assertEqual([l.text for l in _ocr_lines(paras[1:3], 1, 595, 842, None)], paras[1:3])  # no position: as read
 
     def _shared_page(self, header):
         # DU/2005/1369 p. 2: the end of act 1369 in two columns, its footnote under "———" in the left column, then
