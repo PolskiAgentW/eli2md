@@ -74,6 +74,15 @@ UNESCAPE = re.compile(r"^\\([>#|\[*+-])")  # the converter escapes Markdown synt
 FRONT = re.compile(r"^---\n(.*?)\n---\n", re.S)
 COMMON_PART = re.compile(rf"^(?:[{LOWER}]|–\s)")  # "część wspólna" after an enumeration
 ANNOUNCES_QUOTE = re.compile(r"(?:brzmienie|brzmieniu)\s*:\s*$")  # "… otrzymuje brzmienie:", "… w brzmieniu:"
+# Rows of tables and forms that look like units (_Builder.table_row). The Markdown has no table markup (pdf.py
+# flattens tables into paragraphs), so these go by the text and the numbering only.
+# A point of a list of coordinates: "6. 54°10′43,83″ N 19°22′52,30″ E" (DU/2024/1594), "2) 52°36'08"N 019°39'05"E"
+# (DU/2025/947). Degrees followed by minutes, so "30 °C lub więcej:" stays a unit.
+COORD = re.compile(r"^\d{1,3}\s?°\s?\d{1,2}(?:[,.]\d+)?\s?[′'’]")
+# The label of a row of a form: an upper-case word followed by another one or by a number ("5. FUNKCJA PODSTAWOWA",
+# "2. NUMER 18 3. OPIS …", "4. POLE 0,05 km²" in the cards of sea areas, DU/2024/1337), not by a sentence ("2. BGK
+# przyznaje …", "ABW i SKW …").
+FORM_LABEL = re.compile(rf"^[{UPPER}]{{3,}}(?:\s*$|\s+(?:[{UPPER}]{{2,}}(?![{LOWER}])|\d))")
 
 
 def parse_unit(text: str) -> tuple[str, str, str] | None:
@@ -161,13 +170,45 @@ class _Builder:
         self.common = False  # the last text was the common part after an enumeration
         self.undo: tuple[list, list] | None = None  # (closed list item entries, common-part text nodes)
         self.roman = 0  # number of the last "I." … "XXXIX." section heading
+        self.table: int | None = None  # rank of the unit that holds a form table (table_row), while it lasts
 
     def _parent_list(self) -> list[dict]:
         return self.stack[-1][1]["children"] if self.stack else self.body
 
     def close(self) -> None:
         self.stack.clear()
-        self.fresh = self.heading = self.undo = None
+        self.fresh = self.heading = self.undo = self.table = None
+
+    def table_row(self, typ: str, num: str, text: str) -> bool:
+        """True if a paragraph that parses as a unit is a numbered row of a table or form (it stays text):
+        - a point of a list of coordinates (COORD);
+        - a row of a form, which also starts a table that lasts until the next unit of the rank of the unit
+          holding it (the next § or Art., a heading, an annex): an "N." with an upper-case label (FORM_LABEL)
+          that would be the first ust. of its parent and is not "1." (the cells before it were glued into other
+          paragraphs: "KARTA AKWENU 1. OZNACZENIE LITEROWE" / "2. NUMER 18 3. OPIS 1. 54°…" / "5. FUNKCJA
+          PODSTAWOWA" / "6. FUNKCJE DOPUSZCZALNE" / "1) badania naukowe (N);" …, DU/2024/1337). The official
+          HTML marks none of the rows and lists in these cards as units;
+        - a row of a table replaced by an amendment without quotes: an "N." under a unit that already holds
+          pkt/lit/tirets but no ust., right after a unit that announces the new wording ("– – – lp. 3 i 4
+          otrzymują brzmienie:" / "3. Realizacja Krajowego planu … 2.500 300 …", MP/2025/1248). Without the
+          announcement such an ust. stays: "§ 7." + "1) …" + "2. Jeżeli termin …" (DU/2025/1895 prints no "1.")."""
+        rank = RANK[typ] + (int(num) - 1 if typ == "tir" else 0)
+        if self.table is not None:
+            if rank > self.table:
+                return True
+            self.table = None
+        if typ in ("ust", "pkt") and COORD.match(text):
+            return True
+        if typ != "ust":
+            return False
+        parent = next((node for r, node in reversed(self.stack) if r < rank), None)
+        if parent is None or any(c["type"] == "ust" for c in parent["children"]):
+            return False
+        if num != "1" and FORM_LABEL.match(text):
+            self.table = RANK[parent["type"]]
+            return True
+        return any(c["type"] in RANK for c in parent["children"]) \
+            and bool(ANNOUNCES_QUOTE.search(self.stack[-1][1]["text"]))
 
     def add_unit(self, typ: str, num: str, text: str) -> None:
         rank = RANK[typ]
@@ -182,6 +223,8 @@ class _Builder:
             closed[-1][1]["children"].extend(texts)
             self.stack.extend(closed)
         self.undo = None
+        if self.table is not None and rank <= self.table:
+            self.table = None  # "##### § 2." ends the table of § 1
         while self.stack and self.stack[-1][0] >= rank:
             self.stack.pop()
         siblings = self._parent_list()
@@ -312,6 +355,8 @@ def md_to_tree(md: str) -> dict:
             u, d = None, 1  # "§ 5." + "„1. …": the same split for a quoted §
         if u and u[0] == "tir" and kind == "p" and not _tiret_list(blocks, n, b):
             u = None  # "– …" after an enumeration that did not announce tirets: the common part, not a tiret
+        if u and kind == "p" and b.table_row(*u):
+            u = None
         if u:
             if notes and b.fresh is not None:  # "##### Art. 15c." + "[^7] 1. …": the marker belongs to Art.
                 b.fresh["text"] = notes
