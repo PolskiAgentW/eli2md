@@ -36,6 +36,9 @@ Rules:
 - Headings of systematising units (DZIAŁ, Rozdział, Oddział, ...) are flat `heading` nodes between
   the articles (articles are not nested in chapters); the next non-unit paragraph is their title.
   In annexes, sections numbered "I." … "XXXIX." are `heading` nodes too (label "III.").
+- Numbered rows of tables and forms are `text`, not units (_Builder.table_row): points of lists of coordinates,
+  the rows and cell lists of a form card ("5. FUNKCJA PODSTAWOWA" … up to the next §, DU/2024/1337) and rows of
+  a table that an amendment replaces without quotes ("– – – lp. 8 otrzymuje brzmienie:" / "8. Program …").
 - Footnote markers stay in the text as `[^n]`.
 - Each annex has its own tree (texts announced as consolidated texts have their own Art./§).
 """
@@ -100,8 +103,8 @@ def parse_unit(text: str) -> tuple[str, str, str] | None:
 
 
 def _next(prev: str, num: str) -> bool:
-    """True if unit number num comes right after prev: "5" after "4", "27a" after "27" or "27", "e" after "d",
-    "ca" after "c", "cb" after "ca"."""
+    """True if unit number num comes right after prev: "5" after "4", "27a" after "27", "28" after "27a", "e" after
+    "d", "ca" after "c", "cb" after "ca"."""
     a, b = NUM_PARTS.match(prev), NUM_PARTS.match(num)
     if a and b:
         return int(b.group(1)) == int(a.group(1)) + 1 or (b.group(1) == a.group(1) and b.group(2) > a.group(2))
