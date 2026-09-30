@@ -1,0 +1,476 @@
+{
+ "version": "0.6.17",
+ "total": {
+  "identical": 5903,
+  "differs": 25,
+  "missing": 1,
+  "ge99": 5905,
+  "n": 5929
+ },
+ "acts": {
+  "KC": {
+   "eli": "DU/2024/1061",
+   "articles": 1296,
+   "identical": 1294,
+   "ge99": 1294,
+   "differs": 2,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": [
+    {
+     "art": "449_11",
+     "status": "differs",
+     "ratio": 0.5,
+     "ref_tokens": 4,
+     "diff": [
+      [
+       "insert",
+       "",
+       "tytuł vii wykonanie zobowiązań i skutki ich niewykonania"
+      ]
+     ]
+    },
+    {
+     "art": "109_9",
+     "status": "differs",
+     "ratio": 0.7273,
+     "ref_tokens": 4,
+     "diff": [
+      [
+       "insert",
+       "",
+       "tytuł v termin"
+      ]
+     ]
+    }
+   ]
+  },
+  "KP": {
+   "eli": "DU/2023/1465",
+   "articles": 512,
+   "identical": 508,
+   "ge99": 509,
+   "differs": 4,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": [
+    {
+     "art": "173",
+     "status": "differs",
+     "ratio": 0.9333,
+     "ref_tokens": 28,
+     "diff": [
+      [
+       "insert",
+       "",
+       "rozdział ia urlop opiekuńczy"
+      ]
+     ]
+    },
+    {
+     "art": "265",
+     "status": "differs",
+     "ratio": 0.976,
+     "ref_tokens": 61,
+     "diff": [
+      [
+       "insert",
+       "",
+       "art 266 280"
+      ]
+     ]
+    },
+    {
+     "art": "283",
+     "status": "differs",
+     "ratio": 0.9872,
+     "ref_tokens": 316,
+     "diff": [
+      [
+       "delete",
+       "rozdział ii zawierający art 284 290 1 uchylony",
+       ""
+      ]
+     ]
+    },
+    {
+     "art": "186",
+     "status": "differs",
+     "ratio": 0.9953,
+     "ref_tokens": 424,
+     "diff": [
+      [
+       "replace",
+       "1 i8",
+       "1i 8"
+      ]
+     ]
+    }
+   ]
+  },
+  "KSH": {
+   "eli": "DU/2024/18",
+   "articles": 941,
+   "identical": 937,
+   "ge99": 937,
+   "differs": 4,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": [
+    {
+     "art": "580",
+     "status": "differs",
+     "ratio": 0.9349,
+     "ref_tokens": 79,
+     "diff": [
+      [
+       "insert",
+       "",
+       "rozdział 4 1 transgraniczne przekształcenie spółek kapitałowych i spółki komandytowo akcyjnej"
+      ]
+     ]
+    },
+    {
+     "art": "550_22",
+     "status": "differs",
+     "ratio": 0.9412,
+     "ref_tokens": 48,
+     "diff": [
+      [
+       "insert",
+       "",
+       "rozdział 4 podział spółki komandytowo akcyjnej"
+      ]
+     ]
+    },
+    {
+     "art": "550_1",
+     "status": "differs",
+     "ratio": 0.9554,
+     "ref_tokens": 107,
+     "diff": [
+      [
+       "insert",
+       "",
+       "rozdział 3 transgraniczny podział spółek kapitałowych i spółki komandytowo akcyjnej"
+      ]
+     ]
+    },
+    {
+     "art": "532",
+     "status": "differs",
+     "ratio": 0.9793,
+     "ref_tokens": 118,
+     "diff": [
+      [
+       "insert",
+       "",
+       "rozdział 2 podział spółek kapitałowych"
+      ]
+     ]
+    }
+   ]
+  },
+  "KPC": {
+   "eli": "DU/2024/1568",
+   "articles": 2010,
+   "identical": 2003,
+   "ge99": 2004,
+   "missing": 1,
+   "differs": 6,
+   "extra_md_articles": 1,
+   "worst": [
+    {
+     "art": "1522",
+     "status": "missing",
+     "ratio": 0.0
+    },
+    {
+     "art": "1217",
+     "status": "differs",
+     "ratio": 0.4144,
+     "ref_tokens": 46,
+     "diff": [
+      [
+       "insert",
+       "",
+       "1i niniejsza ustawa w zakresie swojej regulacji wdraża dyrektywę parlamentu europejskiego i rady ue 2020 1828 z dnia 25 "
+      ]
+     ]
+    },
+    {
+     "art": "1102",
+     "status": "differs",
+     "ratio": 0.5,
+     "ref_tokens": 3,
+     "diff": [
+      [
+       "insert",
+       "",
+       "tytuł iii jurysdykcja krajowa w procesie"
+      ]
+     ]
+    },
+    {
+     "art": "893_3",
+     "status": "differs",
+     "ratio": 0.9259,
+     "ref_tokens": 27,
+     "diff": [
+      [
+       "replace",
+       "1 i893",
+       "1i 893"
+      ]
+     ]
+    },
+    {
+     "art": "694_8",
+     "status": "differs",
+     "ratio": 0.9391,
+     "ref_tokens": 54,
+     "diff": [
+      [
+       "insert",
+       "",
+       "księga trzecia zawierająca art 695 715 uchylona"
+      ]
+     ]
+    },
+    {
+     "art": "447",
+     "status": "differs",
+     "ratio": 0.9684,
+     "ref_tokens": 47,
+     "diff": [
+      [
+       "replace",
+       "rejonowymiejsca",
+       "rejonowy miejsca"
+      ]
+     ]
+    },
+    {
+     "art": "755_2",
+     "status": "differs",
+     "ratio": 0.996,
+     "ref_tokens": 498,
+     "diff": [
+      [
+       "replace",
+       "15",
+       "15aaa"
+      ],
+      [
+       "replace",
+       "15",
+       "15aaa"
+      ]
+     ]
+    }
+   ]
+  },
+  "KK": {
+   "eli": "DU/2024/17",
+   "articles": 456,
+   "identical": 453,
+   "ge99": 453,
+   "differs": 3,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": [
+    {
+     "art": "363",
+     "status": "differs",
+     "ratio": 0.3035,
+     "ref_tokens": 39,
+     "diff": [
+      [
+       "insert",
+       "",
+       "1i niniejsza ustawa w zakresie swojej regulacji realizuje postanowienia 1 dyrektywy parlamentu europejskiego i rady ue 2"
+      ]
+     ]
+    },
+    {
+     "art": "37b",
+     "status": "differs",
+     "ratio": 0.9796,
+     "ref_tokens": 73,
+     "diff": [
+      [
+       "replace",
+       "wsprawie",
+       "w sprawie"
+      ]
+     ]
+    },
+    {
+     "art": "316",
+     "status": "differs",
+     "ratio": 0.9833,
+     "ref_tokens": 61,
+     "diff": [
+      [
+       "delete",
+       "część wojskowa",
+       ""
+      ]
+     ]
+    }
+   ]
+  },
+  "PrAut": {
+   "eli": "DU/2022/2509",
+   "articles": 175,
+   "identical": 175,
+   "ge99": 175,
+   "differs": 0,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": []
+  },
+  "u.r.p.": {
+   "eli": "DU/2024/499",
+   "articles": 150,
+   "identical": 149,
+   "ge99": 149,
+   "differs": 1,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": [
+    {
+     "art": "65_1",
+     "status": "differs",
+     "ratio": 0.9897,
+     "ref_tokens": 194,
+     "diff": [
+      [
+       "replace",
+       "1 wrazie",
+       "1w razie"
+      ]
+     ]
+    }
+   ]
+  },
+  "u.ś.u.d.e.": {
+   "eli": "DU/2024/1513",
+   "articles": 31,
+   "identical": 29,
+   "ge99": 29,
+   "differs": 2,
+   "missing": 0,
+   "extra_md_articles": 1,
+   "worst": [
+    {
+     "art": "14",
+     "status": "differs",
+     "ratio": 0.9143,
+     "ref_tokens": 190,
+     "diff": [
+      [
+       "delete",
+       "art 15 podmiot który świadczy usługi określone w art 12 14 nie jest obowiązany do sprawdzania przekazywanych przechowywa",
+       ""
+      ]
+     ]
+    },
+    {
+     "art": "19",
+     "status": "differs",
+     "ratio": 0.9565,
+     "ref_tokens": 44,
+     "diff": [
+      [
+       "insert",
+       "",
+       "art 20 22 uchylone"
+      ]
+     ]
+    }
+   ]
+  },
+  "u.z.n.k.": {
+   "eli": "DU/2022/1233",
+   "articles": 44,
+   "identical": 44,
+   "ge99": 44,
+   "differs": 0,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": []
+  },
+  "u.p.k.": {
+   "eli": "DU/2024/1796",
+   "articles": 74,
+   "identical": 74,
+   "ge99": 74,
+   "differs": 0,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": []
+  },
+  "UODO": {
+   "eli": "DU/2019/1781",
+   "articles": 131,
+   "identical": 130,
+   "ge99": 130,
+   "differs": 1,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": [
+    {
+     "art": "176",
+     "status": "differs",
+     "ratio": 0.1319,
+     "ref_tokens": 12,
+     "diff": [
+      [
+       "insert",
+       "",
+       "a zmiany tekstu jednolitego wymienionej ustawy zostały ogłoszone w dz u z 2017 r poz 2491 oraz z 2018 r poz 5 138 398 41"
+      ]
+     ]
+    }
+   ]
+  },
+  "u.k.k.": {
+   "eli": "DU/2024/1497",
+   "articles": 109,
+   "identical": 107,
+   "ge99": 107,
+   "differs": 2,
+   "missing": 0,
+   "extra_md_articles": 0,
+   "worst": [
+    {
+     "art": "59de",
+     "status": "differs",
+     "ratio": 0.9565,
+     "ref_tokens": 77,
+     "diff": [
+      [
+       "insert",
+       "",
+       "rozdział 5ab nadzór nad działalnością instytucji pożyczkowych"
+      ]
+     ]
+    },
+    {
+     "art": "59d",
+     "status": "differs",
+     "ratio": 0.9819,
+     "ref_tokens": 190,
+     "diff": [
+      [
+       "insert",
+       "",
+       "rozdział 5aa wpis do rejestru pośredników kredytowych"
+      ]
+     ]
+    }
+   ]
+  }
+ }
+}
