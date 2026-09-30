@@ -1,4 +1,4 @@
-"""Compare PDF conversion against the official HTML text (2024 acts have both).
+"""Compare PDF conversion against the official HTML text (2024 acts have both; older samples carry a "year").
 
 Metric: word tokens (\\w+, case-folded, punctuation ignored), aligned with difflib.
   recall    = matched / reference tokens  (how much of the official text we recover)
@@ -114,8 +114,8 @@ def show_diff(ref: list[str], hyp: list[str], limit: int = 40) -> None:
             break
 
 
-def evaluate_act(pos: int, show: bool = False) -> dict:
-    d = CACHE / "DU" / "2024" / str(pos)
+def evaluate_act(pos: int, show: bool = False, year: int = 2024) -> dict:
+    d = CACHE / "DU" / str(year) / str(pos)
     t0 = time.time()
     doc = convert(str(d / "text.pdf"))
     dt = time.time() - t0
@@ -153,7 +153,7 @@ def main() -> None:
         items = [i for i in items if i["pos"] == a.show]
     rows = []
     for it in items:
-        r = evaluate_act(it["pos"], show=bool(a.show))
+        r = evaluate_act(it["pos"], show=bool(a.show), year=it.get("year", 2024))  # year: samples of other years
         r["type"] = it["type"]
         rows.append(r)
         if "skipped" in r:

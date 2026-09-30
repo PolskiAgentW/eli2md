@@ -335,9 +335,29 @@ def _image_text(page, ocr: str):
     return read if ocr_mod.text_image(read) else None
 
 
+MAC_PL_FONT = re.compile(r"PL$")  # QuarkXPress fonts of Dz.U. 2000–2010: "Univers-PL", "Univers-BoldPL"
+PL_LETTERS = set("ąćęłńśźżĄĆĘŁŃŚŹŻ")
+
+
+def _mac_pl(page):
+    """Dz.U. 2000–2010 (QuarkXPress) set Polish letters in fonts "…PL" with MacCE codes, but the PDF reads the codes
+    as MacRoman: "og∏oszenia", "ROZPORZÑDZENIE". Chars of those fonts are decoded again, where that gives a Polish
+    letter (the other codes, e.g. "±", may be what the font prints)."""
+    for c in page.chars:
+        if not c["text"].isascii() and MAC_PL_FONT.search(c.get("fontname", "")):
+            try:
+                t = c["text"].encode("mac_roman").decode("mac_latin2")
+            except UnicodeError:
+                continue
+            if t in PL_LETTERS:
+                c["text"] = t
+    return page
+
+
 def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
     """Return (body_lines, footnote_lines) for one page."""
     body, notes = [], []
+    _mac_pl(page)
     for k, (words, fw, fh, rects) in enumerate(_frames(_drop_hidden_placed(_drop_watermark(_single_glyphs(page))))):
         b, n = _frame_lines(words, fw, fh, rects, pno)
         if k > 0:
