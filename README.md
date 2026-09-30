@@ -468,9 +468,10 @@ renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część st
 - Wzory Cambria Math: w 19 aktach DU 2025–2026 mapa ToUnicode daje jednemu glifowi dwie litery (`𝑘𝑘`).
   Od 0.6.4.dev zapisuję je pojedynczo („k”, nie „kk”). W czterech z nich (DU/2025/454, 459, 1743, 1744) mapa jest
   poza tym błędna i wzory pozostają nieczytelne. `eval/math_glyphs_0.6.4.dev.md`.
-- Wklejony PDF z zagnieżdżonym znakowaniem treści (`/Span … EMC` wewnątrz `/PlacedPDF`): pdfplumber gubi
-  znacznik `PlacedPDF` po pierwszym wewnętrznym `EMC`, więc reszta ukrytej kopii nie przechodzi testu tuszu
-  i miesza się z tekstem (DU/2026/40 s. 2–6, akapity przy wzorach).
+- Wklejony PDF z Worda pod przepisanym tekstem Dziennika (DU/2026/40 s. 2–6): widać z niego tylko wzory.
+  Do 0.6.3 pdfplumber gubił znacznik `PlacedPDF` po zagnieżdżonym `/Span … EMC` wzoru, więc reszta ukrytej kopii
+  w ogóle nie szła do testu tuszu. Od 0.6.4.dev znacznik zostaje (10 aktów 2025–2026). Test tuszu dalej przepuszcza
+  ukryte litery, których ramka nachodzi na tusz innego tekstu, więc akapity przy wzorach bywają wymieszane.
 - Umowy międzynarodowe: pierwsza strona (preambuła, art. 1) bywa obrazem tekstu na stronie, która ma warstwę
   tekstową z samym tytułem. Taka strona nie jest „bez tekstu”, więc OCR jej nie czyta i w wyniku brakuje treści
   (np. MP/2026/869).

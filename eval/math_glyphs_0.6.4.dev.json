@@ -14,7 +14,13 @@
 "kept": 0.9606763978623275,
 "grounded": 0.9762898715194748
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 25074,
+"md_tokens": 24673,
+"kept": 0.9606763978623275,
+"grounded": 0.9762898715194748
+}
 },
 {
 "eli": "DU/2025/1555",
@@ -48,7 +54,13 @@
 "kept": 0.9966544355709044,
 "grounded": 0.9997834794846812
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 9266,
+"md_tokens": 9237,
+"kept": 0.9966544355709044,
+"grounded": 0.9997834794846812
+}
 },
 {
 "eli": "DU/2025/1744",
@@ -65,7 +77,13 @@
 "kept": 0.9908710127805821,
 "grounded": 0.9993500866551126
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 9311,
+"md_tokens": 9231,
+"kept": 0.990763612930942,
+"grounded": 0.9993500162495937
+}
 },
 {
 "eli": "DU/2025/441",
@@ -99,7 +117,13 @@
 "kept": 0.9305237171574678,
 "grounded": 0.9526990431485828
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 5671,
+"md_tokens": 5539,
+"kept": 0.9305237171574678,
+"grounded": 0.9526990431485828
+}
 },
 {
 "eli": "DU/2025/454",
@@ -116,7 +140,13 @@
 "kept": 0.985610183562402,
 "grounded": 0.9970140897639265
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 10841,
+"md_tokens": 10717,
+"kept": 0.985610183562402,
+"grounded": 0.9970140897639265
+}
 },
 {
 "eli": "DU/2025/459",
@@ -133,7 +163,13 @@
 "kept": 0.9898698884758365,
 "grounded": 0.9976582989883852
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 10760,
+"md_tokens": 10675,
+"kept": 0.9897769516728625,
+"grounded": 0.9976580796252927
+}
 },
 {
 "eli": "DU/2025/597",
@@ -150,7 +186,13 @@
 "kept": 0.9442464651109322,
 "grounded": 0.9873782906599351
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 17398,
+"md_tokens": 16596,
+"kept": 0.9418323945281066,
+"grounded": 0.9873463485177151
+}
 },
 {
 "eli": "DU/2025/822",
@@ -201,7 +243,13 @@
 "kept": 0.9447983014861996,
 "grounded": 0.951193444959031
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 2826,
+"md_tokens": 2741,
+"kept": 0.9281670205237085,
+"grounded": 0.9569500182415177
+}
 },
 {
 "eli": "DU/2025/932",
@@ -235,7 +283,13 @@
 "kept": 0.9492697924673328,
 "grounded": 0.9544049459041731
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 2602,
+"md_tokens": 2588,
+"kept": 0.9492697924673328,
+"grounded": 0.9544049459041731
+}
 },
 {
 "eli": "DU/2026/1012",
@@ -354,7 +408,13 @@
 "kept": 0.504079254079254,
 "grounded": 0.9083749015489629
 },
-"text_changed": true
+"text_changed": true,
+"new_with_placed_tags": {
+"pdf_tokens": 6864,
+"md_tokens": 3208,
+"kept": 0.4364801864801865,
+"grounded": 0.9339152119700748
+}
 },
 {
 "eli": "DU/2026/447",

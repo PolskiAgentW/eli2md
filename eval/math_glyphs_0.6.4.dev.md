@@ -58,7 +58,8 @@ skopiowana, żeby kontrola działała na wyniku każdej wersji). Miara porównuj
 `𝑘𝑘` z PDF nie pasował do niczego w wyniku, a „kk” z 0.6.3 do niczego w PDF. Wyniki dla aktów ze wzorami
 Cambria Math nie są porównywalne z wcześniejszymi plikami `selfcheck_*`.
 
-**Przed i po** (wyniki: `eval/math_glyphs_0.6.4.dev.json`). 32 akty: 19 z podwojonymi glifami z przeglądu i 27
+**Przed i po** (wyniki: `eval/math_glyphs_0.6.4.dev.json`; `old` = 0.6.3, `new` = same podwojenia,
+`new_with_placed_tags` = z poprawką znaczników z p. 5, tylko dla 10 aktów). 32 akty: 19 z podwojonymi glifami z przeglądu i 27
 aktów, w których grounded spadł przy 0.6.2 → 0.6.3 (14 wspólnych). 0.6.3 to opublikowane dane, „nowy” to ten
 kod (konwersja do /tmp, bez OCR, bo żaden z 32 aktów nie ma w danych stron z OCR). Obie wersje oceniam tą
 samą, nową miarą (`python eval/selfcheck.py` w wersji z tego commitu, funkcja `check`).
@@ -105,7 +106,10 @@ z warstwą tekstową, a ta jest tu nieczytelna.
 
 ## 4. Próby deweloperskie
 
-DEV_EVALS
+`eval/evaluate.py`, `eval/structure.py` i `eval/tree_eval.py` na `sample_2024_n50_s2024.json`
+i `sample_2024_n50_s7.json` (bez OCR). Wyniki per akt i sumy są identyczne z `*_dev_*_v0.6.3.dev.txt` (porównanie
+po usunięciu kolumny czasu). Sprawdziłem po każdej z dwóch zmian osobno: po samych podwojeniach i po podwojeniach
+ze znacznikami. W tych 100 aktach z 2024 r. żadna z tych dwóch zmian nie zmienia więc wyniku.
 
 ## 5. DU/2026/40 (kept 0.47)
 
@@ -133,15 +137,39 @@ wyniku nie występują w tekście Dziennika: to widoczne wzory i przeciek ukryte
 z miary (liczy niewidoczną kopię). Realną wadą wyniku są wymieszane akapity przy wzorach. Po poprawce
 podwojeń: kept 0.4747 → 0.5041, grounded 0.8553 → 0.9084 (tabela wyżej). Akapity przy wzorach zostają wymieszane.
 
-**Bez poprawki.** Przyczyna 1 jest jasna, ale poprawka nie jest wąska. Wymaga stosu znaczników w agregatorze
-pdfplumbera (podklasa albo łatka). To zmienia, które znaki idą do testu tuszu, w każdym akcie z wklejonym PDF-em
-z zagnieżdżonym znakowaniem. Przyczyny 2 i tak nie usuwa (s. 3: 1572 znaki). Potrzebny osobny pomiar na
-wszystkich aktach z `PlacedPDF` i na próbach deweloperskich.
+**Poprawka przyczyny 1** (osobny commit, łatwo ją cofnąć). `eli2md/pdf.py`: `_PlacedTags`, podklasa agregatora
+pdfplumbera, podstawiona w `pdfplumber.page`. Wszystko wewnątrz `/PlacedPDF` ma znacznik `PlacedPDF`, a pozostałe
+znaczniki są jak w pdfplumberze. Test: `test_placed_tag_survives_nested_marked_content`. Zasięg zmierzyłem skanem
+(niżej, w otwartych sprawach): zgubiony znacznik ma 10 ze 118 aktów z Cambria Math i 0 z losowych 300 aktów.
+Wynik w tych 10 aktach (selfcheck, nowa miara; 0.6.3 → same podwojenia → podwojenia + znaczniki):
+
+| akt | kept | grounded | tokeny wyniku |
+|-----|------|----------|---------------|
+| DU/2026/40 | 0.4747 → 0.5041 → 0.4365 | 0.8553 → 0.9084 → 0.9339 | 3809 → 3809 → 3208 |
+| DU/2025/928 | 0.9367 → 0.9448 → 0.9282 | 0.9430 → 0.9512 → 0.9570 | 2807 → 2807 → 2741 |
+| DU/2025/597 | 0.9433 → 0.9442 → 0.9418 | 0.9864 → 0.9874 → 0.9873 | 16638 → 16638 → 16596 |
+| DU/2025/1744 | 0.9266 → 0.9909 → 0.9908 | 0.9346 → 0.9994 → 0.9994 | 9232 → 9232 → 9231 |
+| DU/2025/459 | 0.9359 → 0.9899 → 0.9898 | 0.9432 → 0.9977 → 0.9977 | 10676 → 10676 → 10675 |
+
+W pozostałych pięciu (DU/2025/1743, 454, 452, 1548, 978) liczby bez zmian. Kept spada, bo strona PDF liczy ukrytą
+kopię, a wynik jej już nie ma. Sprawdziłem, co wypadło:
+- DU/2026/40: tekst Dziennika bez zmian (kept względem niego 0.9922 w obu wersjach). Tokenów spoza tekstu Dziennika
+  jest 1033 zamiast 1634, czyli o 601 mniej przecieku. Pozostałe to widoczne wzory i przeciek przez przyczynę 2.
+  Kolejność kawałków spłaszczonych wzorów się zmienia (np. „∑ i=1 DDᵢ” → „∑ DDᵢ”, a „i=1” linię niżej).
+- DU/2025/597: wypadają przypisy „[^67] W brzmieniu ustalonym przez § 1 pkt 18 …”, „[^68]”, „[^71]” z treści.
+  Na s. 18 tych przypisów nie widać (obejrzałem render), to ukryta kopia z wklejonego PDF-u.
+- DU/2025/928: znikają przypisy zdublowane i przeplecione z ukrytą kopią („[^5]: W brzmieniu W brzmieniu ustalonym
+  ustalonym przez § przez 1 pkt …” → „[^5]: W brzmieniu ustalonym przez § 1 pkt 2 lit. b …”, „[^3_2]” scalony
+  z „[^3]”). Do „[^2]” doszła za to resztka ukrytej kopii („… zmieniającego rozporządzenie w zcz gó w d wyz …”),
+  przepuszczona przez przyczynę 2.
+
+Przyczyny 2 nie poprawiałem (DU/2026/40 s. 3: 1572 ukryte znaki ze znacznikiem przechodzą test tuszu).
+Wymagałaby testu tuszu odpornego na cudzy tusz albo ścieżek przycinania, których pdfminer nie czyta.
 
 ## Otwarte sprawy
 
-- DU/2026/40 i podobne: zgubiony `PlacedPDF` po zagnieżdżonym `EMC` (pdfplumber 0.11.10) i test tuszu przy
-  nakładających się warstwach (wyżej). Ile to dotyczy, policzyłem skanem ze stosem znaczników (`/tmp`, poza
+- DU/2026/40 i podobne: test tuszu przy nakładających się warstwach (przyczyna 2, wyżej) dalej przepuszcza część
+  ukrytej kopii. Zgubiony `PlacedPDF` po zagnieżdżonym `EMC` (pdfplumber 0.11.10) jest poprawiony. Ile to dotyczy, policzyłem skanem ze stosem znaczników (`/tmp`, poza
   repozytorium). W losowych 300 aktach DU+MP 2025–2026 (seed 40) 43 mają znaki `PlacedPDF`, a zgubiony znacznik
   ma 0. W 118 aktach z fontem Cambria Math 39 ma znaki `PlacedPDF`, a zgubiony znacznik 10: 60 636 z 2 853 963
   znaków wklejonych. Są to DU/2025/1743, 1744, 454, 459, 452, 597, 1548, 928, 978 i DU/2026/40, wszystkie z listy
