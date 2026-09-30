@@ -1,0 +1,465 @@
+[
+ {
+  "pos": 793,
+  "ref": 511,
+  "hyp": 490,
+  "matched": 490,
+  "n_hyp_notes": 21,
+  "miss": 0,
+  "label_miss": 21,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1441,
+  "ref": 139,
+  "hyp": 133,
+  "matched": 133,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 692,
+  "ref": 158,
+  "hyp": 156,
+  "matched": 156,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 593,
+  "ref": 238,
+  "hyp": 232,
+  "matched": 232,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1751,
+  "ref": 342,
+  "hyp": 417,
+  "matched": 333,
+  "n_hyp_notes": 9,
+  "miss": 0,
+  "label_miss": 9,
+  "extra": 84,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 18,
+  "runs": [
+   [
+    "insert",
+    "",
+    "22 22 29 30 31 31 32 32 33 33 34 34 35 18 18 36 19 19 37 35 36 37 23 23 38 24 24 39 38 39 25 25 40 26 26 41 42 43 44 41 42 43 44 45 27 27 46 28 28 47 29 29 48 50 30 30 31 31 51 50 51 32 32 52 33 33 53"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 774,
+  "ref": 37,
+  "hyp": 36,
+  "matched": 36,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 158,
+  "ref": 587,
+  "hyp": 562,
+  "matched": 562,
+  "n_hyp_notes": 25,
+  "miss": 0,
+  "label_miss": 25,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 636,
+  "ref": 37,
+  "hyp": 36,
+  "matched": 36,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 459,
+  "ref": 365,
+  "hyp": 353,
+  "matched": 353,
+  "n_hyp_notes": 12,
+  "miss": 0,
+  "label_miss": 12,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1981,
+  "ref": 42,
+  "hyp": 41,
+  "matched": 41,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 398,
+  "ref": 44,
+  "hyp": 100,
+  "matched": 43,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 57,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 5,
+  "runs": [
+   [
+    "insert",
+    "",
+    "folia zawiera elementy graficzne wykonane farbą aktywną w promieniowaniu ultrafioletowym opis okładka sztywna kolor szary napisy wytłoczone o widocznym wewnętrzne kartki w widocznym kolorze białym nap"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1728,
+  "ref": 62,
+  "hyp": 60,
+  "matched": 60,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 573,
+  "ref": 407,
+  "hyp": 398,
+  "matched": 395,
+  "n_hyp_notes": 12,
+  "miss": 0,
+  "label_miss": 12,
+  "extra": 3,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 3,
+  "runs": [
+   [
+    "insert",
+    "",
+    "r m z"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 164,
+  "ref": 0,
+  "hyp": 24,
+  "matched": 0,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 0,
+  "extra": 24,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 2,
+  "runs": [
+   [
+    "insert",
+    "",
+    "dane przesyłki osoby miejsca lub obiektu wobec których stosowane będą czynności ze wskazaniem sposobu przeprowadzenia opis przestępstwa wskazanie okoliczności uzasadniających potrzebę zarządzenia czyn"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 806,
+  "ref": 177,
+  "hyp": 171,
+  "matched": 171,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 700,
+  "ref": 237,
+  "hyp": 226,
+  "matched": 226,
+  "n_hyp_notes": 11,
+  "miss": 0,
+  "label_miss": 11,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 404,
+  "ref": 70,
+  "hyp": 69,
+  "matched": 69,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1262,
+  "ref": 216,
+  "hyp": 209,
+  "matched": 209,
+  "n_hyp_notes": 7,
+  "miss": 0,
+  "label_miss": 7,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1308,
+  "ref": 40,
+  "hyp": 39,
+  "matched": 39,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1674,
+  "ref": 70,
+  "hyp": 68,
+  "matched": 68,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1659,
+  "ref": 89,
+  "hyp": 380,
+  "matched": 7,
+  "n_hyp_notes": 1,
+  "miss": 82,
+  "label_miss": 0,
+  "extra": 373,
+  "miss_in_hyp_other": 82,
+  "extra_in_ref_other": 6,
+  "runs": [
+   [
+    "insert",
+    "",
+    "strona"
+   ],
+   [
+    "replace",
+    "niniejsze rozporządzenie było poprzedzone rozporządzeniem ministra",
+    "z 13 strona 2 z 13 strona 3 z 13 strona 4 z 13 strona 5 z 13 strona 6 z 13 strona 7 z 13 strona 8 z 13 strona 9 z 13 strona 10 z 13 strona 11 z 13 strona 12 z 13 strona 13 z 13 strona 1 z 19 strona 2 "
+   ],
+   [
+    "insert",
+    "",
+    "ministerstwo sprawiedliwości strona 16"
+   ],
+   [
+    "replace",
+    "dnia",
+    "23 strona 17 z 23 strona 18 z 23 strona 19 z 23 strona 20 z 23 strona 21 z 23 sklep rtv i agd strona 22 z 23 strona 23 z 23 strona strona strona 1 1 1 z z z 12 12 12 strona 2 z 12 strona 3 z 12 strona"
+   ],
+   [
+    "delete",
+    "sierpnia 2024 r w sprawie określenia wzorów pisemnych wyjaśnień dla podejrzanego pokrzywdzonego i świadka co do zakresu ich uprawnień i obowiązków oraz sposobu i warunków przesłuchania dz u poz 1241 k",
+    ""
+   ],
+   [
+    "replace",
+    "dniem wejścia w życie niniejszego rozporządzenia zgodnie",
+    "24 strona 14"
+   ],
+   [
+    "replace",
+    "art 12 pkt 2 ustawy",
+    "24 strona 15"
+   ],
+   [
+    "replace",
+    "dnia 26 lipca 2024 r o zmianie niektórych ustaw w celu usprawnienia działań sił zbrojnych rzeczypospolitej polskiej policji oraz straży granicznej na wypadek zagrożenia bezpieczeństwa państwa dz u poz",
+    "24 strona 16 z 24 strona 17 z 24 strona 18 z 24 strona 19 z 24 strona 20 z 24 strona 21 z 24 strona 22 z 24 strona 23 z 24 strona 24 z 24"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1714,
+  "ref": 36,
+  "hyp": 35,
+  "matched": 35,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1833,
+  "ref": 63,
+  "hyp": 61,
+  "matched": 61,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 935,
+  "ref": 1232,
+  "hyp": 1185,
+  "matched": 1185,
+  "n_hyp_notes": 47,
+  "miss": 0,
+  "label_miss": 47,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1518,
+  "ref": 115,
+  "hyp": 113,
+  "matched": 113,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1018,
+  "ref": 430,
+  "hyp": 0,
+  "matched": 0,
+  "n_hyp_notes": 0,
+  "miss": 430,
+  "label_miss": 0,
+  "extra": 0,
+  "miss_in_hyp_other": 427,
+  "extra_in_ref_other": 0,
+  "runs": [
+   [
+    "delete",
+    "1 minister klimatu i środowiska kieruje działami administracji rządowej energia i klimat na podstawie 1 ust 2 pkt 1 i 2 rozporządzenia prezesa rady ministrów z dnia 19 grudnia 2023 r w sprawie szczegó",
+    ""
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 308,
+  "ref": 262,
+  "hyp": 252,
+  "matched": 252,
+  "n_hyp_notes": 10,
+  "miss": 0,
+  "label_miss": 10,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 834,
+  "ref": 1083,
+  "hyp": 1076,
+  "matched": 1076,
+  "n_hyp_notes": 7,
+  "miss": 0,
+  "label_miss": 7,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Ustawa"
+ }
+]

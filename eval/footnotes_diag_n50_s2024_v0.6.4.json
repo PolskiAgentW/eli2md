@@ -1,0 +1,735 @@
+[
+ {
+  "pos": 963,
+  "ref": 121,
+  "hyp": 120,
+  "matched": 120,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 373,
+  "ref": 163,
+  "hyp": 176,
+  "matched": 157,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 19,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 9,
+  "runs": [
+   [
+    "insert",
+    "",
+    "imię i nazwisko oraz numer dokumentu tożsamości imię i nazwisko oraz podpis osoby upoważnionej do reprezentowania podmiotu składającego zapotrzebowanie"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1492,
+  "ref": 117,
+  "hyp": 115,
+  "matched": 115,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1185,
+  "ref": 133,
+  "hyp": 127,
+  "matched": 127,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 623,
+  "ref": 44,
+  "hyp": 43,
+  "matched": 43,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 411,
+  "ref": 146,
+  "hyp": 142,
+  "matched": 142,
+  "n_hyp_notes": 4,
+  "miss": 0,
+  "label_miss": 4,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1818,
+  "ref": 133,
+  "hyp": 132,
+  "matched": 132,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 840,
+  "ref": 80,
+  "hyp": 103,
+  "matched": 78,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 25,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 11,
+  "runs": [
+   [
+    "insert",
+    "",
+    "n średnio średnio stosunkowo średnio niebezpieczna bezpieczna bezpieczna bezpieczna bezpieczna stosunkowo bezpieczna niebezpieczna bezpieczna bezpieczna bezpieczna umiarkowanie średnio brak wyniku bez"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1551,
+  "ref": 37,
+  "hyp": 36,
+  "matched": 36,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1468,
+  "ref": 75,
+  "hyp": 74,
+  "matched": 74,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1554,
+  "ref": 322,
+  "hyp": 315,
+  "matched": 315,
+  "n_hyp_notes": 7,
+  "miss": 0,
+  "label_miss": 7,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 544,
+  "ref": 0,
+  "hyp": 73,
+  "matched": 0,
+  "n_hyp_notes": 4,
+  "miss": 0,
+  "label_miss": 0,
+  "extra": 73,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 43,
+  "runs": [
+   [
+    "insert",
+    "",
+    "ustawa z dnia 22 czerwca 1995 r o zakwaterowaniu sił zbrojnych rzeczypospolitej polskiej dz u z 2022 r poz 1623 oraz z 2023 r poz 1872 niepotrzebne skreślić ustawa z dnia 22 czerwca 1995 r o zakwatero"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 503,
+  "ref": 43,
+  "hyp": 46,
+  "matched": 42,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 4,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 4,
+  "runs": [
+   [
+    "insert",
+    "",
+    "3 3 2 3"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1303,
+  "ref": 85,
+  "hyp": 83,
+  "matched": 83,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1665,
+  "ref": 210,
+  "hyp": 202,
+  "matched": 202,
+  "n_hyp_notes": 8,
+  "miss": 0,
+  "label_miss": 8,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1506,
+  "ref": 124,
+  "hyp": 123,
+  "matched": 123,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1021,
+  "ref": 108,
+  "hyp": 105,
+  "matched": 105,
+  "n_hyp_notes": 3,
+  "miss": 0,
+  "label_miss": 3,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 726,
+  "ref": 139,
+  "hyp": 137,
+  "matched": 137,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1080,
+  "ref": 40,
+  "hyp": 39,
+  "matched": 39,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1491,
+  "ref": 206,
+  "hyp": 200,
+  "matched": 200,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1261,
+  "ref": 825,
+  "hyp": 819,
+  "matched": 819,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1973,
+  "ref": 115,
+  "hyp": 751,
+  "matched": 43,
+  "n_hyp_notes": 37,
+  "miss": 71,
+  "label_miss": 1,
+  "extra": 708,
+  "miss_in_hyp_other": 71,
+  "extra_in_ref_other": 141,
+  "runs": [
+   [
+    "insert",
+    "",
+    "objaśnienia wzory zawierają przykładowy rok wytworzenia banderoli banderola każdego poszczególnego rodzaju ma w ramach roku kalendarzowego kolejny numer ewidencyjny przedstawiony przykładowo w postaci"
+   ],
+   [
+    "replace",
+    "niniejsze rozporządzenie było poprzedzone rozporządzeniem ministra finansów",
+    "należy podać odpowiednio podatkowych albo legalizacyjnych 3 należy wpisać odpowiednio importowanych nabywanych wewnątrzwspólnotowo albo wyprodukowanych na terytorium kraju 4 należy wpisać odpowiednio "
+   ],
+   [
+    "replace",
+    "dnia 7 czerwca 2019 r",
+    "propozycją naniesienia banderoli niepotrzebne skreślić objaśnienia należy podać właściwego naczelnika urzędu skarbowego należy wpisać odpowiednio importowanych nabywanych wewnątrzwspólnotowo albo wypr"
+   ],
+   [
+    "replace",
+    "sprawie",
+    "przypadku puszki lub butelki rodzaj opakowania np puszka lub butelka pochodzenie wyrobu należy podać odpowiednio termin wywozu wyrobów z których mają być zdjęte banderole należy podać dokładny adres o"
+   ],
+   [
+    "replace",
+    "akcyzowych znakami",
+    "banderolami niepotrzebne skreślić w przypadku składania w trakcie roku kalendarzowego zmiany wstępnego zapotrzebowania należy w odpowiednich kolumnach wskazać łączną liczbę banderol którą planuje się "
+   ],
+   [
+    "replace",
+    "dz u",
+    "należy wpisać odpowiednio podatkowych albo legalizacyjnych należy wpisać odpowiednio importowanych nabytych wewnątrzwspólnotowo albo wyprodukowanych na terytorium kraju należy wpisać odpowiednio wyrob"
+   ],
+   [
+    "replace",
+    "2022 r poz 1753 z 2023 r poz 1056 oraz z 2024 r poz 223 i 716 które traci moc z dniem wejścia w życie niniejszego rozporządzenia zgodnie z art 22 ust 3 ustawy z dnia 1 grudnia 2022 r o zmianie ustawy ",
+    "wnioskiem niepotrzebne skreślić poziomo pionowo nazwa wystawiającego upoważnienie objaśnienia należy wpisać odpowiednio podatkowych albo legalizacyjnych należy wpisać odpowiednio importowanych nabytyc"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 447,
+  "ref": 43,
+  "hyp": 42,
+  "matched": 42,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 634,
+  "ref": 222,
+  "hyp": 229,
+  "matched": 217,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 5,
+  "extra": 12,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 12,
+  "runs": [
+   [
+    "insert",
+    "",
+    "wymagane kwalifikacje dla pracowników służby bezpieczeństwa i higieny pracy określają odrębne przepisy"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1114,
+  "ref": 108,
+  "hyp": 106,
+  "matched": 106,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1442,
+  "ref": 36,
+  "hyp": 123,
+  "matched": 35,
+  "n_hyp_notes": 12,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 88,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 88,
+  "runs": [
+   [
+    "insert",
+    "",
+    "dotyczy oprogramowania komputerów stacjonarnych dla uczniów w szkołach ponadpodstawowych dotyczy oprogramowania komputerów stacjonarnych aio dla uczniów w szkołach ponadpodstawowych dotyczy oprogramow"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 677,
+  "ref": 771,
+  "hyp": 766,
+  "matched": 766,
+  "n_hyp_notes": 5,
+  "miss": 0,
+  "label_miss": 5,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 153,
+  "ref": 212,
+  "hyp": 205,
+  "matched": 205,
+  "n_hyp_notes": 7,
+  "miss": 0,
+  "label_miss": 7,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1498,
+  "ref": 43,
+  "hyp": 42,
+  "matched": 42,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1586,
+  "ref": 37,
+  "hyp": 36,
+  "matched": 36,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1776,
+  "ref": 43,
+  "hyp": 42,
+  "matched": 42,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 423,
+  "ref": 2078,
+  "hyp": 1978,
+  "matched": 1978,
+  "n_hyp_notes": 100,
+  "miss": 0,
+  "label_miss": 100,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1542,
+  "ref": 405,
+  "hyp": 323,
+  "matched": 291,
+  "n_hyp_notes": 14,
+  "miss": 106,
+  "label_miss": 8,
+  "extra": 32,
+  "miss_in_hyp_other": 67,
+  "extra_in_ref_other": 13,
+  "runs": [
+   [
+    "delete",
+    "1 minister zdrowia kieruje działem administracji rządowej zdrowie na podstawie 1 ust 2 rozporządzenia prezesa rady ministrów z dnia 18 grudnia 2023 r w sprawie szczegółowego zakresu działania ministra",
+    ""
+   ],
+   [
+    "replace",
+    "8 przez 1 pkt 3 rozporządzenia o którym mowa w odnośniku 2 9",
+    "imię i nazwisko osoby zgłaszającej podejrzenie choroby zawodowej __________________________________"
+   ],
+   [
+    "replace",
+    "10",
+    "ze zmianami wprowadzonym prz z ro o dze m ow w"
+   ],
+   [
+    "replace",
+    "11",
+    "ze zmianami wprowadzonym prz z ro o dze m ow w"
+   ],
+   [
+    "replace",
+    "12 ze zmianą wprowadzoną przez 1 rozporządzenia ministra zdrowia z dnia 13 września 2024 r zmieniającego rozporządzenie w sprawie sposobu dokumentowania chorób zawodowych i skutków tych chorób dz u po",
+    "______________________________"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 960,
+  "ref": 336,
+  "hyp": 332,
+  "matched": 332,
+  "n_hyp_notes": 7,
+  "miss": 0,
+  "label_miss": 4,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1894,
+  "ref": 37,
+  "hyp": 36,
+  "matched": 36,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1703,
+  "ref": 634,
+  "hyp": 618,
+  "matched": 568,
+  "n_hyp_notes": 17,
+  "miss": 53,
+  "label_miss": 13,
+  "extra": 50,
+  "miss_in_hyp_other": 44,
+  "extra_in_ref_other": 41,
+  "runs": [
+   [
+    "insert",
+    "",
+    "i odnośnik nr"
+   ],
+   [
+    "insert",
+    "",
+    "ze zmianą wprowadzoną przez 1 pkt 1 rozporządzenia ministra infrastruktury z dnia 5 sierpnia 2022 r zmieniającego rozporządzenie w sprawie przeglądów"
+   ],
+   [
+    "insert",
+    "",
+    "inspekcji oraz międzynarodowych świadectw w zakresie ochrony morza przed zanieczyszczaniem przez statki dz u poz 1707 które weszło w życie z dniem 14 września 2022 r"
+   ],
+   [
+    "delete",
+    "i odnośnik nr 2 ze zmianą wprowadzoną przez 1 pkt 1 rozporządzenia ministra infrastruktury z dnia 5 sierpnia 2022 r zmieniającego rozporządzenie w sprawie przeglądów i inspekcji oraz międzynarodowych ",
+    ""
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1786,
+  "ref": 367,
+  "hyp": 361,
+  "matched": 361,
+  "n_hyp_notes": 11,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1337,
+  "ref": 0,
+  "hyp": 236,
+  "matched": 0,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 0,
+  "extra": 236,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 210,
+  "runs": [
+   [
+    "insert",
+    "",
+    "3 53 55 56 54 n 14 16 17 61 e 4 53 55 57 36 n 14 16 17 21 e 5 53 56 5 15 n 14 16 16 48 e 6 53 56 18 40 n 14 16 15 23 e 7 53 56 19 01 n 14 16 20 00 e 8 53 56 21 17 n 14 16 36 74 e 9 53 56 27 29 n 14 17"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 304,
+  "ref": 1401,
+  "hyp": 1350,
+  "matched": 1350,
+  "n_hyp_notes": 51,
+  "miss": 0,
+  "label_miss": 51,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1089,
+  "ref": 643,
+  "hyp": 636,
+  "matched": 636,
+  "n_hyp_notes": 7,
+  "miss": 0,
+  "label_miss": 7,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Ustawa"
+ },
+ {
+  "pos": 436,
+  "ref": 484,
+  "hyp": 469,
+  "matched": 469,
+  "n_hyp_notes": 15,
+  "miss": 0,
+  "label_miss": 15,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1777,
+  "ref": 153,
+  "hyp": 282,
+  "matched": 149,
+  "n_hyp_notes": 7,
+  "miss": 0,
+  "label_miss": 4,
+  "extra": 133,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 133,
+  "runs": [
+   [
+    "insert",
+    "",
+    "układ współrzędnych płaskich prostokątnych pl 1992 jest jednym z układów tworzących państwowy system odniesień przestrzennych o którym mowa w przepisach wydanych na podstawie art 3 ust 5 ustawy z dnia"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 120,
+  "ref": 101,
+  "hyp": 100,
+  "matched": 100,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ }
+]

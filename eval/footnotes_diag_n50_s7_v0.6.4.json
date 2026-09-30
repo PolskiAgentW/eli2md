@@ -1,0 +1,811 @@
+[
+ {
+  "pos": 664,
+  "ref": 37,
+  "hyp": 36,
+  "matched": 36,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1942,
+  "ref": 23,
+  "hyp": 22,
+  "matched": 22,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 309,
+  "ref": 191,
+  "hyp": 186,
+  "matched": 186,
+  "n_hyp_notes": 5,
+  "miss": 0,
+  "label_miss": 5,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 809,
+  "ref": 115,
+  "hyp": 113,
+  "matched": 113,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1334,
+  "ref": 153,
+  "hyp": 295,
+  "matched": 149,
+  "n_hyp_notes": 8,
+  "miss": 0,
+  "label_miss": 4,
+  "extra": 146,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 146,
+  "runs": [
+   [
+    "insert",
+    "",
+    "specjalny obszar ochrony siedlisk ostoja kozubowska plh260029 składa się z czterech powiązanych funkcjonalnie enklaw układ współrzędnych płaskich prostokątnych pl 1992 jest jednym z układów tworzących"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 99,
+  "ref": 280,
+  "hyp": 269,
+  "matched": 269,
+  "n_hyp_notes": 11,
+  "miss": 0,
+  "label_miss": 11,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 149,
+  "ref": 56,
+  "hyp": 54,
+  "matched": 54,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1682,
+  "ref": 37,
+  "hyp": 36,
+  "matched": 36,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1098,
+  "ref": 40,
+  "hyp": 85,
+  "matched": 39,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 46,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 46,
+  "runs": [
+   [
+    "insert",
+    "",
+    "kody siedlisk są zgodne z rozporządzeniem ministra środowiska z dnia 13 kwietnia 2010 r w sprawie siedlisk przyrodniczych oraz gatunków będących przedmiotem zainteresowania wspólnoty a także kryteriów"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 193,
+  "ref": 162,
+  "hyp": 198,
+  "matched": 157,
+  "n_hyp_notes": 7,
+  "miss": 0,
+  "label_miss": 5,
+  "extra": 41,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 8,
+  "runs": [
+   [
+    "insert",
+    "",
+    "minister spraw wewnętrznych i administracji kieruje działem administracji rządowej sprawy wewnętrzne na podstawie"
+   ],
+   [
+    "insert",
+    "",
+    "ust 2 pkt 2 rozporządzenia prezesa rady ministrów z dnia 18 grudnia 2023 r w sprawie szczegółowego zakresu działania ministra spraw wewnętrznych i administracji dz u poz 2708"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 749,
+  "ref": 111,
+  "hyp": 107,
+  "matched": 107,
+  "n_hyp_notes": 4,
+  "miss": 0,
+  "label_miss": 4,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1194,
+  "ref": 239,
+  "hyp": 231,
+  "matched": 231,
+  "n_hyp_notes": 8,
+  "miss": 0,
+  "label_miss": 8,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1864,
+  "ref": 41,
+  "hyp": 40,
+  "matched": 40,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1040,
+  "ref": 292,
+  "hyp": 403,
+  "matched": 287,
+  "n_hyp_notes": 11,
+  "miss": 0,
+  "label_miss": 5,
+  "extra": 116,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 27,
+  "runs": [
+   [
+    "insert",
+    "",
+    "ze zmianami wprowadzonymi przez 1 pkt 2 rozporządzenia o którym mowa w odnośniku 3 ze zmianami wprowadzonymi przez 1 pkt 3 rozporządzenia o którym mowa w odnośniku 3 ze zmianami wprowadzonymi przez 1 "
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 440,
+  "ref": 0,
+  "hyp": 292,
+  "matched": 0,
+  "n_hyp_notes": 3,
+  "miss": 0,
+  "label_miss": 0,
+  "extra": 292,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 259,
+  "runs": [
+   [
+    "insert",
+    "",
+    "minister rolnictwa i rozwoju wsi kieruje działem administracji rządowej rolnictwo na podstawie 1 ust 2 pkt 1 rozporządzenia prezesa rady ministrów z dnia 18 grudnia 2023 r w sprawie szczegółowego zakr"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 77,
+  "ref": 34,
+  "hyp": 101,
+  "matched": 33,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 68,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 7,
+  "runs": [
+   [
+    "insert",
+    "",
+    "niniejsze rozporządzenie dokonuje w zakresie swojej regulacji wdrożenia dyrektywy komisji 2006 17 we z dnia 8 lutego 2006 r wprowadzającej w życie dyrektywę 2004 23 we parlamentu europejskiego i rady "
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 177,
+  "ref": 234,
+  "hyp": 225,
+  "matched": 225,
+  "n_hyp_notes": 9,
+  "miss": 0,
+  "label_miss": 9,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 889,
+  "ref": 204,
+  "hyp": 195,
+  "matched": 195,
+  "n_hyp_notes": 9,
+  "miss": 0,
+  "label_miss": 9,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 857,
+  "ref": 99,
+  "hyp": 97,
+  "matched": 97,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 144,
+  "ref": 36,
+  "hyp": 35,
+  "matched": 35,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 493,
+  "ref": 200,
+  "hyp": 194,
+  "matched": 194,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 186,
+  "ref": 116,
+  "hyp": 114,
+  "matched": 114,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1129,
+  "ref": 144,
+  "hyp": 141,
+  "matched": 141,
+  "n_hyp_notes": 3,
+  "miss": 0,
+  "label_miss": 3,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 870,
+  "ref": 449,
+  "hyp": 566,
+  "matched": 442,
+  "n_hyp_notes": 14,
+  "miss": 0,
+  "label_miss": 7,
+  "extra": 124,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 28,
+  "runs": [
+   [
+    "insert",
+    "",
+    "w brzmieniu ustalonym przez 1 pkt 2 rozporządzenia o którym mowa w odnośniku 3 co najmniej jedno stanowisko pomiarowe na obszarach na których prawdopodobne jest narażenie ludności na najwyższe stężeni"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 122,
+  "ref": 105,
+  "hyp": 102,
+  "matched": 102,
+  "n_hyp_notes": 3,
+  "miss": 0,
+  "label_miss": 3,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1694,
+  "ref": 71,
+  "hyp": 69,
+  "matched": 69,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1159,
+  "ref": 31,
+  "hyp": 30,
+  "matched": 30,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 254,
+  "ref": 717,
+  "hyp": 779,
+  "matched": 700,
+  "n_hyp_notes": 16,
+  "miss": 7,
+  "label_miss": 10,
+  "extra": 79,
+  "miss_in_hyp_other": 1,
+  "extra_in_ref_other": 58,
+  "runs": [
+   [
+    "replace",
+    "1",
+    "na dzień ogłoszenia obwieszczenia w dzienniku ustaw rzeczypospolitej polskiej działem administracji rządowej rynki rolne kieruje"
+   ],
+   [
+    "delete",
+    "kieruje działem administracji rządowej rynki rolne",
+    ""
+   ],
+   [
+    "insert",
+    "",
+    "i odnośnik nr"
+   ],
+   [
+    "insert",
+    "",
+    "ze zmianą wprowadzoną przez 1 pkt 1 rozporządzenia ministra rolnictwa i rozwoju wsi z dnia 5 grudnia 2016 r zmieniającego rozporządzenie w sprawie szczegółowego zakresu i sposobu znakowania nieprzezna"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1941,
+  "ref": 0,
+  "hyp": 230,
+  "matched": 0,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 0,
+  "extra": 230,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 25,
+  "runs": [
+   [
+    "insert",
+    "",
+    "w przypadku wypełnienia pozycji 91 9 2 9 3 9 4 informacje w nich podane podlegają udostępnieniu z rejestru regon zgodnie z art 45 ust 1 ustawy z dnia 29 czerwca 1995 stan wpisu można potwierdzić na st"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 458,
+  "ref": 213,
+  "hyp": 507,
+  "matched": 209,
+  "n_hyp_notes": 4,
+  "miss": 3,
+  "label_miss": 1,
+  "extra": 298,
+  "miss_in_hyp_other": 1,
+  "extra_in_ref_other": 35,
+  "runs": [
+   [
+    "delete",
+    "rozporządzeniem",
+    ""
+   ],
+   [
+    "delete",
+    "rozporządzeniem",
+    ""
+   ],
+   [
+    "delete",
+    "rozporządzeniem",
+    ""
+   ],
+   [
+    "insert",
+    "",
+    "a miejsce pobytu stałego lub pobytu czasowego karta trwającego ponad 3 miesiące b adres do korespondencji seria numer data wydania 11 osoba do kontaktu nazwisko imiona adres zameldowania lub adres zam"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1292,
+  "ref": 805,
+  "hyp": 765,
+  "matched": 765,
+  "n_hyp_notes": 40,
+  "miss": 0,
+  "label_miss": 40,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1285,
+  "ref": 42,
+  "hyp": 42,
+  "matched": 41,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 1,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [
+   [
+    "insert",
+    "",
+    "rewers"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 127,
+  "ref": 1105,
+  "hyp": 1063,
+  "matched": 1063,
+  "n_hyp_notes": 45,
+  "miss": 0,
+  "label_miss": 42,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1182,
+  "ref": 131,
+  "hyp": 129,
+  "matched": 129,
+  "n_hyp_notes": 2,
+  "miss": 0,
+  "label_miss": 2,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 1200,
+  "ref": 37,
+  "hyp": 53,
+  "matched": 36,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 17,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 1,
+  "runs": [
+   [
+    "insert",
+    "",
+    "5 6 5 6 ord og 5 3 6 5 6 5 6 5 2 5 2"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 813,
+  "ref": 1926,
+  "hyp": 1856,
+  "matched": 1856,
+  "n_hyp_notes": 86,
+  "miss": 0,
+  "label_miss": 70,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 102,
+  "ref": 142,
+  "hyp": 138,
+  "matched": 138,
+  "n_hyp_notes": 4,
+  "miss": 0,
+  "label_miss": 4,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 453,
+  "ref": 263,
+  "hyp": 378,
+  "matched": 256,
+  "n_hyp_notes": 13,
+  "miss": 0,
+  "label_miss": 7,
+  "extra": 122,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 68,
+  "runs": [
+   [
+    "insert",
+    "",
+    "w brzmieniu ustalonym przez 1 pkt 1 rozporządzenia ministra edukacji i nauki z dnia 14 września 2023 r zmieniającego rozporządzenie w sprawie standardu kształcenia przygotowującego do wykonywania zawo"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 96,
+  "ref": 0,
+  "hyp": 5,
+  "matched": 0,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 0,
+  "extra": 5,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 5,
+  "runs": [
+   [
+    "insert",
+    "",
+    "protokolant grażyna szałygo katarzyna wajer"
+   ]
+  ],
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 1759,
+  "ref": 40,
+  "hyp": 39,
+  "matched": 39,
+  "n_hyp_notes": 1,
+  "miss": 0,
+  "label_miss": 1,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 273,
+  "ref": 1094,
+  "hyp": 1182,
+  "matched": 1064,
+  "n_hyp_notes": 30,
+  "miss": 0,
+  "label_miss": 30,
+  "extra": 118,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 69,
+  "runs": [
+   [
+    "insert",
+    "",
+    "miejscowość data własnoręczny podpis miejscowość data własnoręczny podpis właściwe podkreślić wypełniają osoby które oświadczyły że służyły pracowały lub współpracowały z organami bezpieczeństwa państ"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 594,
+  "ref": 198,
+  "hyp": 193,
+  "matched": 193,
+  "n_hyp_notes": 7,
+  "miss": 0,
+  "label_miss": 5,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 859,
+  "ref": 736,
+  "hyp": 730,
+  "matched": 730,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 6,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Ustawa"
+ },
+ {
+  "pos": 296,
+  "ref": 255,
+  "hyp": 245,
+  "matched": 245,
+  "n_hyp_notes": 10,
+  "miss": 0,
+  "label_miss": 10,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1108,
+  "ref": 146,
+  "hyp": 251,
+  "matched": 143,
+  "n_hyp_notes": 6,
+  "miss": 0,
+  "label_miss": 3,
+  "extra": 108,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 108,
+  "runs": [
+   [
+    "insert",
+    "",
+    "specjalny obszar ochrony siedlisk putnowice plh060074 składa się z sześciu powiązanych funkcjonalnie enklaw układ współrzędnych płaskich prostokątnych pl 1992 jest jednym z układów tworzących państwow"
+   ]
+  ],
+  "type": "Rozporządzenie"
+ },
+ {
+  "pos": 242,
+  "ref": 889,
+  "hyp": 872,
+  "matched": 872,
+  "n_hyp_notes": 17,
+  "miss": 0,
+  "label_miss": 17,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1170,
+  "ref": 336,
+  "hyp": 327,
+  "matched": 327,
+  "n_hyp_notes": 9,
+  "miss": 0,
+  "label_miss": 9,
+  "extra": 0,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 0,
+  "runs": [],
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 632,
+  "ref": 257,
+  "hyp": 1116,
+  "matched": 250,
+  "n_hyp_notes": 8,
+  "miss": 0,
+  "label_miss": 7,
+  "extra": 866,
+  "miss_in_hyp_other": 0,
+  "extra_in_ref_other": 64,
+  "runs": [
+   [
+    "insert",
+    "",
+    "ustawa utraciła moc z dniem 25 maja 2018 r z wyjątkiem art 1 art 2 art 3 ust 1 art 4 7 art 14 22 art 23 28 art 31 oraz rozdziałów 4 5 i 7 które zachowały moc w odniesieniu do przetwarzania danych osob"
+   ]
+  ],
+  "type": "Obwieszczenie"
+ }
+]
