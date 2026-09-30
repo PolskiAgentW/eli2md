@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.9**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.10**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -174,6 +174,30 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.10** (2026-09-30). Dz.U. 2000–2011: strony, na których przypis zajmuje większość miejsca. (1) Łamy nad
+przypisem mają tu 2–3 pełne wiersze. Rynna (odstęp między łamami) wymagała 3 wierszy kończących się na jednej
+krawędzi i bez dziur w wierszu; dziurę po drobnym znaczniku przypisu („a)²⁾ zarobkowego”, DU/2008/1342 s. 5) wypełnia
+teraz ten znacznik. Gdy są tylko 2 takie wiersze, rozstrzyga rynna z innych stron tego samego PDF-u (konwerter czyta
+wtedy PDF drugi raz; DU/2004/959 s. 1). Wcześniej oba łamy i przypis czytały się jako jeden przemieszany tekst.
+(2) Rozmiar czcionki treści na takiej stronie to rozmiar tekstu tuż nad kreską „———”, a nie najczęstszy na stronie
+(przypis), inaczej znaczniki 7,5 pt stawały się tekstem. Na stronach starych wydań znacznik równy 0,75 rozmiaru treści
+(7,5 pt przy 10 pt, rok 2004) jest znacznikiem. Na stronach 2012+ nadal nie (DU/2025/1057: liczby 7,5 pt w tabeli).
+(3) Przypisy pod „———” w łamie, gdy niżej na stronie zaczyna się załącznik: kreska obejmuje wtedy tylko swój łam
+(DU/2005/1468 s. 4). „———” bywa złożona drobnym drukiem (9 pt), więc porównuję też z rozmiarem treści.
+(4) Stopka wydawcy zaczyna się też od „Szanowni Państwo” bez „!” (DU/2002/933 s. 3: ogłoszenie o Monitorze Polskim B).
+Wariant od „Egzemplarze bieżące…” odrzuciłem, bo ucinał tekst (DU/2001/1622: ten blok stoi obok końca wyroku).
+Wynik 2012+ bez zmian: 93 PDF-y (DU 2021–2026, MP 2012–2025) bajt w bajt jak w 0.6.9, bez linii `converter`.
+**Test 2000–2011, s5203** (70 wylosowanych, 67 poza wcześniejszymi próbami, zapisana przed oceną, oceniona raz;
+0.6.9 i 0.6.10 tymi samymi skryptami): treść główna R 0.7130 → 0.7134, P 0.9481 → 0.9562. Niski recall to jeden akt:
+DU/2001/1186 (269 stron tabel wyników wyborów) nie ma warstwy tekstowej na 268 stronach, a ocena liczy bez OCR. Bez
+niego: R 0.9975 → 0.9981, P 0.9481 → 0.9562. Przypisy R 0.9476 → 0.9667 (akty z R < 0,95: 9 → 4), P 0.9919 → 0.9918;
+załączniki R 0.9349 → 0.9354, P 0.9789 → 0.9903. Drzewo: treść R 0.9906 → 0.9947, P 0.9962 → 0.9975; załączniki
+R 0.7543 → 0.9930, P 0.8771 → 1.0000. Próba s5202 (67 aktów) mierzyła wersję przed zmianą (4): treść R 0.9486 → 0.9504
+(bez DU/2000/985, też bez warstwy tekstowej: 0.9940 → 0.9960), P 0.9630 → 0.9661; zmianę (4) znalazłem na tej próbie,
+więc jej zysk tam (P → 0.9680) nie jest niezależny. Nadmiar w treści to głównie podpisy sędziów w orzeczeniach TK
+(HTML ich nie ma) i DU/2010/277: jego HTML kończy się „Pokaż całość”, a miara bierze z niego 3347 słów treści przy
+ok. 10 tys. słów w pliku (przyczyny nie sprawdziłem). Wyniki: `eval/*_test2000_s520{2,3}_*`.
 
 **0.6.9** (2026-09-30). Dz.U. 2000–2011, dalej: (1) stopka wydawcy z ostatniej strony wydania („Wydawca: Kancelaria
 Prezesa Rady Ministrów… ISSN 0867-3411”, ogłoszenia o prenumeracie) nie jest tekstem aktu (DU/2000/291, DU/2003/577);
@@ -611,6 +635,10 @@ zbiorze 2025–2026 to ok. 35 min czasu jednego wątku.
   tekstową z samym tytułem (np. MP/2026/869). Do 0.6.3 OCR jej nie czytał. Od 0.6.4 z `--ocr` czyta taki
   obraz, gdy wygląda na tekst ciągły (opis wyżej, w sekcji o OCR). W 2025–2026 tak jest na 25 z 43 umów. Obrazy, w których przeważają
   krótkie linie (tytuły, nagłówki artykułów, np. MP/2012/646 s. 1), dalej zostają z notką.
+- Dz.U. 2000–2011: część PDF-ów nie ma warstwy tekstowej (w próbach s5202 i s5203 po 1 z 67 aktów: DU/2000/985,
+  DU/2001/1186). Bez `--ocr` zostaje z nich tylko notka. Podpisy sędziów w orzeczeniach TK bywają sklejone w jeden
+  wiersz. Miary dla tych lat pochodzą z aktów, które mają HTML (głównie ustawy, obwieszczenia i orzeczenia), a akty
+  bez HTML to w większości rozporządzenia, których ta miara nie obejmuje.
 - Domyślnie bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 53 356 stron
   w indeksie z 29.09.2026), głównie umowy międzynarodowe. OCR (`--ocr`, od 0.6.0) opisany niżej.
 
