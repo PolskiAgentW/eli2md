@@ -3,7 +3,7 @@ import unittest
 from eli2md.eli import parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
                         _QuarkWords, _drop_colophon, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
-                        _gutter, _plain_math, _quark_gap, _rows, _segment, _single_glyphs, _to_frame, _watermark, page_ranges,
+                        _gutter, _plain_math, _quark_gap, _rows, _segment, quote_depths, _single_glyphs, _to_frame, _watermark, page_ranges,
                         to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
@@ -608,6 +608,19 @@ class Basic(unittest.TestCase):
         self.assertEqual(body[1].text, "(Dz. U. Nr 16, poz. 93, z późn. zm.[^2])")
         body, _ = _frame_lines(r("Dziennik Ustaw – 2 – Poz. 959", 38, 557, 50) + line, 595, 842, [], 2)
         self.assertNotIn("[^2]", " ".join(l.text for l in body))
+
+    def test_article_after_quote_not_closed(self):
+        # DU/2004/895: pkt 17 of Art. 1 ends "…z późn. zm.)." without "”;"; "Art. 2." is an article of this act again.
+        # "Art. 35b." in the quote goes on the quoted "„Art. 35a.".
+        texts = ["Art. 1. W ustawie wprowadza się następujące zmiany:", "17) po art. 35 dodaje się art. 35a i 35b:",
+                 "„Art. 35a. Tekst.", "Art. 35b. Tekst z późn. zm.).", "Art. 2. W ustawie wprowadza się zmianę.",
+                 "Art. 3. W ustawie art. 1 otrzymuje brzmienie:", "Art. 4. Tekst bez cudzysłowu.”;",
+                 "Art. 4. Ustawa wchodzi w życie po upływie 14 dni od dnia ogłoszenia."]
+        blocks = [Block("p", t, 1) for t in texts]
+        self.assertEqual(quote_depths(blocks), [0, 0, 0, 1, 0, 0, 0, 0])
+        # a quoted "„Art. 3." (of the amended act) goes on with its "Art. 4.", which stays quoted
+        self.assertEqual(quote_depths(blocks[:6] + [Block("p", "„Art. 3. Tekst.", 1)] + blocks[6:7]),
+                         [0, 0, 0, 1, 0, 0, 0, 1])
 
     def _shared_page(self, header):
         # DU/2005/1369 p. 2: the end of act 1369 in two columns, its footnote under "———" in the left column, then

@@ -67,6 +67,26 @@ class Tree(unittest.TestCase):
         self.assertEqual(paths(t["body"]), ["par_1", "par_1/lit_a", "par_1/lit_b"])
         self.assertEqual(t["body"][0]["children"][0]["children"][0]["text"], "I. Pakiet 1. Uprawy")
 
+    def test_quote_not_closed_by_the_source(self):
+        # DU/2007/162: "…sądu,”;" closes only the inner of two quotes; the next point of the amending act ends the
+        # outer one. Points of a quoted amending article ("2) uchyla się art. 6a;" after "„Art. 6. … 20) …”;",
+        # DU/2008/539) stay quoted.
+        t = md_to_tree(md("##### Art. 1.", "W ustawie z dnia 1 lutego 2006 r. wprowadza się następujące zmiany:",
+                          "1) art. 30 otrzymuje brzmienie:",
+                          "„Art. 30. W ustawie z dnia 26 maja 1982 r. wprowadza się następujące zmiany:",
+                          "1) w art. 68 ust. 3 otrzymuje brzmienie:", "„3. Do wniosku dołącza się informację.”;",
+                          "2) w art. 72 w ust. 1 po pkt 6 dodaje się pkt 6a w brzmieniu:",
+                          "„6a) złożenia oświadczenia,”;", "2) art. 31 otrzymuje brzmienie:", "„Art. 31. Tekst.”;",
+                          "3) w art. 34:", "a) pkt 1 otrzymuje brzmienie:", "„1) tekst,”,", "b) uchyla się pkt 2."))
+        self.assertEqual(paths(t["body"]), ["art_1", "art_1/pkt_1", "art_1/pkt_2", "art_1/pkt_3", "art_1/pkt_3/lit_a",
+                                            "art_1/pkt_3/lit_b"])
+        t = md_to_tree(md("##### Art. 1.", "W ustawie wprowadza się następujące zmiany:",
+                          "1) art. 245 ustawy, który stanowi:", "„Art. 245. W ustawie wprowadza się następujące zmiany:",
+                          "1) art. 6 otrzymuje brzmienie:", "„Art. 6. Do zadań należy:", "1) pierwsze;",
+                          "2) drugie.”;", "2) uchyla się art. 6a;", "3) w art. 6b ust. 1 otrzymuje brzmienie:",
+                          "„1. Tekst.”.”;", "2) art. 21 ustawy, który stanowi:", "„Art. 21. Tekst.”."))
+        self.assertEqual(paths(t["body"]), ["art_1", "art_1/pkt_1", "art_1/pkt_2"])
+
     def test_ocr_paragraphs_are_not_units(self):
         t = md_to_tree(md("##### Art. 1.", "Tekst.", "> [Strona 2 PDF nie ma czytelnej warstwy tekstowej. Tekst poniżej odczytał OCR "
                           "(tesseract 5.5.0, pol+eng). Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]",

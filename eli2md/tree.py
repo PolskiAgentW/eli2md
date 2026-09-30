@@ -81,7 +81,8 @@ COMMON_PART = re.compile(rf"^(?:[{LOWER}]|–\s)")  # "część wspólna" after 
 ANNOUNCES_QUOTE = re.compile(r"(?:brzmienie|brzmieniu)\s*:\s*$")  # "… otrzymuje brzmienie:", "… w brzmieniu:"
 # the instruction of a point of an amending act ("13) art. 31 otrzymuje brzmienie:", "20) w załączniku do ustawy wprowadza
 # się następujące zmiany:"), for a quote the source did not close (tree_depths)
-AMENDS = re.compile(r"(?:brzmieni[eua]|dodaje\s+się|uchyla\s+się|skreśla\s+się|zastępuje\s+się|wprowadza\s+się)")
+AMENDS = re.compile(r"(?:brzmieni[eua]|dodaje\s+się|uchyla\s+się|skreśla\s+się|zastępuje\s+się|wprowadza\s+się"
+                    r"|^\S+\)\s+w\s+(?:art\.|§|załączniku)[^:]{0,40}:\s*$)")  # "16) w art. 34:" (DU/2007/162)
 # Rows of tables and forms that look like units (_Builder.table_row). The Markdown has no table markup (pdf.py
 # flattens tables into paragraphs), so these go by the text and the numbering only.
 # A point of a list of coordinates: "6. 54°10′43,83″ N 19°22′52,30″ E" (DU/2024/1594), "2) 52°36'08"N 019°39'05"E"
