@@ -65,6 +65,7 @@ DUP_TOL = 0.3  # pt; a char drawn twice repeats within this distance (<= 0.1pt i
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
 CID = re.compile(r"\(cid:\d+\)")  # a glyph the PDF font does not map to Unicode (pdfminer's placeholder)
 FOOTNOTE_MARK = re.compile(r"^\d{1,3}\)?[,.;:]?$")
+FOOTNOTE_TYPE = 9.5  # pt; footnotes are set in 9pt, body text in 10pt
 # Small digits without ")" are not footnote markers but unit numbers (Art. 41¹), units (m²)
 # or chemical subscripts (P₂O₅). Kept as Unicode super/subscript digits.
 SUPER = str.maketrans("0123456789abcdefghijklmnoprstuvwxyz", SUP_CHARS)
@@ -271,16 +272,18 @@ def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
     page is read in a rotated frame. Pages with mostly upright text are read as before.
     """
     angles = Counter(_char_angle(c) for c in page.chars)
+    # the footnote rule is usually a rect; some PDFs draw it as a line (DU/2024/1346, DU/2024/1018)
+    rects = page.rects + [{**x, "line": True} for x in page.lines]
     if not angles or angles.most_common(1)[0][0] == 0:
         return [(page.extract_words(extra_attrs=["size"], keep_blank_chars=False),
-                 float(page.width), float(page.height), page.rects)]
+                 float(page.width), float(page.height), rects)]
     frames = []
     w, h = float(page.width), float(page.height)
     for rot, _ in angles.most_common():
         chars = _dedupe([_to_frame(c, rot, w, h) for c in page.chars if _char_angle(c) == rot])
         fw, fh = (h, w) if rot in (90, 270) else (w, h)
         words = extract_words(chars, extra_attrs=["size"], keep_blank_chars=False)
-        frames.append((words, fw, fh, [_to_frame(r, rot, w, h) for r in page.rects]))
+        frames.append((words, fw, fh, [_to_frame(r, rot, w, h) for r in rects]))
     return frames
 
 
@@ -432,9 +435,13 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
 
     rule_top = None
     for r in rects:
-        if r["height"] < 1.5 and 130 < r["width"] < 160 and r["x0"] < pw * 0.2 and r["top"] > ph * 0.3 \
-                and _free(r, rects):
-            rule_top = r["top"] if rule_top is None else min(rule_top, r["top"])
+        if r["height"] < 1.5 and 130 < r["width"] < 160 and r["x0"] < pw * 0.2 and _free(r, rects):
+            # A rule drawn as a line, or one high on a page of footnotes only (DU/2024/1539 p. 2 at 25%
+            # of the page), counts only with nothing but footnote type below it (DU/2024/1346 p. 1).
+            below = [w for w in words if w["top"] > r["top"]]
+            small = bool(below) and all(w["size"] < FOOTNOTE_TYPE for w in below)
+            if (r["top"] > ph * 0.3 and not r.get("line")) or (r["top"] > ph * 0.1 and small):
+                rule_top = r["top"] if rule_top is None else min(rule_top, r["top"])
 
     body, notes = [], []
     for r in rows:

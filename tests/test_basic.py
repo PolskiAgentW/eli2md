@@ -241,6 +241,29 @@ class Basic(unittest.TestCase):
         self.assertTrue(_free(rule, [rule, border, next_cell]))
         self.assertFalse(_free(border, [rule, border, next_cell]))
 
+    def test_footnote_rule_high_or_drawn_as_line(self):
+        def w(text, x0, top, size):
+            return {"text": text, "x0": x0, "x1": x0 + 5 * len(text), "top": top, "bottom": top + size, "size": size}
+
+        def rule(top, line=False):
+            r = {"x0": 51.0, "x1": 195.6, "top": top, "bottom": top + 0.5, "width": 144.6, "height": 0.5}
+            return {**r, "line": True} if line else r
+        # a page of footnotes only: the rule at 25% of the page, 9pt below (DU/2024/1539 p. 2)
+        page = [w("USTAWA", 250, 100, 11), w("o", 250, 130, 10), w("transporcie", 260, 130, 10),
+                w("1)", 51, 216, 6), w("Niniejsza", 64, 216, 9), w("ustawa", 114, 216, 9)]
+        page += [w("dyrektywy", 60, 228 + 12 * k, 9) for k in range(40)]
+        body, notes = _frame_lines(page, 595, 842, [rule(209)], 1)
+        self.assertEqual([l.text for l in body], ["USTAWA", "o transporcie"])
+        self.assertTrue(notes[0].text.startswith("[^1] Niniejsza"))
+        # the rule drawn as a line (DU/2024/1346 p. 1)
+        body, notes = _frame_lines(page, 595, 842, [rule(209, line=True)], 1)
+        self.assertEqual(len(body), 2)
+        # a high rule or a line with body type below it is not the footnote rule
+        page2 = page + [w("Art.", 51, 760, 10), w("1.", 75, 760, 10)]
+        for r in (rule(209), rule(209, line=True), rule(600, line=True)):
+            body, notes = _frame_lines(page2, 595, 842, [r], 1)
+            self.assertEqual(notes, [], r)
+
     def test_segment_small_gap_units(self):
         # line pitch 12 pt (gap 2), units 14 pt (gap 4): below the 0.45 * size threshold, above the usual gap
         def line(top, x0, x1, text):
