@@ -86,11 +86,11 @@ Przyjętych jest tylko 34, więc obejrzałem **wszystkie 34** zamiast próby 30.
 - Przyjęte: 34/34 to skany tekstu. Na 5 z nich oprócz tekstu są podpisy lub wpisy odręczne. OCR daje z nich
   śmieci w tekście, np. DU/2025/1604 s. 78 „this <Q. day of spó pa 2022”, DU/2026/286 s. 50
   „à VAR4Oy (E, ce 7 6” jour de an vier 202 à”, MP/2025/442 s. 1 „„... 3 =”. Pozostałe z tej piątki to
-  DU/2026/204 s. 40 i MP/2025/348 s. 1 (odręczne nazwiska w tekście).
+  DU/2026/204 s. 40 (podpisy, odręczna data) i MP/2025/348 s. 1 (odręczne nazwiska i data w tekście).
 - Odrzucone, skan tekstu (pominięty): DU/2026/818 s. 1 (tytuł i preambuła umowy w krótkich, wyśrodkowanych
   liniach).
 - Odrzucone, nie tekst: znaki drogowe (DU/2025/100 s. 135), mapy (DU/2025/1075 s. 2, MP/2026/343 s. 19),
-  rysunek techniczny (DU/2025/1323 s. 18), wzory legitymacji i dokumentów (DU/2025/1326 s. 6, DU/2025/687 s. 2),
+  fragment rysunku, kreskowany kształt (DU/2025/1323 s. 18), wzory legitymacji i dokumentów (DU/2025/1326 s. 6, DU/2025/687 s. 2),
   logo i emblematy (DU/2025/1758 s. 2, DU/2025/1768 s. 3), rysunki przedmiotów, mundurów i pojazdów
   (DU/2025/26 s. 7, DU/2026/131 s. 8, DU/2026/501 s. 18), wzór oznakowania (DU/2025/295 s. 4),
   tablica drogowa (DU/2026/132 s. 13), formularze (DU/2026/537 s. 8; DU/2026/872 s. 39 z warstwą tekstową nad
