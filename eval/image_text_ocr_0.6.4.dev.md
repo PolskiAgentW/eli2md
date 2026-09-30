@@ -48,7 +48,8 @@ Bez OCR kod nie woła niczego nowego. Wynik jest bajtowo taki sam (pkt 4).
 
 Źródło: `pages_with_images` z front matter opublikowanych plików 0.6.3 (DU i MP, lata 2025–2026). Mamy
 824 strony w 227 aktach (DU 631, MP 193). Dla każdej zapisałem odczyt OCR i decyzję reguły.
-Decyzję liczy funkcja z pakietu (`ocr.text_image`) na zapisanych odczytach.
+Decyzję liczy funkcja z pakietu (`ocr.text_image`) na zapisanych odczytach. Decyzje, cechy i czasy każdej
+strony są w `image_text_ocr_0.6.4.dev.json`.
 
 | | DU | MP | razem |
 |---|---:|---:|---:|
@@ -153,7 +154,25 @@ notka s. 1 zamieniona na notkę OCR i 8 akapitów).
 
 ## 4. Bez OCR wynik się nie zmienia
 
-WYNIKI_BEZ_OCR
+Porównałem Markdown bez OCR (`to_markdown(convert(pdf), meta)`) z nowego kodu i z kodu sprzed zmiany (HEAD
+d30b9ef, eksport `git archive`):
+- 227 aktów 2025–2026 z obrazami i 40 losowych innych aktów 2025–2026 (seed 64, do 60 stron): 267 z 267
+  plików identycznych bajt w bajt;
+- 100 aktów z próbek dev (`sample_2024_n50_s2024.json`, `sample_2024_n50_s7.json`, bez front matter, bo nie
+  mają `meta.json`): 100 ze 100 identycznych;
+- z tych 267 aktów 193 opublikowano bez `pages_ocr` (bez tekstu OCR). Ich nowy Markdown jest identyczny
+  z opublikowanymi plikami 0.6.3. Pozostałych 74 nie porównywałem z opublikowanymi, bo te mają tekst OCR
+  stron bez warstwy tekstowej.
+
+Ewaluacje dev (bez OCR), nowy kod:
+- `evaluate.py`: wynik identyczny z `results_dev_s2024_v0.6.3.dev_F.txt` i `results_dev_s7_v0.6.3.dev_F.txt`
+  (wszystkie wiersze po usunięciu czasów). s2024: body micro R=0.9939 P=0.9830; s7: body micro R=0.9991
+  P=0.9983.
+- `structure.py` i `tree_eval.py`: wynik identyczny z tymi samymi skryptami uruchomionymi na kodzie sprzed
+  zmiany (oba próbki, wszystkie wiersze). Od plików `*_v0.6.3.dev_F.txt` oba kody różnią się w 3–4 wierszach
+  (DU/2024/440, 813, 840, załączniki). Pliki `_F` powstały na gałęzi wątku F przed scaleniem pozostałych
+  wątków, więc różnica jest wcześniejsza niż ta zmiana. Nie badałem jej.
+- Testy jednostkowe: 56, wszystkie przechodzą (`python -m unittest discover -s tests`).
 
 ## 5. selfcheck
 
