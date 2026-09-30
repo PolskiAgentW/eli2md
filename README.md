@@ -451,7 +451,7 @@ tekstową. Robi to, jeśli nad obrazem nie leży tekst z warstwy (> 30 znaków o
 formularza). Tekst przyjmuje tylko wtedy, gdy wygląda na skan tekstu ciągłego (`ocr.text_image`):
 - mediana pewności ≥ 95, co najmniej 5 linii i słowa funkcyjne jakiegoś języka,
 - ≥ 75% tokenów to słowa,
-- co najmniej połowa linii ma ≥ 45 znaków i zajmuje ≥ 60% szerokości obrazu,
+- co najmniej połowa linii ma ≥ 45 znaków i co najmniej połowa zajmuje ≥ 60% szerokości obrazu,
 - mało symboli (`|`, `%`, `=` …),
 - żaden akapit nie zaczyna się od „Tabela”, „Wykres”, „Rys.”, „Mapa”, „Źródło” itp.
 
@@ -463,7 +463,7 @@ kolumna `image_ocr_pages`. Bez `--ocr` wynik się nie zmienia.
 
 Pomiar na wszystkich 824 stronach z obrazem w danych 2025–2026 (DU 631, MP 193;
 `eval/image_text_ocr_0.6.4.dev.md`):
-- Przyjętych jest 34 stron z 29 umów międzynarodowych. Obejrzałem wszystkie i wszystkie to skany tekstu,
+- Przyjęte są 34 strony z 29 umów międzynarodowych. Obejrzałem wszystkie i wszystkie to skany tekstu,
   ale na 5 są podpisy lub wpisy odręczne, które dają w OCR śmieci.
 - W losowej próbie 20 odrzuconych 19 to nie tekst (mapy, rysunki, logo, formularze, wzory legitymacji).
   Jeden to pominięty obraz tekstu (tytuł i preambuła w krótkich liniach).
