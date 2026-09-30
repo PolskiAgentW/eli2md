@@ -87,7 +87,8 @@ Akty z największym nadmiarem i co widać w niedopasowanym tekście (sprawdzone 
 - objaśnienia pod wzorami/formularzami (d): s2024 DU/2024/1973 (708, „Objaśnienia: Wzory zawierają…”),
   s7 DU/2024/273 („miejscowość, data, własnoręczny podpis… właściwe podkreślić”), 458 (pola formularza);
 - tabela drobnym drukiem na dole strony jako przypis (realny błąd, reguła zapasowa bez kreski):
-  s2024 DU/2024/1337 (236, współrzędne; HTML bez przypisów), 840 (25, „średnio bezpieczna…”);
+  s2024 DU/2024/1337 (236, współrzędne; HTML nie ma przypisów, więc akt jest poza wynikiem przypisów),
+  840 (25, „średnio bezpieczna…”);
 - przypis, którego HTML nie ma w ogóle (nieznalezione; niesprawdzone w PDF): s7 DU/2024/77
   („Niniejsze rozporządzenie dokonuje… wdrożenia dyrektywy Komisji 2006/17/WE”, 68/7),
   DU/2024/193 („Minister Spraw Wewnętrznych i Administracji kieruje działem…”, 41/8).
@@ -97,7 +98,7 @@ konwerter błędnie wziął za przypis, też jest w HTML w załączniku (DU/2024
 
 ## Poprawka w pdf.py (0.6.5.dev)
 
-Kreska przypisów (`_frame_lines`): dotąd tylko `page.rects` i tylko poniżej 30% wysokości strony.
+Kreska przypisów (`_frame_lines`): dotąd tylko `page.rects` i tylko niżej niż 30% wysokości strony od góry.
 Teraz kandydatami są też `page.lines` (DU/2024/1346, 1018, 1659), a kreska w górnych 10–30% strony
 albo narysowana linią liczy się tylko, gdy wszystko pod nią jest drukiem przypisu (< 9.5 pt).
 Kreska-prostokąt poniżej 30% działa jak dotąd. Test: `test_footnote_rule_high_or_drawn_as_line`.
@@ -160,7 +161,8 @@ załączniku (tabela/formularz, np. DU/2024/1337) — tego miara nie odróżni o
   1. stopki formularzy „Strona N z M” (DU/2024/1659) jako przypis — pomijać wiersz pasujący do
      `^Strona \d+ z \d+$` pod kreską/na dole strony;
   2. reguła zapasowa bez kreski (`size < body_size - 0.5 and top > 0.6 * ph`) bierze tabele i pola
-     formularzy drukiem drobnym za przypisy (DU/2024/1337, 840, 458, 273, 164, 398); przypis bez kreski
+     formularzy drukiem drobnym za przypisy (DU/2024/1337, 840, 458, 273, 164, 398 — widziane tylko w tekście,
+     nie w PDF); przypis bez kreski
      powinien zaczynać się znacznikiem `[^N]`;
   3. objaśnienia pod wzorami (DU/2024/1973) — decyzja, czy to przypisy, czy tekst załącznika.
 - README („Znane ograniczenia”) warto poprawić: niski recall przypisów s5110 był błędem konwertera.
