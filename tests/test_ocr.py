@@ -159,16 +159,34 @@ class Ocr(unittest.TestCase):
         self.assertIn("> [Na stronie 3 PDF jest obraz (np. wzór, rysunek, skan). Jego treści tu nie ma", md)
 
     def test_text_image(self):
-        text = ("Rząd Rzeczypospolitej Polskiej i Rząd Królestwa Arabii Saudyjskiej zwane dalej Stronami pragnąc "
-                "zacieśnić przyjazne stosunki między obydwoma Państwami uzgodniły co następuje w celu").split()
-        self.assertTrue(ocr.text_image(ocr.OcrPage([" ".join(text)], words=len(text), confidence=96)))
-        # a form: many short fields, few function words
-        form = "Nazwisko Imię PESEL Data Podpis Adres Kod Miejscowość Ulica Numer Telefon".split() * 3
-        self.assertFalse(ocr.text_image(ocr.OcrPage(form, words=len(form), confidence=95)))
-        # a drawing or a signature: text-like words, but read with low confidence
-        self.assertFalse(ocr.text_image(ocr.OcrPage([" ".join(text)], words=len(text), confidence=60)))
-        # too little text (a caption, a stamp)
-        self.assertFalse(ocr.text_image(ocr.OcrPage([" ".join(text[:12])], words=12, confidence=96)))
+        # MP/2026/869 s.1 as read: running text in long lines across the image
+        lines = ["Rząd Rzeczypospolitej Polskiej i Rząd Królestwa Arabii Saudyjskiej, zwane dalej",
+                 "„Stronami”, pragnąc zacieśnić przyjazne stosunki między obydwoma Państwami;",
+                 "biorąc pod uwagę interes Stron dotyczący zwolnienia z obowiązku posiadania wiz",
+                 "dla swoich obywateli legitymujących się paszportami dyplomatycznymi, służbowymi",
+                 "i specjalnymi, zgodnie z obowiązującymi przepisami prawa obydwu Państw;",
+                 "uzgodniły, co następuje:"]
+
+        def page(lines, conf=96.2, widths=None, width=1760):
+            return ocr.OcrPage([" ".join(lines)], words=len(" ".join(lines).split()), confidence=conf, width=width,
+                               line_widths=widths or [1700] * (len(lines) - 1) + [500],
+                               line_chars=[len(l) for l in lines])
+        self.assertTrue(ocr.text_image(page(lines)))
+        self.assertFalse(ocr.text_image(page(lines, conf=90)))  # an unclear scan, a drawing: below IMAGE_MIN_CONF
+        self.assertFalse(ocr.text_image(page(lines[:4])))  # fewer than IMAGE_MIN_LINES lines
+        # the same words in short centred lines (a title, DU/2026/204 s.1): a miss rather than a false acceptance
+        short = [w for l in lines for w in l.split(", ")]
+        self.assertFalse(ocr.text_image(page(short, widths=[700] * len(short))))
+        # the text is in long lines, but they do not span the image (a label box of a form or a chart)
+        self.assertFalse(ocr.text_image(page(lines, width=4000)))
+        # an ID card or a form: field labels, no function words
+        form = ["Legitymacja studencka Numer albumu Kod kreskowy Imię Nazwisko PESEL Data urodzenia Ważna do"] * 6
+        self.assertFalse(ocr.text_image(page(form)))
+        # a chart with long labels: bars read as | and «
+        chart = [l + " | ss « 20% =" for l in lines]
+        self.assertFalse(ocr.text_image(page(chart)))
+        # a table drawn as an image, under its caption
+        self.assertFalse(ocr.text_image(page(["Tabela 2. " + lines[0]] + lines[1:])))
 
     def test_image_text_region(self):
         from eli2md import pdf

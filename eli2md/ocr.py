@@ -42,6 +42,22 @@ MIN_WORDS, MIN_CONF = 20, 80.0  # below either, the page keeps only the note (ev
 # stamp form) kept tesseract busy for over 10 minutes; such a page keeps only the note.
 TIMEOUT = 120
 LOWER = "a-ząćęłńóśźżàâçéèêëîïôûùüÿñæœäöåõãíúýøα-ωά-ώ"
+# An image on a page that has a text layer (page 1 of agreements: title as text, preamble as a scan, MP/2026/869)
+# is read as text only if its OCR looks like a scan of running text: high confidence, function words, word-like
+# tokens, and mostly long lines across the image. Forms, ID cards, charts, maps and tables drawn as images have
+# short lines, labels or symbols. Thresholds from the 824 image pages of DU and MP 2025-2026, where text scans
+# read at a median confidence >= 96 (eval/image_text_ocr_0.6.4.dev.md).
+IMAGE_MIN_CONF = 95.0
+IMAGE_MIN_LINES = 5
+IMAGE_LONG_CHARS = 45  # a line of running text has more characters than this; labels and form fields fewer
+IMAGE_LONG_WIDTH = 0.6  # ... and spans this share of the image width
+IMAGE_MIN_LONG = 0.5  # share of such lines (both measures)
+IMAGE_MIN_WORDLIKE = 0.75  # share of tokens that are words (letters with a vowel, or a one-letter Polish word)
+IMAGE_MAX_SYMBOLS = 0.05  # per word: | = % « @ ... are table rules, chart labels, form boxes
+SYMBOLS = re.compile(r"[|«»=<>®©™@#$%^*~_\[\]{}]")
+VOWEL = re.compile(r"[aeiouyąęóаеиоуыэюяαεηιουωάέήίόύώ]")
+ONE_LETTER_WORDS = {"a", "i", "o", "u", "w", "z"}
+FIGURE_CAPTION = re.compile(r"(Tabela|Tab\.|Wykres|Rys\.|Rysunek|Mapa|Schemat|Legenda|LEGENDA|Źródło)\b")
 
 # tesseract (pol) often reads a lone "1" as "|": "ust. | pkt 2", "Ustęp |". Fixed only after a unit
 # word or before "i 2", where a table rule "|" cannot stand (eval/ocr_eval_digital_*.txt: fix_text).
@@ -89,6 +105,9 @@ class OcrPage:
     confidence: float = 0.0  # median word confidence, 0-100
     lang: str = ""  # tesseract language(s) used, e.g. "pol+eng", "por+eng"
     rotated: int = 0  # degrees the page image was turned before OCR
+    width: int = 0  # of the image read, in pixels (0 = unknown)
+    line_widths: list[int] = field(default_factory=list)  # of the lines kept, in pixels
+    line_chars: list[int] = field(default_factory=list)  # characters of the lines kept
 
 
 @lru_cache(maxsize=None)
@@ -138,23 +157,28 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
     header at the top of the page is dropped (also when read in another script: a short line in the
     header band with the page number). band: share of the image height searched for the header
     (0 for an image cut out of a page: it has no header)."""
-    lines: dict[tuple[int, int, int], list[tuple[int, int, str, float]]] = {}
+    lines: dict[tuple[int, int, int], list[tuple[int, int, str, float, int, int]]] = {}
+    page = OcrPage()
     for row in tsv.splitlines()[1:]:
         f = row.split("\t")
+        if len(f) >= 12 and f[0] == "1":
+            page.width = int(f[8])
         if len(f) < 12 or f[0] != "5" or not f[11].strip():
             continue
         key = (int(f[2]), int(f[3]), int(f[4]))  # block, paragraph, line
-        lines.setdefault(key, []).append((int(f[7]), int(f[7]) + int(f[9]), f[11].strip(), float(f[10])))
-    page = OcrPage()
+        lines.setdefault(key, []).append((int(f[7]), int(f[7]) + int(f[9]), f[11].strip(), float(f[10]),
+                                          int(f[6]), int(f[6]) + int(f[8])))
     confs: list[float] = []
     kept = []  # (block, top, bottom, text) without the header
     for (blk, _, _), words in lines.items():
-        text = " ".join(w for _, _, w, _ in words)
+        text = " ".join(w[2] for w in words)
         top, bottom = min(w[0] for w in words), max(w[1] for w in words)
         if top < band * height and (
                 OCR_HEADER.match(text) or (len(words) <= 8 and str(page_number) in re.findall(r"\d+", text))):
             continue
-        confs += [c for _, _, _, c in words]
+        confs += [w[3] for w in words]
+        page.line_widths.append(max(w[5] for w in words) - min(w[4] for w in words))
+        page.line_chars.append(len(text))
         kept.append((blk, top, bottom, fix_text(text)))
     # tesseract's own paragraphs and blocks split 1.5-spaced justified text at random lines (DU/2025/360);
     # a new paragraph starts where the reading order goes back up (next column, table cell), after a gap
@@ -185,8 +209,20 @@ def usable(page: OcrPage) -> bool:
 
 
 def text_image(page: OcrPage) -> bool:
-    """Is the OCR text of an image on a page with a text layer running text (a scan of text)?"""
-    return usable(page) and language(re.findall(r"\w+", " ".join(page.paragraphs).lower())) != "?"
+    """Is the OCR text of an image on a page with a text layer running text (a scan of text)? See IMAGE_*.
+    False acceptance is worse than a miss: a title set in short centred lines (DU/2026/204 s.1) keeps the note."""
+    lines = len(page.line_chars)
+    if not usable(page) or page.confidence < IMAGE_MIN_CONF or lines < IMAGE_MIN_LINES or not page.width:
+        return False
+    text = " ".join(page.paragraphs)
+    tokens = re.findall(r"\w+", text.lower())
+    wordlike = sum(1 for t in tokens if t.isalpha() and (len(t) >= 2 and VOWEL.search(t) or t in ONE_LETTER_WORDS))
+    return (language(tokens) != "?"
+            and wordlike >= IMAGE_MIN_WORDLIKE * len(tokens)
+            and sum(c >= IMAGE_LONG_CHARS for c in page.line_chars) >= IMAGE_MIN_LONG * lines
+            and sum(w >= IMAGE_LONG_WIDTH * page.width for w in page.line_widths) >= IMAGE_MIN_LONG * lines
+            and len(SYMBOLS.findall(text)) <= IMAGE_MAX_SYMBOLS * page.words
+            and not any(FIGURE_CAPTION.match(p) for p in page.paragraphs))
 
 
 def osd(img) -> tuple[int, str]:
