@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.4**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.5**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -167,6 +167,15 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.5** (2026-09-30). Kreska przypisów jest rozpoznawana także wysoko na stronie (10–30% wysokości, np. strona
+z samymi przypisami, DU/2024/1539 s. 2) i gdy jest narysowana linią, a nie prostokątem (DU/2024/1346). W obu
+przypadkach tylko wtedy, gdy pod nią jest wyłącznie drobny druk (< 9,5 pt). Wcześniej przypisy z takich stron szły
+do treści albo załącznika. Błąd znalazła diagnoza na próbie s5110 (tam recall przypisów 0.783 → 0.982, ale to
+nie jest niezależny test). **Test s5111** (39 nowych aktów, zapisana w gicie przed oceną, oceniona raz, 0.6.4
+i 0.6.5 tymi samymi skryptami): przypisy R 0.9517 → 0.9525, P 0.9609 → 0.9647; załączniki P 0.9809 → 0.9807;
+treść główna (R 0.9947, P 0.9957), struktura i drzewo bez zmian. Poprawa jest mała, bo ten układ kreski jest
+rzadki. Wyniki: `eval/*_test_s5111_v0.6.{4,5.dev}.*`.
 
 **0.6.4** (2026-09-30). Trzy zmiany (opisy w sekcjach niżej i w raportach `eval/*_0.6.4.dev.md`):
 - z `--ocr` obraz tekstu na stronie z warstwą tekstową (s. 1 umów międzynarodowych) dostaje tekst OCR
@@ -508,10 +517,14 @@ zbiorze 2025–2026 to ok. 35 min czasu jednego wątku.
 - Załączniki bywają wklejonymi PDF-ami, a ich pierwotny nagłówek jest w Dzienniku Ustaw zakryty.
   Taki ukryty tekst wykrywam heurystycznie: renderuję stronę i sprawdzam, czy pod znakiem jest tusz.
   Mogą zostać pojedyncze duplikaty.
-- Objaśnienia pod formularzami w załącznikach bywają brane za przypisy. Niska precision przypisów to jednak
-  w dużej części cecha wzorca: w obwieszczeniach z tekstem jednolitym HTML podaje przypisy tego tekstu jako zwykły
-  tekst załącznika, a wynik jako przypisy (DU/2024/1580: 106 ze 112 przypisów wyniku jest w HTML tylko w treści,
-  DU/2024/1442: 11 z 12). Wtedy spada też recall załącznika.
+- Objaśnienia pod formularzami, stopki formularzy („Strona N z M”, DU/2024/1659) i drobny druk tabel bez kreski
+  przypisów bywają brane za przypisy. Część niskiej precision przypisów to cecha wzorca: HTML podaje przypisy
+  tekstów jednolitych i załączników jako zwykły tekst, a wynik jako przypisy (DU/2024/1580: 106 ze 112 przypisów
+  wyniku jest w HTML tylko w treści; DU/2024/781 na próbie s5110: 3054 tokeny). Niski recall przypisów na s5110
+  był za to błędem konwertera (kreska przypisów wysoko na stronie albo narysowana linią), poprawionym w 0.6.5.
+  Diagnoza: `eval/footnotes_diagnosis_0.6.5.dev.md`. Od 0.6.5 `eval/evaluate.py` podaje też łagodniejszą miarę
+  `notes*` (numery przypisów zostają, nadmiarowy token obecny w HTML poza przypisami liczy się jako trafiony);
+  zawyża ona P, gdy konwerter bierze za przypis tekst załącznika.
 - Ciasno złożone tabele: do 0.6.2 pozycja „2) …” w komórce po krótkiej linii bez „;” doklejała się do „1) …”
   (MP/2025/121). Od 0.6.3 taka pozycja zaczyna nowy akapit (opis niżej, w zmianach 0.6.3). Mogą zostać inne
   układy komórek, w których podział ginie. Tekst jest wtedy pełny, brakuje tylko podziału.
