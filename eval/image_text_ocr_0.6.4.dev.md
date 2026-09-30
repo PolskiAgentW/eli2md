@@ -199,7 +199,8 @@ wynik z `--ocr` dają to samo (`pdf_tokens=29, md_tokens=29, kept=1.000, grounde
 ## Znane błędy i ograniczenia
 
 - Recall na s. 1 umów to 25/43. Tytuły i preambuły w krótkich, wyśrodkowanych liniach, listy stron i spisy
-  treści zostają z notką.
+  treści zostają z notką. Tak samo tekst z wieloma krótkimi liniami (MP/2012/646 s. 1, spoza zbioru
+  pomiarowego).
 - OCR czyta tylko największy obraz strony. Inne obrazy tej strony nie są czytane i nie dostają osobnej notki
   (tak było już w 0.6.3). 311 z 824 stron ma więcej niż jeden obraz, ale nie sprawdzałem, ile z nich to duże
   obrazy tekstu.

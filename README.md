@@ -497,8 +497,8 @@ zbiorze 2025–2026 to ok. 35 min czasu jednego wątku.
   jako powtórzony tekst (DU/2025/452 s. 7).
 - Umowy międzynarodowe: pierwsza strona (preambuła, art. 1) bywa obrazem tekstu na stronie, która ma warstwę
   tekstową z samym tytułem (np. MP/2026/869). Do 0.6.3 OCR jej nie czytał. Od 0.6.4.dev z `--ocr` czyta taki
-  obraz, gdy wygląda na tekst ciągły (opis wyżej, w sekcji o OCR). W 2025–2026 tak jest na 25 z 43 umów. Obrazy tytułów
-  w krótkich liniach dalej zostają z notką.
+  obraz, gdy wygląda na tekst ciągły (opis wyżej, w sekcji o OCR). W 2025–2026 tak jest na 25 z 43 umów. Obrazy, w których przeważają
+  krótkie linie (tytuły, nagłówki artykułów, np. MP/2012/646 s. 1), dalej zostają z notką.
 - Domyślnie bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 53 356 stron
   w indeksie z 29.09.2026), głównie umowy międzynarodowe. OCR (`--ocr`, od 0.6.0) opisany niżej.
 
