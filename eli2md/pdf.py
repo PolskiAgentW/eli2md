@@ -465,11 +465,14 @@ def _gutter(rows: list[list[dict]], pw: float, words: list[dict] = (), gut: dict
         return None
     left = min(r[0]["x0"] for r in rows if round(r[0]["x0"]) == min(lm))
     right = max(r[-1]["x1"] for r in rows if round(r[-1]["x1"]) == max(rm))
+    # the middle of the text, not of the page: pages 576 pt wide keep the text where it is on 595 pt (DU/2000/839:
+    # margins 39.3 and 560.3, the left column ends at 293.8)
+    mid = max(0.5 * pw, (left + right) / 2)
     edges: dict[float, list[tuple[float, float]]] = {}  # gl (0.5 pt) -> (x1 of a left part, x0 of the right part)
     for r in rows:
         for k, a in enumerate(r):
             b = r[k + 1] if k + 1 < len(r) else None
-            if not (0.4 * pw < a["x1"] < 0.5 * pw) or (b is not None and b["x0"] - a["x1"] < GUTTER[0]):
+            if not (0.4 * pw < a["x1"] < mid) or (b is not None and b["x0"] - a["x1"] < GUTTER[0]):
                 continue
             part = r[: k + 1]
             if part[0]["x0"] > left + 0.5 * (a["x1"] - left) or len(part) < 3 \
@@ -615,8 +618,10 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             groups.setdefault(key(w), []).append(w)
         rows = [r for k in sorted(groups) for r in _rows(groups[k])]  # the columns' baselines differ (DU/2011/1134)
     # rows (by id, before small words are attached) that are the number of an act starting here: see ACT_NUMBER
+    # centred on the text between the columns (a page 576 pt wide has it at 299.8, DU/2000/839), else on the page
+    centre2 = gutter[0] + gutter[1] if key else pw
     acts = {id(r): int(r[0]["text"]) for r in rows if old and len(r) == 1 and ACT_NUMBER.match(r[0]["text"])
-            and r[0]["size"] >= ACT_NUMBER_SIZE and abs(r[0]["x0"] + r[0]["x1"] - pw) < 20}
+            and r[0]["size"] >= ACT_NUMBER_SIZE and abs(r[0]["x0"] + r[0]["x1"] - centre2) < 20}
     # where they are in reading order (band, column, top): footnotes of an act lie above the next act's number
     starts = sorted((*(key(r[0]) if key else (0, 0)), r[0]["top"]) for r in rows if id(r) in acts)
 
