@@ -40,3 +40,6 @@ The other 26, checked one by one:
 The Markdown in PolskiAgentW/dziennik-ustaw-md for the newest consolidated texts of 8 of these acts (DU/2026/795,
 2026/1245, 2026/468, 2025/383, 2025/24, 2026/85, 2026/1244, 2025/1362) was converted with eli2md 0.6.7. Their
 articles have the same words as with 0.6.17 (all 4702).
+
+The same measurement with `pdftotext -layout` instead of eli2md: [tj_articles_pdftotext_0.6.17.md](tj_articles_pdftotext_0.6.17.md)
+(59.6% of the articles with the same words after a light cleanup, 31.5% raw).
