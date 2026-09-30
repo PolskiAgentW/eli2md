@@ -1,8 +1,8 @@
 import unittest
 
 from eli2md.eli import parse_eli
-from eli2md.pdf import (MASTHEAD_END, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled, _group_notes,
-                        _drop_watermark, _frame_lines, _free, _glyph_box, _join, _plain_math, _segment,
+from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
+                        _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _plain_math, _segment,
                         _single_glyphs, _to_frame, _watermark, page_ranges, to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
@@ -481,6 +481,9 @@ class Basic(unittest.TestCase):
         body, _ = _frame_lines(self._two_column_page("Dziennik Ustaw – 2 – Poz. 1255"), 595, 842, [], 1)
         self.assertIn("Art. 1. Wyraża się zgodę na dokonanie Prezy- Art. 2. Ustawa", [l.text[:59] for l in body])
         self.assertEqual({(l.band, l.col) for l in body}, {(0, 0)})
+        self.assertTrue(OLD_HEADER.match("Dziennik Ustaw Nr 150 — 9307 — Poz. 1255, 1256 i 1257"))
+        self.assertTrue(OLD_HEADER.match("Monitor Polski Nr 5 — 101 — Poz. 30"))
+        self.assertFalse(OLD_HEADER.match("Dziennik Ustaw – 2 – Poz. 1255"))
         # a table of an old issue: cells far apart are not a column of text, the rows are read across
         r = self._row
         page = r("Dziennik Ustaw Nr 150 — 9307 — Poz. 1255", 38, 557, 52)

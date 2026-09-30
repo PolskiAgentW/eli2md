@@ -780,7 +780,10 @@ def convert(path: str, ocr: str | None = None) -> Document:
                         doc.masthead = [x.text for x in b[: i + 1]]
                         b = b[i + 1 :]
                         break
-            elif b and RUNNING_HEADER.match(b[0].text):
+                else:  # an act of 2011 or earlier starts under the running header of its issue (DU/2005/1255)
+                    if b and OLD_HEADER.match(b[0].text):
+                        doc.masthead, b = [b[0].text], b[1:]
+            elif b and (RUNNING_HEADER.match(b[0].text) or OLD_HEADER.match(b[0].text)):
                 b = b[1:]
             if not b and not n:
                 read = ocr_mod.ocr_page(page, ocr) if ocr else None
