@@ -79,6 +79,9 @@ UNESCAPE = re.compile(r"^\\([>#|\[*+-])")  # the converter escapes Markdown synt
 FRONT = re.compile(r"^---\n(.*?)\n---\n", re.S)
 COMMON_PART = re.compile(rf"^(?:[{LOWER}]|–\s)")  # "część wspólna" after an enumeration
 ANNOUNCES_QUOTE = re.compile(r"(?:brzmienie|brzmieniu)\s*:\s*$")  # "… otrzymuje brzmienie:", "… w brzmieniu:"
+# the instruction of a point of an amending act ("13) art. 31 otrzymuje brzmienie:", "20) w załączniku do ustawy wprowadza
+# się następujące zmiany:"), for a quote the source did not close (tree_depths)
+AMENDS = re.compile(r"(?:brzmieni[eua]|dodaje\s+się|uchyla\s+się|skreśla\s+się|zastępuje\s+się|wprowadza\s+się)")
 # Rows of tables and forms that look like units (_Builder.table_row). The Markdown has no table markup (pdf.py
 # flattens tables into paragraphs), so these go by the text and the numbering only.
 # A point of a list of coordinates: "6. 54°10′43,83″ N 19°22′52,30″ E" (DU/2024/1594), "2) 52°36'08"N 019°39'05"E"
@@ -148,15 +151,32 @@ def tree_depths(blocks: list[tuple[str, str]]) -> list[int]:
     - a quote opened mid-block and still open at a block ending with ":" runs into the next blocks
       ("zastępuje się wyrazami „…, w terminach:" / "1) …;" / "2) …”,", DU/2024/859), again only if a
       later block closes it.
-    The pdf.quote_depths rule that other mid-block quotes end with their block is kept."""
+    The pdf.quote_depths rule that other mid-block quotes end with their block is kept.
+    A quote the source did not close ends at the next point of the amending act: a block "N) …" with an amending
+    instruction, N right after the last point outside quotes and not after the last point at any depth inside them
+    (DU/2008/539: "2) uchyla się art. 6a;" goes on the points of a quoted amending article after its own quote "1) …
+    „Art. 6. … 20) …”;")
+    (DU/2007/162: "…orzeczeniem sądu,”;" closes only the inner of two quotes, then "13) art. 31 otrzymuje brzmienie:";
+    DU/2004/895: pkt 17 ends "…z późn. zm.)." without "”;")."""
     out, d, announced = [], 0, False
+    top, inner = None, {}  # number of the last point outside quotes / at each depth inside the current quote
     for i, (kind, text) in enumerate(blocks):
         if kind in ("annex", "head"):
-            d = 0
+            d, top, inner = 0, None, {}
         t = SECONDS.sub("", text)
         head = QUOTE_HEAD.match(t)
         if announced and d == 0 and kind == "p" and not head and _closed_later(blocks, i - 1):
             d = 1
+        unit = parse_unit(t) if kind == "p" and not head else None
+        if d and unit and unit[0] == "pkt" and top and _next(top, unit[1]) \
+                and not any(_next(v, unit[1]) for v in inner.values()) and AMENDS.search(t):
+            d = 0
+        if unit and d == 0:
+            top, inner = (unit[1] if unit[0] == "pkt" else None if RANK.get(unit[0], 9) < RANK["pkt"] else top), {}
+        elif unit and unit[0] == "pkt":
+            inner = {k: v for k, v in inner.items() if k < d} | {d: unit[1]}
+        elif head and kind == "p" and (quoted := parse_unit(t[head.end():])) and quoted[0] == "pkt":
+            inner = {k: v for k, v in inner.items() if k <= d} | {d + 1: quoted[1]}  # "„1) …" opens a quote
         out.append(d)
         if kind == "ocr":  # OCR misreads quotes; the converter ignores them too
             continue

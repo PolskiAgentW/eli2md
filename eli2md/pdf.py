@@ -1028,6 +1028,10 @@ SECONDS = re.compile(r"\d[’′']\s?\d+(?:[,.]\d+)?”")
 QUOTE_HEAD = re.compile(rf"^(?:(?:Art\.|§)\s*\d+[a-z]*[{SUP_CHARS}]*\.\s*|\d+[a-z]*[{SUP_CHARS}]*[.)]\s*|[a-z]{{1,3}}\)\s*)?[„“]")
 
 
+ART_NUMBER_AT = re.compile(r"^Art\.\s*(\d+[a-z]*)\.")  # the number of "Art. 2. W ustawie …" (quote_depths)
+ART_DIGITS = re.compile(r"\d+")
+
+
 def quote_depths(blocks: list[Block]) -> list[int]:
     """Quotation depth (opening minus closing marks) at the start of each block. Units inside
     quotes are provisions of another act (amendments, "przepisy nieobjęte tekstem jednolitym"),
@@ -1035,16 +1039,31 @@ def quote_depths(blocks: list[Block]) -> list[int]:
     be carried over. Only a quote that opens the block (after an optional unit number) may run
     into the next blocks; one opened mid-sentence and left open is a typo in the source
     („zwany dalej „kodem;”) and ends with its block. Some PDFs close with ˮ (U+02EE);
-    “ opens English quotes in forms."""
+    “ opens English quotes in forms.
+    A quote the source did not close ends at the next article of this act: "Art. N." with N right after the last
+    article outside quotes, and not the next of the articles at any depth inside them, unless the block before
+    announces a quote (DU/2004/895: pkt 17 of Art. 1 ends "…z późn. zm.)." without "”;", then "Art. 2. W ustawie …")."""
     depths, d = [], 0
+    top, inner, announced = None, {}, False  # last article number outside quotes / at each depth inside them
     for b in blocks:
         if b.kind == "annex":
-            d = 0
-        depths.append(d)
-        if b.kind == "ocr":  # OCR misreads quotes; its text is never a heading anyway
-            continue
+            d, top, inner = 0, None, {}
         t = SECONDS.sub("", b.text)
         head = QUOTE_HEAD.match(t)
+        art = None if head or b.kind == "ocr" else ART_NUMBER_AT.match(t)
+        if d and art and top and art.group(1).isdigit() and int(art.group(1)) == int(top) + 1 and not announced \
+                and not any(int(ART_DIGITS.match(v).group()) in (int(top), int(top) + 1) for v in inner.values()):
+            d = 0
+        depths.append(d)
+        if art and d == 0:
+            top, inner = art.group(1), {}
+        elif art:
+            inner = {k: v for k, v in inner.items() if k < d} | {d: art.group(1)}
+        elif head and (quoted := ART_NUMBER_AT.match(t[head.end():])):
+            inner = {k: v for k, v in inner.items() if k <= d} | {d + 1: quoted.group(1)}
+        announced = t.rstrip().endswith(":")
+        if b.kind == "ocr":  # OCR misreads quotes; its text is never a heading anyway
+            continue
         carry, local = d, 0  # quotes open from earlier blocks / opened mid-block in this one
         for k, ch in enumerate(t):
             if ch in "„“":
