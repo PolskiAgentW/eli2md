@@ -38,6 +38,10 @@ The measure (`compare.py`) runs on the Markdown body below the front matter and 
 | 80 with complete HTML | annexes (37 acts have annex text in HTML) | 0.9959 | 0.8887 | 0.8997 | 0.9765 | 0.8355 |
 | 20 with `[patrz oryginał]` in HTML | main text | 0.8780 | 0.9426 | 0.9759 | 0.8679 | 0.9583 |
 
+With the annex-table fix of the HTML path (branch `pl-html-annex-tables`: the HTML path dropped annex tables after
+the first one) on top of commit `04f7a4a` (same PDF-path numbers as `fc9aac1`), annexes of the 80 acts: text R 0.9954,
+P 0.9784, P_noref 0.9906 (`results_test_…_04f7a4a+8a1dd31`). Most of the annex gap above was the HTML side.
+
 Micro-averages over tokens / lines. Per act: `results_test_2024_n100_s20261001_fc9aac1.{json,txt}`. Main text of the
 80 acts: median R 1.0, none below 0.95, 2 below 0.99. Dev sample, same code: main text R 0.9965, P_noref 0.9923
 (`results_dev_…`).
