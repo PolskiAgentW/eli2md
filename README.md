@@ -119,6 +119,12 @@ potem przychodzi jednostka niższego rzędu (np. lit. po takim akapicie), akapit
 ciągiem jego tekstu rozbitym przez układ strony. „– ” po wyliczeniu nie jest tiretem, chyba że poprzedni akapit
 kończy się dwukropkiem albo sam jest tiretem.
 
+Numerowane wiersze tabel i formularzy nie są jednostkami (0.6.4.dev, `eval/annex_rows_0.6.4.dev.md`): punkty
+wykazów współrzędnych („6. 54°10′43,83″ N …”), karty akwenów od pierwszego wiersza „N.” z etykietą wielkimi
+literami („5. FUNKCJA PODSTAWOWA”) do następnego § oraz wiersze tabel wstawiane przez nowelizację bez cudzysłowu
+(„– – – lp. 8 otrzymuje brzmienie:” / „8. Program naukowo-badawczy 10.000 …”). Zostają tekstem w jednostce nad
+nimi. Załączniki próby dev seed 2024: P 0.852 → 0.994 przy tym samym R; treść główna bez zmian.
+
 `eval/tree_eval.py` porównuje ścieżki (`art_5/ust_2/pkt_3`) z identyfikatorami jednostek w HTML 2024 (bez
 jednostek cytowanych) w tym samym miejscu tekstu. **R**: odsetek jednostek HTML, dla których w JSON jest węzeł
 o tej samej ścieżce zaczynający się w tym samym słowie; **P**: odwrotnie. Od 0.6.0 miara sprawdza też
