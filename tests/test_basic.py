@@ -2,7 +2,7 @@ import unittest
 
 from eli2md.eli import parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
-                        _QuarkWords, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
+                        _QuarkWords, _drop_colophon, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
                         _plain_math, _quark_gap, _segment, _single_glyphs, _to_frame, _watermark, page_ranges,
                         to_markdown)
 
@@ -396,6 +396,21 @@ class Basic(unittest.TestCase):
         self.assertEqual(pages, [2, 2, 2])
         md = to_markdown(Document(blocks=[Block("p", "USTAWA[^1]", 1)], footnotes=texts[:1], footnote_pages=[1]))
         self.assertIn("[^1]: Niniejsza ustawa:\n\n    1) wdraża dyrektywę 2019/884;\n\n    2) służy stosowaniu.\n", md)
+
+    def test_colophon_of_an_issue(self):
+        # the last page of an old issue: the colophon may be read as footnotes, price and ISSN as body (DU/2000/291)
+        body = [Line(3, 100, 110, 40, 10, "kryminacji ze względu na płeć."), Line(3, 600, 610, 300, 10, "Jerzy Ciemniewski"),
+                Line(3, 778, 790, 450, 12, "Cena 3 zł 96 gr"), Line(3, 780, 790, 260, 10, "ISSN 0867-3411")]
+        notes = [Line(3, 690, 698, 40, 7, "[^1] Przypis aktu."), Line(3, 720, 728, 40, 7, "Wydawca: Kancelaria Prezesa"),
+                 Line(3, 730, 738, 40, 7, "ul. Powsińska 69/71")]
+        b, n = _drop_colophon(body, notes)
+        self.assertEqual([l.text for l in b], ["kryminacji ze względu na płeć.", "Jerzy Ciemniewski"])
+        self.assertEqual([l.text for l in n], ["[^1] Przypis aktu."])
+        # a publisher's notice page under a bare page number (DU/2003/577); without an ISSN nothing is cut
+        body = [Line(2, 50, 60, 40, 10, "Tekst aktu."), Line(3, 52, 60, 273, 10, "— 4096 —"),
+                Line(3, 77, 89, 242, 12, "Szanowni Państwo!"), Line(3, 780, 790, 264, 10, "ISSN 0867-3411")]
+        self.assertEqual([l.text for l in _drop_colophon(body, [])[0]], ["Tekst aktu."])
+        self.assertEqual(len(_drop_colophon(body[:3], [])[0]), 3)
 
     def test_masthead_end(self):
         for line in ("Poz. 5", "Poz. 1021", "Pozycja 19", ") Poz. 1024*", "Poz. 1024*)"):  # MP/2012/19, MP/2012/1024

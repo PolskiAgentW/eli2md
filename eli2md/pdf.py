@@ -806,6 +806,36 @@ def _segment(body: list[Line]) -> list[Block]:
     return blocks
 
 
+# The last page of an issue of 2011 or earlier ends with the publisher's colophon ("Wydawca: Kancelaria Prezesa Rady
+# Ministrów" … "ISSN 0867-3411", DU/2000/291) or is a publisher's notice ("Szanowni Państwo!" … prices of subscriptions,
+# DU/2003/577), above a bare page number "— 4096 —"
+COLOPHON = re.compile(r"^(?:Wydawca\s*:|Szanowni\s+Państwo!)")
+ISSN = re.compile(r"\bISSN\s*\d{4}\s*-\s*\d{3}[\dX]\b")
+BARE_PAGE_NUMBER = re.compile(r"^[—–-]\s*\d+\s*[—–-]$")
+
+
+def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], list[Line]]:
+    """Body and footnote lines without the colophon of an issue (COLOPHON): it is not text of the act. Only on the
+    last page, and only if that page names an ISSN; acts of 2012 on are single PDFs without it. The colophon may be
+    set small, under the footnotes (DU/2000/291: "Wydawca: …" read as footnotes, "Cena 3 zł 96 gr" and the ISSN as
+    body), so it starts at its first line in reading order, body or footnote."""
+    if not body:
+        return body, notes
+    last = max(l.page for l in body + notes)
+    lines = [l for l in body + notes if l.page == last]
+    starts = [(l.band, l.col, l.top) for l in lines if COLOPHON.match(l.text)]
+    if not starts or not any(ISSN.search(l.text) for l in lines):
+        return body, notes
+    at = min(starts)
+
+    def keep(l: Line) -> bool:
+        return l.page != last or (l.band, l.col, l.top) < at
+    body = [l for l in body if keep(l)]
+    if body and body[-1].page == last and BARE_PAGE_NUMBER.match(body[-1].text):
+        body.pop()
+    return body, [l for l in notes if keep(l)]
+
+
 def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[Line], list[Line], int, int] | None:
     """The act numbered `position` out of pages it shares with other acts of its issue (DU 2000-2011): the PDF of
     a position holds whole pages, so also the end of the acts before it and the start of the ones after it
@@ -887,6 +917,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None) -> D
             notes.extend(n)
             page.close()  # pdfplumber caches every parsed page; 867-page acts exhausted 14 GB RAM
 
+    body, notes = _drop_colophon(body, notes)
     if position is not None and (own := _own_act(body, notes, int(position))):
         body, notes, lo, hi = own
         for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
