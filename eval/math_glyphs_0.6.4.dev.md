@@ -141,8 +141,12 @@ wszystkich aktach z `PlacedPDF` i na próbach deweloperskich.
 ## Otwarte sprawy
 
 - DU/2026/40 i podobne: zgubiony `PlacedPDF` po zagnieżdżonym `EMC` (pdfplumber 0.11.10) i test tuszu przy
-  nakładających się warstwach (wyżej). Nie wiem, ile aktów ma zagnieżdżone znakowanie we wklejonych PDF-ach,
-  nie liczyłem.
+  nakładających się warstwach (wyżej). Ile to dotyczy, policzyłem skanem ze stosem znaczników (`/tmp`, poza
+  repozytorium). W losowych 300 aktach DU+MP 2025–2026 (seed 40) 43 mają znaki `PlacedPDF`, a zgubiony znacznik
+  ma 0. W 118 aktach z fontem Cambria Math 39 ma znaki `PlacedPDF`, a zgubiony znacznik 10: 60 636 z 2 853 963
+  znaków wklejonych. Są to DU/2025/1743, 1744, 454, 459, 452, 597, 1548, 928, 978 i DU/2026/40, wszystkie z listy
+  19 aktów z podwojeniem i na tych samych stronach. Zagnieżdżone `/Span <</ActualText …>>` to więc cecha tego
+  samego eksportu wzorów z Worda. Wszystkich 5440 aktów nie skanowałem.
 - `🖸🖸` w MP/2025/781 (Segoe UI Symbol, 46 znaków, w wyniku 37 razy „🖸🖸”): wygląda na to samo podwojenie przy
   symbolu wypunktowania. Zostawione, bo to jeden akt i inna klasa znaków.
 - Rozłożone polskie litery (`s` + U+0301): 772 znaki w 5 aktach MP (MP/2026/943 567, MP/2025/1013 122,
