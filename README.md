@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.8**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.9**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -174,6 +174,16 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.9** (2026-09-30). Dz.U. 2000–2011, dalej: (1) stopka wydawcy z ostatniej strony wydania („Wydawca: Kancelaria
+Prezesa Rady Ministrów… ISSN 0867-3411”, ogłoszenia o prenumeracie) nie jest tekstem aktu (DU/2000/291, DU/2003/577);
+(2) nagłówek załącznika (tekstu jednolitego) w połowie strony pod podpisem albo drobnym drukiem w łamie jest nagłówkiem
+załącznika, a nie treścią czy przypisem (DU/2010/648, DU/2002/664). Miara: `evaluate.py`, `tree_eval.py`
+i `structure.py` czytają też starszy układ HTML (tekst aktu w `div.block` poza sekcjami; wyniki 2024 identyczne).
+Wynik 2012+ bez zmian (42 PDF-y 2023–2026 wobec 0.6.7, bez linii `converter`). **Test 2000–2011, s5201** (60
+wylosowanych, 56 poza wcześniejszymi próbami, zapisana przed oceną, oceniona raz; 0.6.8 i 0.6.9 tymi samymi skryptami):
+treść główna R 0.9957 → 0.9957, P 0.9497 → 0.9854; przypisy R 0.8777, P 0.9409 → 0.9424; załączniki R 0.8921 → 0.9957,
+P 0.9590 → 0.9666; drzewo treści bez zmian (R 0.9160, P 0.9786). Wyniki: `eval/*_test2000_s5201_v0.6.{8,9.dev}.*`.
 
 **0.6.8** (2026-09-30). Dziennik Ustaw 2000–2011 (wydania z numerami „Nr N”, dwa łamy). Tylko strony z nagłówkiem
 takiego wydania; wynik dla lat 2012+ jest bajt w bajt ten sam co w 0.6.7 (sprawdzone na 42 PDF-ach Dz.U. i M.P. 2023–2026

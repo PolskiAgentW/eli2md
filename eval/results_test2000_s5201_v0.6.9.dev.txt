@@ -1,0 +1,61 @@
+  721 Ustawa         main R=1.000 P=1.000 (ref 4598, hyp 4598)  notes R=1.000 P=1.000 annex R=1.000  1.2s
+  731 Orzeczenie     main R=0.976 P=0.491 (ref 170, hyp 338)  notes R=1.000 P=1.000   0.1s
+ 1758 Orzeczenie     main R=0.971 P=0.508 (ref 172, hyp 329)  notes R=1.000 P=0.000   0.1s
+  959 Ustawa         main R=0.999 P=0.990 (ref 63000, hyp 63574)  notes R=0.887 P=0.993   6.8s
+ 1823 Ustawa         main R=1.000 P=0.987 (ref 74, hyp 75)  notes R=0.981 P=1.000   0.1s
+ 1444 Ustawa         main R=1.000 P=1.000 (ref 142, hyp 142)  notes R=1.000 P=1.000   0.0s
+  758 Ustawa         main R=1.000 P=1.000 (ref 507, hyp 507)  notes R=1.000 P=1.000   0.1s
+  620 Orzeczenie     main R=1.000 P=0.918 (ref 169, hyp 184)  notes R=1.000 P=1.000   0.0s
+  333 Obwieszczenie  main R=0.859 P=0.795 (ref 505, hyp 546)  notes R=1.000 P=0.000   0.1s
+  745 Ustawa         main R=1.000 P=1.000 (ref 373, hyp 373)  notes R=1.000 P=1.000   0.1s
+ 1419 Orzeczenie     main R=1.000 P=0.938 (ref 257, hyp 274)  notes R=1.000 P=1.000   0.0s
+ 1679 Orzeczenie     main R=0.986 P=0.645 (ref 289, hyp 442)  notes R=1.000 P=0.000   0.1s
+ 1188 Ustawa         main R=1.000 P=1.000 (ref 423, hyp 423)  notes R=1.000 P=1.000   0.1s
+  201 Ustawa         main R=0.999 P=0.997 (ref 1150, hyp 1152)  notes R=0.995 P=1.000   0.1s
+ 1800 Ustawa         main R=1.000 P=1.000 (ref 6180, hyp 6181)  notes R=1.000 P=1.000   0.8s
+ 1194 Obwieszczenie  main R=1.000 P=1.000 (ref 1952, hyp 1952)  notes R=0.958 P=1.000 annex R=0.998  0.8s
+ 2382 Orzeczenie     main R=0.995 P=0.928 (ref 220, hyp 236)  notes R=1.000 P=1.000   0.1s
+  271 Ustawa         main R=0.991 P=0.994 (ref 4641, hyp 4629)  notes R=1.000 P=0.000   0.6s
+ 1805 Ustawa         main R=1.000 P=0.995 (ref 1464, hyp 1472)  notes R=0.982 P=1.000   0.3s
+ 2259 Ustawa         main R=1.000 P=0.999 (ref 1178, hyp 1179)  notes R=0.990 P=0.995   0.2s
+  880 Ustawa         main R=0.989 P=0.987 (ref 2007, hyp 2011)  notes R=0.987 P=0.996   0.2s
+  943 Orzeczenie     main R=0.989 P=0.959 (ref 526, hyp 542)  notes R=1.000 P=1.000   0.1s
+ 1952 Orzeczenie     main R=0.969 P=0.444 (ref 131, hyp 286)  notes R=1.000 P=0.000   0.1s
+  301 Ustawa         main R=0.979 P=0.989 (ref 722, hyp 715)  notes R=1.000 P=0.000   0.1s
+ 1352 Ustawa         main R=0.997 P=0.972 (ref 11341, hyp 11627)  notes R=1.000 P=1.000   1.4s
+  105 Obwieszczenie  main R=0.833 P=0.528 (ref 318, hyp 502)  notes R=1.000 P=1.000   0.1s
+  617 Ustawa         main R=0.993 P=0.986 (ref 4923, hyp 4960)  notes R=1.000 P=1.000   0.5s
+  515 Ustawa         main R=0.979 P=0.978 (ref 1051, hyp 1052)  notes R=1.000 P=1.000   0.2s
+ 1021 Ustawa         main R=1.000 P=1.000 (ref 494, hyp 494)  notes R=0.991 P=0.991   0.1s
+  808 Ustawa         main R=1.000 P=1.000 (ref 828, hyp 828)  notes R=1.000 P=1.000   0.2s
+ 1657 Orzeczenie     main R=0.991 P=0.759 (ref 543, hyp 709)  notes R=1.000 P=0.000   0.1s
+ 1404 Ustawa         main R=1.000 P=1.000 (ref 694, hyp 694)  notes R=1.000 P=1.000   0.1s
+  996 Ustawa         main R=0.996 P=0.990 (ref 4167, hyp 4189)  notes R=0.993 P=0.999   0.5s
+ 1342 Obwieszczenie  main R=1.000 P=1.000 (ref 2539, hyp 2539)  notes R=0.643 P=0.825 annex R=0.992  4.1s
+ 1387 Ustawa         main R=1.000 P=1.000 (ref 24548, hyp 24547)  notes R=1.000 P=1.000   2.9s
+ 1371 Ustawa         main R=1.000 P=1.000 (ref 14035, hyp 14037)  notes R=1.000 P=1.000   1.6s
+  814 Ustawa         main R=0.994 P=0.989 (ref 20304, hyp 20425)  notes R=0.992 P=0.998   2.2s
+  128 Ustawa         main R=1.000 P=1.000 (ref 1159, hyp 1159)  notes R=1.000 P=1.000   0.1s
+ 1873 Ustawa         main R=1.000 P=1.000 (ref 7008, hyp 7008)  notes R=1.000 P=0.994   0.9s
+ 1651 Ustawa         main R=1.000 P=1.000 (ref 1393, hyp 1393)  notes R=0.991 P=1.000   0.2s
+  130 Obwieszczenie  main R=0.981 P=0.503 (ref 154, hyp 300)  notes R=1.000 P=1.000   0.0s
+   29 Obwieszczenie  main R=0.993 P=0.987 (ref 2765, hyp 2783)  notes R=0.982 P=0.986 annex R=0.995*  1.4s
+ 2058 Ustawa         main R=0.989 P=0.991 (ref 8752, hyp 8733)  notes R=1.000 P=0.000   1.0s
+ 1802 Ustawa         main R=0.999 P=0.999 (ref 3978, hyp 3979)  notes R=0.976 P=1.000   0.5s
+  958 Ustawa         main R=0.985 P=0.991 (ref 6690, hyp 6654)  notes R=0.983 P=0.739   0.8s
+ 1982 Ustawa         main R=1.000 P=1.000 (ref 80, hyp 80)  notes R=1.000 P=1.000   0.1s
+ 1401 Ustawa         main R=1.000 P=0.995 (ref 194, hyp 195)  notes R=0.992 P=1.000   0.1s
+  179 Obwieszczenie  main R=0.996 P=0.992 (ref 2259, hyp 2268)  notes R=0.968 P=0.989 annex R=0.999  0.6s
+  827 Ustawa         main R=0.993 P=0.954 (ref 147, hyp 153)  notes R=0.994 P=1.000   0.0s
+ 1645 Orzeczenie     main R=0.996 P=0.929 (ref 238, hyp 255)  notes R=1.000 P=1.000   0.0s
+  672 Ustawa         main R=0.993 P=0.985 (ref 4843, hyp 4881)  notes R=0.984 P=1.000   0.5s
+ 2257 Ustawa         main R=1.000 P=1.000 (ref 387, hyp 387)  notes R=1.000 P=1.000   0.1s
+  229 Ustawa         main R=0.994 P=0.986 (ref 3399, hyp 3426)  notes R=0.995 P=1.000   0.4s
+  955 Ustawa         main R=0.993 P=1.000 (ref 148, hyp 147)  notes R=1.000 P=0.955   0.1s
+ 1379 Obwieszczenie  main R=1.000 P=1.000 (ref 154, hyp 154)  notes R=1.000 P=0.000   0.0s
+ 1360 Obwieszczenie  main R=0.971 P=0.964 (ref 4888, hyp 4921)  notes R=0.963 P=0.840 annex R=0.999  3.9s
+scored 56/56 acts
+TOTAL body  (n=56): micro R=0.9957 P=0.9854  macro R=0.9887  R<0.95: 2  | P on complete refs (n=55): 0.9858
+TOTAL notes (n=25): micro R=0.8777 P=0.9424  macro R=0.9691  R<0.95: 2  | P on complete refs (n=25): 0.9424
+TOTAL annex (n=6): micro R=0.9957 P=0.9666  macro R=0.9971  R<0.95: 0  | P on complete refs (n=5): 0.9744
+TOTAL notes* (n=25): micro R=0.9267 P=0.9849  (lenient: footnote numbers kept, extra tokens found in HTML main/annexes count)
