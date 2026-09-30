@@ -19,6 +19,7 @@ from dataclasses import dataclass, field, replace
 import pdfplumber
 import pdfplumber.page
 from pdfplumber.utils import extract_words
+from pdfplumber.utils.text import WordExtractor
 
 
 class _PlacedTags(pdfplumber.page.PDFPageAggregatorWithMarkedContent):
@@ -281,6 +282,34 @@ def _dedupe(chars: list[dict], tol: float = DUP_TOL) -> list[dict]:
     return out
 
 
+QUARK_GAP = (1.0, 2.2)  # pt; a word ends at a wider gap in a Quark text font, in its bold (see _QuarkWords)
+
+
+def _quark_gap(c: dict) -> float | None:
+    """The word gap of a char of the fonts of the QuarkXPress issues (DU 2000-2009: "Univers-PL", "Univers-BoldPL";
+    MAC_PL_FONT), None for other chars."""
+    f = c.get("fontname") or ""
+    if not MAC_PL_FONT.search(f) or not c.get("upright", True):
+        return None
+    return QUARK_GAP[1] if "Bold" in f else QUARK_GAP[0]
+
+
+class _QuarkWords(WordExtractor):
+    """Words of a Quark page. The space after a one-letter word ("z dnia", "w art.", "i wywozem") is not a char
+    there but a gap of 1.5-3 pt (DU/2009/1323 p. 1), mostly under pdfplumber's x_tolerance of 3 pt: "zdnia",
+    "wart.". Measured on the first 6 pages of 11 Quark acts of 2000-2009, gaps between chars of a line without a
+    space char: in the text fonts letters of a word are at most 0.3 pt apart, words at least 1.47 pt; in the bold
+    letter-spaced titles ("U S T A W A", DU/2005/684) letters are up to 1.5 pt apart, words ("o Służbie", DU/2009/1323)
+    at least 2.78 pt."""
+
+    def char_begins_new_word(self, prev_char, curr_char, direction, x_tolerance, y_tolerance) -> bool:
+        a, b = _quark_gap(prev_char), _quark_gap(curr_char)
+        if a and b and curr_char["x0"] - prev_char["x1"] > max(a, b) \
+                and abs(curr_char["top"] - prev_char["top"]) <= y_tolerance:
+            return True
+        return super().char_begins_new_word(prev_char, curr_char, direction, x_tolerance, y_tolerance)
+
+
 def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
     """(words, width, height, rects) per writing direction, dominant direction first.
 
@@ -291,8 +320,10 @@ def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
     # the footnote rule is usually a rect; some PDFs draw it as a line (DU/2024/1346, DU/2024/1018)
     rects = page.rects + [{**x, "line": True} for x in page.lines]
     if not angles or angles.most_common(1)[0][0] == 0:
-        return [(page.extract_words(extra_attrs=["size"], keep_blank_chars=False),
-                 float(page.width), float(page.height), rects)]
+        words = page.extract_words(extra_attrs=["size"], keep_blank_chars=False)
+        if any(_quark_gap(c) for c in page.chars) and _old_issue(_rows(words), float(page.height)):
+            words = _QuarkWords(extra_attrs=["size"], keep_blank_chars=False).extract_words(page.chars)
+        return [(words, float(page.width), float(page.height), rects)]
     frames = []
     w, h = float(page.width), float(page.height)
     for rot, _ in angles.most_common():

@@ -2,8 +2,9 @@ import unittest
 
 from eli2md.eli import parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
-                        _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act, _plain_math, _segment,
-                        _single_glyphs, _to_frame, _watermark, page_ranges, to_markdown)
+                        _QuarkWords, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
+                        _plain_math, _quark_gap, _segment, _single_glyphs, _to_frame, _watermark, page_ranges,
+                        to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
         "pos": 1, "publisher": "DU", "keywords": ["a", "b"]}
@@ -561,6 +562,26 @@ class Basic(unittest.TestCase):
         # a page of 2012 on has no act numbers
         body, _ = _frame_lines(self._shared_page("Dziennik Ustaw – 2 – Poz. 1369"), 595, 842, [], 2)
         self.assertEqual([l.act for l in body if l.act], [])
+
+    def test_quark_word_gaps(self):
+        # DU/2009/1323 p. 1: "z dnia" with no space char, a 2.9 pt gap; the bold title letter-spaced by 1.5 pt
+        def chars(text, x, font, gaps, w=5.0):
+            out = []
+            for ch, g in zip(text, gaps):
+                out.append({"text": ch, "x0": x, "x1": x + w, "top": 100.0, "bottom": 110.0, "doctop": 100.0,
+                            "upright": True, "size": 10.0, "fontname": font})
+                x += w + g
+            return out
+
+        def words(cs):
+            return [w["text"] for w in _QuarkWords(extra_attrs=["size"], keep_blank_chars=False).extract_words(cs)]
+        self.assertEqual(words(chars("zdnia", 50, "ABCDEF+Univers-PL", [2.9, 0, 0.2, 0, 0])), ["z", "dnia"])
+        self.assertEqual(words(chars("wart.", 50, "ABCDEF+Univers-PL", [1.5, 0.3, 0, 0, 0])), ["w", "art."])
+        self.assertEqual(words(chars("USTAWA", 50, "ABCDEF+Univers-BoldPL", [1.5] * 6)), ["USTAWA"])
+        self.assertEqual(words(chars("oSłużbie", 50, "ABCDEF+Univers-BoldPL", [2.9] + [0] * 7)), ["o", "Służbie"])
+        # fonts of other PDFs keep pdfplumber's 3 pt
+        self.assertEqual(words(chars("zdnia", 50, "ABCDEF+Arial", [2.9, 0, 0, 0, 0])), ["zdnia"])
+        self.assertEqual(_quark_gap({"fontname": "Times-Roman"}), None)
 
     def test_segment_column_break(self):
         # from the bottom of the left column to the top of the right one: as at a page break, a new block only
