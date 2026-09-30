@@ -86,11 +86,14 @@ def html_structure(html: str) -> dict | None:
             t.decompose()
     h1 = s.find("h1")
     sections = s.select("section[id^=part_]")
-    main = _walk(([h1] if h1 else []) + sections[:1])
+    # older acts (DU 2000-2011): the act's text in div.block outside the sections, which are its parts (as evaluate.py)
+    outside = [b for b in s.select("div.block") if not b.find_parent("section")]
+    old_layout = bool(sections) and len(" ".join(b.get_text(" ") for b in outside).split()) > 50
+    main = _walk(([h1] if h1 else []) + (outside if old_layout else sections[:1]))
     if len(main["tokens"]) < 10:
         return None
     main["title_end"] = len(tokens(h1.get_text(" "))) if h1 else 0
-    annex = _walk([sec for sec in sections[1:]
+    annex = _walk([sec for sec in (sections if old_layout else sections[1:])
                    if not any(a.get("href", "").endswith("text.pdf") for a in sec.find_all("a"))])
     annex["title_end"] = 0
     return {"main": main, "annex": annex}
