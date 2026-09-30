@@ -40,7 +40,6 @@ SCRIPTS = {ord(c): p for c, p in zip("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄
 # ("479³⁰ᶠ", "6b¹")
 PDF_INDEX = re.compile(r"(?<=\w)\[(\d{1,3}[a-z]{0,3})\]")
 MATH_ALNUM = re.compile("[\U0001D400-\U0001D7FF]")
-DOUBLED_CLASS = re.compile("[\U0001D400-\U0001D7FF\u0370-\u03FF]")  # math alphanumerics, Greek
 
 
 def plain_math(text: str) -> str:
@@ -52,7 +51,7 @@ def single_glyphs(p) -> None:
     cached chars). Same rule as eli2md.pdf._doubled, kept here so that the check runs against any version."""
     for c in p.chars:
         t = c["text"]
-        if len(t) == 2 and t[0] == t[1] and DOUBLED_CLASS.match(t) and "Math" in (c.get("fontname") or ""):
+        if len(t) == 2 and t[0] == t[1] and MATH_ALNUM.match(t) and "Math" in (c.get("fontname") or ""):
             c["text"] = t[0]
 
 

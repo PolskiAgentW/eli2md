@@ -38,7 +38,6 @@ ANNEX = re.compile(r"^Załącznik")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
 DUP_TOL = 0.3  # pt; a char drawn twice repeats within this distance (<= 0.1pt in DU/2025/1095; see _dedupe)
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
-DOUBLED_CLASS = re.compile("[\U0001D400-\U0001D7FFͰ-Ͽ]")  # math alphanumerics, Greek (see _doubled)
 CID = re.compile(r"\(cid:\d+\)")  # a glyph the PDF font does not map to Unicode (pdfminer's placeholder)
 FOOTNOTE_MARK = re.compile(r"^\d{1,3}\)?[,.;:]?$")
 # Small digits without ")" are not footnote markers but unit numbers (Art. 41¹), units (m²)
@@ -129,11 +128,11 @@ def _drop_watermark(page):
 
 def _doubled(c: dict) -> bool:
     """A glyph whose ToUnicode maps to its character twice: Word exports Cambria Math so, one 𝑘 reads "𝑘𝑘"
-    (DU/2026/1236 p. 10, "kk" in 0.6.3; poppler reads it doubled too). Only math alphanumerics and Greek in a
-    math font: in 2025-2026 all doubled chars of these classes are in Cambria Math (eval/math_glyphs_0.6.4.dev.md),
-    while "ff" in text fonts is a ligature."""
+    (DU/2026/1236 p. 10, "kk" in 0.6.3; poppler reads it doubled too). Only mathematical alphanumerics (also
+    math Greek 𝜂) in a font named *Math*: in DU+MP 2025-2026 all 16 991 doubled chars of Cambria Math are such
+    (19 acts), while doubled chars of text fonts are ligatures ("ff", "tt"; eval/math_glyphs_0.6.4.dev.md)."""
     t = c["text"]
-    return len(t) == 2 and t[0] == t[1] and bool(DOUBLED_CLASS.match(t)) and "Math" in (c.get("fontname") or "")
+    return len(t) == 2 and t[0] == t[1] and bool(MATH.match(t)) and "Math" in (c.get("fontname") or "")
 
 
 def _single_glyphs(page):

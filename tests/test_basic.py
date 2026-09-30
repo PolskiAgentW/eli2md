@@ -87,11 +87,12 @@ class Basic(unittest.TestCase):
         # Word's Cambria Math maps one glyph to its character twice: 𝑘 reads "𝑘𝑘", 𝜂 "𝜂𝜂" (DU/2026/1236 p. 10)
         def ch(t, font="GOZOOC+CambriaMath"):
             return {"text": t, "fontname": font}
-        for t in ("𝑘𝑘", "𝐿𝐿", "𝜂𝜂", "𝜆𝜆", "λλ"):
+        for t in ("𝑘𝑘", "𝐿𝐿", "𝜂𝜂", "𝜆𝜆"):
             self.assertTrue(_doubled(ch(t)), t)
-        # ligatures stay ("ff" is two letters), as do two different chars, one char and other fonts
-        for c in (ch("ff", "ABCD+TimesNewRomanPSMT"), ch("ff"), ch("fi"), ch("𝑘𝑙"), ch("𝑘"), ch("=="), ch("11"),
-                  ch("𝑘𝑘", "ABCD+TimesNewRomanPS-ItalicMT"), ch("λλ", "ABCD+SymbolMT")):
+        # ligatures stay ("ff", "tt" are two letters), as do two different chars, one char, other chars (never seen
+        # doubled in a math font) and other fonts
+        for c in (ch("ff", "ABCD+TimesNewRomanPSMT"), ch("tt", "ABCD+Calibri"), ch("ff"), ch("fi"), ch("𝑘𝑙"),
+                  ch("𝑘"), ch("=="), ch("11"), ch("λλ"), ch("𝑘𝑘", "ABCD+TimesNewRomanPS-ItalicMT")):
             self.assertFalse(_doubled(c), c)
 
         class Page:
