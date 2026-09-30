@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.6**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.7**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -84,7 +84,8 @@ postępowaniu…`. Artykuły z takim numerem nie były nagłówkami ani węzłam
 - Przypisy w składni Markdown: `[^1]` w tekście i `[^1]: …` na końcu. Numeracja przypisów zaczyna się od nowa
   w załącznikach i formularzach; od 0.6.1 kolejny przypis o tym samym numerze ma etykietę `[^1_2]`, `[^1_3]`…,
   a odnośnik wskazuje przypis z tej samej strony (albo najbliższej dalszej). Wcześniej etykiety się powtarzały
-  (w zbiorze 0.5.3: 466 plików) i w JSON część przypisów ginęła.
+  (w zbiorze 0.5.3: 466 plików) i w JSON część przypisów ginęła. Kolejne akapity przypisu (np. punkty „1) wdraża…”)
+  są wcięte o 4 spacje, jak wymaga składnia przypisów Markdown (od 0.6.7).
 - Objaśnienia wydrukowane w treści (pod tabelą albo formularzem w załączniku, przypis cytowany przez nowelizację:
   „¹⁾ Niniejsza ustawa wdraża…”) nie są przypisami Markdown. Od 0.6.6 ich etykiety i odnośniki do nich w tym samym
   załączniku mają postać `¹⁾`, jak w druku. Etykietę poznaję po tym, że znacznik zaczyna linię (odnośnik jest
@@ -173,6 +174,18 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.7** (2026-09-30). (1) Przypis z wyliczeniem („Niniejsza ustawa:” + „1) wdraża…” + „2) służy…”) jest w całości
+przypisem: punkty są jego kolejnymi akapitami (w Markdown z wcięciem, w JSON w tekście przypisu). Wcześniej przypis
+kończył się na dwukropku, a punkty trafiały na koniec pliku jako treść, w JSON jako fałszywe jednostki `pkt` po
+podpisie (DU/2026/421; w danych 0.6.5: 166 aktów Dz.U. i 3 M.P.). (2) Dz.U. 2000–2010 (QuarkXPress, czcionki „…PL”):
+polskie litery są dekodowane jako MacCE („og∏oszenia” → „ogłoszenia”). W PDF-ach z lat 2024–2026 (80 sprawdzonych)
+takich czcionek nie ma. To pierwszy krok do lat 2000–2011; dwa łamy tych lat nadal są czytane wierszami przez całą
+stronę. **Test s5113** (90 wylosowanych, 62 wcześniej nieużyte, zapisana w gicie przed oceną, oceniona raz, 0.6.6
+i 0.6.7 tymi samymi skryptami): słowa, struktura i znaczniki identyczne (treść główna R 0.9993, P 0.9979; przypisy
+R 0.9701, P 0.9564; załączniki R 0.9973, P 0.9627), drzewo: jednostki identyczne (treść 1297/1297; załączniki
+R 0.9976, P 0.9924), węzłów JSON bez odpowiednika w HTML 213 → 210 (fałszywe `pkt` z przypisu). Na próbach dev
+(s7, s2024) takich węzłów ubyło 37, reszta identyczna. Wyniki: `eval/*_test_s5113_v0.6.{6,7.dev}.*`.
 
 **0.6.6** (2026-09-30). Objaśnienia wydrukowane w treści (pod tabelami i formularzami w załącznikach, przypisy
 cytowane przez nowelizacje) mają znaczniki `¹⁾`, a nie `[^n]`, więc nie prowadzą już do przypisu aktu o tym samym
