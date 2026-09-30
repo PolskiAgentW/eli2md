@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.7**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.8**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -174,6 +174,27 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.8** (2026-09-30). Dziennik Ustaw 2000–2011 (wydania z numerami „Nr N”, dwa łamy). Tylko strony z nagłówkiem
+takiego wydania; wynik dla lat 2012+ jest bajt w bajt ten sam co w 0.6.7 (sprawdzone na 42 PDF-ach Dz.U. i M.P. 2023–2026
+wprost wobec 0.6.7 i na 154 PDF-ach 2012–2026 wobec wersji pośrednich).
+(1) Łamy czytane po kolei: lewy, potem prawy, a wiersze przez całą stronę (nagłówek, numer pozycji, tytuł) osobno;
+przejście z dołu lewego łamu na górę prawego działa jak podział strony. (2) Akt wycięty ze stron wspólnych z sąsiednimi
+aktami: od jego numeru pozycji (wyśrodkowana pogrubiona liczba) do numeru następnego aktu, z przypisami między nimi;
+`convert(..., position=N)`, CLI i `dataset` podają pozycję z ELI. (3) Spacje po jednoliterowych słowach w PDF-ach
+z QuarkXPress (2000–2009): odstęp bez znaku spacji, węższy niż próg pdfplumbera („zdnia” → „z dnia”). (4) Przypisy
+pod kreską w łamie (2010–2011) i pod wierszem „———” (2000–2009). **Test 2000–2011, s5200** (60 wylosowanych aktów
+z HTML, 59 poza próbami dev, zapisana w gicie przed oceną, oceniona raz; 0.6.7 i 0.6.8 tymi samymi skryptami):
+treść główna R 0.4743 → 0.9963, P 0.3975 → 0.8970 (macro R 0.9950); przypisy R 0.5046 → 0.9716, P 0.5014 → 0.9640;
+załączniki R 0.3640 → 0.6910, P 0.4770 → 0.9484; drzewo (tylko 0.6.8): treść R 0.9525, P 0.9885. Na próbach dev
+(s2000, s2011, po 40 aktów) treść R 0.9976 i 0.9909, P 0.7974 i 0.7433; bez dwóch aktów, w których wynik jest ponad
+3 razy dłuższy niż treść wzorca, P 0.9404 i 0.9782 (DU/2008/1547, DU/2004/1227: `evaluate.py` bierze ze starego HTML
+krótką „treść główną” — do sprawdzenia; orzeczenia TK z niepełnym HTML). Próba z HTML to głównie ustawy (30 z 40
+na dev), a akty bez HTML to głównie rozporządzenia i obwieszczenia, więc wynik dla nich może być inny. Znane błędy:
+rozdzielona pierwsza litera w PDF-ach z InDesign 2011 („s kładanie”, DU/2011/1134), odnośniki przypisów jako osobne
+linie, gdy przypisy mają większy udział niż treść (DU/2009/1323), spis treści na pierwszej stronie wydania (DU/2002/994),
+nagłówek załącznika tekstu jednolitego nie rozpoznany (DU/2010/648). Przegląd lat 1918–2011:
+`eval/du_pre2012_survey_0.6.5.md`. Wyniki: `eval/results_test2000_s5200_v0.6.{7,8.dev}.*`.
 
 **0.6.7** (2026-09-30). (1) Przypis z wyliczeniem („Niniejsza ustawa:” + „1) wdraża…” + „2) służy…”) jest w całości
 przypisem: punkty są jego kolejnymi akapitami (w Markdown z wcięciem, w JSON w tekście przypisu). Wcześniej przypis
