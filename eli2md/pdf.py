@@ -109,6 +109,7 @@ class Line:
     band: int = 0  # two-column pages (see _bands): full-width rows are odd bands, the text in columns even ones
     col: int = 0  # 1 = left, 2 = right column of a two-column band; 0 = read across the page
     act: int = 0  # the line is the position number that starts an act on a page of an old issue (ACT_NUMBER)
+    old: bool = False  # the line is on a page of an issue of 2011 or earlier (_old_issue)
 
 
 @dataclass
@@ -635,6 +636,7 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
                     col_rules.append((key(r[0]), r[0]["top"]))
 
     body, notes = [], []
+    head: Line | None = None  # the last line of an annex header of an old issue (see below)
     for r in rows:
         if any(r is s for s in seps):  # a rule, not text
             continue
@@ -674,10 +676,19 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             band=band,
             col=col,
             act=acts.get(id(r), 0),
+            old=old,
         )
         is_note = (rule_top is not None and line.top > rule_top) or (
             rule_top is None and line.size < body_size - 0.5 and line.top > ph * 0.6
         ) or any(under(k, t, (band, col), line.top) for k, t in col_rules)
+        # an annex header of an old issue set small in a column, with the line under it, is not a footnote
+        # (DU/2002/664 p. 4: "Załącznik do obwieszczenia Marszałka Sejmu Rzeczypospolitej" / "Polskiej z dnia … (poz. 664)"
+        # in 8 pt under the signature)
+        if old and (ANNEX.match(line.text) or head is not None and (band, col) == (head.band, head.col)
+                    and abs(line.size - head.size) < 0.5 and 0 <= line.top - head.bottom < head.size):
+            is_note, head = False, line
+        else:
+            head = None
         if line.text:  # a line of unmapped glyphs only is empty now
             (notes if is_note else body).append(line)
     body.sort(key=lambda l: (l.band, l.col, l.top))  # down the page; a band's left column before its right one
@@ -759,7 +770,9 @@ def _segment(body: list[Line]) -> list[Block]:
         kind = "p"
         if l.mark:
             kind = l.mark
-        elif ANNEX.match(l.text) and l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph:
+        elif ANNEX.match(l.text) and (l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph
+                                      or l.old and cur is not None and cur.kind == "signature"):
+            # in an old issue the annex (a consolidated text) starts under the signature, mid-page (DU/2010/648 p. 6)
             kind = "annex"
         elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
             kind = "signature"
