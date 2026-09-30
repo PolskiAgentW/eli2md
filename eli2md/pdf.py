@@ -274,8 +274,8 @@ def _image_text(page, ocr: str):
 
     Page 1 of international agreements has the masthead and title as text and the preamble and first
     articles as an image of text (MP/2026/869 s.1, MP/2012/646 s.1). Returns the OcrPage, or None when
-    the image is not text (forms, drawings, maps, signatures: ocr.text_image) or the text layer already
-    covers the image (a form drawn as an image under its text, MP/2025/...)."""
+    the image is not text (forms, drawings, maps, ID cards: ocr.text_image) or text of the text layer lies
+    over it: the image is a background, e.g. a form under its fields (DU/2026/872 s.39)."""
     from . import ocr as ocr_mod
     box = _largest_image_box(page)
     if box is None:

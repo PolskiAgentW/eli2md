@@ -187,6 +187,7 @@ class Ocr(unittest.TestCase):
         self.assertFalse(ocr.text_image(page(chart)))
         # a table drawn as an image, under its caption
         self.assertFalse(ocr.text_image(page(["Tabela 2. " + lines[0]] + lines[1:])))
+        self.assertFalse(ocr.text_image(page(["Rys. 5. " + lines[0]] + lines[1:])))
 
     def test_image_text_region(self):
         from eli2md import pdf

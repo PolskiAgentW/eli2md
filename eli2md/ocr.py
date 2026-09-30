@@ -57,7 +57,7 @@ IMAGE_MAX_SYMBOLS = 0.05  # per word: | = % « @ ... are table rules, chart labe
 SYMBOLS = re.compile(r"[|«»=<>®©™@#$%^*~_\[\]{}]")
 VOWEL = re.compile(r"[aeiouyąęóаеиоуыэюяαεηιουωάέήίόύώ]")
 ONE_LETTER_WORDS = {"a", "i", "o", "u", "w", "z"}
-FIGURE_CAPTION = re.compile(r"(Tabela|Tab\.|Wykres|Rys\.|Rysunek|Mapa|Schemat|Legenda|LEGENDA|Źródło)\b")
+FIGURE_CAPTION = re.compile(r"(?:Tabela|Wykres|Rysunek|Mapa|Schemat|Legenda|LEGENDA|Źródło)\b|(?:Tab|Rys)\.")
 
 # tesseract (pol) often reads a lone "1" as "|": "ust. | pkt 2", "Ustęp |". Fixed only after a unit
 # word or before "i 2", where a table rule "|" cannot stand (eval/ocr_eval_digital_*.txt: fix_text).
