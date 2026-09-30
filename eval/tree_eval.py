@@ -263,23 +263,23 @@ def score_part(ref: dict, hyp: dict, c: Counter, label: str, bad: list | None = 
                 bad.append((label, side, kind, _fmt(p), got, i_ref))
 
 
-def md_for(pos: int, md_cache: Path | None) -> str:
+def md_for(pos: int, md_cache: Path | None, year: int = 2024) -> str:
     if md_cache:
-        f = md_cache / f"{pos}.md"
+        f = md_cache / (f"{pos}.md" if year == 2024 else f"{year}_{pos}.md")
         if f.exists():
             return f.read_text(encoding="utf-8")
-    md = to_markdown(convert(str(CACHE / "DU" / "2024" / str(pos) / "text.pdf")))
+    md = to_markdown(convert(str(CACHE / "DU" / str(year) / str(pos) / "text.pdf")))
     if md_cache:
         md_cache.mkdir(parents=True, exist_ok=True)
-        (md_cache / f"{pos}.md").write_text(md, encoding="utf-8")
+        f.write_text(md, encoding="utf-8")
     return md
 
 
-def evaluate_act(pos: int, md_cache: Path | None = None, show: bool = False) -> dict:
-    ref = html_units((CACHE / "DU" / "2024" / str(pos) / "text.html").read_text(encoding="utf-8"))
+def evaluate_act(pos: int, md_cache: Path | None = None, show: bool = False, year: int = 2024) -> dict:
+    ref = html_units((CACHE / "DU" / str(year) / str(pos) / "text.html").read_text(encoding="utf-8"))
     if ref is None:
         return {"pos": pos, "skipped": "html_unusable"}
-    hyp = json_units(md_to_tree(md_for(pos, md_cache)))
+    hyp = json_units(md_to_tree(md_for(pos, md_cache, year)))
     c: Counter = Counter()
     bad: list = []
     for label in ("main", "annex"):
@@ -345,7 +345,7 @@ def main() -> None:
     rows, total = [], Counter()
     core = ("art", "par", "ust", "pkt", "lit")
     for it in items:
-        r = evaluate_act(it["pos"], a.md_cache, show=bool(a.show))
+        r = evaluate_act(it["pos"], a.md_cache, show=bool(a.show), year=it.get("year", 2024))
         r["type"] = it["type"]
         rows.append(r)
         if "skipped" in r:

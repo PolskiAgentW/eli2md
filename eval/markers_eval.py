@@ -24,7 +24,7 @@ from bs4 import BeautifulSoup
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from eli2md.pdf import SUP_DIGITS, convert, to_markdown  # noqa: E402
 
-CACHE = Path.home() / "cache" / "eli" / "DU" / "2024"
+CACHE = Path.home() / "cache" / "eli" / "DU"
 LINK = re.compile(r"\[\^\d+(?:_\d+)?\](?!:)")
 PRINTED = re.compile(rf"[{SUP_DIGITS}]+⁾")
 HTML_NOTE = re.compile(r"^\s*\d{1,3}\)\s*$")
@@ -58,7 +58,7 @@ def main() -> None:
     a = ap.parse_args()
     rows, skipped = [], 0
     for it in json.loads(Path(a.sample).read_text()):
-        d = CACHE / str(it["pos"])
+        d = CACHE / str(it.get("year", 2024)) / str(it["pos"])
         ref = html_counts((d / "text.html").read_text(encoding="utf-8"))
         if ref is None:
             skipped += 1

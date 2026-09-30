@@ -187,8 +187,8 @@ def score_part(ref: dict, hyp: dict, head_type: str, c: Counter, show: bool, lab
             print(f"{label:5} {kind:18} ...{' '.join(rt[max(0, i - 8):i])} | {' '.join(rt[i:i + 10])}")
 
 
-def evaluate_act(pos: int, show: bool = False) -> dict:
-    d = CACHE / "DU" / "2024" / str(pos)
+def evaluate_act(pos: int, show: bool = False, year: int = 2024) -> dict:
+    d = CACHE / "DU" / str(year) / str(pos)
     ref = html_structure((d / "text.html").read_text(encoding="utf-8"))
     if ref is None:
         return {"pos": pos, "skipped": "html_unusable"}
@@ -218,7 +218,7 @@ def main() -> None:
         items = [i for i in items if i["pos"] == a.show]
     rows, total = [], Counter()
     for it in items:
-        r = evaluate_act(it["pos"], show=bool(a.show))
+        r = evaluate_act(it["pos"], show=bool(a.show), year=it.get("year", 2024))
         r["type"] = it["type"]
         rows.append(r)
         if "skipped" in r:
