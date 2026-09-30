@@ -1,0 +1,8 @@
+  190 links html  163 md  158   printed html    0 md    0
+ 1718 links html    0 md    0   printed html  130 md  132
+  627 links html    0 md   13   printed html   14 md    0
+   28 links html   11 md   10   printed html    1 md    1
+  744 links html    3 md    5   printed html    8 md    8
+scored 40 acts, skipped 10 (HTML incomplete)
+TOTAL links    html   556  md   565  R=0.9892  P=0.9735  acts equal 36/40
+TOTAL printed  html   158  md   146  R=0.9114  P=0.9863  acts equal 38/40

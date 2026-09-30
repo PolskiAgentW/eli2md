@@ -150,13 +150,13 @@ class Tree(unittest.TestCase):
             "*Minister: J. K*",
             "## Załącznik do obwieszczenia Ministra z dnia 9 lutego 2024 r. (Dz. U. poz. 193)",
             "ROZPORZĄDZENIE", "Rozdział 1", "Przepisy ogólne", "##### § 1.", "Rozporządzenie określa:",
-            "1) zasady;", "1a)[^2] fundusz;", "##### § 2.", "[^3] 1. Treść.", "2.Druga treść bez spacji.",
+            "1) zasady;", "1a)[^2] fundusz;", "1b)¹⁾ zamówień;", "##### § 2.", "[^3] 1. Treść.", "2.Druga treść bez spacji.",
             "[^2]: Dodany przez § 1.", "[^3]: W brzmieniu ustalonym przez § 1."))
         self.assertEqual(paths(t["body"]), ["ust_1", "ust_2"])
         self.assertTrue(t["body"][2]["children"][0]["quoted"])
         a = t["annexes"][0]
         self.assertTrue(a["heading"].startswith("Załącznik do obwieszczenia"))
-        self.assertEqual(paths(a["body"]), ["par_1", "par_1/pkt_1", "par_1/pkt_1a", "par_2", "par_2/ust_1", "par_2/ust_2"])
+        self.assertEqual(paths(a["body"]), ["par_1", "par_1/pkt_1", "par_1/pkt_1a", "par_1/pkt_1b", "par_2", "par_2/ust_1", "par_2/ust_2"])
         self.assertEqual(a["body"][1], {"type": "heading", "label": "Rozdział 1", "text": "Przepisy ogólne"})
         par1 = a["body"][2]
         self.assertEqual(par1["text"], "Rozporządzenie określa:")

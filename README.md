@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.5**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.6**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -85,6 +85,12 @@ postępowaniu…`. Artykuły z takim numerem nie były nagłówkami ani węzłam
   w załącznikach i formularzach; od 0.6.1 kolejny przypis o tym samym numerze ma etykietę `[^1_2]`, `[^1_3]`…,
   a odnośnik wskazuje przypis z tej samej strony (albo najbliższej dalszej). Wcześniej etykiety się powtarzały
   (w zbiorze 0.5.3: 466 plików) i w JSON część przypisów ginęła.
+- Objaśnienia wydrukowane w treści (pod tabelą albo formularzem w załączniku, przypis cytowany przez nowelizację:
+  „¹⁾ Niniejsza ustawa wdraża…”) nie są przypisami Markdown. Od 0.6.6 ich etykiety i odnośniki do nich w tym samym
+  załączniku mają postać `¹⁾`, jak w druku. Etykietę poznaję po tym, że znacznik zaczyna linię (odnośnik jest
+  doklejony do słowa). Odnośnik zostaje przypisem `[^n]`, gdy na jego stronie jest przypis o tym numerze.
+  Wcześniej takie znaczniki były `[^1]` i prowadziły do przypisu aktu o tym numerze (DU/2025/1016: „Arsen[^1]”
+  w tabeli załącznika → przypis o ministrze kierującym działem).
 - Akapit z warstwy tekstowej zaczynający się od `>` albo `#` (np. `> 90 dni` w tabeli) jest poprzedzony `\`,
   żeby nie był cytatem blokowym (tak oznaczam OCR) ani nagłówkiem (od 0.6.1).
 - Treść, której nie da się odczytać jako tekst, jest oznaczona notką w miejscu, gdzie występuje:
@@ -167,6 +173,20 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.6** (2026-09-30). Objaśnienia wydrukowane w treści (pod tabelami i formularzami w załącznikach, przypisy
+cytowane przez nowelizacje) mają znaczniki `¹⁾`, a nie `[^n]`, więc nie prowadzą już do przypisu aktu o tym samym
+numerze (opis w sekcji o formacie). Słowa bez zmian. Nowa miara `eval/markers_eval.py`: liczba odnośników
+(`[^n]` wobec `a.gloss-link` w HTML) i znaczników wydrukowanych (`¹⁾` wobec `<sup>1)</sup>`), bez aktów, których
+HTML pomija treść („patrz oryginał”). Liczy tylko liczby, nie sprawdza, dokąd odnośnik prowadzi; przypisy
+załączników HTML podaje jako zwykły tekst, więc tam różnica jest cechą wzorca (DU/2024/1108). **Test s5112**
+(90 wylosowanych, 50 wcześniej nieużytych, zapisana w gicie przed oceną, oceniona raz, 0.6.5 i 0.6.6 tymi samymi
+skryptami; 40 aktów z pełnym HTML): odnośniki R 0.9910 → 0.9892, P 0.7750 → 0.9735; znaczniki wydrukowane
+R 0 → 0.9114, P 0 → 0.9863. Treść, przypisy i załączniki identyczne (treść główna micro R 0.9211: dwie umowy
+międzynarodowe, DU/2024/1679 i 363, to skany, 21 i 17 stron bez warstwy tekstowej, a ocena jest bez OCR;
+macro R 0.9605, P 0.9986). Drzewo: akapity pod właściwą jednostką 0.9105 → 0.9107 (treść), 0.9126 → 0.9124
+(załączniki); jednostki bez zmian. Na próbach dev (s7, s2024) zmiana dotyka 1–2 znaczników. Wyniki:
+`eval/*_test_s5112_v0.6.{5,6.dev}.*`.
 
 **0.6.5** (2026-09-30). Kreska przypisów jest rozpoznawana także wysoko na stronie (10–30% wysokości, np. strona
 z samymi przypisami, DU/2024/1539 s. 2) i gdy jest narysowana linią, a nie prostokątem (DU/2024/1346). W obu

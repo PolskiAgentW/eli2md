@@ -360,6 +360,30 @@ class Basic(unittest.TestCase):
         for d in ("[^1]: Przypis aktu.", "[^1_2]: Niepotrzebne skreślić.", "[^2]: Objaśnienie.", "[^1_3]: Na stronie 3."):
             self.assertIn(d, md)
 
+    def test_notes_printed_in_the_text(self):
+        # explanations under an annex table are labelled at the start of a line; their markers are not links to
+        # the act's footnotes (DU/2025/1016), nor are markers of footnotes quoted by an amendment
+        doc = Document(blocks=[Block("p", "USTAWA[^1] o paszach", 1), Block("p", "„[^1] Niniejsza ustawa wdraża.", 1),
+                               Block("annex", "Załącznik nr 1[^2]", 2), Block("p", "1 Arsen[^1] pasza 2[^3]", 3),
+                               Block("p", "[^1] Maksymalne zawartości. [^3] Obejmuje.", 3),
+                               Block("p", "Wzór[^2] i formularz[^7].", 4)],
+                       footnotes=["[^1] Minister kieruje działem.", "[^2] W brzmieniu ustalonym."], footnote_pages=[1, 2])
+        md = to_markdown(doc)
+        self.assertIn("USTAWA[^1] o paszach", md)
+        self.assertIn("„¹⁾ Niniejsza ustawa wdraża.", md)
+        self.assertIn("## Załącznik nr 1[^2]", md)
+        self.assertIn("1 Arsen¹⁾ pasza 2³⁾", md)
+        self.assertIn("¹⁾ Maksymalne zawartości. ³⁾ Obejmuje.", md)
+        self.assertIn("Wzór[^2] i formularz[^7].", md)  # 2 is a footnote, not a label; 7: its footnote may be lost
+        self.assertIn("[^1]: Minister kieruje działem.", md)
+        # a number labelled in the annex, but also a footnote printed on this page: the footnote
+        doc.blocks.append(Block("p", "Tabela[^1].", 5))
+        doc.footnotes.append("[^1] Przypis strony 5.")
+        doc.footnote_pages.append(5)
+        md = to_markdown(doc)
+        self.assertIn("Tabela[^1_2].", md)
+        self.assertIn("1 Arsen¹⁾ pasza", md)
+
     def test_masthead_end(self):
         for line in ("Poz. 5", "Poz. 1021", "Pozycja 19", ") Poz. 1024*", "Poz. 1024*)"):  # MP/2012/19, MP/2012/1024
             self.assertTrue(MASTHEAD_END.match(line), line)

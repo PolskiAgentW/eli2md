@@ -40,7 +40,7 @@ Rules:
 - Numbered rows of tables and forms are `text`, not units (_Builder.table_row): points of lists of coordinates,
   the rows and cell lists of a form card ("5. FUNKCJA PODSTAWOWA" … up to the next §, DU/2024/1337) and rows of
   a table that an amendment replaces without quotes ("– – – lp. 8 otrzymuje brzmienie:" / "8. Program …").
-- Footnote markers stay in the text as `[^n]`.
+- Footnote markers stay in the text as `[^n]`, markers of notes printed in the text as `¹⁾` (see pdf._body_notes).
 - Each annex has its own tree (texts announced as consolidated texts have their own Art./§).
 """
 from __future__ import annotations
@@ -48,11 +48,12 @@ from __future__ import annotations
 import json
 import re
 
-from .pdf import LOWER, QUOTE_HEAD, SECONDS, SUP_CHARS
+from .pdf import LOWER, QUOTE_HEAD, SECONDS, SUP_CHARS, SUP_DIGITS
 
 SUP = SUP_CHARS  # digits and letters of an index: "41¹", "22¹ᵃ"
 UPPER = "A-ZĄĆĘŁŃÓŚŹŻ"
-NOTE = r"(?:\[\^\d+(?:_\d+)?\])*"  # footnote markers glued to a unit number: "1a)[^2] treść", "Art. 5.[^3]"
+NOTE = rf"(?:\[\^\d+(?:_\d+)?\]|[{SUP_DIGITS}]+⁾)*"  # footnote markers glued to a unit number: "1a)[^2] treść",
+# "Art. 5.[^3]", or markers of notes printed in the text: "2)²⁾ zamówień" (pdf._body_notes)
 LEAD_NOTES = re.compile(r"^((?:\[\^\d+(?:_\d+)?\]\s*)+)(.*)$", re.S)  # "[^7] 1. Treść" (marker of the Art. heading)
 UNIT_RES = [  # (type, regex); groups: number, footnote markers, rest
     ("art", re.compile(rf"^Art\.\s*(\d+[a-z]*[{SUP}]*)\.({NOTE})\s*(.*)$", re.S)),

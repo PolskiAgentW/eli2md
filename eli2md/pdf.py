@@ -837,9 +837,42 @@ def _fix_refs(text: str, page: int, occ: dict[str, list[int]]) -> str:
     return re.sub(r"\[\^(\d+)\]", sub, text)
 
 
+# A marker that opens a printed line ("„¹⁾ Niniejsza ustawa…", "¹⁾ Maksymalne zawartości…") labels a note printed
+# in the text (explanations under an annex table, a footnote quoted by an amendment); a reference is glued to its word.
+BODY_LABEL = re.compile(r"(?:^|(?<=\s))([„“]?)\[\^(\d+)\](?=\s)")
+MARKER = re.compile(r"\[\^(\d+)\]")
+
+
+def _printed(n: str) -> str:
+    return n.translate(SUPER) + "⁾"  # "12" -> "¹²⁾", as printed
+
+
+def _body_notes(doc: Document, occ: dict[str, list[int]]) -> Document:
+    """Markers of notes printed in the text are not links to the footnotes: `[^1]` would point to the act's
+    footnote 1 (DU/2025/1016: "Arsen[^1]" in an annex table to "Minister … kieruje działem"). They are printed
+    as "¹⁾": the labels themselves, and in an annex the markers of the numbers it labels, unless that page has
+    a footnote with the number. A marker with no footnote at all stays: its footnote may be lost (DU/2024/127)."""
+    part, parts, labels = 0, [], {}
+    for b in doc.blocks:
+        part += b.kind == "annex"
+        parts.append(part)
+        if b.kind == "p":
+            labels.setdefault(part, set()).update(m.group(2) for m in BODY_LABEL.finditer(b.text))
+
+    def fix(b: Block, part: int) -> Block:
+        text = BODY_LABEL.sub(lambda m: m.group(1) + _printed(m.group(2)), b.text)
+        own = labels.get(part, set()) if part else set()
+        text = MARKER.sub(lambda m: _printed(m.group(1)) if m.group(1) in own
+                          and b.page not in occ.get(m.group(1), []) else m.group(0), text)
+        return replace(b, text=text)
+    return replace(doc, blocks=[fix(b, p) if b.kind == "p" and "[^" in b.text else b
+                                for b, p in zip(doc.blocks, parts)])
+
+
 def to_markdown(doc: Document, meta: dict | None = None) -> str:
     """Markdown body: one block per paragraph, top-level units (Art. or, if none, §) as h5."""
     occ = _footnote_pages(doc)
+    doc = _body_notes(doc, occ)
     if any(len(v) > 1 for v in occ.values()):
         doc = replace(doc, blocks=[replace(b, text=_fix_refs(b.text, b.page, occ)) for b in doc.blocks])
     depths = quote_depths(doc.blocks)
