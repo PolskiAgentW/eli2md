@@ -19,13 +19,15 @@ Liczby dla s5109 z 0.6.4 są takie same jak w wynikach 0.6.3.dev (R 0.9001, P 0.
 
 - **Recall: luka to głównie realny błąd konwertera.** Na s5110 2597 z 2818 brakujących tokenów (92%)
   to przypisy, które konwerter wstawił do tekstu załącznika albo treści głównej, bo nie rozpoznał kreski
-  przypisów (3 akty). Reszta (221, 8%) to numery przypisów (artefakt miary). Na s5109: 430 z 708 (61%)
-  to ten sam błąd (1 akt), 82 (12%) inny błąd konwertera, 196 (28%) numery.
+  przypisów (3 akty). Reszta (221, 8%) to numery przypisów (artefakt miary). Na s5109: 512 z 708 (72%)
+  to ten sam błąd (DU/2024/1018, 1659: kreska narysowana linią), 196 (28%) numery.
 - **Precision: na s5110 cała luka to artefakt referencji.** 3217 z 3269 nadmiarowych tokenów HTML ma
   w tekście załącznika (przypisy pod tabelami załączników, DU/2024/781: 3054), 52 to przypis formularza
-  w załączniku, który HTML daje tylko jako link. Na s5109 i próbkach dev jest inaczej: tam większość
-  nadmiaru to realne błędy (tekst formularzy/tabel drobnym drukiem na dole strony i stopki
-  „Strona N z M” brane za przypisy) albo przypisy, których HTML w ogóle nie ma (niesprawdzone).
+  w załączniku, który HTML daje tylko jako link. Na s5109 i próbkach dev jest inaczej: większość nadmiaru
+  nie występuje w HTML poza przypisami (s5109: 485 z 517, s2024: 619 z 1071, s7: 1485 z 2150). W
+  przejrzanych aktach to mieszanka: realne błędy (stopki „Strona N z 13” w DU/2024/1659: 373 tokeny;
+  tabele/pola formularzy drobnym drukiem na dole strony), objaśnienia pod wzorami, przypisy tekstu
+  jednolitego nieznalezione w HTML i przypisy, których HTML nie ma (te trzy ostatnie niesprawdzone w PDF).
 - Twierdzenie z README („niska precyzja przypisów to w dużej mierze właściwość referencji”) jest
   prawdziwe dla s5110, ale **nie dla recall** i tylko częściowo dla dev/s5109.
 - Naprawiłem błąd kreski przypisów (pdf.py, 1 test). s5110 (diagnostycznie, próbka skonsumowana): przypisy
@@ -56,7 +58,8 @@ tokenów (43%).
 | przyczyna | R | P | akty |
 |---|---:|---:|---|
 | (c) kreska jako `line`, przypisy w treści (0 przypisów na wyjściu) | 430 | 0 | DU/2024/1018 |
-| (c/f) na s. 2 przypis zastąpiony stopkami formularzy „Strona 2 z 13 … Ministerstwo Sprawiedliwości Strona 16”; prawdziwy przypis („Niniejsze rozporządzenie było poprzedzone…”) w treści | 82 | 373 | DU/2024/1659 (kreska s. 2 to `line`) |
+| (c) j.w. (kreska s. 2 to `line`): prawdziwy przypis („Niniejsze rozporządzenie było poprzedzone…”) w treści | 82 | 0 | DU/2024/1659 |
+| (f) stopki stron formularzy „Strona 2 z 13 … Ministerstwo Sprawiedliwości Strona 16” jako przypis | 0 | 373 | DU/2024/1659 |
 | (e) numery przypisów | 196 | 0 | wszystkie |
 | (d) tekst załącznika drobnym drukiem jako przypis („folia zawiera elementy graficzne…”, opis wzoru); HTML: 2 z 3 załączników link-only | 0 | 57 | DU/2024/398 |
 | (f) nieustalone: ciągi liczb „22 22 29 30 31…” jako przypisy | 0 | 84 | DU/2024/1751 (18 tokenów jest w HTML poza przypisami) |
@@ -64,7 +67,7 @@ tokenów (43%).
 | razem | 708 | 517 | |
 
 (DU/2024/164: 24 nadmiarowe tokeny, ale HTML nie ma przypisów, więc akt nie wchodzi do wyniku przypisów.)
-Realny błąd konwertera: R ≥ 512/708 (72%), P ≥ 373/517 (72%; + 57 i 84 prawdopodobnie też, niesprawdzone).
+Realny błąd konwertera: R 512/708 (72%), P ≥ 373/517 (72%; 57 i 84 prawdopodobnie też, niesprawdzone w PDF).
 
 ### Dev (0.6.4): s2024 n=41, s7 n=45
 
@@ -121,7 +124,10 @@ P 0.018 → 0.188 (stopki „Strona N z 13” nadal jako przypis). TOTAL: treś�
 R 0.9001 → 0.9716, P 0.9251 → 0.9293, załączniki bez zmian.
 
 structure s7: bez zmian; structure s2024: jedyna różnica „annex break unaligned 1440 → 1437”
-(P/R bez zmian). TREE_EVAL
+(P/R bez zmian). tree_eval s2024: main attach unaligned 63 → 62; annex attach 3101/3351 → 3102/3352
+akapitów, 140299/147024 → 140345/147070 słów (wskaźniki 0.9254 i 0.9543 bez zmian); reszta bez zmian.
+tree_eval s7: jedyna różnica annex attach 3707/4043 → 3708/4044 akapitów, 277438/284420 → 277484/284466
+słów (wskaźniki bez zmian). Testy jednostkowe: 62/62 OK.
 
 ## Łagodniejsza miara (evaluate.py, linia `TOTAL notes*`)
 
