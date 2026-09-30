@@ -19,11 +19,13 @@ import csv
 import datetime as dt
 import hashlib
 import json
+import os
 import resource
 import sys
 import time
 import traceback
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 
 import pdfplumber
@@ -96,11 +98,12 @@ def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
     """Worker: convert one downloaded act. Returns the index row fields it determines.
     After a MemoryError the worker's heap stays near the address-space limit: its next acts failed as
     "PdfminerException" and one outside the try stopped the whole run (MP/2020/1070, 2026-09-30). So such a worker
-    only hands its next acts back ("retry"), and main() converts them in a fresh pool."""
+    exits at its next act; the pool breaks and main() converts the acts not yet recorded in a fresh one. (Handing the
+    acts back drained the queue into that worker; a pool per batch of acts waited for the slowest act of each batch.)"""
     global _POISONED
     eli, pdf_path, out_path, with_json, ocr = job
     if _POISONED:
-        return {"eli": eli, "status": "retry"}
+        os._exit(3)  # the pool breaks (BrokenProcessPool) and main() goes on with a fresh one
     t0 = time.time()
     try:
         meta = json.loads((Path(pdf_path).parent / "meta.json").read_text())
@@ -193,29 +196,24 @@ def main(argv: list[str] | None = None) -> int:
         index[eli] = {**_base_row(it), "pdf_sha256": sha}
         jobs.append((eli, str(pdf), str(md_path(a.root, year, pos, a.publisher)), a.json, a.ocr))
 
-    done, by_eli = 0, {j[0]: j for j in jobs}
-    # A fresh pool for every batch of 25 acts per worker: a worker over its memory limit hands back at most the rest of
-    # its batch, not the rest of the queue (MP 2020-2024: 4 of 6 workers idle while one handed everything back).
-    # Not max_tasks_per_child: in CPython 3.14 the pool then shrank to one worker (exited workers not replaced).
-    size = 25 * max(1, a.jobs)
-    for attempt in range(1, 4):  # acts handed back by a worker over its memory limit go to a fresh pool
-        retry = []
-        for k in range(0, len(jobs), size):
+    done, recorded = 0, set()
+    for attempt in range(1, 6):  # a worker over its memory limit ends the pool; the acts not recorded go to a new one
+        pending = [j for j in jobs if j[0] not in recorded]
+        if not pending:
+            break
+        try:
             with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
                                      initargs=(a.mem_limit_gb,)) as ex:
-                for res in ex.map(_convert_one, jobs[k:k + size]):
-                    if res["status"] == "retry":
-                        retry.append(by_eli[res["eli"]])
-                        continue
+                for res in ex.map(_convert_one, pending):
+                    recorded.add(res["eli"])
                     done += _record(index, res)
                     if done % 50 == 0:
-                        print(f"converted {done}/{len(by_eli)}", flush=True)
+                        print(f"converted {done}/{len(jobs)}", flush=True)
                         save_index(a.root, index)
-        if not retry:
-            break
-        print(f"pass {attempt}: {len(retry)} acts handed back by a worker over its memory limit", flush=True)
-        jobs = retry
-    for eli, *_ in jobs if retry else []:  # still handed back after the last pass
+        except BrokenProcessPool:
+            print(f"pass {attempt}: a worker over its memory limit ended the pool; "
+                  f"{len(jobs) - len(recorded)} acts go to a new one", flush=True)
+    for eli, *_ in [j for j in jobs if j[0] not in recorded]:  # still not converted after the last pass
         done += _record(index, {"eli": eli, "status": "error", "error": "MemoryError in an earlier act (not retried)"})
     save_index(a.root, index)
     ok = sum(1 for r in index.values() if r["status"] == "ok")

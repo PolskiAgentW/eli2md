@@ -125,9 +125,11 @@ class Basic(unittest.TestCase):
         self.assertIsNone(d.cur_tag)
 
     def test_dataset_worker_over_memory_limit(self):
-        # after a MemoryError a worker hands its next acts back; they are converted in a fresh pool (MP/2020/1070)
+        # after a MemoryError a worker exits at its next act; the pool breaks and the acts not recorded are converted
+        # in a fresh pool (MP/2020/1070)
         import json as _json
         import tempfile
+        from concurrent.futures.process import BrokenProcessPool
         from pathlib import Path
         from unittest import mock
         import eli2md.dataset as ds
@@ -138,17 +140,19 @@ class Basic(unittest.TestCase):
 
         def convert_one(job):
             calls.append(job[0])
-            if job[0] == "DU/2000/1" and calls.count(job[0]) == 1:
+            if job[0] == "DU/2000/1":
                 return {"eli": job[0], "status": "error", "error": "MemoryError (over --mem-limit-gb)"}
-            if job[0] in ("DU/2000/2", "DU/2000/3") and calls.count(job[0]) == 1:
-                return {"eli": job[0], "status": "retry"}
+            if job[0] == "DU/2000/2" and calls.count(job[0]) == 1:
+                raise BrokenProcessPool("a worker exited")  # what the pool reports after os._exit in the worker
             return {"eli": job[0], "status": "ok", "error": "", "pages": 1, "words": 5}
 
         class Pool:  # in-process stand-in for ProcessPoolExecutor
             def __init__(self, **kw): pass
             def __enter__(self): return self
             def __exit__(self, *a): return False
-            def map(self, f, jobs): return [f(j) for j in jobs]
+            def map(self, f, jobs):
+                for j in jobs:
+                    yield f(j)
         with tempfile.TemporaryDirectory() as d:
             pdf = Path(d) / "text.pdf"
             pdf.write_bytes(b"%PDF-1.4")
@@ -157,13 +161,14 @@ class Basic(unittest.TestCase):
                     mock.patch.object(ds, "ProcessPoolExecutor", Pool), mock.patch.object(ds, "_convert_one", convert_one):
                 main(["--root", d, "--years", "2000"])
             idx = load_index(Path(d))
-        self.assertEqual(calls, ["DU/2000/1", "DU/2000/2", "DU/2000/3", "DU/2000/4", "DU/2000/2", "DU/2000/3"])
+        self.assertEqual(calls, ["DU/2000/1", "DU/2000/2", "DU/2000/2", "DU/2000/3", "DU/2000/4"])
         self.assertEqual({k: v["status"] for k, v in idx.items()},
                          {"DU/2000/1": "error", "DU/2000/2": "ok", "DU/2000/3": "ok", "DU/2000/4": "ok"})
-        ds._POISONED = True  # a poisoned worker does not convert
+        ds._POISONED = True  # a poisoned worker exits
         try:
-            self.assertEqual(ds._convert_one(("DU/2000/9", "x.pdf", "x.md", False, None)),
-                             {"eli": "DU/2000/9", "status": "retry"})
+            with mock.patch.object(ds.os, "_exit", side_effect=SystemExit(3)):
+                with self.assertRaises(SystemExit):
+                    ds._convert_one(("DU/2000/9", "x.pdf", "x.md", False, None))
         finally:
             ds._POISONED = False
         try:  # pdfplumber wraps a MemoryError of pdfminer
