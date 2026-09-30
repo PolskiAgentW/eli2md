@@ -41,8 +41,13 @@ What goes wrong with pdftotext (checked on KC, KP, KK, u.ś.u.d.e.):
   digit next to the text: "Art. 22¹ᶜ.⁴⁾ § 1." in KP comes out as "Art. 221c.4) § 1.".
 - **Page headers** ("Dziennik Ustaw –12– Poz. 1061") inside every article that crosses a page (raw only).
 
-Newer PDFs can differ: in the PDF of KP DU/2026/1245 pdftotext prints "Art. 22[1]." (with brackets), so there the
-numbers do not collide. That text has no HTML, so it is not measured here.
+Newer PDFs can differ. The newest consolidated texts of 8 of these acts are only in PDF (no HTML, so not measured
+here). In three of them pdftotext prints superscripts in brackets ("Art. 22[1]."), so the numbers do not collide:
+KC DU/2026/795, KP DU/2026/1245, KPC DU/2026/468. In PrAut DU/2025/24 they are flattened: 92 articles with a
+superscript ("Art. 35¹" as "Art. 351."), of them 6 collide with another article (6¹, 6², 6³ and 61, 62, 63):
+`grep "Art. 61\."` finds line 240 (art. 6¹) before line 1432 (art. 61).
+KK DU/2025/383, DU/2026/85, DU/2026/1244 and DU/2025/1362 have no articles with superscripts. Footnote texts are
+inside the articles in all of them.
 
 Limits: the baseline segmentation is mine (a simple one, as a grep user would read it); a better cleanup of
 pdftotext output is possible. The heading limits of the measurement described in tj_articles_0.6.17.md apply to both
