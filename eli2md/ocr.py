@@ -133,10 +133,11 @@ def ocr_image(img, lang: str = BASE_LANG) -> str:
     return _run(img, lang, "txt")
 
 
-def parse_tsv(tsv: str, height: int, page_number: int | None = None) -> OcrPage:
+def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float = HEADER_BAND) -> OcrPage:
     """Tesseract TSV -> paragraphs. Lines are joined (hyphenated words glued back), the gazette
     header at the top of the page is dropped (also when read in another script: a short line in the
-    header band with the page number)."""
+    header band with the page number). band: share of the image height searched for the header
+    (0 for an image cut out of a page: it has no header)."""
     lines: dict[tuple[int, int, int], list[tuple[int, int, str, float]]] = {}
     for row in tsv.splitlines()[1:]:
         f = row.split("\t")
@@ -150,7 +151,7 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None) -> OcrPage:
     for (blk, _, _), words in lines.items():
         text = " ".join(w for _, _, w, _ in words)
         top, bottom = min(w[0] for w in words), max(w[1] for w in words)
-        if top < HEADER_BAND * height and (
+        if top < band * height and (
                 OCR_HEADER.match(text) or (len(words) <= 8 and str(page_number) in re.findall(r"\d+", text))):
             continue
         confs += [c for _, _, _, c in words]
@@ -183,6 +184,11 @@ def usable(page: OcrPage) -> bool:
     return page.words >= MIN_WORDS and page.confidence >= MIN_CONF
 
 
+def text_image(page: OcrPage) -> bool:
+    """Is the OCR text of an image on a page with a text layer running text (a scan of text)?"""
+    return usable(page) and language(re.findall(r"\w+", " ".join(page.paragraphs).lower())) != "?"
+
+
 def osd(img) -> tuple[int, str]:
     """(degrees clockwise the image must be turned by, script) from tesseract's orientation and script
     detection; (0, "") if unknown (no osd data, too little text)."""
@@ -196,45 +202,49 @@ def osd(img) -> tuple[int, str]:
     return (int(rot.group(1)) if rot else 0), (script.group(1) if script else "")
 
 
-def _read(img, lang: str, pno: int | None, rotated: int = 0) -> OcrPage:
-    page = parse_tsv(_run(img, lang, "tsv"), img.height, pno)
+def _read(img, lang: str, pno: int | None, rotated: int = 0, band: float = HEADER_BAND) -> OcrPage:
+    page = parse_tsv(_run(img, lang, "tsv"), img.height, pno, band)
     page.lang, page.rotated = lang, rotated
     return page
 
 
-def ocr_page(page, lang: str = LANG, dpi: int = DPI) -> OcrPage:
+def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None) -> OcrPage:
     """OCR of a pdfplumber page: paragraphs, word count, median word confidence, language used.
 
     lang: tesseract language(s), or "auto" (see the module docstring). A page whose text is unusable
     is tried again turned as orientation detection says (DU/2025/15 is printed sideways: median
-    confidence 47 -> 96) and, with "auto", in the detected script's language (Greek)."""
+    confidence 47 -> 96) and, with "auto", in the detected script's language (Greek).
+    bbox: (x0, top, x1, bottom) in points: read only this part of the page (an image), without
+    looking for the gazette header in it."""
     have = tesseract()[2]
-    img = render(page, dpi)
+    img = render(page.crop(bbox) if bbox else page, dpi)
     pno = getattr(page, "page_number", None)
+    band = 0.0 if bbox else HEADER_BAND
     try:
-        read = _read(img, BASE_LANG if lang == "auto" else lang, pno)
+        read = _read(img, BASE_LANG if lang == "auto" else lang, pno, band=band)
     except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:  # the page keeps only the note
         why = f"took over {TIMEOUT} s" if isinstance(e, subprocess.TimeoutExpired) else f"failed ({e.returncode})"
         warnings.warn(f"page {pno}: tesseract {why}, page skipped")
         return OcrPage(lang=BASE_LANG if lang == "auto" else lang)
     try:
-        return _retry(read, img, pno, lang, have)
+        return _retry(read, img, pno, lang, have, band)
     except (subprocess.TimeoutExpired, subprocess.CalledProcessError):  # keep the first reading
         return read
 
 
-def _retry(read: OcrPage, img, pno: int | None, lang: str, have: frozenset[str]) -> OcrPage:
+def _retry(read: OcrPage, img, pno: int | None, lang: str, have: frozenset[str],
+           band: float = HEADER_BAND) -> OcrPage:
     """Second readings for ocr_page: turned page, other script, the page's own language."""
     if not usable(read):
         rot, script = osd(img)
         if rot:
             turned = img.rotate(-rot, expand=True)
-            again = _read(turned, read.lang, pno, rot)
+            again = _read(turned, read.lang, pno, rot, band)
             if again.confidence > read.confidence:
                 read, img = again, turned
         code = SCRIPT_TESS.get(script)
         if lang == "auto" and not usable(read) and code in have:
-            again = _read(img, code, pno, read.rotated)
+            again = _read(img, code, pno, read.rotated, band)
             if again.confidence > read.confidence:
                 read = again
     if lang == "auto" and usable(read) and read.lang == BASE_LANG:
@@ -242,7 +252,7 @@ def _retry(read: OcrPage, img, pno: int | None, lang: str, have: frozenset[str])
         code = TESS.get(guess)
         if code and code not in ("pol", "eng"):
             if code in have:
-                again = _read(img, f"{code}+eng", pno, read.rotated)
+                again = _read(img, f"{code}+eng", pno, read.rotated, band)
                 if again.confidence >= read.confidence:
                     read = again
             else:

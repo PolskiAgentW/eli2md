@@ -8,8 +8,9 @@ Layout: DIR/<PUB>/<year>/<PUB>-<year>-<pos>.md and DIR/index.csv (one row per ac
 With --json also DIR/<PUB>/<year>/<PUB>-<year>-<pos>.json (tree of units, eli2md.tree) next to each .md.
 An act is (re)converted when it is new, when its ELI `changeDate` differs from the index, or when
 it previously failed (or always, with --all). With --ocr also acts with pages without a text layer that
-were never converted with OCR (index column ocr_pages empty). Downloads are sequential and polite
-(see eli.fetch); conversion can be parallel.
+were never converted with OCR (index column ocr_pages empty) and acts with image pages whose images were
+never tried as images of text (column image_ocr_pages empty; it is new in 0.6.4). Downloads are sequential
+and polite (see eli.fetch); conversion can be parallel.
 """
 from __future__ import annotations
 
@@ -34,8 +35,8 @@ from .pdf import convert, to_markdown
 from .tree import md_to_tree
 
 FIELDS = ["eli", "year", "pos", "type", "title", "announcement_date", "promulgation", "change_date",
-          "pdf_sha256", "pages", "words", "no_text_pages", "image_pages", "ocr_pages", "status", "error", "converter",
-          "converted_at"]
+          "pdf_sha256", "pages", "words", "no_text_pages", "image_pages", "ocr_pages", "image_ocr_pages", "status", "error",
+          "converter", "converted_at"]
 FIRST_PDF_ONLY_YEAR = 2025  # from 2025 the ELI API has no HTML text for DU (checked 2026-09-29)
 
 
@@ -95,6 +96,7 @@ def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
         return {"eli": eli, "status": "ok", "error": "", "pages": pages,
                 "words": sum(len(b.text.split()) for b in doc.blocks), "no_text_pages": len(doc.no_text_pages),
                 "image_pages": len(doc.image_pages), "ocr_pages": len(doc.ocr_pages) if ocr else "",
+                "image_ocr_pages": len(doc.image_ocr_pages) if ocr else "",
                 "secs": round(time.time() - t0, 1)}
     except MemoryError:
         pass  # report below, once the frames holding the large objects are released
@@ -139,7 +141,8 @@ def main(argv: list[str] | None = None) -> int:
             if not it.get("textPDF") or it.get("textHTML"):
                 continue
             old = index.get(it["ELI"])
-            needs_ocr = bool(a.ocr and old and int(old.get("no_text_pages") or 0) > 0 and not old.get("ocr_pages"))
+            needs_ocr = bool(a.ocr and old and (int(old.get("no_text_pages") or 0) > 0 and not old.get("ocr_pages")
+                                                or int(old.get("image_pages") or 0) > 0 and not old.get("image_ocr_pages")))
             if not a.all and old and old["change_date"] == it["changeDate"] and old["status"] == "ok" \
                     and md_path(a.root, year, it["pos"], a.publisher).exists() and not needs_ocr:
                 mdf = md_path(a.root, year, it["pos"], a.publisher)
@@ -173,8 +176,8 @@ def main(argv: list[str] | None = None) -> int:
                              initargs=(a.mem_limit_gb,)) as ex:
         for res in ex.map(_convert_one, jobs):
             row = index[res["eli"]]
-            row.update({k: res[k] for k in ("status", "error", "pages", "words", "no_text_pages", "image_pages", "ocr_pages")
-                        if k in res})
+            row.update({k: res[k] for k in ("status", "error", "pages", "words", "no_text_pages", "image_pages",
+                                            "ocr_pages", "image_ocr_pages") if k in res})
             row.update(converter=f"eli2md {__version__}",
                        converted_at=dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
             done += 1
