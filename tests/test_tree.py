@@ -217,6 +217,14 @@ class Tree(unittest.TestCase):
             "par_1", "par_1/pkt_1", "par_1/pkt_2", "par_1/pkt_2/lit_d", "par_1/pkt_2/lit_d/tir_1",
             "par_1/pkt_2/lit_d/tir_1/tir_1", "par_1/pkt_2/lit_d/tir_1/tir_1/tir_1", "par_1/pkt_2/lit_d/tir_1/tir_1/tir_2",
             "par_1/pkt_2/lit_e", "par_2"])
+        # DU/2025/1847: the list of a replaced row is text too; "2)" after its "9)" continues the list of Art. 3
+        t = md_to_tree(md("##### Art. 3.", "W ustawie w załączniku do ustawy w części I:", "1) po ust. 9b dodaje się ust. 9ba w brzmieniu:",
+                          "9ba. Przyjęcie zgłoszenia dotyczącego budowy: 155 zł", "1) wolno stojących budynków,",
+                          "2) kolumbariów", "– od którego organ nie wniósł sprzeciwu", "2) po ust. 9c dodaje się ust. 9ca w brzmieniu:",
+                          "9ca. Przyjęcie zgłoszenia dotyczącego przebudowy: 155 zł", "1) wolno stojących budynków",
+                          "##### Art. 4.", "Ustawa wchodzi w życie po upływie 14 dni od dnia ogłoszenia."))
+        self.assertEqual(paths(t["body"]), ["art_3", "art_3/pkt_1", "art_3/pkt_2", "art_4"])
+        self.assertEqual(len(t["body"][0]["children"][0]["children"]), 4)
         # DU/2025/1895 prints "§ 7." without "1.": without an announced new wording "2." stays a unit
         t = md_to_tree(md("##### § 7.", "Rozliczenia są składane w terminach:", "1) do 20. dnia każdego miesiąca;",
                           "2) do dnia 5 lutego – rozliczenie roczne.", "2. Jeżeli termin przypada na sobotę, upływa w poniedziałek."))
