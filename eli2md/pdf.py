@@ -61,6 +61,7 @@ ITEM_START = re.compile(rf"^„?(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_CHARS}]*\)\s|
 POINT_START = re.compile(rf"^„?(\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s)")  # "1)", "a)" only
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
+ANNEX_UNDER_SIGNATURE = re.compile(r"^„?(?:Załącznik|ZAŁĄCZNIK)")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
 DUP_TOL = 0.3  # pt; a char drawn twice repeats within this distance (<= 0.1pt in DU/2025/1095; see _dedupe)
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
@@ -815,9 +816,10 @@ def _segment(body: list[Line]) -> list[Block]:
         kind = "p"
         if l.mark:
             kind = l.mark
-        elif ANNEX.match(l.text) and (l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph
-                                      or l.old and cur is not None and cur.kind == "signature"):
-            # in an old issue the annex (a consolidated text) starts under the signature, mid-page (DU/2010/648 p. 6)
+        elif ANNEX.match(l.text) and (l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph) \
+                or l.old and cur is not None and cur.kind == "signature" and ANNEX_UNDER_SIGNATURE.match(l.text):
+            # in an old issue the annex (a consolidated text) starts under the signature, mid-page (DU/2010/648 p. 6),
+            # also as the new text of an annex of the amended act (DU/2004/895 p. 9: "„ZAŁĄCZNIK — Część I")
             kind = "annex"
         elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
             kind = "signature"
