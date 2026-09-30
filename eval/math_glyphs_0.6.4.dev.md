@@ -60,8 +60,8 @@ Cambria Math nie są porównywalne z wcześniejszymi plikami `selfcheck_*`.
 
 **Przed i po** (wyniki: `eval/math_glyphs_0.6.4.dev.json`). 32 akty: 19 z podwojonymi glifami z przeglądu i 27
 aktów, w których grounded spadł przy 0.6.2 → 0.6.3 (14 wspólnych). 0.6.3 to opublikowane dane, „nowy” to ten
-kod (konwersja do /tmp, OCR tak jak w danych: `auto` dla aktów z niepustym `ocr_pages`). Obie wersje oceniam tą
-samą, nową miarą.
+kod (konwersja do /tmp, bez OCR, bo żaden z 32 aktów nie ma w danych stron z OCR). Obie wersje oceniam tą
+samą, nową miarą (`python eval/selfcheck.py` w wersji z tego commitu, funkcja `check`).
 
 | akt | podwojonych glifów w PDF | kept 0.6.3 → nowy | grounded 0.6.3 → nowy |
 |-----|---:|---|---|
@@ -88,7 +88,7 @@ samą, nową miarą.
 Tekst zmienił się w 19 aktach, w każdym lepszy kept i grounded. Średnia ważona tokenami: kept
 0.9388 → 0.9512, grounded 0.9746 → 0.9875.
 W pozostałych 13 aktach (spadek grounded w 0.6.3 miał tam inną przyczynę) wynik jest identyczny:
-DU/2025/822, DU/2026/1013, DU/2026/1231, DU/2026/1242, DU/2026/393, DU/2026/490, DU/2026/511, DU/2026/520, DU/2026/522, DU/2026/524, DU/2026/526, DU/2026/639, DU/2026/848.
+DU/2025/822, DU/2026/1013, 1231, 1242, 393, 490, 511, 520, 522, 524, 526, 639, 848.
 
 W 17 z 19 aktów zmiana to wyłącznie usunięte litery: każda zmieniona linia nowego wyniku jest podciągiem starej
 (380 linii). Usuniętych znaków jest tyle, ile podwojonych glifów w PDF (np. DU/2025/454: 3641, DU/2025/1548: 458),
@@ -130,7 +130,8 @@ Dwie przyczyny, dla których ukryta kopia trafia do wyniku i miesza się z widoc
 **Miara.** Strona PDF zawiera całą ukrytą kopię: 6864 tokeny wobec 2192 w samym tekście Dziennika (znaki spoza
 `PlacedPDF`, liczone ze stosem). Tekst Dziennika jest w wyniku prawie cały (kept względem niego 0.992). 1634 tokeny
 wyniku nie występują w tekście Dziennika: to widoczne wzory i przeciek ukrytej kopii. Kept 0.47 wynika więc głównie
-z miary (liczy niewidoczną kopię). Realną wadą wyniku są wymieszane akapity przy wzorach.
+z miary (liczy niewidoczną kopię). Realną wadą wyniku są wymieszane akapity przy wzorach. Po poprawce
+podwojeń: kept 0.4747 → 0.5041, grounded 0.8553 → 0.9084 (tabela wyżej). Akapity przy wzorach zostają wymieszane.
 
 **Bez poprawki.** Przyczyna 1 jest jasna, ale poprawka nie jest wąska. Wymaga stosu znaczników w agregatorze
 pdfplumbera (podklasa albo łatka). To zmienia, które znaki idą do testu tuszu, w każdym akcie z wklejonym PDF-em
@@ -144,7 +145,9 @@ wszystkich aktach z `PlacedPDF` i na próbach deweloperskich.
   nie liczyłem.
 - `🖸🖸` w MP/2025/781 (Segoe UI Symbol, 46 znaków, w wyniku 37 razy „🖸🖸”): wygląda na to samo podwojenie przy
   symbolu wypunktowania. Zostawione, bo to jeden akt i inna klasa znaków.
-- Rozłożone polskie litery (`s` + U+0301) w 4 aktach zostają rozłożone. Wynik nie jest w NFC. Nie sprawdzałem, czy
-  to przeszkadza w wyszukiwaniu.
+- Rozłożone polskie litery (`s` + U+0301): 772 znaki w 5 aktach MP (MP/2026/943 567, MP/2025/1013 122,
+  MP/2025/323 80, MP/2025/607 2, MP/2026/560 1). W opublikowanym wyniku zostają rozłożone (znaki łączące
+  w tych plikach: 563, 121, 80, 2, 1), więc wynik nie jest w NFC. Nie sprawdzałem, czy przeszkadza to
+  w wyszukiwaniu.
 - DU/2025/452 s. 7 i podobne: niewidoczna kopia wzoru pod widocznym (znane ograniczenie z 0.6.3). Poprawka tylko
   skraca podwojone litery („jjjjżjjeeee” → „jjżjee”), kopii nie usuwa.
