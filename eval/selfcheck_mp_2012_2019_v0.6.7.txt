@@ -1,0 +1,26 @@
+MP/2016/1000   Zarządzenie    kept=0.331 grounded=0.312 pdf=936 md=994
+MP/2017/1199   Zarządzenie    kept=0.343 grounded=0.384 pdf=820 md=731
+MP/2019/885    Uchwała        kept=0.436 grounded=0.816 pdf=2556 md=1366
+MP/2019/886    Uchwała        kept=0.509 grounded=0.843 pdf=2190 md=1321
+MP/2019/903    Uchwała        kept=0.563 grounded=0.811 pdf=2758 md=1916
+MP/2018/921    Uchwała        kept=0.575 grounded=0.591 pdf=14699 md=14296
+MP/2018/1054   Obwieszczenie  kept=0.593 grounded=0.911 pdf=1083 md=705
+MP/2017/465    Zarządzenie    kept=0.605 grounded=0.676 pdf=650 md=581
+MP/2019/884    Uchwała        kept=0.660 grounded=0.887 pdf=14344 md=10670
+MP/2015/1012   Zarządzenie    kept=0.677 grounded=0.915 pdf=637 md=471
+MP/2019/268    Uchwała        kept=0.681 grounded=0.843 pdf=5059 md=4089
+MP/2015/1137   Zarządzenie    kept=0.705 grounded=0.936 pdf=643 md=484
+MP/2016/647    Uchwała        kept=0.711 grounded=0.865 pdf=14422 md=11851
+MP/2014/176    Komunikat      kept=0.741 grounded=0.990 pdf=2683 md=2009
+MP/2012/504    Uchwała        kept=0.792 grounded=0.949 pdf=5902 md=4924
+MP/2015/746    Uchwała        kept=0.799 grounded=0.926 pdf=9362 md=8076
+MP/2013/789    Komunikat      kept=0.830 grounded=0.932 pdf=12067 md=10744
+MP/2016/722    Obwieszczenie  kept=0.842 grounded=0.999 pdf=1164 md=981
+MP/2014/600    Komunikat      kept=0.848 grounded=0.933 pdf=11762 md=10695
+MP/2013/566    Obwieszczenie  kept=0.850 grounded=0.993 pdf=975 md=835
+MP/2018/9      Zarządzenie    kept=0.853 grounded=0.984 pdf=434 md=376
+MP/2018/1018   Obwieszczenie  kept=0.853 grounded=0.998 pdf=634 md=542
+MP/2015/662    Zarządzenie    kept=0.858 grounded=0.982 pdf=260 md=227
+MP/2016/312    Uchwała        kept=0.859 grounded=0.982 pdf=689 md=603
+MP/2019/1190   Uchwała        kept=0.860 grounded=0.869 pdf=3444 md=3407
+n=9577 micro kept=0.9804; kept<0.95: 416
