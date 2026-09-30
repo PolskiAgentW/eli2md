@@ -84,6 +84,7 @@ OLD_HEADER = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\s*\d+")
 OLD_MASTHEAD = re.compile(r"^(?:DZIENNIK\s*USTAW|MONITOR\s*POLSKI)")
 OLD_ISSUE = re.compile(r"^Nr\s*\d+$")
 GUTTER = (6.0, 20.0)  # pt; the gap between the columns is 11.3-12 pt in DU 2000-2011 (DU/2005/1255, DU/2011/1134)
+DASH_RULE = re.compile(r"[—–-]{3,}")  # the rule over the footnotes of a QuarkXPress page (DU 2000-2009)
 # An act of an issue starts with its position number alone in a row, bold, centred on the page: 14 pt Univers-BoldPL
 # (DU 2000-2008: "1255" at x 282-313 above "USTAWA", DU/2005/1255 p. 1), 12 pt in 2009 (DU/2009/1323) and in the
 # InDesign issues of 2010-2011 (UniversPro-Bold, DU/2011/1134); body text is 10 pt or less.
@@ -402,12 +403,12 @@ def _mac_pl(page):
     return page
 
 
-def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
+def _page_lines(page, pno: int, gut: dict | None = None) -> tuple[list[Line], list[Line]]:
     """Return (body_lines, footnote_lines) for one page."""
     body, notes = [], []
     _mac_pl(page)
     for k, (words, fw, fh, rects) in enumerate(_frames(_drop_hidden_placed(_drop_watermark(_single_glyphs(page))))):
-        b, n = _frame_lines(words, fw, fh, rects, pno)
+        b, n = _frame_lines(words, fw, fh, rects, pno, gut)
         if k > 0:
             b = [l for l in b if not RUNNING_HEADER.match(l.text)]
         body += b
@@ -437,7 +438,7 @@ def _old_issue(rows: list[list[dict]], ph: float) -> bool:
         any(OLD_MASTHEAD.match(t) for t in texts) and any(OLD_ISSUE.match(t) for t in texts))
 
 
-def _gutter(rows: list[list[dict]], pw: float) -> tuple[float, float] | None:
+def _gutter(rows: list[list[dict]], pw: float, words: list[dict] = (), gut: dict | None = None) -> tuple[float, float] | None:
     """(gl, gr): the right edge of the left column and the left edge of the right column of a page set in two
     columns, or None.
 
@@ -447,8 +448,15 @@ def _gutter(rows: list[list[dict]], pw: float) -> tuple[float, float] | None:
     lines are all indented (points of a list, DU/2009/1323 p. 1). The page header spans the margins where both
     columns are indented (amendments, DU/2011/1430 p. 3); otherwise the leftmost right part of a row is the edge
     (DU/2011/1134 p. 2). It takes 3 rows whose left part is a line of text (from the left half's start, no gap
-    wider than the type: not cells of a table) ending at gl."""
+    wider than the type: not cells of a table) ending at gl. A smaller word in a gap fills it: the footnote marker of
+    "a)²⁾ zarobkowego" (DU/2008/1342 p. 5, a short column over a page of footnotes).
+    gut (see convert): 2 rows do where the gutter is the one of the act's other pages, gut["doc"] (the first page of
+    DU/2004/959: 3 lines of columns over a page of footnotes); such a page is noted in gut["cands"] until it is known."""
     rows = [sorted(r, key=lambda w: w["x0"]) for r in rows]
+
+    def filled(x: dict, y: dict) -> bool:
+        return any(x["x1"] - 1 <= w["x0"] and w["x1"] <= y["x0"] + 1 and w["x1"] - w["x0"] > 0.5 * (y["x0"] - x["x1"])
+                   and x["top"] - x["size"] < w["top"] < x["bottom"] and w["size"] < x["size"] - 0.5 for w in words)
     starts, ends = Counter(round(r[0]["x0"]) for r in rows), Counter(round(r[-1]["x1"]) for r in rows)
     head = [r for r in rows if OLD_HEADER.match(" ".join(w["text"] for w in r))]
     lm = [x for x, n in starts.items() if n >= 3] + [round(r[0]["x0"]) for r in head]
@@ -465,15 +473,21 @@ def _gutter(rows: list[list[dict]], pw: float) -> tuple[float, float] | None:
                 continue
             part = r[: k + 1]
             if part[0]["x0"] > left + 0.5 * (a["x1"] - left) or len(part) < 3 \
-                    or any(y["x0"] - x["x1"] > a["size"] for x, y in zip(part, part[1:])):
+                    or any(y["x0"] - x["x1"] > a["size"] and not filled(x, y) for x, y in zip(part, part[1:])):
                 continue
             edges.setdefault(round(a["x1"] * 2) / 2, []).append((a["x1"], b["x0"] if b else math.inf))
     for c in sorted(edges, key=lambda c: -sum(len(v) for x, v in edges.items() if abs(x - c) <= 0.5)):
         xs = [x for v in edges.values() for x in v if abs(x[0] - c) <= 0.8]
         gl = max(x for x, _ in xs)
         gr = min(left + right - gl, *(x for _, x in xs))
-        if len(xs) >= 3 and GUTTER[0] <= gr - gl <= GUTTER[1]:
+        if not GUTTER[0] <= gr - gl <= GUTTER[1]:
+            continue
+        if len(xs) >= 3:
             return gl, gr
+        if len(xs) == 2 and gut is not None:
+            if (doc := gut.get("doc")) and abs(gl - doc[0]) <= 1 and abs(gr - doc[1]) <= 1:
+                return gl, gr
+            gut["cands"].append((gl, gr))
     return None
 
 
@@ -538,14 +552,30 @@ def _index_words(r: list[dict], big: list[dict]) -> tuple[list[dict], list[dict]
     return rest, idx
 
 
-def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno: int) -> tuple[list[Line], list[Line]]:
+def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno: int,
+                 gut: dict | None = None) -> tuple[list[Line], list[Line]]:
     if not words:
         return [], []
     sizes = Counter()
     for w in words:
         sizes[round(w["size"], 1)] += len(w["text"])
     body_size = sizes.most_common(1)[0][0]
+    # a page of an old issue mostly of footnotes (DU/2004/959 p. 1: 3 lines of text over them, and a table of
+    # contents in 9 pt higher up): the body type is the one just above the row of dashes over the footnotes, or the
+    # markers in 7.5 pt would be text beside 9 pt footnotes
+    for sep in [w for w in words if DASH_RULE.fullmatch(w["text"]) and w["x1"] - w["x0"] < 0.3 * pw]:
+        above = Counter()
+        for w in words:
+            if sep["top"] - 100 <= w["top"] and w["bottom"] <= sep["top"]:
+                above[round(w["size"], 1)] += len(w["text"])
+        if sum(above.values()) >= 60 and above.most_common(1)[0][0] > body_size and _old_issue(_rows(words), ph):
+            body_size = above.most_common(1)[0][0]
+            break
     sup_limit = body_size * 0.75
+    # markers of 7.5 pt in 10 pt text of an old issue are small (DU/2004/959); figures of 7.5 pt in a table of 2025
+    # are not (DU/2025/1057)
+    if any(sup_limit <= w["size"] < sup_limit + 0.05 for w in words) and _old_issue(_rows(words), ph):
+        sup_limit += 0.05
 
     # Cluster words into lines. Superscripts attach to the line they overlap vertically.
     # Small words: footnote markers ("1)"), whole lines of small print, or sub/superscripts in
@@ -576,7 +606,9 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
     rows = _rows(normal)
     old = _old_issue(rows, ph)
     key = None  # word -> (band, column) on a two-column page (DU 2000-2011)
-    if old and (gutter := _gutter(rows, pw)):
+    if old and (gutter := _gutter(rows, pw, words, gut)):
+        if gut is not None:
+            gut["found"].append(gutter)
         key = _bands(normal, *gutter)
         groups: dict[tuple[int, int], list[dict]] = {}
         for w in normal:
@@ -611,13 +643,13 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
                 rule_top = r["top"] if rule_top is None else min(rule_top, r["top"])
     # Two-column page: footnote rules as ((band, column), top). Under a rule are the lines of its column below it and
     # the bands further down; the other column of its band goes on beside the footnotes.
-    col_rules: list[tuple[tuple[int, int], float]] = []
+    col_rules: list[tuple[tuple[int, int], float, bool]] = []  # (band, column), top, the bands further down too
     seps = []  # the rows of dashes over the footnotes of a Quark page
 
-    def under(k: tuple[int, int], top: float, wk: tuple[int, int], wtop: float) -> bool:
+    def under(k: tuple[int, int], top: float, wk: tuple[int, int], wtop: float, down: bool = True) -> bool:
         # not past the number of the next act: its footnotes sit under its text, above the next act's number
         # (DU/2005/1369 p. 2: "———" at top 331 in the left column, notes, "1370" at 447, its own "———" at 612)
-        return wtop > top and (wk == k or wk[0] > k[0]) and not any((*k, top) < s <= (*wk, wtop) for s in starts)
+        return wtop > top and (wk == k or down and wk[0] > k[0]) and not any((*k, top) < s <= (*wk, wtop) for s in starts)
     if key is not None:
         for r in rects:
             # InDesign pages (DU 2010-2011): a ~70 pt line at a column's edge, footnotes under it in the column
@@ -625,15 +657,20 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             if r["height"] < 1.5 and 50 < r["width"] < 160 and _free(r, rects):
                 below = [w for w in words if under(key(r), r["top"], key(w), w["top"])]
                 if below and all(w["size"] < FOOTNOTE_TYPE for w in below):
-                    col_rules.append((key(r), r["top"]))
+                    col_rules.append((key(r), r["top"], True))
         for r in rows:
             # QuarkXPress pages (DU 2000-2009): footnotes across the page under a row "———————" in the left
             # column (DU/2009/1323 p. 1)
-            if re.fullmatch(r"[—–-]{3,}", "".join(w["text"] for w in r)) and r[0]["x1"] - r[0]["x0"] < 0.3 * pw:
-                below = [w for w in words if under(key(r[0]), r[0]["bottom"], key(w), w["top"])]
-                if below and all(w["size"] < r[0]["size"] - 0.5 for w in below):
-                    seps.append(r)
-                    col_rules.append((key(r[0]), r[0]["top"]))
+            if DASH_RULE.fullmatch("".join(w["text"] for w in r)) and r[0]["x1"] - r[0]["x0"] < 0.3 * pw:
+                # only its column if the bands further down are text: an annex under the footnotes of both columns
+                # (DU/2005/1468 p. 4)
+                for down in (True, False):
+                    below = [w for w in words if under(key(r[0]), r[0]["bottom"], key(w), w["top"], down)]
+                    # the dashes are set in body type or, in a column, in footnote type (DU/2005/1468 p. 4: 9 pt)
+                    if below and all(w["size"] < max(r[0]["size"], body_size) - 0.5 for w in below):
+                        seps.append(r)
+                        col_rules.append((key(r[0]), r[0]["top"], down))
+                        break
 
     body, notes = [], []
     head: Line | None = None  # the last line of an annex header of an old issue (see below)
@@ -680,7 +717,7 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
         )
         is_note = (rule_top is not None and line.top > rule_top) or (
             rule_top is None and line.size < body_size - 0.5 and line.top > ph * 0.6
-        ) or any(under(k, t, (band, col), line.top) for k, t in col_rules)
+        ) or any(under(k, t, (band, col), line.top, down) for k, t, down in col_rules)
         # an annex header of an old issue set small in a column, with the line under it, is not a footnote
         # (DU/2002/664 p. 4: "Załącznik do obwieszczenia Marszałka Sejmu Rzeczypospolitej" / "Polskiej z dnia … (poz. 664)"
         # in 8 pt under the signature)
@@ -871,12 +908,17 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
     return body[start + 1: end], notes, first.page, last.page if last else math.inf
 
 
-def convert(path: str, ocr: str | None = None, position: int | None = None) -> Document:
+def convert(path: str, ocr: str | None = None, position: int | None = None,
+            _doc_gutter: tuple[float, float] | None = None) -> Document:
     """ocr: "auto" or tesseract language(s), e.g. "pol+eng", to read pages without a text layer
     (see ocr.py); None (default) = no OCR, such pages only get a note.
     position: the act's position in the gazette (ELI "DU/2005/1255" -> 1255). On pages of issues of 2011 and
-    earlier it cuts the act out of the pages it shares with other acts (see _own_act); None = no cut."""
+    earlier it cuts the act out of the pages it shares with other acts (see _own_act); None = no cut.
+    Two-column pages of those issues: a page with too few full lines to find its gutter (the first page of an act
+    over a page of footnotes) takes the gutter of the act's other pages; as it may come first, the PDF is then read
+    again (_doc_gutter)."""
     doc = Document()
+    gut = {"doc": _doc_gutter, "found": [], "cands": []}
     body: list[Line] = []
     notes: list[Line] = []
     if ocr:
@@ -884,7 +926,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None) -> D
         doc.ocr_engine = f"tesseract {ocr_mod.check(ocr)}"
     with pdfplumber.open(path) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
-            b, n = _page_lines(page, pno)
+            b, n = _page_lines(page, pno, gut)
             layer = None  # text layer of a page mostly of glyphs without Unicode (forms, DU/2025/161): OCR first
             if _unmapped_share(page) > 0.1:
                 layer, b, n = (b, n), [], []
@@ -930,6 +972,11 @@ def convert(path: str, ocr: str | None = None, position: int | None = None) -> D
             notes.extend(n)
             page.close()  # pdfplumber caches every parsed page; 867-page acts exhausted 14 GB RAM
 
+    if _doc_gutter is None and gut["cands"] and gut["found"]:
+        common = Counter((round(a), round(b)) for a, b in gut["found"]).most_common(1)[0][0]
+        g = next(g for g in gut["found"] if (round(g[0]), round(g[1])) == common)
+        if any(abs(a - g[0]) <= 1 and abs(b - g[1]) <= 1 for a, b in gut["cands"]):
+            return convert(path, ocr, position, _doc_gutter=g)
     body, notes = _drop_colophon(body, notes)
     if position is not None and (own := _own_act(body, notes, int(position))):
         body, notes, lo, hi = own

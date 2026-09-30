@@ -3,7 +3,7 @@ import unittest
 from eli2md.eli import parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
                         _QuarkWords, _drop_colophon, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
-                        _plain_math, _quark_gap, _segment, _single_glyphs, _to_frame, _watermark, page_ranges,
+                        _gutter, _plain_math, _quark_gap, _rows, _segment, _single_glyphs, _to_frame, _watermark, page_ranges,
                         to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
@@ -535,6 +535,79 @@ class Basic(unittest.TestCase):
         body, notes = _frame_lines(page, 595, 842, [], 1)
         self.assertEqual([l.text[:6] for l in notes], ["1) Nin"])
         self.assertNotIn("———————", [l.text for l in body])
+
+    def test_short_columns_over_footnotes(self):
+        # DU/2008/1342 p. 5: 3 lines of each column over a page of footnotes (8.5 pt, most of the page); a 7 pt
+        # marker after "a)" leaves a gap in the left column's second line
+        r = self._row
+
+        def x0(text, x1):  # a line ending at x1 with 4 pt word gaps
+            return x1 - 5 * len(text.replace(" ", "")) - 4 * text.count(" ")
+        page = r("Dziennik Ustaw Nr 213", 52, 148.8, 50, 9.5) + r("— 11711 —", 272.6, 324.7, 50, 9.5)
+        page += r("Poz. 1342", x0("Poz. 1342", 542.4), 542.4, 50, 9.5)
+        left = ["1) wymagania weterynaryjne dla podejmowania", "zarobkowego transportu zwierząt lub trans-",
+                "portu zwierząt wykonywanego w związku z pro-"]
+        right = ["c) obrotu zwierzętami, z wyjątkiem obrotu", "dzonego w ramach działalności rolniczej w ro-",
+                 "zumieniu przepisów prawa działalności gospo-"]
+        a = x0(left[1], 292)
+        page += r(left[0], x0(left[0], 292), 292, 241, 9.5) + r(right[0], x0(right[0], 543.3), 543.3, 241, 9.5)
+        page += r("a)", a - 21, a - 11, 269, 9.5) + r(left[1], a, 292, 269, 9.5)
+        page += r(right[1], x0(right[1], 543.3), 543.3, 269, 9.5)
+        page += [{"text": "2)", "x0": a - 11, "x1": a - 4.7, "top": 267.6, "bottom": 274.6, "size": 7.0}]
+        page += r(left[2], x0(left[2], 292), 292, 281, 9.5) + r(right[2], x0(right[2], 543.3), 543.3, 281, 9.5)
+        page += r("———————", 52, 118.5, 307, 9.5)
+        for k in range(20):
+            page += r("a) dyrektywy Rady 64/432/EWG z dnia 26 czerwca 1964 r. w sprawie problemów zdrowotnych zwierząt",
+                      71.6, 543.3, 317 + 9.5 * k, 8.5)
+        body, notes = _frame_lines(page, 595, 842, [], 5)
+        self.assertEqual(len(notes), 20)
+        self.assertEqual([(l.col, l.text[:13]) for l in body[1:]],
+                         [(1, "1) wymagania "), (1, "a)[^2] zarobk"), (1, "portu zwierzą"),
+                          (2, "c) obrotu zwi"), (2, "dzonego w ram"), (2, "zumieniu prze")])
+        # DU/2004/959 p. 1: 2 lines end at the left column's edge; the gutter of the act's other pages decides
+        rows = _rows(r(left[0], x0(left[0], 292), 292, 241) + r(right[0], x0(right[0], 543.3), 543.3, 241)
+                     + r(left[2], x0(left[2], 292), 292, 281) + r(right[2], x0(right[2], 543.3), 543.3, 281)
+                     + r("Dziennik Ustaw Nr 96", 52, 150, 50) + r("Poz. 959", 500, 543.3, 50))
+        gut = {"doc": None, "found": [], "cands": []}
+        self.assertIsNone(_gutter(rows, 595, [], gut))
+        self.assertEqual(len(gut["cands"]), 1)
+        gut["doc"] = gut["cands"][0]
+        self.assertEqual(_gutter(rows, 595, [], gut), gut["doc"])
+        self.assertIsNone(_gutter(rows, 595))
+
+    def test_column_footnotes_over_annex(self):
+        # DU/2005/1468 p. 4: footnotes under "———" (9 pt, as the notes) in the left column, the end of the act and
+        # its own footnote in the right one, then the annex across the page and in columns
+        r = self._row
+        page = r("Dziennik Ustaw Nr 177", 38, 136, 50) + r("— 11112 —", 270, 324, 50) + r("Poz. 1468", 513.4, 557.4, 50)
+        for k in range(5):
+            page += r("treść lewej kolumny tego aktu, wiersz numer dany", 38, 292, 80 + 11 * k)
+            page += r("treść prawej kolumny tego aktu, wiersz numer tu", 303.3, 557.4, 80 + 11 * k)
+        page += r("———————", 38, 108, 140, 9) + r("4) Zmiany tekstu jednolitego wymienionej ustawy", 38, 292, 150, 9)
+        page += r("zostały ogłoszone w Dz. U. z 2000 r. Nr 22, poz. 270", 50, 292, 160, 9)
+        page += r("Prezydent Rzeczypospolitej Polskiej: A. Kwaśniewski", 310, 557.4, 140)
+        page += r("———————", 303.3, 373.3, 160) + r("6) Zmiany wymienionej ustawy zostały ogłoszone w", 303.3, 557.4, 172, 9)
+        page += r("Załącznik do ustawy z dnia 29 sierpnia 2005 r. (poz. 1468)", 290.4, 557.4, 200, 8)
+        page += r("WYKAZ ROBÓT ZALICZANYCH DO REMONTU BUDYNKU LUB LOKALU MIESZKALNEGO", 80, 515, 220)
+        for k in range(4):
+            page += r("treść lewej kolumny załącznika, wiersz numer tu", 38, 292, 240 + 11 * k)
+            page += r("treść prawej kolumny załącznika, wiersz numer tu", 303.3, 557.4, 240 + 11 * k)
+        body, notes = _frame_lines(page, 595, 842, [], 4)
+        self.assertEqual([l.text[:6] for l in notes], ["4) Zmi", "zostały"[:6], "6) Zmi"])
+        self.assertNotIn("———————", [l.text for l in body])
+        self.assertIn("Załącznik do ustawy z dnia 29 sierpnia 2005 r. (poz. 1468)", [l.text for l in body])
+        self.assertEqual(len([l for l in body if "załącznika" in l.text]), 8)
+
+    def test_markers_three_quarters_of_the_type(self):
+        # DU/2004/959: 7.5 pt markers in 10 pt text; in 2012 on such a word stays text (DU/2025/1057: table figures)
+        r = self._row
+        line = r("(Dz. U. Nr 16, poz. 93, z późn. zm.", 130, 292, 100)
+        line += [{"text": "2)", "x0": 293, "x1": 299, "top": 99, "bottom": 106.5, "size": 7.5}]
+        line += [{"text": ")", "x0": 299.5, "x1": 302, "top": 100, "bottom": 110, "size": 10.0}]
+        body, _ = _frame_lines(r("Dziennik Ustaw Nr 96 — 6501 — Poz. 959", 38, 557, 50) + line, 595, 842, [], 2)
+        self.assertEqual(body[1].text, "(Dz. U. Nr 16, poz. 93, z późn. zm.[^2])")
+        body, _ = _frame_lines(r("Dziennik Ustaw – 2 – Poz. 959", 38, 557, 50) + line, 595, 842, [], 2)
+        self.assertNotIn("[^2]", " ".join(l.text for l in body))
 
     def _shared_page(self, header):
         # DU/2005/1369 p. 2: the end of act 1369 in two columns, its footnote under "———" in the left column, then
