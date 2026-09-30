@@ -101,6 +101,28 @@ class Basic(unittest.TestCase):
         self.assertEqual([c["text"] for c in Page.chars], ["𝑘", "1", "ff"])
         self.assertEqual(_plain_math("0,302∙𝑘1∙𝐴𝑝"), "0,302∙k1∙Ap")
 
+    def test_placed_tag_survives_nested_marked_content(self):
+        # a formula "/Span <</ActualText …>> BDC … EMC" inside "/PlacedPDF BDC" (DU/2026/40): pdfplumber reset the
+        # tag to None at the inner EMC, so the rest of the placed page skipped the ink test
+        from pdfminer.pdfinterp import PDFResourceManager
+        from pdfminer.psparser import LIT
+        import pdfplumber.page
+        from eli2md.pdf import _PlacedTags
+        self.assertIs(pdfplumber.page.PDFPageAggregatorWithMarkedContent, _PlacedTags)
+        d = _PlacedTags(PDFResourceManager(), pageno=1)
+        d.begin_tag(LIT("PlacedPDF"))
+        d.begin_tag(LIT("Span"), {"ActualText": "𝑘𝑘"})
+        self.assertEqual(d.cur_tag, "PlacedPDF")
+        d.end_tag()
+        self.assertEqual(d.cur_tag, "PlacedPDF")
+        d.end_tag()
+        self.assertIsNone(d.cur_tag)
+        d.begin_tag(LIT("P"), {"MCID": 3})  # outside a placed PDF: as in pdfplumber
+        d.begin_tag(LIT("Span"))
+        self.assertEqual(d.cur_tag, "Span")
+        d.end_tag()
+        self.assertIsNone(d.cur_tag)
+
     def test_dataset_index_roundtrip(self):
         import tempfile
         from pathlib import Path

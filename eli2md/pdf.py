@@ -17,7 +17,32 @@ from collections import Counter
 from dataclasses import dataclass, field, replace
 
 import pdfplumber
+import pdfplumber.page
 from pdfplumber.utils import extract_words
+
+
+class _PlacedTags(pdfplumber.page.PDFPageAggregatorWithMarkedContent):
+    """pdfplumber keeps no stack of marked content: an EMC resets the tag to None. Word formulas in a placed
+    PDF nest "/Span <</ActualText …>> BDC … EMC" inside "/PlacedPDF BDC", so after the first formula the rest
+    of the placed page lost its tag and skipped the ink test: its hidden copy went into the output, mixed
+    with the visible text (DU/2026/40 p. 2-5: 7860 of 22175 placed chars; 10 of 118 acts with Cambria Math in
+    2025-2026, none in a random 300). Here everything inside /PlacedPDF is tagged PlacedPDF; other tags are
+    as in pdfplumber."""
+
+    def begin_tag(self, tag, props=None):
+        super().begin_tag(tag, props)
+        self._stack = getattr(self, "_stack", []) + [self.cur_tag]
+        if "PlacedPDF" in self._stack:
+            self.cur_tag = "PlacedPDF"
+
+    def end_tag(self):
+        self._stack = getattr(self, "_stack", [])[:-1]
+        super().end_tag()
+        if "PlacedPDF" in self._stack:
+            self.cur_tag = "PlacedPDF"
+
+
+pdfplumber.page.PDFPageAggregatorWithMarkedContent = _PlacedTags  # looked up by Page when it parses a page
 
 RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
 # "Pozycja 19": MP 2012 up to poz. 130; ") Poz. 1024*": the last act of a year has a note "*) Ostatnia pozycja"
