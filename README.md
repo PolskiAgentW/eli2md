@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.10**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.11**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -174,6 +174,27 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.11** (2026-09-30). (1) Cytat, którego źródło nie zamyka, kończy się na następnej jednostce aktu
+zmieniającego. W PDF-ach 2000–2011 zdarza się, że nowelizacja w nowelizacji zamyka tylko jeden z dwóch cudzysłowów
+(DU/2007/162: „…sądu,”;”, w HTML „””;”) albo cytat nie ma zamknięcia wcale (DU/2004/895: pkt 17 kończy się
+„…z późn. zm.).”). Wcześniej cała reszta aktu była „cytatem”: bez nagłówków `##### Art.` i bez punktów w JSON.
+Teraz „Art. N.” (N = ostatni artykuł poza cytatem + 1, same cyfry) wraca do poziomu 0, chyba że numer kontynuuje
+artykuły cytowane albo poprzedni akapit zapowiada cytat („…:”). To samo w drzewie dla „N) …” z poleceniem zmiany
+(„otrzymuje brzmienie”, „dodaje się”, „w art. 34:” …), z numeracją cytatów liczoną osobno dla każdej głębokości
+(DU/2008/539: „2) uchyla się art. 6a;” należy do cytowanej nowelizacji). (2) Strony o szerokości 576 pt (DU 2000:
+4 z 60 PDF-ów) mają tekst w tym samym miejscu co strony 595 pt: granica lewego łamu i środek numeru aktu liczone
+są od tekstu, nie od strony (DU/2000/839: łamy były przemieszane, a spis treści zeszytu zostawał w akcie).
+Wynik 2012+ bez zmian (93 PDF-y: Markdown; 120 PDF-ów: drzewa JSON). Dev s2000: drzewo treści R 0.9540 → 0.9987,
+P 0.9993; s2011, s2024, s7 bez zmian. **Test 2000–2011, s5205** (70 wylosowanych, 59 poza wcześniejszymi próbami,
+zapisana przed oceną, oceniona raz; 58 ocenionych, DU/2008/59 ma pusty HTML): tekst bez zmian wobec 0.6.10 (treść
+R 0.9525, P 0.9921; bez DU/2000/70 i 179, które nie mają warstwy tekstowej: R 0.9984, P 0.9921; przypisy R 0.9777,
+P 0.9936); drzewo treści R 0.9932 → 0.9981, P 0.9992 → 0.9990. Na próbie s5204 (65 aktów, oceniona raz wersją
+0.6.10): treść R 0.9963, P 0.9900, przypisy R 0.9587, P 0.9914, drzewo treści R 0.9936, P 0.9959. Zmianę (2)
+znalazłem na s5204 (akt 839), więc jej zysk tam (treść R → 0.9972) nie jest niezależny; na s5205 nie ma takich stron.
+Uwaga o latach 2000–2011: w próbach s5202–s5205 cztery akty nie mają warstwy tekstowej (DU/2000/70, 179, 985,
+DU/2001/1186: PDF-y „Distiller 4.0 for Macintosh; modified using iText”, bez fontów). Z `--ocr` czyta je OCR.
+Wyniki: `eval/*_test2000_s520{4,5}_*`.
 
 **0.6.10** (2026-09-30). Dz.U. 2000–2011: strony, na których przypis zajmuje większość miejsca. (1) Łamy nad
 przypisem mają tu 2–3 pełne wiersze. Rynna (odstęp między łamami) wymagała 3 wierszy kończących się na jednej
@@ -635,8 +656,8 @@ zbiorze 2025–2026 to ok. 35 min czasu jednego wątku.
   tekstową z samym tytułem (np. MP/2026/869). Do 0.6.3 OCR jej nie czytał. Od 0.6.4 z `--ocr` czyta taki
   obraz, gdy wygląda na tekst ciągły (opis wyżej, w sekcji o OCR). W 2025–2026 tak jest na 25 z 43 umów. Obrazy, w których przeważają
   krótkie linie (tytuły, nagłówki artykułów, np. MP/2012/646 s. 1), dalej zostają z notką.
-- Dz.U. 2000–2011: część PDF-ów nie ma warstwy tekstowej (w próbach s5202 i s5203 po 1 z 67 aktów: DU/2000/985,
-  DU/2001/1186). Bez `--ocr` zostaje z nich tylko notka. Podpisy sędziów w orzeczeniach TK bywają sklejone w jeden
+- Dz.U. 2000–2011: część PDF-ów nie ma warstwy tekstowej (w próbach s5202–s5205 4 z 258 aktów: DU/2000/70, 179,
+  985, DU/2001/1186; 3 z nich z 2000 r.). Bez `--ocr` zostaje z nich tylko notka. Podpisy sędziów w orzeczeniach TK bywają sklejone w jeden
   wiersz. Miary dla tych lat pochodzą z aktów, które mają HTML (głównie ustawy, obwieszczenia i orzeczenia), a akty
   bez HTML to w większości rozporządzenia, których ta miara nie obejmuje.
 - Domyślnie bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 53 356 stron

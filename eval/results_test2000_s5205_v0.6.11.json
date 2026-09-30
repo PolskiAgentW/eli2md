@@ -1,0 +1,2037 @@
+[
+ {
+  "pos": 1636,
+  "secs": 0.17,
+  "body": {
+   "ref": 280,
+   "hyp": 280,
+   "matched": 280,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 856,
+  "secs": 0.41,
+  "body": {
+   "ref": 1134,
+   "hyp": 1134,
+   "matched": 1134,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 273,
+  "secs": 0.19,
+  "body": {
+   "ref": 196,
+   "hyp": 196,
+   "matched": 196,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1188,
+  "secs": 8.66,
+  "body": {
+   "ref": 4766,
+   "hyp": 4769,
+   "matched": 4763,
+   "recall": 0.9993705413344524,
+   "precision": 0.9987418746068358,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 3355,
+   "hyp": 3215,
+   "matched": 3215,
+   "recall": 0.9582712369597616,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 15329,
+   "hyp": 15356,
+   "matched": 15326,
+   "recall": 0.9998042925174506,
+   "precision": 0.9980463662412087,
+   "complete_ref": true,
+   "n_annex_html": 1
+  },
+  "notes_lenient": {
+   "ref": 3355,
+   "hyp": 3355,
+   "matched": 3355,
+   "matched_p": 3355
+  },
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 924,
+  "secs": 3.63,
+  "body": {
+   "ref": 2717,
+   "hyp": 2717,
+   "matched": 2717,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 1333,
+   "hyp": 1233,
+   "matched": 1230,
+   "recall": 0.9227306826706677,
+   "precision": 0.9975669099756691
+  },
+  "annex": {
+   "ref": 4000,
+   "hyp": 4090,
+   "matched": 3993,
+   "recall": 0.99825,
+   "precision": 0.976283618581907,
+   "complete_ref": true,
+   "n_annex_html": 1
+  },
+  "notes_lenient": {
+   "ref": 1333,
+   "hyp": 1256,
+   "matched": 1253,
+   "matched_p": 1254
+  },
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 871,
+  "secs": 0.95,
+  "body": {
+   "ref": 1921,
+   "hyp": 1927,
+   "matched": 1918,
+   "recall": 0.9984383133784487,
+   "precision": 0.9953295277633627,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 236,
+   "hyp": 233,
+   "matched": 233,
+   "recall": 0.9872881355932204,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 236,
+   "hyp": 236,
+   "matched": 236,
+   "matched_p": 236
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 247,
+  "secs": 1.84,
+  "body": {
+   "ref": 3445,
+   "hyp": 3445,
+   "matched": 3445,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1698,
+  "secs": 0.31,
+  "body": {
+   "ref": 92,
+   "hyp": 92,
+   "matched": 92,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 2662,
+  "secs": 0.46,
+  "body": {
+   "ref": 743,
+   "hyp": 743,
+   "matched": 743,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 31,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 0.0,
+   "complete_ref": false,
+   "n_annex_html": 1
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1373,
+  "secs": 0.69,
+  "body": {
+   "ref": 2097,
+   "hyp": 2120,
+   "matched": 2074,
+   "recall": 0.989031950405341,
+   "precision": 0.9783018867924528,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 195,
+   "hyp": 192,
+   "matched": 192,
+   "recall": 0.9846153846153847,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 195,
+   "hyp": 195,
+   "matched": 195,
+   "matched_p": 195
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1222,
+  "secs": 0.34,
+  "body": {
+   "ref": 341,
+   "hyp": 354,
+   "matched": 332,
+   "recall": 0.9736070381231672,
+   "precision": 0.9378531073446328,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 3,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 0.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 3,
+   "matched": 0,
+   "matched_p": 3
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 1725,
+  "secs": 2.82,
+  "body": {
+   "ref": 7404,
+   "hyp": 7431,
+   "matched": 7372,
+   "recall": 0.9956780118854673,
+   "precision": 0.9920602879827749,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 1548,
+   "hyp": 1535,
+   "matched": 1535,
+   "recall": 0.9916020671834626,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 1548,
+   "hyp": 1548,
+   "matched": 1548,
+   "matched_p": 1548
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 379,
+  "secs": 0.47,
+  "body": {
+   "ref": 1295,
+   "hyp": 1295,
+   "matched": 1295,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 52,
+   "hyp": 51,
+   "matched": 51,
+   "recall": 0.9807692307692307,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 52,
+   "hyp": 52,
+   "matched": 52,
+   "matched_p": 52
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 2260,
+  "secs": 0.96,
+  "body": {
+   "ref": 2117,
+   "hyp": 2117,
+   "matched": 2117,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 173,
+   "hyp": 209,
+   "matched": 170,
+   "recall": 0.9826589595375722,
+   "precision": 0.8133971291866029
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 173,
+   "hyp": 213,
+   "matched": 173,
+   "matched_p": 207
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1035,
+  "secs": 2.01,
+  "body": {
+   "ref": 5717,
+   "hyp": 5717,
+   "matched": 5717,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 1989,
+   "hyp": 1974,
+   "matched": 1974,
+   "recall": 0.9924585218702866,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 1989,
+   "hyp": 1989,
+   "matched": 1989,
+   "matched_p": 1989
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 927,
+  "secs": 3.08,
+  "body": {
+   "ref": 1191,
+   "hyp": 1191,
+   "matched": 1191,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 887,
+   "hyp": 956,
+   "matched": 814,
+   "recall": 0.9177001127395716,
+   "precision": 0.8514644351464435
+  },
+  "annex": {
+   "ref": 4770,
+   "hyp": 4821,
+   "matched": 4770,
+   "recall": 1.0,
+   "precision": 0.9894212818917237,
+   "complete_ref": true,
+   "n_annex_html": 1
+  },
+  "notes_lenient": {
+   "ref": 887,
+   "hyp": 985,
+   "matched": 843,
+   "matched_p": 860
+  },
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 984,
+  "secs": 0.46,
+  "body": {
+   "ref": 792,
+   "hyp": 794,
+   "matched": 790,
+   "recall": 0.9974747474747475,
+   "precision": 0.9949622166246851,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 334,
+   "hyp": 331,
+   "matched": 331,
+   "recall": 0.9910179640718563,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 334,
+   "hyp": 334,
+   "matched": 334,
+   "matched_p": 334
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 86,
+  "secs": 5.06,
+  "body": {
+   "ref": 1194,
+   "hyp": 1194,
+   "matched": 1194,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 1391,
+   "hyp": 1310,
+   "matched": 1310,
+   "recall": 0.9417685118619699,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 7215,
+   "hyp": 7240,
+   "matched": 7215,
+   "recall": 1.0,
+   "precision": 0.9965469613259669,
+   "complete_ref": true,
+   "n_annex_html": 1
+  },
+  "notes_lenient": {
+   "ref": 1391,
+   "hyp": 1391,
+   "matched": 1391,
+   "matched_p": 1391
+  },
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 1656,
+  "secs": 2.49,
+  "body": {
+   "ref": 4760,
+   "hyp": 4783,
+   "matched": 4737,
+   "recall": 0.9951680672268908,
+   "precision": 0.9903826050595861,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 182,
+   "hyp": 179,
+   "matched": 179,
+   "recall": 0.9835164835164835,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 182,
+   "hyp": 182,
+   "matched": 182,
+   "matched_p": 182
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1589,
+  "secs": 0.55,
+  "body": {
+   "ref": 1185,
+   "hyp": 1197,
+   "matched": 1172,
+   "recall": 0.9890295358649789,
+   "precision": 0.9791144527986633,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 35,
+   "hyp": 34,
+   "matched": 34,
+   "recall": 0.9714285714285714,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 35,
+   "hyp": 35,
+   "matched": 35,
+   "matched_p": 35
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 70,
+  "secs": 0.05,
+  "body": {
+   "ref": 6761,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 0.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1109,
+  "secs": 0.2,
+  "body": {
+   "ref": 218,
+   "hyp": 218,
+   "matched": 218,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 226,
+   "hyp": 224,
+   "matched": 224,
+   "recall": 0.9911504424778761,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 226,
+   "hyp": 226,
+   "matched": 226,
+   "matched_p": 226
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 989,
+  "secs": 3.75,
+  "body": {
+   "ref": 7426,
+   "hyp": 7425,
+   "matched": 7422,
+   "recall": 0.9994613520064638,
+   "precision": 0.9995959595959596,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 430,
+   "hyp": 425,
+   "matched": 425,
+   "recall": 0.9883720930232558,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 430,
+   "hyp": 430,
+   "matched": 430,
+   "matched_p": 430
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 782,
+  "secs": 0.12,
+  "body": {
+   "ref": 81,
+   "hyp": 81,
+   "matched": 81,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 167,
+   "hyp": 166,
+   "matched": 166,
+   "recall": 0.9940119760479041,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 167,
+   "hyp": 167,
+   "matched": 167,
+   "matched_p": 167
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1196,
+  "secs": 0.27,
+  "body": {
+   "ref": 443,
+   "hyp": 460,
+   "matched": 443,
+   "recall": 1.0,
+   "precision": 0.9630434782608696,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 1702,
+  "secs": 0.21,
+  "body": {
+   "ref": 412,
+   "hyp": 427,
+   "matched": 412,
+   "recall": 1.0,
+   "precision": 0.9648711943793911,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 772,
+  "secs": 0.41,
+  "body": {
+   "ref": 344,
+   "hyp": 356,
+   "matched": 323,
+   "recall": 0.938953488372093,
+   "precision": 0.9073033707865169,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 6,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 0.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 6,
+   "matched": 0,
+   "matched_p": 6
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 1711,
+  "secs": 0.21,
+  "body": {
+   "ref": 170,
+   "hyp": 170,
+   "matched": 170,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 464,
+  "secs": 0.32,
+  "body": {
+   "ref": 68,
+   "hyp": 68,
+   "matched": 68,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1267,
+  "secs": 0.5,
+  "body": {
+   "ref": 494,
+   "hyp": 494,
+   "matched": 494,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 420,
+  "secs": 0.63,
+  "body": {
+   "ref": 1021,
+   "hyp": 1015,
+   "matched": 1005,
+   "recall": 0.9843290891283056,
+   "precision": 0.9901477832512315,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 404,
+   "hyp": 402,
+   "matched": 399,
+   "recall": 0.9876237623762376,
+   "precision": 0.9925373134328358
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 404,
+   "hyp": 407,
+   "matched": 404,
+   "matched_p": 407
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 861,
+  "secs": 0.34,
+  "body": {
+   "ref": 216,
+   "hyp": 379,
+   "matched": 143,
+   "recall": 0.6620370370370371,
+   "precision": 0.37730870712401055,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 3,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 0.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 3,
+   "matched": 0,
+   "matched_p": 3
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 1708,
+  "secs": 4.55,
+  "body": {
+   "ref": 12381,
+   "hyp": 12381,
+   "matched": 12381,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 1248,
+   "hyp": 1235,
+   "matched": 1235,
+   "recall": 0.9895833333333334,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 1248,
+   "hyp": 1248,
+   "matched": 1248,
+   "matched_p": 1248
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1433,
+  "secs": 2.77,
+  "body": {
+   "ref": 6969,
+   "hyp": 6969,
+   "matched": 6969,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 683,
+  "secs": 0.15,
+  "body": {
+   "ref": 124,
+   "hyp": 124,
+   "matched": 124,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 319,
+  "secs": 0.72,
+  "body": {
+   "ref": 1278,
+   "hyp": 1278,
+   "matched": 1278,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 559,
+   "hyp": 552,
+   "matched": 552,
+   "recall": 0.9874776386404294,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 559,
+   "hyp": 559,
+   "matched": 559,
+   "matched_p": 559
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1350,
+  "secs": 2.8,
+  "body": {
+   "ref": 7245,
+   "hyp": 7245,
+   "matched": 7244,
+   "recall": 0.9998619737750173,
+   "precision": 0.9998619737750173,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1494,
+  "secs": 2.98,
+  "body": {
+   "ref": 6329,
+   "hyp": 6329,
+   "matched": 6328,
+   "recall": 0.9998419971559488,
+   "precision": 0.9998419971559488,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 287,
+   "hyp": 281,
+   "matched": 281,
+   "recall": 0.9790940766550522,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 287,
+   "hyp": 287,
+   "matched": 287,
+   "matched_p": 287
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 737,
+  "secs": 0.25,
+  "body": {
+   "ref": 512,
+   "hyp": 527,
+   "matched": 512,
+   "recall": 1.0,
+   "precision": 0.9715370018975332,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 96,
+  "secs": 0.65,
+  "body": {
+   "ref": 371,
+   "hyp": 371,
+   "matched": 371,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1086,
+  "secs": 0.55,
+  "body": {
+   "ref": 745,
+   "hyp": 745,
+   "matched": 745,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 167,
+   "hyp": 165,
+   "matched": 165,
+   "recall": 0.9880239520958084,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 167,
+   "hyp": 167,
+   "matched": 167,
+   "matched_p": 167
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 59,
+  "skipped": "html_unusable",
+  "type": "Ustawa"
+ },
+ {
+  "pos": 774,
+  "secs": 3.87,
+  "body": {
+   "ref": 8330,
+   "hyp": 8329,
+   "matched": 8328,
+   "recall": 0.9997599039615847,
+   "precision": 0.9998799375675351,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 132,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 0.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 132,
+   "matched": 0,
+   "matched_p": 119
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1241,
+  "secs": 12.94,
+  "body": {
+   "ref": 21414,
+   "hyp": 21568,
+   "matched": 21414,
+   "recall": 1.0,
+   "precision": 0.9928597922848664,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 6361,
+   "hyp": 6288,
+   "matched": 6288,
+   "recall": 0.9885238170099041,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 6361,
+   "hyp": 6361,
+   "matched": 6361,
+   "matched_p": 6361
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1647,
+  "secs": 0.15,
+  "body": {
+   "ref": 112,
+   "hyp": 112,
+   "matched": 112,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 547,
+  "secs": 0.16,
+  "body": {
+   "ref": 167,
+   "hyp": 167,
+   "matched": 167,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 708,
+  "secs": 15.28,
+  "body": {
+   "ref": 32761,
+   "hyp": 33342,
+   "matched": 32755,
+   "recall": 0.9998168554073441,
+   "precision": 0.9823945774098735,
+   "complete_ref": false
+  },
+  "notes": {
+   "ref": 6478,
+   "hyp": 6421,
+   "matched": 6418,
+   "recall": 0.9907378820623649,
+   "precision": 0.9995327830555988
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 6478,
+   "hyp": 6481,
+   "matched": 6478,
+   "matched_p": 6479
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 179,
+  "secs": 0.02,
+  "body": {
+   "ref": 2198,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 0.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1180,
+  "secs": 0.32,
+  "body": {
+   "ref": 92,
+   "hyp": 92,
+   "matched": 91,
+   "recall": 0.9891304347826086,
+   "precision": 0.9891304347826086,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 714,
+  "secs": 0.39,
+  "body": {
+   "ref": 223,
+   "hyp": 244,
+   "matched": 209,
+   "recall": 0.9372197309417041,
+   "precision": 0.8565573770491803,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 3,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 0.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 3,
+   "matched": 0,
+   "matched_p": 3
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 1387,
+  "secs": 0.07,
+  "body": {
+   "ref": 86,
+   "hyp": 86,
+   "matched": 86,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 679,
+  "secs": 0.31,
+  "body": {
+   "ref": 326,
+   "hyp": 346,
+   "matched": 321,
+   "recall": 0.9846625766871165,
+   "precision": 0.9277456647398844,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 3,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 0.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 3,
+   "matched": 0,
+   "matched_p": 3
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 1170,
+  "secs": 0.11,
+  "body": {
+   "ref": 203,
+   "hyp": 218,
+   "matched": 203,
+   "recall": 1.0,
+   "precision": 0.9311926605504587,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 1343,
+  "secs": 0.12,
+  "body": {
+   "ref": 262,
+   "hyp": 277,
+   "matched": 262,
+   "recall": 1.0,
+   "precision": 0.9458483754512635,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Orzeczenie"
+ },
+ {
+  "pos": 289,
+  "secs": 2.55,
+  "body": {
+   "ref": 5894,
+   "hyp": 5894,
+   "matched": 5894,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 331,
+   "hyp": 329,
+   "matched": 329,
+   "recall": 0.9939577039274925,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 130,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 0.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 1
+  },
+  "notes_lenient": {
+   "ref": 331,
+   "hyp": 331,
+   "matched": 331,
+   "matched_p": 331
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 59,
+  "secs": 6.2,
+  "body": {
+   "ref": 6363,
+   "hyp": 6409,
+   "matched": 6317,
+   "recall": 0.9927707056419928,
+   "precision": 0.9856451864565455,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 1957,
+   "hyp": 1900,
+   "matched": 1898,
+   "recall": 0.9698518140010219,
+   "precision": 0.9989473684210526
+  },
+  "annex": {
+   "ref": 10385,
+   "hyp": 10482,
+   "matched": 10315,
+   "recall": 0.9932595089070775,
+   "precision": 0.9840679259683267,
+   "complete_ref": true,
+   "n_annex_html": 1
+  },
+  "notes_lenient": {
+   "ref": 1957,
+   "hyp": 1958,
+   "matched": 1956,
+   "matched_p": 1958
+  },
+  "type": "Obwieszczenie"
+ },
+ {
+  "pos": 594,
+  "secs": 0.09,
+  "body": {
+   "ref": 176,
+   "hyp": 176,
+   "matched": 176,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 1270,
+  "secs": 7.22,
+  "body": {
+   "ref": 16354,
+   "hyp": 16348,
+   "matched": 16347,
+   "recall": 0.9995719701602055,
+   "precision": 0.999938830437974,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 7,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 0.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 7,
+   "matched": 0,
+   "matched_p": 7
+  },
+  "type": "Ustawa"
+ },
+ {
+  "pos": 760,
+  "secs": 1.67,
+  "body": {
+   "ref": 3025,
+   "hyp": 3025,
+   "matched": 3025,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true
+  },
+  "notes": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  },
+  "annex": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "recall": 1.0,
+   "precision": 1.0,
+   "complete_ref": true,
+   "n_annex_html": 0
+  },
+  "notes_lenient": {
+   "ref": 0,
+   "hyp": 0,
+   "matched": 0,
+   "matched_p": 0
+  },
+  "type": "Ustawa"
+ }
+]
