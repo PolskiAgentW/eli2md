@@ -175,7 +175,9 @@ do treści albo załącznika. Błąd znalazła diagnoza na próbie s5110 (tam re
 nie jest niezależny test). **Test s5111** (39 nowych aktów, zapisana w gicie przed oceną, oceniona raz, 0.6.4
 i 0.6.5 tymi samymi skryptami): przypisy R 0.9517 → 0.9525, P 0.9609 → 0.9647; załączniki P 0.9809 → 0.9807;
 treść główna (R 0.9947, P 0.9957), struktura i drzewo bez zmian. Poprawa jest mała, bo ten układ kreski jest
-rzadki. Wyniki: `eval/*_test_s5111_v0.6.{4,5.dev}.*`.
+rzadki. Wyniki: `eval/*_test_s5111_v0.6.{4,5.dev}.*`. W opublikowanych danych zmieniło się 133 z 3266 aktów
+Dz.U. i 4 z 2272 aktów M.P. 2025–2026 (tekst przypisów przeszedł z treści do definicji `[^n]:`); selfcheck
+(`eval/selfcheck.py`) dla wszystkich zmienionych aktów bez zmian, bo słowa są te same.
 
 **0.6.4** (2026-09-30). Trzy zmiany (opisy w sekcjach niżej i w raportach `eval/*_0.6.4.dev.md`):
 - z `--ocr` obraz tekstu na stronie z warstwą tekstową (s. 1 umów międzynarodowych) dostaje tekst OCR
