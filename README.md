@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.11**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.12**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -174,6 +174,18 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.12** (2026-09-30). Dz.U. 2000–2011, załączniki: (1) kreska przypisów narysowana w łamie (InDesign, 2010–2011)
+obejmuje tylko swój łam, gdy niżej na stronie zaczyna się załącznik (DU/2010/277 s. 6: przypis 5 był tekstem, a oba
+załączniki, ok. 5 tys. słów, trafiały do treści głównej); (2) pod podpisem załącznik może się zaczynać od nowego
+brzmienia załącznika zmienianej ustawy: „„ZAŁĄCZNIK — Część I” (DU/2004/895 s. 9). Obie zmiany znalazłem na
+zużytych próbach (s5203, s5202; tam diagnostycznie treść P 0.9562 → 0.9889 i 0.9680 → 0.9816, załączniki R 0.9354 →
+0.9968 i 0.9377 → 0.9890). Wynik 2012+ i dev bez zmian. **Test 2000–2011, s5206** (70 wylosowanych, 62 poza
+wcześniejszymi próbami, zapisana przed oceną, oceniona raz): wynik identyczny z 0.6.11 (tych układów w próbie nie ma):
+treść R 0.9991, P 0.9926; przypisy R 0.9696, P 0.9822; załączniki R 0.9853, P 0.9823; drzewo treści R 0.9994,
+P 0.9997, załączników R 0.9626, P 0.9757. Luka miary: załącznik, który HTML podaje jako „patrz oryginał” (wzory
+formularzy, DU/2007/1171), liczy się jako pełny wzorzec, więc tekst wzoru z PDF obniża P załączników.
+Wyniki: `eval/*_test2000_s5206_*`.
 
 **0.6.11** (2026-09-30). (1) Cytat, którego źródło nie zamyka, kończy się na następnej jednostce aktu
 zmieniającego. W PDF-ach 2000–2011 zdarza się, że nowelizacja w nowelizacji zamyka tylko jeden z dwóch cudzysłowów
