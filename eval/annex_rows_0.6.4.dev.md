@@ -123,17 +123,26 @@ w brzmieniu:” to nadal `par_1/pkt_10` (reguła 3 zaczyna się tylko od ust.; w
 - **DU/2024/813 (s7)**: schematy sprawozdań finansowych w załącznikach („1. Bilans z podziałem na:” / „1) Aktywa”
   / „A. Aktywa trwałe” / „I. …” / „1. utworzone zgodnie z umową …” / „a) …”), ok. 72 fałszywe ust./pkt/lit.
   i ponad 150 tiretów z formularzy („– kod pocztowy”, „– ulica”; tiretów miara nie liczy). HTML nie oznacza tam
-  nic, nawet „1. Bilans”. W Markdown to zwykłe listy; odróżnia je tylko to, że są w komórkach tabeli.
+  nic, nawet „1. Bilans”. To nie są komórki tabeli: na stronie ze „Bilans z podziałem na” (s. 50 PDF) nie ma
+  pionowych linii, przy pierwszym „kod pocztowy” (s. 11) też nie. W Markdown to zwykłe listy i nie widzę
+  sygnału, który by je odróżnił od list prawdziwych.
 - **DU/2024/440 (s7)**: grupy wierszy tabeli kosztów „1. Badania laboratoryjne” … „8. Koszt pobrania próbek”
   (8 ust.) i objaśnienia kolumn „a) Region …”–„d) …” (4 lit.). Sygnał w Markdown: restart numeracji po
-  „7. Szczegółowa analiza kosztów” i akapity z samymi liczbami obok — zbyt słaby, żeby go użyć bez straty
-  prawdziwych ust. (restart „1.” po nagłówku bez numeru jest w załącznikach częsty).
+  „7. Szczegółowa analiza kosztów” i akapity z samymi liczbami obok. Nie próbowałem: restart „1.” po akapicie
+  bez numeru zdarza się też w prawdziwych listach załączników, a nie mierzyłem, jak często.
 - Listy wewnątrz tabel zmienianych bez cudzysłowu, gdy numer z tabeli przypadkiem kontynuuje listę aktu
   (DU/2025/852), i punkty dodawane bez cudzysłowu po lit./tirecie (DU/2025/1582).
-- Karty, w których pierwszy rozpoznany wiersz ma numer 1 (nie widziałem w danych), i wykazy współrzędnych
-  z numerem bez kropki („5 54°10′40,50″ N …”) — te drugie i tak nie są jednostkami.
+- Karta bez „§ N.” przed nią (pierwsza karta załącznika nr 2 DU/2025/675: „CZĘŚĆ TEKSTOWA PLANU …” / „KARTA
+  AKWENU …” / „5. FUNKCJA PODSTAWOWA”) leży na najwyższym poziomie załącznika, bez rodzica, i reguła 2 jej nie
+  łapie (zostaje `ust_5`, `ust_6/pkt_1` … jak w 0.6.3); tak samo „4. POLE POŁOŻENIA …” w DU/2025/1061. Rozszerzenie
+  na najwyższy poziom złapałoby w danych 2025–2026 7 przypadków, z czego tylko te 2 to karty (reszta: formularz
+  DU/2025/108, rozdziały programów inwestycyjnych MP/2025/251, 254, 1294 z 5–60 jednostkami pod spodem), więc
+  go nie dodałem. Karty, w których pierwszy rozpoznany wiersz ma numer 1, nie widziałem.
 
-**Sygnał z `pdf.py`, który by to rozwiązał**: przynależność linii do komórki tabeli z obramowaniem. `pdf.py` ma
+**Sygnał z `pdf.py`, który by pomógł**: przynależność linii do komórki tabeli z obramowaniem. Sprawdziłem
+pdfplumberem, że wiersze „5. FUNKCJA PODSTAWOWA” (DU/2024/1337 s. 55, DU/2024/1594 s. 53), „8. Program
+naukowo-badawczy” (MP/2025/1248 s. 2) i „1) zasady bezpieczeństwa” (DU/2025/852 s. 1) leżą w prostokątach
+z linii (pionowa linia z lewej i z prawej, pozioma nad i pod). DU/2024/813 — nie (wyżej). `pdf.py` ma
 już `page.rects` w `_frame_lines` (używa ich tylko do kreski przypisów). Potrzebne: (1) w `_frame_lines`
 znaleźć siatkę tabeli (poziome i pionowe odcinki `rects`/`lines`, które się przecinają) i oznaczyć linie
 leżące w jej komórkach (`Line.cell`); (2) przenieść znacznik na `Block` w `_segment` (akapit zaczęty
@@ -141,5 +150,5 @@ w komórce); (3) zapisać go w Markdown, bo drzewo buduje się z samego Markdown
 HTML przy akapicie z komórki, co zmienia format publikowanych plików; (4) w `tree.py` akapit z komórki nigdy
 nie jest jednostką. Szacunek (niesprawdzony): 60–120 linii w `pdf.py`, kilka w `to_markdown` i `tree.py`,
 regeneracja całych danych i ponowna ocena słów/struktury, bo zmienia się Markdown. Nie ruszałem `pdf.py`
-(równolegle pracują nad nim inne wątki). Tabele bez ramek (część kart, DU/2024/440?) tego sygnału nie dadzą —
-nie sprawdzałem, ile ich jest.
+(równolegle pracują nad nim inne wątki). Tabele bez ramek i listy jak w DU/2024/813 tego sygnału nie dadzą;
+nie sprawdzałem, ile ich jest (DU/2024/440 nie sprawdziłem: pdfplumber nie znalazł tekstu wiersza).
