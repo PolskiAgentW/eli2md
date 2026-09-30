@@ -146,8 +146,9 @@ błędem — to był realny błąd w 1346/1505/1539).
 | s2024 | 0.6.4 | 0.9539 | 0.9105 | ≈0.9799 | ≈0.9442 |
 | s2024 | 0.6.5.dev | 0.9622 | 0.9158 | 0.9889 | 0.9481 |
 | s7 | 0.6.4 | 0.9709 | 0.8528 | ≈0.9992 | ≈0.8972 |
+| s7 | 0.6.5.dev | 0.9709 | 0.8555 | 0.9993 | 0.8996 |
 
-Dodanie linii `notes*` nie zmienia pozostałych liczb (s2024: wyniki identyczne z przebiegiem bez niej).
+Dodanie linii `notes*` nie zmienia pozostałych liczb (s2024 i s7: wyniki identyczne z przebiegiem bez niej).
 ≈ = wyliczone z footnotes_diag (dopasowane + numery; nadmiar znaleziony w HTML; hyp + liczba przypisów),
 a nie przez `evaluate.py`; różnica względem `notes*` może wynikać z innego wyrównania.
 Ograniczenie: `notes*` P zawyża wynik, gdy konwerter bierze za przypis tekst, który w HTML jest w
