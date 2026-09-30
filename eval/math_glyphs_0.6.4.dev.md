@@ -58,7 +58,50 @@ skopiowana, żeby kontrola działała na wyniku każdej wersji). Miara porównuj
 `𝑘𝑘` z PDF nie pasował do niczego w wyniku, a „kk” z 0.6.3 do niczego w PDF. Wyniki dla aktów ze wzorami
 Cambria Math nie są porównywalne z wcześniejszymi plikami `selfcheck_*`.
 
-RESULTS_TABLE
+**Przed i po** (wyniki: `eval/math_glyphs_0.6.4.dev.json`). 32 akty: 19 z podwojonymi glifami z przeglądu i 27
+aktów, w których grounded spadł przy 0.6.2 → 0.6.3 (14 wspólnych). 0.6.3 to opublikowane dane, „nowy” to ten
+kod (konwersja do /tmp, OCR tak jak w danych: `auto` dla aktów z niepustym `ocr_pages`). Obie wersje oceniam tą
+samą, nową miarą.
+
+| akt | podwojonych glifów w PDF | kept 0.6.3 → nowy | grounded 0.6.3 → nowy |
+|-----|---:|---|---|
+| DU/2025/1743 | 3709 | 0.9319 → 0.9967 | 0.9348 → 0.9998 |
+| DU/2025/1744 | 3707 | 0.9266 → 0.9909 | 0.9346 → 0.9994 |
+| DU/2025/459 | 3639 | 0.9359 → 0.9899 | 0.9432 → 0.9977 |
+| DU/2026/40 | 568 | 0.4747 → 0.5041 | 0.8553 → 0.9084 |
+| DU/2025/454 | 3641 | 0.9337 → 0.9856 | 0.9445 → 0.9970 |
+| DU/2025/452 | 392 | 0.9150 → 0.9305 | 0.9368 → 0.9527 |
+| DU/2025/978 | 192 | 0.9335 → 0.9493 | 0.9386 → 0.9544 |
+| DU/2026/1236 | 307 | 0.9313 → 0.9437 | 0.9629 → 0.9758 |
+| DU/2025/928 | 139 | 0.9367 → 0.9448 | 0.9430 → 0.9512 |
+| DU/2025/1548 | 458 | 0.9559 → 0.9607 | 0.9714 → 0.9763 |
+| DU/2025/932 | 22 | 0.8016 → 0.8042 | 0.9773 → 0.9804 |
+| DU/2025/597 | 136 | 0.9433 → 0.9442 | 0.9864 → 0.9874 |
+| DU/2025/441 | 15 | 0.9500 → 0.9507 | 0.9845 → 0.9852 |
+| DU/2026/748 | 12 | 0.9509 → 0.9514 | 0.9867 → 0.9872 |
+| DU/2026/1012 | 36 | 0.9927 → 0.9932 | 0.9986 → 0.9992 |
+| DU/2025/1555 | 2 | 0.9746 → 0.9748 | 0.9948 → 0.9950 |
+| DU/2025/919 | 8 | 0.9392 → 0.9393 | 0.9865 → 0.9866 |
+| DU/2026/447 | 2 | 0.9730 → 0.9731 | 0.9813 → 0.9814 |
+| DU/2026/710 | 6 | 0.9738 → 0.9739 | 0.9986 → 0.9987 |
+
+Tekst zmienił się w 19 aktach, w każdym lepszy kept i grounded. Średnia ważona tokenami: kept
+0.9388 → 0.9512, grounded 0.9746 → 0.9875.
+W pozostałych 13 aktach (spadek grounded w 0.6.3 miał tam inną przyczynę) wynik jest identyczny:
+DU/2025/822, DU/2026/1013, DU/2026/1231, DU/2026/1242, DU/2026/393, DU/2026/490, DU/2026/511, DU/2026/520, DU/2026/522, DU/2026/524, DU/2026/526, DU/2026/639, DU/2026/848.
+
+W 17 z 19 aktów zmiana to wyłącznie usunięte litery: każda zmieniona linia nowego wyniku jest podciągiem starej
+(380 linii). Usuniętych znaków jest tyle, ile podwojonych glifów w PDF (np. DU/2025/454: 3641, DU/2025/1548: 458),
+albo mniej, gdy część wzorów jest ukryta (DU/2026/40: 422 z 568, DU/2025/932: 13 z 22). W DU/2025/1743
+i DU/2025/459 wynik ma też po 4 linie więcej. Statystyki strony liczone od długości tekstu liczą teraz każdy glif
+raz: rozmiar pisma ważony liczbą znaków i prawa krawędź z linii mających co najmniej 40 znaków. W DU/2025/1743 s. 5
+prawa krawędź to teraz 488 pt zamiast 392, a s. 4 ma 41 linii zamiast 47. Etykiety tabeli („Rentowność aktywów”,
+„Rentowność kapitału własnego”) są przez to osobnymi akapitami. Słowa się nie zmieniają (kept i grounded w górę).
+
+Uwaga: w DU/2025/454, 459, 1743 i 1744 (tabele wskaźników finansowych) mapa ToUnicode Cambria Math jest poza
+podwojeniem błędna. Wiele glifów ma tę samą literę: „𝑃𝑃𝑃𝑃𝑃𝑃𝑃𝑃𝑃𝑃ℎ𝑜𝑜𝑜𝑜𝑜𝑜” (poppler czyta to tak samo), w wyniku
+„PszZcℎadZ aossa zo ZoszodsżZ” zamiast „Przychody netto ze sprzedaży”. Wysoki kept (0.99) mierzy tylko zgodność
+z warstwą tekstową, a ta jest tu nieczytelna.
 
 ## 4. Próby deweloperskie
 
