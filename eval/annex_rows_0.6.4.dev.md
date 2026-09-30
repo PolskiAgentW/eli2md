@@ -36,7 +36,10 @@ Akapit, który parsuje się jako jednostka, zostaje tekstem (węzeł `text` w na
    „1)”–„3)” i „2. Jeżeli termin …” (sprawdzone w PDF) — `par_7/ust_2` jak w 0.6.3.
 
 Reguły działają w treści głównej i w załącznikach. W próbkach dev zadziałała tylko reguła 2 (DU/2024/1337);
-w danych 2025–2026 reguły 1–2 zmieniają tylko załączniki, reguła 3 tylko treść główną nowelizacji. Czego nie próbowałem: kolumny „Lp.” jako sygnału (w obu próbkach dev jest jeden akapit
+w danych 2025–2026 reguły 1–2 zmieniają tylko załączniki, reguła 3 tylko treść główną nowelizacji. Odrzucone: reguła 3 dla każdej jednostki (nie tylko ust.), która po zapowiedzi brzmienia nie kontynuuje listy.
+Próby dev bez zmian, ale w danych 2025–2026 dochodzi 19 aktów DU, a wśród zmian są prawdziwe jednostki
+zamienione w tekst (DU/2025/159 `art_1/pkt_10/lit_e`–`lit_h`, DU/2026/947 `par_1/pkt_4`–`pkt_6`, DU/2025/1052
+`par_1/pkt_2`, lit. r–x w DU/2025/1238), więc wróciłem do wersji tylko dla ust. Czego nie próbowałem: kolumny „Lp.” jako sygnału (w obu próbkach dev jest jeden akapit
 jednostki po nagłówku z „Lp.”, DU/2024/1973, i nie jest błędem), restartu numeracji („1.” po „7.” bez
 nagłówka), wierszy z samymi liczbami bez stopni.
 
