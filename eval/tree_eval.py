@@ -268,7 +268,7 @@ def md_for(pos: int, md_cache: Path | None, year: int = 2024) -> str:
         f = md_cache / (f"{pos}.md" if year == 2024 else f"{year}_{pos}.md")
         if f.exists():
             return f.read_text(encoding="utf-8")
-    md = to_markdown(convert(str(CACHE / "DU" / str(year) / str(pos) / "text.pdf")))
+    md = to_markdown(convert(str(CACHE / "DU" / str(year) / str(pos) / "text.pdf"), position=pos))
     if md_cache:
         md_cache.mkdir(parents=True, exist_ok=True)
         f.write_text(md, encoding="utf-8")

@@ -117,7 +117,7 @@ def show_diff(ref: list[str], hyp: list[str], limit: int = 40) -> None:
 def evaluate_act(pos: int, show: bool = False, year: int = 2024) -> dict:
     d = CACHE / "DU" / str(year) / str(pos)
     t0 = time.time()
-    doc = convert(str(d / "text.pdf"))
+    doc = convert(str(d / "text.pdf"), position=pos)
     dt = time.time() - t0
     ref = html_reference((d / "text.html").read_text(encoding="utf-8"))
     if not ref["usable"]:

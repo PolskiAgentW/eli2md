@@ -85,7 +85,7 @@ def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
     meta = json.loads((Path(pdf_path).parent / "meta.json").read_text())
     t0 = time.time()
     try:
-        doc = convert(pdf_path, ocr=ocr)
+        doc = convert(pdf_path, ocr=ocr, position=meta.get("pos"))
         md = to_markdown(doc, meta)
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
         Path(out_path).write_text(md, encoding="utf-8")

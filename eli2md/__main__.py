@@ -31,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
         meta, pdf = None, Path(a.act)
     else:
         meta, pdf = fetch(a.act)
-    md = to_markdown(convert(str(pdf), ocr=a.ocr), meta)
+    md = to_markdown(convert(str(pdf), ocr=a.ocr, position=meta.get("pos") if meta else None), meta)
     if a.format == "json":
         md = json.dumps(md_to_tree(md), ensure_ascii=False, indent=1) + "\n"
     if a.output:

@@ -2,7 +2,7 @@ import unittest
 
 from eli2md.eli import parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
-                        _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _plain_math, _segment,
+                        _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act, _plain_math, _segment,
                         _single_glyphs, _to_frame, _watermark, page_ranges, to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
@@ -519,6 +519,48 @@ class Basic(unittest.TestCase):
         body, notes = _frame_lines(page, 595, 842, [], 1)
         self.assertEqual([l.text[:6] for l in notes], ["1) Nin"])
         self.assertNotIn("———————", [l.text for l in body])
+
+    def _shared_page(self, header):
+        # DU/2005/1369 p. 2: the end of act 1369 in two columns, its footnote under "———" in the left column, then
+        # act 1370 from its number (14 pt, centred) with its own footnote at the bottom of the page
+        r = self._row
+        page = r(header, 38, 557, 52)
+        for k in range(4):
+            page += r("treść lewej kolumny aktu 1369, wiersz numer tu", 38, 292, 80 + 11 * k)
+            page += r("treść prawej kolumny aktu 1369, wiersz numer dwa", 303.3, 557.4, 80 + 11 * k)
+        page += r("———————", 38, 110, 331) + r("1) Przypis aktu 1369 pod jego tekstem na stronie.", 38, 292, 343, 8)
+        page += r("1370", 282.1, 313.2, 447, 14) + r("USTAWA", 273, 322, 470)
+        for k in range(4):
+            page += r("treść lewej kolumny aktu 1370, wiersz numer tu", 38, 292, 500 + 11 * k)
+            page += r("treść prawej kolumny aktu 1370, wiersz numer dwa", 303.3, 557.4, 500 + 11 * k)
+        page += r("———————", 38, 110, 612) + r("1) Przypis aktu 1370 na dole strony, pod tekstem.", 38, 292, 623, 8)
+        return page
+
+    def test_act_numbers_cut(self):
+        body, notes = _frame_lines(self._shared_page("Dziennik Ustaw Nr 165 — 10063 — Poz. 1369 i 1370"),
+                                   595, 842, [], 2)
+        self.assertEqual([l.act for l in body if l.act], [1370])
+        # the footnote of 1369 is a footnote though text of 1370 follows further down the page
+        self.assertEqual([l.text[:18] for l in notes], ["1) Przypis aktu 13"] * 2)
+        self.assertNotIn("———————", [l.text for l in body])
+        # the act 1369 began on page 1 (its number there); on page 2 it ends above 1370
+        start = Line(1, 78, 92, 282.1, 14.0, "1369", band=1, act=1369)
+        text = Line(1, 100, 110, 38, 10.0, "USTAWA", band=1)
+        prev = Line(1, 50, 60, 38, 10.0, "koniec aktu 1368", band=1)
+        own, own_notes, lo, hi = _own_act([prev, start, text] + body[1:], notes, 1369)
+        self.assertEqual(own[0].text, "USTAWA")  # the number itself is dropped, and what is above it
+        self.assertEqual({l.text[:22] for l in own[1:]}, {"treść lewej kolumny ak", "treść prawej kolumny a"})
+        self.assertTrue(all("1369" in l.text for l in own[1:]))
+        self.assertEqual([l.text[:22] for l in own_notes], ["1) Przypis aktu 1369 p"])
+        self.assertEqual((lo, hi), (1, 2))
+        own, own_notes, lo, hi = _own_act(body, notes, 1370)
+        self.assertEqual(own[0].text, "USTAWA")
+        self.assertTrue(all("1370" in l.text for l in own[1:]))
+        self.assertEqual([l.text[:22] for l in own_notes], ["1) Przypis aktu 1370 n"])
+        self.assertIsNone(_own_act(body, notes, 1400))  # the act's number is not there: nothing is cut
+        # a page of 2012 on has no act numbers
+        body, _ = _frame_lines(self._shared_page("Dziennik Ustaw – 2 – Poz. 1369"), 595, 842, [], 2)
+        self.assertEqual([l.act for l in body if l.act], [])
 
     def test_segment_column_break(self):
         # from the bottom of the left column to the top of the right one: as at a page break, a new block only

@@ -83,6 +83,12 @@ OLD_HEADER = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\s*\d+")
 OLD_MASTHEAD = re.compile(r"^(?:DZIENNIK\s*USTAW|MONITOR\s*POLSKI)")
 OLD_ISSUE = re.compile(r"^Nr\s*\d+$")
 GUTTER = (6.0, 20.0)  # pt; the gap between the columns is 11.3-12 pt in DU 2000-2011 (DU/2005/1255, DU/2011/1134)
+# An act of an issue starts with its position number alone in a row, bold, centred on the page: 14 pt Univers-BoldPL
+# (DU 2000-2008: "1255" at x 282-313 above "USTAWA", DU/2005/1255 p. 1), 12 pt in 2009 (DU/2009/1323) and in the
+# InDesign issues of 2010-2011 (UniversPro-Bold, DU/2011/1134); body text is 10 pt or less.
+ACT_NUMBER = re.compile(r"^\d{1,4}$")
+ACT_NUMBER_SIZE = 11.5  # pt
+ACT_NUMBER_NEXT = 20  # the next act's number is at most this far above the act's own (an issue's positions run on)
 
 
 @dataclass
@@ -101,6 +107,7 @@ class Line:
     lead: float = -1.0  # usual gap between lines in this frame (-1 = unknown)
     band: int = 0  # two-column pages (see _bands): full-width rows are odd bands, the text in columns even ones
     col: int = 0  # 1 = left, 2 = right column of a two-column band; 0 = read across the page
+    act: int = 0  # the line is the position number that starts an act on a page of an old issue (ACT_NUMBER)
 
 
 @dataclass
@@ -535,13 +542,19 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             attach.append((w, {"sup": True} if ")" in w["text"] else {"script": True}))
         attach += [(w, {}) for w in text]
     rows = _rows(normal)
+    old = _old_issue(rows, ph)
     key = None  # word -> (band, column) on a two-column page (DU 2000-2011)
-    if _old_issue(rows, ph) and (gutter := _gutter(rows, pw)):
+    if old and (gutter := _gutter(rows, pw)):
         key = _bands(normal, *gutter)
         groups: dict[tuple[int, int], list[dict]] = {}
         for w in normal:
             groups.setdefault(key(w), []).append(w)
         rows = [r for k in sorted(groups) for r in _rows(groups[k])]  # the columns' baselines differ (DU/2011/1134)
+    # rows (by id, before small words are attached) that are the number of an act starting here: see ACT_NUMBER
+    acts = {id(r): int(r[0]["text"]) for r in rows if old and len(r) == 1 and ACT_NUMBER.match(r[0]["text"])
+            and r[0]["size"] >= ACT_NUMBER_SIZE and abs(r[0]["x0"] + r[0]["x1"] - pw) < 20}
+    # where they are in reading order (band, column, top): footnotes of an act lie above the next act's number
+    starts = sorted((*(key(r[0]) if key else (0, 0)), r[0]["top"]) for r in rows if id(r) in acts)
 
     def dist(r: list[dict], s: dict) -> float:
         return abs((r[0]["top"] + r[0]["bottom"]) / 2 - s["bottom"])
@@ -567,10 +580,12 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
     # Two-column page: footnote rules as ((band, column), top). Under a rule are the lines of its column below it and
     # the bands further down; the other column of its band goes on beside the footnotes.
     col_rules: list[tuple[tuple[int, int], float]] = []
-    sep = None  # the row of dashes over the footnotes of a Quark page
+    seps = []  # the rows of dashes over the footnotes of a Quark page
 
     def under(k: tuple[int, int], top: float, wk: tuple[int, int], wtop: float) -> bool:
-        return wtop > top and (wk == k or wk[0] > k[0])
+        # not past the number of the next act: its footnotes sit under its text, above the next act's number
+        # (DU/2005/1369 p. 2: "———" at top 331 in the left column, notes, "1370" at 447, its own "———" at 612)
+        return wtop > top and (wk == k or wk[0] > k[0]) and not any((*k, top) < s <= (*wk, wtop) for s in starts)
     if key is not None:
         for r in rects:
             # InDesign pages (DU 2010-2011): a ~70 pt line at a column's edge, footnotes under it in the column
@@ -585,12 +600,12 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             if re.fullmatch(r"[—–-]{3,}", "".join(w["text"] for w in r)) and r[0]["x1"] - r[0]["x0"] < 0.3 * pw:
                 below = [w for w in words if under(key(r[0]), r[0]["bottom"], key(w), w["top"])]
                 if below and all(w["size"] < r[0]["size"] - 0.5 for w in below):
-                    sep = r
+                    seps.append(r)
                     col_rules.append((key(r[0]), r[0]["top"]))
 
     body, notes = [], []
     for r in rows:
-        if r is sep:  # a rule, not text
+        if any(r is s for s in seps):  # a rule, not text
             continue
         r.sort(key=lambda w: w["x0"])
         parts: list[tuple[str, bool]] = []  # (text, glued to the previous word)
@@ -627,6 +642,7 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             x1=max(w["x1"] for w in normal_words),
             band=band,
             col=col,
+            act=acts.get(id(r), 0),
         )
         is_note = (rule_top is not None and line.top > rule_top) or (
             rule_top is None and line.size < body_size - 0.5 and line.top > ph * 0.6
@@ -759,9 +775,33 @@ def _segment(body: list[Line]) -> list[Block]:
     return blocks
 
 
-def convert(path: str, ocr: str | None = None) -> Document:
+def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[Line], list[Line], int, int] | None:
+    """The act numbered `position` out of pages it shares with other acts of its issue (DU 2000-2011): the PDF of
+    a position holds whole pages, so also the end of the acts before it and the start of the ones after it
+    (DU/2005/1255 p. 1 holds 1255, 1256 and 1257; DU/2005/1369 p. 2 ends 1369 and starts 1370 at top 447). Keeps
+    the lines after the act's number (ACT_NUMBER) up to the next act's number, and the footnotes between them in
+    reading order: a Quark page sets an act's footnotes under its text, above the next act's number (DU/2005/1369
+    p. 2, DU/2007/1322 p. 1). The number itself is dropped: it is the position, as "Poz. N" closing the masthead of
+    2012 on, which is not text of the act either. Returns (body, notes, first page, last page), or None if the
+    act's number is not found (then nothing is cut)."""
+    start = next((i for i, l in enumerate(body) if l.act == position), None)
+    if start is None:
+        return None
+    end = next((i for i in range(start + 1, len(body)) if position < body[i].act <= position + ACT_NUMBER_NEXT),
+               len(body))
+    first, last = body[start], body[end] if end < len(body) else None
+
+    def at(l: Line) -> tuple:
+        return l.page, l.band, l.col, l.top
+    notes = [l for l in notes if at(first) < at(l) and (last is None or at(l) < at(last))]
+    return body[start + 1: end], notes, first.page, last.page if last else math.inf
+
+
+def convert(path: str, ocr: str | None = None, position: int | None = None) -> Document:
     """ocr: "auto" or tesseract language(s), e.g. "pol+eng", to read pages without a text layer
-    (see ocr.py); None (default) = no OCR, such pages only get a note."""
+    (see ocr.py); None (default) = no OCR, such pages only get a note.
+    position: the act's position in the gazette (ELI "DU/2005/1255" -> 1255). On pages of issues of 2011 and
+    earlier it cuts the act out of the pages it shares with other acts (see _own_act); None = no cut."""
     doc = Document()
     body: list[Line] = []
     notes: list[Line] = []
@@ -816,6 +856,11 @@ def convert(path: str, ocr: str | None = None) -> Document:
             notes.extend(n)
             page.close()  # pdfplumber caches every parsed page; 867-page acts exhausted 14 GB RAM
 
+    if position is not None and (own := _own_act(body, notes, int(position))):
+        body, notes, lo, hi = own
+        for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
+            setattr(doc, f, [p for p in getattr(doc, f) if lo <= p <= hi])  # pages of the other acts only
+        doc.ocr_langs = {p: v for p, v in doc.ocr_langs.items() if lo <= p <= hi}
     doc.blocks = _segment(body)
 
     doc.footnotes, doc.footnote_pages = _group_notes(notes)
