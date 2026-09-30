@@ -659,10 +659,13 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
         for r in rects:
             # InDesign pages (DU 2010-2011): a ~70 pt line at a column's edge, footnotes under it in the column
             # (DU/2011/1170 p. 2), also high on the page (DU/2010/626 p. 3), or across the page (ibid. p. 4)
+            # (only its column if the bands further down are text: an annex under it, DU/2010/277 p. 6)
             if r["height"] < 1.5 and 50 < r["width"] < 160 and _free(r, rects):
-                below = [w for w in words if under(key(r), r["top"], key(w), w["top"])]
-                if below and all(w["size"] < FOOTNOTE_TYPE for w in below):
-                    col_rules.append((key(r), r["top"], True))
+                for down in (True, False):
+                    below = [w for w in words if under(key(r), r["top"], key(w), w["top"], down)]
+                    if below and all(w["size"] < FOOTNOTE_TYPE for w in below):
+                        col_rules.append((key(r), r["top"], down))
+                        break
         for r in rows:
             # QuarkXPress pages (DU 2000-2009): footnotes across the page under a row "———————" in the left
             # column (DU/2009/1323 p. 1)
