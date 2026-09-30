@@ -175,6 +175,53 @@ class Tree(unittest.TestCase):
         t = md_to_tree(md("##### Art. 14t.", "§ 1. Treść.", "§ 2. Treść:", "1) pkt;", "##### Art. 15.", "Treść."))
         self.assertEqual(paths(t["body"]), ["art_14t", "art_14t/par_1", "art_14t/par_2", "art_14t/par_2/pkt_1", "art_15"])
 
+    def test_form_card_rows_are_text(self):
+        # DU/2024/1337: a card of a sea area is a table; rows 1-4 are glued into other paragraphs, so "5." with an
+        # upper-case label is the first ust. of the §; it and everything up to the next § stay text
+        card = ("## Załącznik nr 2", "##### § 1.", "Ustala się rozstrzygnięcia szczegółowe dla akwenu SWI.1.Ip określone w karcie",
+                "akwenu.", "KARTA AKWENU 1. OZNACZENIE LITEROWE", "SWI.1.Ip Ip",
+                "2. NUMER 18 3. OPIS 1. 54°10′40,76″ N 19°22′59,11″ E AKWENU POŁOŻENIA", "5. FUNKCJA PODSTAWOWA",
+                "FUNKCJONOWANIE PORTU", "6. FUNKCJE DOPUSZCZALNE", "1) badania naukowe (N);", "2) transport (T).",
+                "7. ZAKAZY LUB OGRANICZENIA W KORZYSTANIU Z POSZCZEGÓLNYCH OBSZARÓW", "a) nie ustala się.",
+                "##### § 2.", "Ustala się rozstrzygnięcia szczegółowe dla akwenu SWI.2.T.", "1. Treść.", "2. Treść:", "1) pkt.")
+        t = md_to_tree(md("##### § 1.", "Tekst.", *card))
+        body = t["annexes"][0]["body"]
+        self.assertEqual(paths(body), ["par_1", "par_2", "par_2/ust_1", "par_2/ust_2", "par_2/ust_2/pkt_1"])
+        self.assertEqual(len(body[0]["children"]), 11)
+        self.assertEqual(body[0]["children"][4]["text"], "5. FUNKCJA PODSTAWOWA")
+        # not a form: a sentence after an acronym, and an ust. whose "1." was printed
+        t = md_to_tree(md("##### § 1.", "Tekst.", "## Załącznik", "##### § 3.", "Tekst.", "2. NFZ przekazuje dane.",
+                          "##### § 4.", "1. ZASADY OGÓLNE", "2. ZAKRES"))
+        self.assertEqual(paths(t["annexes"][0]["body"]), ["par_3", "par_3/ust_2", "par_4", "par_4/ust_1", "par_4/ust_2"])
+
+    def test_coordinate_rows_are_text(self):
+        # DU/2024/1594, DU/2025/947: numbered points of a list of coordinates are rows of a table
+        t = md_to_tree(md("##### § 17.", "1. Wyznacza się akwen ELB.01.T. Ustala się wykaz współrzędnych:",
+                          "6. 54°10′43,83″ N 19°22′52,30″ E", "7. 54°10′43,79″ N 19°22′52,76″ E",
+                          "2. Wyznacza się akwen ELB.02.P o współrzędnych:", "1) 52°34'21\"N 019°38'47\"E",
+                          "2) 52°36'08\"N 019°39'05\"E", "3. Temperatura:", "a) 30 °C lub więcej:"))
+        self.assertEqual(paths(t["body"]), ["par_17", "par_17/ust_1", "par_17/ust_2", "par_17/ust_3", "par_17/ust_3/lit_a"])
+        self.assertEqual([c["text"][:2] for c in t["body"][0]["children"][1]["children"]], ["1)", "2)"])
+
+    def test_table_rows_replaced_without_quotes(self):
+        # MP/2025/1248: rows "3.", "4.", "8." of a table replaced without quotes are not ust. of § 1, and lit. e)
+        # after them is not under them
+        t = md_to_tree(md("##### § 1.", "W uchwale wprowadza się następujące zmiany:", "1) w § 4 wyraz „a” zastępuje się wyrazem „b”;",
+                          "2) w załączniku do uchwały:", "d) w rozdziale 1:", "– w pkt 1.4:",
+                          "– – w tabeli nr 1.3 Koszty realizacji Krajowego planu w latach 2020–2033:",
+                          "– – – lp. 3 i 4 otrzymują brzmienie:", "3. Realizacja Krajowego planu 2.500 300 200",
+                          "4. Zamknięcie KSOP RÓŻAN 10.000 - - - -", "– – – lp. 8 otrzymuje brzmienie:",
+                          "8. Program naukowo-badawczy 10.000 - - - 5.000", "e) w rozdziale 2 wyraz „c” zastępuje się wyrazem „d”.",
+                          "##### § 2.", "Uchwała wchodzi w życie z dniem następującym po dniu ogłoszenia."))
+        self.assertEqual(paths(t["body"]), [
+            "par_1", "par_1/pkt_1", "par_1/pkt_2", "par_1/pkt_2/lit_d", "par_1/pkt_2/lit_d/tir_1",
+            "par_1/pkt_2/lit_d/tir_1/tir_1", "par_1/pkt_2/lit_d/tir_1/tir_1/tir_1", "par_1/pkt_2/lit_d/tir_1/tir_1/tir_2",
+            "par_1/pkt_2/lit_e", "par_2"])
+        # DU/2025/1895 prints "§ 7." without "1.": without an announced new wording "2." stays a unit
+        t = md_to_tree(md("##### § 7.", "Rozliczenia są składane w terminach:", "1) do 20. dnia każdego miesiąca;",
+                          "2) do dnia 5 lutego – rozliczenie roczne.", "2. Jeżeli termin przypada na sobotę, upływa w poniedziałek."))
+        self.assertEqual(paths(t["body"]), ["par_7", "par_7/pkt_1", "par_7/pkt_2", "par_7/ust_2"])
+
 
 class TreeMeasure(unittest.TestCase):
     """eval/tree_eval.py on a tiny HTML reference: a correct tree scores 1, broken ones do not."""
