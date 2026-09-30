@@ -138,7 +138,84 @@ class Ocr(unittest.TestCase):
     def test_no_ocr_fields_without_ocr(self):
         md = to_markdown(Document(blocks=[Block("notext", "", 1)], no_text_pages=[1]), META)
         self.assertNotIn("pages_ocr", md)
+        self.assertNotIn("pages_images_ocr", md)
         self.assertNotIn("\nocr:", md)
+
+    def test_image_ocr_markdown(self):
+        # MP/2026/869 s.1: title in the text layer, preamble and Art. 1 as an image of text, read by OCR
+        doc = Document(blocks=[Block("p", "UMOWA", 1), Block("ocr", "Rząd Rzeczypospolitej Polskiej i Rząd ...", 1),
+                               Block("ocr", "Artykuł 1 DEFINICJE", 1), Block("p", "Art. 2. Dalej.", 2),
+                               Block("image", "", 3)],
+                       image_pages=[1, 3], image_ocr_pages=[1], ocr_engine="tesseract 5.5.0", ocr_langs={1: "pol+eng"})
+        md = to_markdown(doc, META)
+        self.assertIn('pages_with_images: "1, 3"', md)
+        self.assertIn('pages_images_ocr: "1"', md)
+        self.assertIn('ocr: "tesseract 5.5.0"', md)
+        self.assertNotIn("pages_ocr", md)
+        self.assertIn("UMOWA\n\n> [Na stronie 1 PDF jest obraz tekstu (skan). Tekst poniżej odczytał z obrazu OCR "
+                      "(tesseract 5.5.0, pol+eng). Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]\n\n"
+                      "> Rząd Rzeczypospolitej Polskiej i Rząd ...\n\n> Artykuł 1 DEFINICJE\n\n##### Art. 2.", md)
+        self.assertEqual(md.count("> [Na stronie 1 "), 1)  # one note per image
+        self.assertIn("> [Na stronie 3 PDF jest obraz (np. wzór, rysunek, skan). Jego treści tu nie ma", md)
+
+    def test_text_image(self):
+        # MP/2026/869 s.1 as read: running text in long lines across the image
+        lines = ["Rząd Rzeczypospolitej Polskiej i Rząd Królestwa Arabii Saudyjskiej, zwane dalej",
+                 "„Stronami”, pragnąc zacieśnić przyjazne stosunki między obydwoma Państwami;",
+                 "biorąc pod uwagę interes Stron dotyczący zwolnienia z obowiązku posiadania wiz",
+                 "dla swoich obywateli legitymujących się paszportami dyplomatycznymi, służbowymi",
+                 "i specjalnymi, zgodnie z obowiązującymi przepisami prawa obydwu Państw;",
+                 "uzgodniły, co następuje:"]
+
+        def page(lines, conf=96.2, widths=None, width=1760):
+            return ocr.OcrPage([" ".join(lines)], words=len(" ".join(lines).split()), confidence=conf, width=width,
+                               line_widths=widths or [1700] * (len(lines) - 1) + [500],
+                               line_chars=[len(l) for l in lines])
+        self.assertTrue(ocr.text_image(page(lines)))
+        self.assertFalse(ocr.text_image(page(lines, conf=90)))  # an unclear scan, a drawing: below IMAGE_MIN_CONF
+        self.assertFalse(ocr.text_image(page(lines[:4])))  # fewer than IMAGE_MIN_LINES lines
+        # the same words in short centred lines (a title, DU/2026/204 s.1): a miss rather than a false acceptance
+        short = [w for l in lines for w in l.split(", ")]
+        self.assertFalse(ocr.text_image(page(short, widths=[700] * len(short))))
+        # the text is in long lines, but they do not span the image (a label box of a form or a chart)
+        self.assertFalse(ocr.text_image(page(lines, width=4000)))
+        # an ID card or a form: field labels, no function words
+        form = ["Legitymacja studencka Numer albumu Kod kreskowy Imię Nazwisko PESEL Data urodzenia Ważna do"] * 6
+        self.assertFalse(ocr.text_image(page(form)))
+        # a chart with long labels: bars read as | and «
+        chart = [l + " | ss « 20% =" for l in lines]
+        self.assertFalse(ocr.text_image(page(chart)))
+        # a table drawn as an image, under its caption
+        self.assertFalse(ocr.text_image(page(["Tabela 2. " + lines[0]] + lines[1:])))
+        self.assertFalse(ocr.text_image(page(["Rys. 5. " + lines[0]] + lines[1:])))
+
+    def test_image_text_region(self):
+        from eli2md import pdf
+
+        def page(chars):
+            return mock.Mock(width=595.0, height=842.0, page_number=1, chars=chars,
+                             images=[{"x0": 70.0, "x1": 500.0, "top": 357.0, "bottom": 685.0},
+                                     {"x0": 400.0, "x1": 480.0, "top": 700.0, "bottom": 780.0}])
+        good = ocr.OcrPage(["Rząd Rzeczypospolitej Polskiej i Rząd ..."], words=100, confidence=96, lang="pol+eng")
+        with mock.patch.object(ocr, "ocr_page", return_value=good) as read, \
+                mock.patch.object(ocr, "text_image", return_value=True):
+            self.assertIs(pdf._image_text(page([{"text": "U", "x0": 280, "x1": 290, "top": 231, "bottom": 241}]),
+                                          "auto"), good)
+            read.assert_called_once()
+            self.assertEqual(read.call_args.kwargs["bbox"], (70.0, 357.0, 500.0, 685.0))  # the largest image
+            # text-layer text over the image: the image is a background (a form), not read
+            read.reset_mock()
+            over = [{"text": "x", "x0": 100 + 5 * k, "x1": 104 + 5 * k, "top": 400, "bottom": 410} for k in range(40)]
+            self.assertIsNone(pdf._image_text(page(over), "auto"))
+            read.assert_not_called()
+        with mock.patch.object(ocr, "ocr_page", return_value=good), mock.patch.object(ocr, "text_image", return_value=False):
+            self.assertIsNone(pdf._image_text(page([]), "auto"))
+
+    def test_region_keeps_top_line(self):
+        # a line at the top of an image cut out of a page is not the gazette header
+        words = [(1, 1, 1, 20, 95, "–"), (1, 1, 1, 20, 95, "2"), (1, 1, 1, 20, 95, "–"), (2, 1, 1, 900, 95, "Dalej")]
+        self.assertEqual(ocr.parse_tsv(tsv(words), 3508).paragraphs, ["Dalej"])
+        self.assertEqual(ocr.parse_tsv(tsv(words), 3508, band=0.0).paragraphs, ["– 2 – Dalej"])
 
 
 @unittest.skipUnless(shutil.which("tesseract"), "tesseract not installed")

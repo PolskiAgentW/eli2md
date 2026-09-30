@@ -42,6 +42,22 @@ MIN_WORDS, MIN_CONF = 20, 80.0  # below either, the page keeps only the note (ev
 # stamp form) kept tesseract busy for over 10 minutes; such a page keeps only the note.
 TIMEOUT = 120
 LOWER = "a-ząćęłńóśźżàâçéèêëîïôûùüÿñæœäöåõãíúýøα-ωά-ώ"
+# An image on a page that has a text layer (page 1 of agreements: title as text, preamble as a scan, MP/2026/869)
+# is read as text only if its OCR looks like a scan of running text: high confidence, function words, word-like
+# tokens, and mostly long lines across the image. Forms, ID cards, charts, maps and tables drawn as images have
+# short lines, labels or symbols. Thresholds from the 824 image pages of DU and MP 2025-2026, where text scans
+# read at a median confidence >= 96 (eval/image_text_ocr_0.6.4.dev.md).
+IMAGE_MIN_CONF = 95.0
+IMAGE_MIN_LINES = 5
+IMAGE_LONG_CHARS = 45  # a line of running text has more characters than this; labels and form fields fewer
+IMAGE_LONG_WIDTH = 0.6  # ... and spans this share of the image width
+IMAGE_MIN_LONG = 0.5  # share of such lines (both measures)
+IMAGE_MIN_WORDLIKE = 0.75  # share of tokens that are words (letters with a vowel, or a one-letter Polish word)
+IMAGE_MAX_SYMBOLS = 0.05  # per word: | = % « @ ... are table rules, chart labels, form boxes
+SYMBOLS = re.compile(r"[|«»=<>®©™@#$%^*~_\[\]{}]")
+VOWEL = re.compile(r"[aeiouyąęóаеиоуыэюяαεηιουωάέήίόύώ]")
+ONE_LETTER_WORDS = {"a", "i", "o", "u", "w", "z"}
+FIGURE_CAPTION = re.compile(r"(?:Tabela|Wykres|Rysunek|Mapa|Schemat|Legenda|LEGENDA|Źródło)\b|(?:Tab|Rys)\.")
 
 # tesseract (pol) often reads a lone "1" as "|": "ust. | pkt 2", "Ustęp |". Fixed only after a unit
 # word or before "i 2", where a table rule "|" cannot stand (eval/ocr_eval_digital_*.txt: fix_text).
@@ -89,6 +105,9 @@ class OcrPage:
     confidence: float = 0.0  # median word confidence, 0-100
     lang: str = ""  # tesseract language(s) used, e.g. "pol+eng", "por+eng"
     rotated: int = 0  # degrees the page image was turned before OCR
+    width: int = 0  # of the image read, in pixels (0 = unknown)
+    line_widths: list[int] = field(default_factory=list)  # of the lines kept, in pixels
+    line_chars: list[int] = field(default_factory=list)  # characters of the lines kept
 
 
 @lru_cache(maxsize=None)
@@ -133,27 +152,33 @@ def ocr_image(img, lang: str = BASE_LANG) -> str:
     return _run(img, lang, "txt")
 
 
-def parse_tsv(tsv: str, height: int, page_number: int | None = None) -> OcrPage:
+def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float = HEADER_BAND) -> OcrPage:
     """Tesseract TSV -> paragraphs. Lines are joined (hyphenated words glued back), the gazette
     header at the top of the page is dropped (also when read in another script: a short line in the
-    header band with the page number)."""
-    lines: dict[tuple[int, int, int], list[tuple[int, int, str, float]]] = {}
+    header band with the page number). band: share of the image height searched for the header
+    (0 for an image cut out of a page: it has no header)."""
+    lines: dict[tuple[int, int, int], list[tuple[int, int, str, float, int, int]]] = {}
+    page = OcrPage()
     for row in tsv.splitlines()[1:]:
         f = row.split("\t")
+        if len(f) >= 12 and f[0] == "1":
+            page.width = int(f[8])
         if len(f) < 12 or f[0] != "5" or not f[11].strip():
             continue
         key = (int(f[2]), int(f[3]), int(f[4]))  # block, paragraph, line
-        lines.setdefault(key, []).append((int(f[7]), int(f[7]) + int(f[9]), f[11].strip(), float(f[10])))
-    page = OcrPage()
+        lines.setdefault(key, []).append((int(f[7]), int(f[7]) + int(f[9]), f[11].strip(), float(f[10]),
+                                          int(f[6]), int(f[6]) + int(f[8])))
     confs: list[float] = []
     kept = []  # (block, top, bottom, text) without the header
     for (blk, _, _), words in lines.items():
-        text = " ".join(w for _, _, w, _ in words)
+        text = " ".join(w[2] for w in words)
         top, bottom = min(w[0] for w in words), max(w[1] for w in words)
-        if top < HEADER_BAND * height and (
+        if top < band * height and (
                 OCR_HEADER.match(text) or (len(words) <= 8 and str(page_number) in re.findall(r"\d+", text))):
             continue
-        confs += [c for _, _, _, c in words]
+        confs += [w[3] for w in words]
+        page.line_widths.append(max(w[5] for w in words) - min(w[4] for w in words))
+        page.line_chars.append(len(text))
         kept.append((blk, top, bottom, fix_text(text)))
     # tesseract's own paragraphs and blocks split 1.5-spaced justified text at random lines (DU/2025/360);
     # a new paragraph starts where the reading order goes back up (next column, table cell), after a gap
@@ -183,6 +208,23 @@ def usable(page: OcrPage) -> bool:
     return page.words >= MIN_WORDS and page.confidence >= MIN_CONF
 
 
+def text_image(page: OcrPage) -> bool:
+    """Is the OCR text of an image on a page with a text layer running text (a scan of text)? See IMAGE_*.
+    False acceptance is worse than a miss: a title set in short centred lines (DU/2026/204 s.1) keeps the note."""
+    lines = len(page.line_chars)
+    if not usable(page) or page.confidence < IMAGE_MIN_CONF or lines < IMAGE_MIN_LINES or not page.width:
+        return False
+    text = " ".join(page.paragraphs)
+    tokens = re.findall(r"\w+", text.lower())
+    wordlike = sum(1 for t in tokens if t.isalpha() and (len(t) >= 2 and VOWEL.search(t) or t in ONE_LETTER_WORDS))
+    return (language(tokens) != "?"
+            and wordlike >= IMAGE_MIN_WORDLIKE * len(tokens)
+            and sum(c >= IMAGE_LONG_CHARS for c in page.line_chars) >= IMAGE_MIN_LONG * lines
+            and sum(w >= IMAGE_LONG_WIDTH * page.width for w in page.line_widths) >= IMAGE_MIN_LONG * lines
+            and len(SYMBOLS.findall(text)) <= IMAGE_MAX_SYMBOLS * page.words
+            and not any(FIGURE_CAPTION.match(p) for p in page.paragraphs))
+
+
 def osd(img) -> tuple[int, str]:
     """(degrees clockwise the image must be turned by, script) from tesseract's orientation and script
     detection; (0, "") if unknown (no osd data, too little text)."""
@@ -196,45 +238,49 @@ def osd(img) -> tuple[int, str]:
     return (int(rot.group(1)) if rot else 0), (script.group(1) if script else "")
 
 
-def _read(img, lang: str, pno: int | None, rotated: int = 0) -> OcrPage:
-    page = parse_tsv(_run(img, lang, "tsv"), img.height, pno)
+def _read(img, lang: str, pno: int | None, rotated: int = 0, band: float = HEADER_BAND) -> OcrPage:
+    page = parse_tsv(_run(img, lang, "tsv"), img.height, pno, band)
     page.lang, page.rotated = lang, rotated
     return page
 
 
-def ocr_page(page, lang: str = LANG, dpi: int = DPI) -> OcrPage:
+def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None) -> OcrPage:
     """OCR of a pdfplumber page: paragraphs, word count, median word confidence, language used.
 
     lang: tesseract language(s), or "auto" (see the module docstring). A page whose text is unusable
     is tried again turned as orientation detection says (DU/2025/15 is printed sideways: median
-    confidence 47 -> 96) and, with "auto", in the detected script's language (Greek)."""
+    confidence 47 -> 96) and, with "auto", in the detected script's language (Greek).
+    bbox: (x0, top, x1, bottom) in points: read only this part of the page (an image), without
+    looking for the gazette header in it."""
     have = tesseract()[2]
-    img = render(page, dpi)
+    img = render(page.crop(bbox) if bbox else page, dpi)
     pno = getattr(page, "page_number", None)
+    band = 0.0 if bbox else HEADER_BAND
     try:
-        read = _read(img, BASE_LANG if lang == "auto" else lang, pno)
+        read = _read(img, BASE_LANG if lang == "auto" else lang, pno, band=band)
     except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:  # the page keeps only the note
         why = f"took over {TIMEOUT} s" if isinstance(e, subprocess.TimeoutExpired) else f"failed ({e.returncode})"
         warnings.warn(f"page {pno}: tesseract {why}, page skipped")
         return OcrPage(lang=BASE_LANG if lang == "auto" else lang)
     try:
-        return _retry(read, img, pno, lang, have)
+        return _retry(read, img, pno, lang, have, band)
     except (subprocess.TimeoutExpired, subprocess.CalledProcessError):  # keep the first reading
         return read
 
 
-def _retry(read: OcrPage, img, pno: int | None, lang: str, have: frozenset[str]) -> OcrPage:
+def _retry(read: OcrPage, img, pno: int | None, lang: str, have: frozenset[str],
+           band: float = HEADER_BAND) -> OcrPage:
     """Second readings for ocr_page: turned page, other script, the page's own language."""
     if not usable(read):
         rot, script = osd(img)
         if rot:
             turned = img.rotate(-rot, expand=True)
-            again = _read(turned, read.lang, pno, rot)
+            again = _read(turned, read.lang, pno, rot, band)
             if again.confidence > read.confidence:
                 read, img = again, turned
         code = SCRIPT_TESS.get(script)
         if lang == "auto" and not usable(read) and code in have:
-            again = _read(img, code, pno, read.rotated)
+            again = _read(img, code, pno, read.rotated, band)
             if again.confidence > read.confidence:
                 read = again
     if lang == "auto" and usable(read) and read.lang == BASE_LANG:
@@ -242,7 +288,7 @@ def _retry(read: OcrPage, img, pno: int | None, lang: str, have: frozenset[str])
         code = TESS.get(guess)
         if code and code not in ("pol", "eng"):
             if code in have:
-                again = _read(img, f"{code}+eng", pno, read.rotated)
+                again = _read(img, f"{code}+eng", pno, read.rotated, band)
                 if again.confidence >= read.confidence:
                     read = again
             else:

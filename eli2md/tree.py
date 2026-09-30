@@ -18,7 +18,8 @@ Unit node: {"type": "art"|"par"|"ust"|"pkt"|"lit"|"tir", "num": "41¹", "path": 
 Other nodes: {"type": "text", "text": ..., "quoted": true?}   paragraph that is not a unit start
              {"type": "heading", "label": "Rozdział 2", "text": "title"}   dział/rozdział/oddział/...
              {"type": "signature", "text": ...}   {"type": "note", "text": ...}  (content missing in PDF text)
-             {"type": "ocr", "text": ...}  paragraph read by OCR from a page without a text layer (`> ` in Markdown)
+             {"type": "ocr", "text": ...}  paragraph read by OCR from a page without a text layer or from an
+                                           image of text on a page with one (`> ` in Markdown)
 
 Rules:
 - A unit is only recognised at quotation depth 0. Units quoted in amendments ("„Art. 5. …",
@@ -352,7 +353,7 @@ def md_to_tree(md: str) -> dict:
             blocks.append(("head", p[6:].strip()))
         elif p.startswith("> [") and p.endswith("]"):
             blocks.append(("note", p[2:].strip()))
-        elif p.startswith("> "):  # text read by OCR from a page without a text layer
+        elif p.startswith("> "):  # text read by OCR (a page without a text layer, an image of text)
             blocks.append(("ocr", UNESCAPE.sub(r"\1", p[2:].strip())))
         elif p.startswith("*") and p.endswith("*") and len(p) > 2:
             blocks.append(("signature", p[1:-1]))

@@ -5,7 +5,9 @@ For each act: word tokens of the whole PDF text layer vs word tokens of the Mark
 the output (multiset overlap, order ignored) and the share of output tokens found in the PDF.
 The masthead and running headers are removed from the PDF side, as the output drops them too.
 Low values point at dropped text (e.g. text wrongly treated as hidden); scanned pages (no text layer)
-are invisible to this check.
+are invisible to this check. Text read by OCR (quote blocks "> ...") is never on the Markdown side: pages
+read by OCR as a whole (pages_ocr) are left out of the PDF side too; on pages whose image of text was read
+by OCR (pages_images_ocr, 0.6.4) only the OCR text is left out, their text layer is compared as usual.
 Usage: python eval/selfcheck.py DATA_ROOT [--limit N] [--out FILE] [--jobs N]
 """
 from __future__ import annotations
@@ -75,13 +77,17 @@ def md_body(md: str) -> str:
     md = re.sub(r"\A\s*# .*\n", "", md)  # title from metadata; the PDF has it in the body already
     md = re.sub(r"\[\^\w+\]:?", " ", md)
     md = re.sub(r"^> \[(Stron[ay]|Na stronie) .*\]$", "", md, flags=re.M)  # notes on non-text content
-    md = re.sub(r"^> .*$", "", md, flags=re.M)  # OCR text (0.6.0): its pages have no text layer to compare with
+    # OCR text (0.6.0): of a page without a text layer, or (0.6.4) of an image on a page with one; the PDF
+    # text layer has neither
+    md = re.sub(r"^> .*$", "", md, flags=re.M)
     return re.sub(r"^#+ ", "", md, flags=re.M)
 
 
 def ocr_pages(md: str) -> set[int]:
     """Pages the output read by OCR (front matter `pages_ocr: "2-23, 30"`): their text layer is unreadable
-    ("(cid:N)" glyphs), and their OCR text is left out of the output side, so they are left out of both."""
+    ("(cid:N)" glyphs), and their OCR text is left out of the output side, so they are left out of both.
+    Pages in `pages_images_ocr` are not: their text layer is in the output as text (md_body drops only
+    the OCR quote blocks)."""
     m = re.search(r'^pages_ocr: "([^"]*)"', md, re.M)
     pages: set[int] = set()
     for part in (m.group(1).split(",") if m else []):

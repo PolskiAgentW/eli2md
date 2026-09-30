@@ -91,7 +91,8 @@ postępowaniu…`. Artykuły z takim numerem nie były nagłówkami ani węzłam
   `> [Strony 2-28 PDF nie mają warstwy tekstowej …]` (skany) oraz
   `> [Na stronie 7 PDF jest obraz …]` (obraz zajmujący ≥10% strony: wzór, rysunek, mapa).
   We front matter te same strony są w polach `pages_without_text` i `pages_with_images`.
-  Tej treści nie ma w Markdown. Domyślnie konwerter nie robi OCR (opcja `--ocr` niżej). Od 0.6.1 stroną bez
+  Tej treści nie ma w Markdown. Domyślnie konwerter nie robi OCR (opcja `--ocr` niżej; z nią obraz, który jest
+  skanem tekstu ciągłego, dostaje tekst OCR zamiast notki, od 0.6.4.dev). Od 0.6.1 stroną bez
   czytelnej warstwy tekstowej jest też strona, na której ponad 10% znaków nie ma kodu Unicode (pdfminer daje wtedy
   `(cid:N)`; formularze, np. DU/2025/161). Wcześniej te znaki trafiały do wyniku (w zbiorze 0.5.3: 27 plików).
 
@@ -111,7 +112,7 @@ z opublikowanych plików `.md`):
 ```
 
 Typy: `art`, `par` (§), `ust`, `pkt`, `lit`, `tir` oraz `text`, `heading` (rozdział, dział…), `signature`, `note`,
-`ocr` (akapit odczytany przez OCR, od 0.6.0). Jednostki cytowane w nowelizacjach nie są węzłami, tylko tekstem
+`ocr` (akapit odczytany przez OCR, od 0.6.0; od 0.6.4.dev także z obrazu tekstu na stronie z warstwą tekstową). Jednostki cytowane w nowelizacjach nie są węzłami, tylko tekstem
 (`"quoted": true`) jednostki, która je zawiera. Akapit bez numeru trafia do najgłębszej otwartej jednostki.
 Wyjątek (od 0.6.0): tekst tuż po ostatnim punkcie wyliczenia, zaczynający się małą literą albo od „– ”
 („część wspólna”: „oraz zmian wynikających…”, „– w wysokości…”), trafia do jednostki nad wyliczeniem. Jeśli
@@ -448,6 +449,38 @@ innych aktów 2025–2026 (sprawdzone DU/2025/29, 360, 370: 0 z 36 losowych frag
 renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część stron drugi raz
 (inny język, obrót). Nowe akty: średnio 83 strony bez tekstu na miesiąc (od 1 do 306).
 
+### Obraz tekstu na stronie z warstwą tekstową (0.6.4.dev, też tylko z `--ocr`)
+
+S. 1 umów międzynarodowych ma w warstwie tekstowej tylko winietę i tytuł. Preambuła i pierwsze artykuły są na
+tej samej stronie obrazem (np. MP/2026/869). Z `--ocr` konwerter czyta OCR-em największy obraz strony z warstwą
+tekstową. Robi to, jeśli nad obrazem nie leży tekst z warstwy (> 30 znaków oznacza, że obraz jest tłem
+formularza). Tekst przyjmuje tylko wtedy, gdy wygląda na skan tekstu ciągłego (`ocr.text_image`):
+- mediana pewności ≥ 95, co najmniej 5 linii i słowa funkcyjne jakiegoś języka,
+- ≥ 75% tokenów to słowa,
+- co najmniej połowa linii ma ≥ 45 znaków i co najmniej połowa zajmuje ≥ 60% szerokości obrazu,
+- mało symboli (`|`, `%`, `=` …),
+- żaden akapit nie zaczyna się od „Tabela”, „Wykres”, „Rys.”, „Mapa”, „Źródło” itp.
+
+Przyjęty tekst stoi w miejscu notki o obrazie, pod notką
+`> [Na stronie 1 PDF jest obraz tekstu (skan). Tekst poniżej odczytał z obrazu OCR (tesseract 5.5.0, pol+eng). Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]`,
+jako cytaty blokowe `> …` (w JSON węzły `ocr`). Strona zostaje w `pages_with_images`. Dochodzi nowe pole
+`pages_images_ocr`, a `pages_ocr` dalej oznacza tylko strony bez warstwy tekstowej. W `index.csv` jest nowa
+kolumna `image_ocr_pages`. Bez `--ocr` wynik się nie zmienia.
+
+Pomiar na wszystkich 824 stronach z obrazem w danych 2025–2026 (DU 631, MP 193;
+`eval/image_text_ocr_0.6.4.dev.md`):
+- Przyjęte są 34 strony z 29 umów międzynarodowych. Obejrzałem wszystkie i wszystkie to skany tekstu,
+  ale na 5 są podpisy lub wpisy odręczne, które dają w OCR śmieci.
+- W losowej próbie 20 odrzuconych 19 to nie tekst (mapy, rysunki, logo, formularze, wzory legitymacji).
+  Jeden to pominięty obraz tekstu (tytuł i preambuła w krótkich liniach).
+- Na s. 1 z 43 umów-kandydatów (29 DU, 14 MP) tekst dostaje 25. Pozostałe to głównie tytuły i preambuły
+  w krótkich, wyśrodkowanych liniach, listy stron i spis treści. Zostają z notką, bo fałszywe przyjęcie
+  formularza jako tekstu jest gorsze niż brak.
+- Progi dobrałem na tych samych stronach, więc to nie jest niezależny test.
+
+Koszt: OCR ma 722 strony (reszta odpada wcześniej), mediana 1,65 s, średnio 2,9 s na stronę. W całym
+zbiorze 2025–2026 to ok. 35 min czasu jednego wątku.
+
 ## Znane ograniczenia
 
 - Tabele są spłaszczane do akapitów (komórki wierszami), wzory do zwykłego tekstu. Grafik i skanów
@@ -469,8 +502,9 @@ renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część st
 - Wklejone wzory z Worda: niewidoczna kopia wzoru bywa w PDF-ie pod widocznym wzorem i trafia do wyniku
   jako powtórzony tekst (DU/2025/452 s. 7).
 - Umowy międzynarodowe: pierwsza strona (preambuła, art. 1) bywa obrazem tekstu na stronie, która ma warstwę
-  tekstową z samym tytułem. Taka strona nie jest „bez tekstu”, więc OCR jej nie czyta i w wyniku brakuje treści
-  (np. MP/2026/869).
+  tekstową z samym tytułem (np. MP/2026/869). Do 0.6.3 OCR jej nie czytał. Od 0.6.4.dev z `--ocr` czyta taki
+  obraz, gdy wygląda na tekst ciągły (opis wyżej, w sekcji o OCR). W 2025–2026 tak jest na 25 z 43 umów. Obrazy, w których przeważają
+  krótkie linie (tytuły, nagłówki artykułów, np. MP/2012/646 s. 1), dalej zostają z notką.
 - Domyślnie bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 53 356 stron
   w indeksie z 29.09.2026), głównie umowy międzynarodowe. OCR (`--ocr`, od 0.6.0) opisany niżej.
 

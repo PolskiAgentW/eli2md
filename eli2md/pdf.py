@@ -49,6 +49,7 @@ SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
 # without the brackets, so both prints give "Art. 479³⁰ᶠ." ("1" alone is a script digit, see FOOTNOTE_MARK).
 INDEX = re.compile(r"^(?:\[(\d{1,3}[a-z]{0,3})\]|(\d{1,3}[a-z]{1,3}))$")
 SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+$")
+IMAGE_TEXT_CHARS = 30  # more text-layer chars than this over an image: the image is a background, not read by OCR
 
 
 @dataclass
@@ -82,8 +83,10 @@ class Document:
     footnote_pages: list[int] = field(default_factory=list)  # page of each footnote (numbering may restart)
     no_text_pages: list[int] = field(default_factory=list)  # e.g. scanned pages: their content is lost
     image_pages: list[int] = field(default_factory=list)  # pages with text and large images (forms, drawings)
-    ocr_pages: list[int] = field(default_factory=list)
-    unmapped_pages: list[int] = field(default_factory=list)  # text layer mostly without Unicode, kept without it  # pages without text whose OCR text is included
+    ocr_pages: list[int] = field(default_factory=list)  # pages without text whose OCR text is included
+    unmapped_pages: list[int] = field(default_factory=list)  # text layer mostly without Unicode, kept without it
+    # pages with text whose large image is a scan of text read by OCR (also in image_pages, not in ocr_pages)
+    image_ocr_pages: list[int] = field(default_factory=list)
     ocr_engine: str = ""  # e.g. "tesseract 5.5.0"
     ocr_langs: dict[int, str] = field(default_factory=dict)  # page -> tesseract language(s) used
 
@@ -253,6 +256,37 @@ def _large_image(page, min_share: float = 0.1) -> float | None:
         if best is None or w * h > best[0]:
             best = (w * h, max(0.0, im["top"]))
     return best[1] if best and area >= min_share * page.width * page.height else None
+
+
+def _largest_image_box(page) -> tuple[float, float, float, float] | None:
+    """(x0, top, x1, bottom) of the largest image, clipped to the page."""
+    best = None
+    for im in page.images:
+        x0, x1 = max(0.0, im["x0"]), min(float(page.width), im["x1"])
+        top, bottom = max(0.0, im["top"]), min(float(page.height), im["bottom"])
+        if x1 > x0 and bottom > top and (best is None or (x1 - x0) * (bottom - top) > best[0]):
+            best = ((x1 - x0) * (bottom - top), (x0, top, x1, bottom))
+    return best[1] if best else None
+
+
+def _image_text(page, ocr: str):
+    """OCR of the largest image of a page that has a text layer, if that image is a scan of text.
+
+    Page 1 of international agreements has the masthead and title as text and the preamble and first
+    articles as an image of text (MP/2026/869 s.1, MP/2012/646 s.1). Returns the OcrPage, or None when
+    the image is not text (forms, drawings, maps, ID cards: ocr.text_image) or text of the text layer lies
+    over it: the image is a background, e.g. a form under its fields (DU/2026/872 s.39)."""
+    from . import ocr as ocr_mod
+    box = _largest_image_box(page)
+    if box is None:
+        return None
+    x0, top, x1, bottom = box
+    inside = sum(1 for c in page.chars if c["text"].strip() and x0 <= (c["x0"] + c["x1"]) / 2 <= x1
+                 and top <= (c["top"] + c["bottom"]) / 2 <= bottom)
+    if inside > IMAGE_TEXT_CHARS:
+        return None
+    read = ocr_mod.ocr_page(page, ocr, bbox=box)
+    return read if ocr_mod.text_image(read) else None
 
 
 def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
@@ -564,10 +598,14 @@ def convert(path: str, ocr: str | None = None) -> Document:
                     b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="notext")]
             elif (img := _large_image(page)) is not None:
                 doc.image_pages.append(pno)
-                m = Line(pno, img, img, 0.0, 1.0, "", page.width, page.height, mark="image")
+                m = [Line(pno, img, img, 0.0, 1.0, "", page.width, page.height, mark="image")]
+                if ocr and (read := _image_text(page, ocr)):  # an image of text: its OCR text replaces the note
+                    doc.image_ocr_pages.append(pno)
+                    doc.ocr_langs[pno] = read.lang
+                    m = [Line(pno, img, img, 0.0, 1.0, t, page.width, page.height, mark="ocr") for t in read.paragraphs]
                 upright = all(l.pw == page.width and l.ph == page.height for l in b)
                 i = next((k for k, l in enumerate(b) if l.top > img), len(b)) if upright else len(b)
-                b = b[:i] + [m] + b[i:]
+                b = b[:i] + m + b[i:]
             body.extend(b)
             notes.extend(n)
             page.close()  # pdfplumber caches every parsed page; 867-page acts exhausted 14 GB RAM
@@ -661,6 +699,11 @@ def ocr_note(page: int, engine: str) -> str:
             "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
 
 
+def image_ocr_note(page: int, engine: str) -> str:
+    return (f"> [Na stronie {page} PDF jest obraz tekstu (skan). Tekst poniżej odczytał z obrazu OCR ({engine}). "
+            "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
+
+
 def _escape_text(text: str) -> str:
     """A text-layer paragraph that starts with > or # ("> 90 dni" in a table) must not become a quote block
     (the mark of OCR text) or a heading."""
@@ -675,7 +718,7 @@ def _escape_ocr(text: str) -> str:
 
 def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[int] | None = None,
                 image_pages: list[int] | None = None, ocr_pages: list[int] | None = None, ocr_engine: str = "",
-                unmapped_pages: list[int] | None = None) -> str:
+                unmapped_pages: list[int] | None = None, image_ocr_pages: list[int] | None = None) -> str:
     """YAML front matter; keys follow legalize-pl where the meaning is the same."""
     from . import __version__
 
@@ -702,7 +745,8 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
         "pages_with_images": page_ranges(image_pages or []),
         "pages_unmapped_glyphs": page_ranges(unmapped_pages or []),
         "pages_ocr": page_ranges(ocr_pages or []),
-        "ocr": ocr_engine if ocr_pages else "",
+        "pages_images_ocr": page_ranges(image_ocr_pages or []),  # pages_with_images whose image text was read by OCR
+        "ocr": ocr_engine if ocr_pages or image_ocr_pages else "",
         "converter": f"eli2md {__version__}",
         "disclaimer": "Nieoficjalny tekst z automatycznej konwersji PDF. Wiążący jest PDF w "
                       + ("Monitorze Polskim." if meta.get("publisher") == "MP" else "Dzienniku Ustaw."),
@@ -760,14 +804,16 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
     out = []
     if meta:
         out += [frontmatter(meta, no_text_pages=doc.no_text_pages, image_pages=doc.image_pages,
-                            ocr_pages=doc.ocr_pages, ocr_engine=doc.ocr_engine, unmapped_pages=doc.unmapped_pages),
+                            ocr_pages=doc.ocr_pages, ocr_engine=doc.ocr_engine, unmapped_pages=doc.unmapped_pages,
+                            image_ocr_pages=doc.image_ocr_pages),
                 "# " + meta["title"]]
     run: list[int] = []  # consecutive pages without text get one note
     for i, b in enumerate(doc.blocks):
-        if b.kind == "ocr":  # each OCR page starts with its own note
+        if b.kind == "ocr":  # each OCR page (or image of text) starts with its own note
             if i == 0 or doc.blocks[i - 1].kind != "ocr" or doc.blocks[i - 1].page != b.page:
                 lang = doc.ocr_langs.get(b.page)
-                out.append(ocr_note(b.page, f"{doc.ocr_engine}, {lang}" if lang else doc.ocr_engine))
+                note = image_ocr_note if b.page in doc.image_ocr_pages else ocr_note
+                out.append(note(b.page, f"{doc.ocr_engine}, {lang}" if lang else doc.ocr_engine))
             out.append("> " + _escape_ocr(" ".join(b.text.split())))  # a quote block: not the text layer
         elif b.kind == "notext":
             run.append(b.page)
