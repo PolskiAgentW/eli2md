@@ -76,6 +76,13 @@ SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
 INDEX = re.compile(r"^(?:\[(\d{1,3}[a-z]{0,3})\]|(\d{1,3}[a-z]{1,3}))$")
 SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+$")
 IMAGE_TEXT_CHARS = 30  # more text-layer chars than this over an image: the image is a background, not read by OCR
+# Dz.U. (and M.P.) up to 2011 came out in numbered issues: the page header names the issue ("Dziennik Ustaw Nr 150
+# — 9307 — Poz. 1255, 1256 i 1257", DU/2005/1255), the first page of an issue has "Nr 115" under the masthead
+# (DU/2002/994). Those years set acts in two columns; from 2012 there are no issues and one column.
+OLD_HEADER = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\s*\d+")
+OLD_MASTHEAD = re.compile(r"^(?:DZIENNIK\s*USTAW|MONITOR\s*POLSKI)")
+OLD_ISSUE = re.compile(r"^Nr\s*\d+$")
+GUTTER = (6.0, 20.0)  # pt; the gap between the columns is 11.3-12 pt in DU 2000-2011 (DU/2005/1255, DU/2011/1134)
 
 
 @dataclass
@@ -92,6 +99,8 @@ class Line:
     x1: float = 0.0
     right: float = 0.0  # right edge of justified text in this frame (0 = unknown)
     lead: float = -1.0  # usual gap between lines in this frame (-1 = unknown)
+    band: int = 0  # two-column pages (see _bands): full-width rows are odd bands, the text in columns even ones
+    col: int = 0  # 1 = left, 2 = right column of a two-column band; 0 = read across the page
 
 
 @dataclass
@@ -381,6 +390,86 @@ def _rows(words: list[dict]) -> list[list[dict]]:
     return rows
 
 
+def _old_issue(rows: list[list[dict]], ph: float) -> bool:
+    """The page belongs to a gazette issue of 2011 or earlier: its header or masthead names the issue (OLD_HEADER).
+    Only such pages are looked at for columns, so the pages of 2012 on are read as before."""
+    texts = [" ".join(w["text"] for w in sorted(r, key=lambda w: w["x0"])) for r in rows if r[0]["top"] < 0.2 * ph]
+    return any(OLD_HEADER.match(t) for t in texts) or (
+        any(OLD_MASTHEAD.match(t) for t in texts) and any(OLD_ISSUE.match(t) for t in texts))
+
+
+def _gutter(rows: list[list[dict]], pw: float) -> tuple[float, float] | None:
+    """(gl, gr): the right edge of the left column and the left edge of the right column of a page set in two
+    columns, or None.
+
+    The columns are justified: full lines of the left column end at one x left of the middle (292.0 in DU/2005/1255
+    p. 1), and in a printed row the right column, if any, starts across the gutter. The margins are symmetric
+    (37.9 and 557.4 there), so the right column starts at left margin + right margin - gl (303.3) even where its
+    lines are all indented (points of a list, DU/2009/1323 p. 1). The page header spans the margins where both
+    columns are indented (amendments, DU/2011/1430 p. 3); otherwise the leftmost right part of a row is the edge
+    (DU/2011/1134 p. 2). It takes 3 rows whose left part is a line of text (from the left half's start, no gap
+    wider than the type: not cells of a table) ending at gl."""
+    rows = [sorted(r, key=lambda w: w["x0"]) for r in rows]
+    starts, ends = Counter(round(r[0]["x0"]) for r in rows), Counter(round(r[-1]["x1"]) for r in rows)
+    head = [r for r in rows if OLD_HEADER.match(" ".join(w["text"] for w in r))]
+    lm = [x for x, n in starts.items() if n >= 3] + [round(r[0]["x0"]) for r in head]
+    rm = [x for x, n in ends.items() if n >= 3] + [round(r[-1]["x1"]) for r in head]
+    if not lm or not rm:
+        return None
+    left = min(r[0]["x0"] for r in rows if round(r[0]["x0"]) == min(lm))
+    right = max(r[-1]["x1"] for r in rows if round(r[-1]["x1"]) == max(rm))
+    edges: dict[float, list[tuple[float, float]]] = {}  # gl (0.5 pt) -> (x1 of a left part, x0 of the right part)
+    for r in rows:
+        for k, a in enumerate(r):
+            b = r[k + 1] if k + 1 < len(r) else None
+            if not (0.4 * pw < a["x1"] < 0.5 * pw) or (b is not None and b["x0"] - a["x1"] < GUTTER[0]):
+                continue
+            part = r[: k + 1]
+            if part[0]["x0"] > left + 0.5 * (a["x1"] - left) or len(part) < 3 \
+                    or any(y["x0"] - x["x1"] > a["size"] for x, y in zip(part, part[1:])):
+                continue
+            edges.setdefault(round(a["x1"] * 2) / 2, []).append((a["x1"], b["x0"] if b else math.inf))
+    for c in sorted(edges, key=lambda c: -sum(len(v) for x, v in edges.items() if abs(x - c) <= 0.5)):
+        xs = [x for v in edges.values() for x in v if abs(x[0] - c) <= 0.8]
+        gl = max(x for x, _ in xs)
+        gr = min(left + right - gl, *(x for _, x in xs))
+        if len(xs) >= 3 and GUTTER[0] <= gr - gl <= GUTTER[1]:
+            return gl, gr
+    return None
+
+
+def _bands(words: list[dict], gl: float, gr: float):
+    """Function word -> (band, column) on a two-column page.
+
+    Full-width rows (a word crosses the gutter: header, position number, title, footnotes of Quark pages) and the
+    runs of column text between them alternate down the page; several acts may share it (DU/2005/1255 p. 1).
+    Bands are numbered down the page, full-width rows odd; in an even band the left column (1) is read before the
+    right one (2). An even band with no word ending at the left column's edge (a table, short lines) is read row
+    by row (column 0). A word crosses the gutter if it reaches 2 pt into it from both sides: a hyphen or quote
+    may stick out of a justified column (optical margins)."""
+    spans: list[list[float]] = []
+    for t, b in sorted((w["top"], w["bottom"]) for w in words if w["x0"] < gr - 2 and w["x1"] > gl + 2):
+        if spans and t <= spans[-1][1]:
+            spans[-1][1] = max(spans[-1][1], b)
+        else:
+            spans.append([t, b])
+
+    def band(w: dict) -> int:
+        mid = (w["top"] + w["bottom"]) / 2
+        for k, (t, b) in enumerate(spans):
+            if mid < t:
+                return 2 * k
+            if mid <= b:
+                return 2 * k + 1
+        return 2 * len(spans)
+    split = {band(w) for w in words if abs(w["x1"] - gl) <= 1} - {2 * k + 1 for k in range(len(spans))}
+
+    def key(w: dict) -> tuple[int, int]:
+        k = band(w)
+        return (k, (1 if w["x0"] + w["x1"] < gl + gr else 2) if k in split else 0)
+    return key
+
+
 def _index_words(r: list[dict], big: list[dict]) -> tuple[list[dict], list[dict]]:
     """Split a row of small words into (other words, indices). An index matches INDEX, starts right after a
     normal-size word ending with a letter or digit and sits above that word's middle: "479" + "[30f]".
@@ -446,8 +535,21 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             attach.append((w, {"sup": True} if ")" in w["text"] else {"script": True}))
         attach += [(w, {}) for w in text]
     rows = _rows(normal)
+    key = None  # word -> (band, column) on a two-column page (DU 2000-2011)
+    if _old_issue(rows, ph) and (gutter := _gutter(rows, pw)):
+        key = _bands(normal, *gutter)
+        groups: dict[tuple[int, int], list[dict]] = {}
+        for w in normal:
+            groups.setdefault(key(w), []).append(w)
+        rows = [r for k in sorted(groups) for r in _rows(groups[k])]  # the columns' baselines differ (DU/2011/1134)
+
+    def dist(r: list[dict], s: dict) -> float:
+        return abs((r[0]["top"] + r[0]["bottom"]) / 2 - s["bottom"])
     for s, flag in attach:
-        best = min(rows, key=lambda r: abs((r[0]["top"] + r[0]["bottom"]) / 2 - s["bottom"]), default=None)
+        best = min(rows if key is None else [r for r in rows if key(r[0]) == key(s)],
+                   key=lambda r: dist(r, s), default=None)
+        if key is not None and (best is None or dist(best, s) >= 12):  # e.g. a marker in a band of its own
+            best = min(rows, key=lambda r: dist(r, s), default=None)
         if best is not None and abs((best[0]["top"] + best[0]["bottom"]) / 2 - s["bottom"]) < 12:
             best.append({**s, **flag})
         else:
@@ -462,9 +564,34 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             small = bool(below) and all(w["size"] < FOOTNOTE_TYPE for w in below)
             if (r["top"] > ph * 0.3 and not r.get("line")) or (r["top"] > ph * 0.1 and small):
                 rule_top = r["top"] if rule_top is None else min(rule_top, r["top"])
+    # Two-column page: footnote rules as ((band, column), top). Under a rule are the lines of its column below it and
+    # the bands further down; the other column of its band goes on beside the footnotes.
+    col_rules: list[tuple[tuple[int, int], float]] = []
+    sep = None  # the row of dashes over the footnotes of a Quark page
+
+    def under(k: tuple[int, int], top: float, wk: tuple[int, int], wtop: float) -> bool:
+        return wtop > top and (wk == k or wk[0] > k[0])
+    if key is not None:
+        for r in rects:
+            # InDesign pages (DU 2010-2011): a ~70 pt line at a column's edge, footnotes under it in the column
+            # (DU/2011/1170 p. 2), also high on the page (DU/2010/626 p. 3), or across the page (ibid. p. 4)
+            if r["height"] < 1.5 and 50 < r["width"] < 160 and _free(r, rects):
+                below = [w for w in words if under(key(r), r["top"], key(w), w["top"])]
+                if below and all(w["size"] < FOOTNOTE_TYPE for w in below):
+                    col_rules.append((key(r), r["top"]))
+        for r in rows:
+            # QuarkXPress pages (DU 2000-2009): footnotes across the page under a row "———————" in the left
+            # column (DU/2009/1323 p. 1)
+            if re.fullmatch(r"[—–-]{3,}", "".join(w["text"] for w in r)) and r[0]["x1"] - r[0]["x0"] < 0.3 * pw:
+                below = [w for w in words if under(key(r[0]), r[0]["bottom"], key(w), w["top"])]
+                if below and all(w["size"] < r[0]["size"] - 0.5 for w in below):
+                    sep = r
+                    col_rules.append((key(r[0]), r[0]["top"]))
 
     body, notes = [], []
     for r in rows:
+        if r is sep:  # a rule, not text
+            continue
         r.sort(key=lambda w: w["x0"])
         parts: list[tuple[str, bool]] = []  # (text, glued to the previous word)
         base = [w for w in r if not w.get("sup") and not w.get("script")]
@@ -487,6 +614,7 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
         for p, glued in parts:
             text = p if not text else text + p if glued else text + " " + p
         normal_words = [w for w in r if not w.get("sup") and not w.get("script")] or r
+        band, col = key(normal_words[0]) if key else (0, 0)
         line = Line(
             page=pno,
             top=min(w["top"] for w in normal_words),
@@ -497,22 +625,26 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             pw=pw,
             ph=ph,
             x1=max(w["x1"] for w in normal_words),
+            band=band,
+            col=col,
         )
         is_note = (rule_top is not None and line.top > rule_top) or (
             rule_top is None and line.size < body_size - 0.5 and line.top > ph * 0.6
-        )
+        ) or any(under(k, t, (band, col), line.top) for k, t in col_rules)
         if line.text:  # a line of unmapped glyphs only is empty now
             (notes if is_note else body).append(line)
-    body.sort(key=lambda l: l.top)
-    notes.sort(key=lambda l: l.top)
-    ends = Counter(round(l.x1) for l in body if len(l.text) >= 40)
-    gaps = Counter(round(2 * (b.top - a.bottom)) / 2 for a, b in zip(body, body[1:])
-                   if abs(a.size - b.size) < 0.5 and 0 <= b.top - a.bottom < a.size)
-    for l in body:
-        if ends and ends.most_common(1)[0][1] >= 3:
-            l.right = ends.most_common(1)[0][0]
-        if gaps and gaps.most_common(1)[0][1] >= 3:
-            l.lead = gaps.most_common(1)[0][0]
+    body.sort(key=lambda l: (l.band, l.col, l.top))  # down the page; a band's left column before its right one
+    notes.sort(key=lambda l: (l.band, l.col, l.top))
+    for c in sorted({l.col for l in body}):  # each column has its own right edge (292 and 557 in DU/2005/1255)
+        lines = [l for l in body if l.col == c]
+        ends = Counter(round(l.x1) for l in lines if len(l.text) >= 40)
+        gaps = Counter(round(2 * (b.top - a.bottom)) / 2 for a, b in zip(lines, lines[1:])
+                       if abs(a.size - b.size) < 0.5 and 0 <= b.top - a.bottom < a.size)
+        for l in lines:
+            if ends and ends.most_common(1)[0][1] >= 3:
+                l.right = ends.most_common(1)[0][0]
+            if gaps and gaps.most_common(1)[0][1] >= 3:
+                l.lead = gaps.most_common(1)[0][0]
     return body, notes
 
 
@@ -591,7 +723,8 @@ def _segment(body: list[Line]) -> list[Block]:
         elif cur.kind == "annex":
             # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
             new = not (l.page == prev.page and l.x0 > 0.4 * l.pw and l.top - prev.bottom < 0.8 * l.size)
-        elif l.page != prev.page:
+        elif l.page != prev.page or (prev.col == 1 and l.col == 2 and l.band == prev.band):
+            # a page break, or the break from the bottom of the left column to the top of the right one
             new = bool(UNIT_START.match(l.text)) or bool(re.search(r"[.:;”]$", prev.text))
         else:
             # Some PDFs set units with little extra space (2 pt over the usual gap between lines, not 6),
@@ -647,7 +780,10 @@ def convert(path: str, ocr: str | None = None) -> Document:
                         doc.masthead = [x.text for x in b[: i + 1]]
                         b = b[i + 1 :]
                         break
-            elif b and RUNNING_HEADER.match(b[0].text):
+                else:  # an act of 2011 or earlier starts under the running header of its issue (DU/2005/1255)
+                    if b and OLD_HEADER.match(b[0].text):
+                        doc.masthead, b = [b[0].text], b[1:]
+            elif b and (RUNNING_HEADER.match(b[0].text) or OLD_HEADER.match(b[0].text)):
                 b = b[1:]
             if not b and not n:
                 read = ocr_mod.ocr_page(page, ocr) if ocr else None
