@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.12**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.13**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -174,6 +174,12 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.13** (2026-09-30). Tylko `eli2md.dataset`, konwersja bez zmian. Po `MemoryError` (limit `--mem-limit-gb`)
+proces roboczy zostaje z pamięcią przy limicie: jego kolejne akty kończyły się fałszywym `PdfminerException`,
+a `MemoryError` przy czytaniu `meta.json` (poza `try`) zatrzymał cały przebieg (MP/2020/1070, konwersja
+MP 2012–2024 2026-09-30, po 10 650 z 15 885 aktów). Teraz taki proces oddaje kolejne akty, a te są konwertowane
+w nowej puli procesów (do 3 przebiegów). `meta.json` jest czytany w `try`. Test: `test_dataset_worker_over_memory_limit`.
 
 **0.6.12** (2026-09-30). Dz.U. 2000–2011, załączniki: (1) kreska przypisów narysowana w łamie (InDesign, 2010–2011)
 obejmuje tylko swój łam, gdy niżej na stronie zaczyna się załącznik (DU/2010/277 s. 6: przypis 5 był tekstem, a oba

@@ -79,12 +79,21 @@ def write_json(md: str, md_file: Path) -> None:
     json_path(md_file).write_text(json.dumps(md_to_tree(md), ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
+_POISONED = False  # this worker hit its memory limit (see _convert_one)
+
+
 def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
-    """Worker: convert one downloaded act. Returns the index row fields it determines."""
+    """Worker: convert one downloaded act. Returns the index row fields it determines.
+    After a MemoryError the worker's heap stays near the address-space limit: its next acts failed as
+    "PdfminerException" and one outside the try stopped the whole run (MP/2020/1070, 2026-09-30). So such a worker
+    only hands its next acts back ("retry"), and main() converts them in a fresh pool."""
+    global _POISONED
     eli, pdf_path, out_path, with_json, ocr = job
-    meta = json.loads((Path(pdf_path).parent / "meta.json").read_text())
+    if _POISONED:
+        return {"eli": eli, "status": "retry"}
     t0 = time.time()
     try:
+        meta = json.loads((Path(pdf_path).parent / "meta.json").read_text())
         doc = convert(pdf_path, ocr=ocr, position=meta.get("pos"))
         md = to_markdown(doc, meta)
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
@@ -99,7 +108,7 @@ def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
                 "image_ocr_pages": len(doc.image_ocr_pages) if ocr else "",
                 "secs": round(time.time() - t0, 1)}
     except MemoryError:
-        pass  # report below, once the frames holding the large objects are released
+        _POISONED = True  # report below, once the frames holding the large objects are released
     except Exception as e:  # keep going; the failure is recorded in the index
         return {"eli": eli, "status": "error", "error": f"{type(e).__name__}: {e}"[:300],
                 "trace": traceback.format_exc(limit=3), "secs": round(time.time() - t0, 1)}
@@ -171,26 +180,42 @@ def main(argv: list[str] | None = None) -> int:
         index[eli] = {**_base_row(it), "pdf_sha256": sha}
         jobs.append((eli, str(pdf), str(md_path(a.root, year, pos, a.publisher)), a.json, a.ocr))
 
-    done = 0
-    with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
-                             initargs=(a.mem_limit_gb,)) as ex:
-        for res in ex.map(_convert_one, jobs):
-            row = index[res["eli"]]
-            row.update({k: res[k] for k in ("status", "error", "pages", "words", "no_text_pages", "image_pages",
-                                            "ocr_pages", "image_ocr_pages") if k in res})
-            row.update(converter=f"eli2md {__version__}",
-                       converted_at=dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
-            done += 1
-            if res["status"] != "ok":
-                print(f"ERROR {res['eli']}: {res['error']}", flush=True)
-            if done % 50 == 0:
-                print(f"converted {done}/{len(jobs)}", flush=True)
-                save_index(a.root, index)
+    done, by_eli = 0, {j[0]: j for j in jobs}
+    for attempt in range(1, 4):  # acts handed back by a worker over its memory limit go to a fresh pool
+        retry = []
+        with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
+                                 initargs=(a.mem_limit_gb,)) as ex:
+            for res in ex.map(_convert_one, jobs):
+                if res["status"] == "retry":
+                    retry.append(by_eli[res["eli"]])
+                    continue
+                done += _record(index, res)
+                if done % 50 == 0:
+                    print(f"converted {done}/{len(by_eli)}", flush=True)
+                    save_index(a.root, index)
+        if not retry:
+            break
+        print(f"pass {attempt}: {len(retry)} acts handed back by a worker over its memory limit", flush=True)
+        jobs = retry
+    for eli, *_ in jobs if retry else []:  # still handed back after the last pass
+        done += _record(index, {"eli": eli, "status": "error", "error": "MemoryError in an earlier act (not retried)"})
     save_index(a.root, index)
     ok = sum(1 for r in index.values() if r["status"] == "ok")
     print(f"done: {done} converted this run; index: {ok} ok / {len(index)} total; "
           f"{time.time() - t_start:.0f}s", flush=True)
     return 0
+
+
+def _record(index: dict[str, dict], res: dict) -> int:
+    """Put a worker's result into the index row of its act; 1 (acts done)."""
+    row = index[res["eli"]]
+    row.update({k: res[k] for k in ("status", "error", "pages", "words", "no_text_pages", "image_pages",
+                                    "ocr_pages", "image_ocr_pages") if k in res})
+    row.update(converter=f"eli2md {__version__}",
+               converted_at=dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+    if res["status"] != "ok":
+        print(f"ERROR {res['eli']}: {res['error']}", flush=True)
+    return 1
 
 
 def _base_row(it: dict) -> dict:
