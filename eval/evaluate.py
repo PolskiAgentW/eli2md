@@ -7,6 +7,10 @@ Scored separately: main text (before the first annex, without signature), footno
 (order differs between formats) and annexes. Annexes that the HTML only links to as PDF
 are excluded from the annex reference (marked * in output). Acts whose HTML is a
 placeholder are skipped.
+Footnotes are also scored leniently ("notes*" line; the numbers above are unchanged): our footnote numbers
+("[^3]") count as the HTML's "3)", and our footnote tokens that the HTML has outside its footnotes (main
+text or any annex, incl. link-only ones) count as matched for precision. The HTML gives footnotes of
+annexes and of consolidated texts as annex text (DU/2024/781, DU/2024/1580).
 Usage: python eval/evaluate.py SAMPLE_JSON [--show POS] [--out FILE]
 """
 from __future__ import annotations
@@ -86,6 +90,18 @@ def score(ref: list[str], hyp: list[str]) -> dict:
     }
 
 
+def lenient_notes(rn: list[str], footnotes: list[str], ref: dict) -> dict:
+    """Footnote score with our numbers kept and our extra tokens looked up in the rest of the HTML."""
+    hn = tokens("\n".join(re.sub(r"^\[\^(\d+)(?:_\d+)?\]", r"\1 ", f) for f in footnotes))
+    sm = difflib.SequenceMatcher(None, rn, hn, autojunk=False)
+    m = sum(b.size for b in sm.get_matching_blocks())
+    extra = [t for op, i1, i2, j1, j2 in sm.get_opcodes() if op != "equal" for t in hn[j1:j2]]
+    other = tokens(ref["main"] + "\n" + "\n".join(t for t, _ in ref["annexes"]))
+    found = sum(b.size for b in difflib.SequenceMatcher(None, other, extra, autojunk=False).get_matching_blocks()) \
+        if extra and other else 0
+    return {"ref": len(rn), "hyp": len(hn), "matched": m, "matched_p": m + found}
+
+
 def show_diff(ref: list[str], hyp: list[str], limit: int = 40) -> None:
     sm = difflib.SequenceMatcher(None, ref, hyp, autojunk=False)
     n = 0
@@ -113,6 +129,7 @@ def evaluate_act(pos: int, show: bool = False) -> dict:
     ra = tokens("\n".join(text_annexes))
     ha = tokens("\n".join(b.text for b in doc.annex_blocks()))
     row = {"pos": pos, "secs": round(dt, 2), "body": score(rb, hb), "notes": score(rn, hn), "annex": score(ra, ha)}
+    row["notes_lenient"] = lenient_notes(rn, doc.footnotes, ref)
     row["body"]["complete_ref"] = ref["complete"]
     row["annex"]["complete_ref"] = len(text_annexes) == len(ref["annexes"])
     row["annex"]["n_annex_html"] = len(ref["annexes"])
@@ -162,6 +179,12 @@ def main() -> None:
         print(f"TOTAL {part:5} (n={len(subset)}): micro R={m / max(ref, 1):.4f} P={m / max(hyp, 1):.4f}  "
               f"macro R={macro_r:.4f}  R<0.95: {sum(1 for r in subset if r[part]['recall'] < 0.95)}  "
               f"| P on complete refs (n={len(comp)}): {cp:.4f}")
+    nl = [r["notes_lenient"] for r in done if r["notes"]["ref"]]
+    if nl:
+        ref, hyp = sum(x["ref"] for x in nl), sum(x["hyp"] for x in nl)
+        print(f"TOTAL notes* (n={len(nl)}): micro R={sum(x['matched'] for x in nl) / max(ref, 1):.4f} "
+              f"P={sum(x['matched_p'] for x in nl) / max(hyp, 1):.4f}  (lenient: footnote numbers kept, "
+              f"extra tokens found in HTML main/annexes count)")
     if a.out:
         Path(a.out).write_text(json.dumps(rows, ensure_ascii=False, indent=1))
 
