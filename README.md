@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.3**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.4**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -92,7 +92,7 @@ postępowaniu…`. Artykuły z takim numerem nie były nagłówkami ani węzłam
   `> [Na stronie 7 PDF jest obraz …]` (obraz zajmujący ≥10% strony: wzór, rysunek, mapa).
   We front matter te same strony są w polach `pages_without_text` i `pages_with_images`.
   Tej treści nie ma w Markdown. Domyślnie konwerter nie robi OCR (opcja `--ocr` niżej; z nią obraz, który jest
-  skanem tekstu ciągłego, dostaje tekst OCR zamiast notki, od 0.6.4.dev). Od 0.6.1 stroną bez
+  skanem tekstu ciągłego, dostaje tekst OCR zamiast notki, od 0.6.4). Od 0.6.1 stroną bez
   czytelnej warstwy tekstowej jest też strona, na której ponad 10% znaków nie ma kodu Unicode (pdfminer daje wtedy
   `(cid:N)`; formularze, np. DU/2025/161). Wcześniej te znaki trafiały do wyniku (w zbiorze 0.5.3: 27 plików).
 
@@ -112,7 +112,7 @@ z opublikowanych plików `.md`):
 ```
 
 Typy: `art`, `par` (§), `ust`, `pkt`, `lit`, `tir` oraz `text`, `heading` (rozdział, dział…), `signature`, `note`,
-`ocr` (akapit odczytany przez OCR, od 0.6.0; od 0.6.4.dev także z obrazu tekstu na stronie z warstwą tekstową). Jednostki cytowane w nowelizacjach nie są węzłami, tylko tekstem
+`ocr` (akapit odczytany przez OCR, od 0.6.0; od 0.6.4 także z obrazu tekstu na stronie z warstwą tekstową). Jednostki cytowane w nowelizacjach nie są węzłami, tylko tekstem
 (`"quoted": true`) jednostki, która je zawiera. Akapit bez numeru trafia do najgłębszej otwartej jednostki.
 Wyjątek (od 0.6.0): tekst tuż po ostatnim punkcie wyliczenia, zaczynający się małą literą albo od „– ”
 („część wspólna”: „oraz zmian wynikających…”, „– w wysokości…”), trafia do jednostki nad wyliczeniem. Jeśli
@@ -120,7 +120,7 @@ potem przychodzi jednostka niższego rzędu (np. lit. po takim akapicie), akapit
 ciągiem jego tekstu rozbitym przez układ strony. „– ” po wyliczeniu nie jest tiretem, chyba że poprzedni akapit
 kończy się dwukropkiem albo sam jest tiretem.
 
-Numerowane wiersze tabel i formularzy nie są jednostkami (0.6.4.dev, `eval/annex_rows_0.6.4.dev.md`): punkty
+Numerowane wiersze tabel i formularzy nie są jednostkami (0.6.4, `eval/annex_rows_0.6.4.dev.md`): punkty
 wykazów współrzędnych („6. 54°10′43,83″ N …”), karty akwenów od pierwszego wiersza „N.” z etykietą wielkimi
 literami („5. FUNKCJA PODSTAWOWA”) do następnego § oraz wiersze tabel wstawiane przez nowelizację bez cudzysłowu
 („– – – lp. 8 otrzymuje brzmienie:” / „8. Program naukowo-badawczy 10.000 …”). Zostają tekstem w jednostce nad
@@ -167,6 +167,19 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.4** (2026-09-30). Trzy zmiany (opisy w sekcjach niżej i w raportach `eval/*_0.6.4.dev.md`):
+- z `--ocr` obraz tekstu na stronie z warstwą tekstową (s. 1 umów międzynarodowych) dostaje tekst OCR
+  (`eval/image_text_ocr_0.6.4.dev.md`);
+- numerowane wiersze tabel i formularzy w załącznikach nie są w JSON jednostkami (`eval/annex_rows_0.6.4.dev.md`);
+- wzory Cambria Math bez podwojonych liter, wklejony PDF nie gubi znacznika ukrytego tekstu (`eval/math_glyphs_0.6.4.dev.md`).
+
+**0.6.4, test s5110** (35 aktów z 2024 r., których nie było w żadnej wcześniejszej próbie; zapisana w gicie przed
+oceną, oceniona raz; 0.6.3 tymi samymi skryptami): wszystkie sumy identyczne w obu wersjach. Słowa: treść główna
+R 0.9999, P 0.9959; przypisy R 0.783, P 0.756; załączniki R 0.980, P 0.980. Drzewo: treść główna 1241/1241,
+załączniki R 0.9994, P 0.9810. W tej próbie nie ma kart akwenów ani wykazów współrzędnych, więc poprawa drzewa
+załączników z próby dev (P 0.852 → 0.994, strojona na niej) nie ma tu niezależnego potwierdzenia. Wyniki:
+`eval/*_test_s5110_v0.6.{3,4}.*`.
 
 **0.6.3** (2026-09-30). Zmiany znalezione przy kontroli danych 2025–2026, bez wzorca HTML:
 - indeksy przy numerach jednostek jako znaki górne, także w nawiasach i z literą (`Art. 479³⁰ᶠ.`, opis wyżej).
@@ -378,7 +391,7 @@ Od 0.6.3 tak samo indeks z literą (`22¹ᵃ` → „221a”). Indeks w nawiasac
 po stronie PDF ze słowem przed nim („47930f”), bo wynik ma go bez nawiasów (`479³⁰ᶠ`). Bez tego poprawiony
 wynik wypadał gorzej (średni kept w 20 aktach z takimi indeksami: 0.9754 → 0.9674 w starej mierze,
 0.9719 → 0.9753 w nowej; `eval/indices_2026_v0.6.3.dev.md`).
-Od 0.6.4.dev znaki alfanumeryczne matematyczne (`𝑘` we wzorach Worda) liczę po obu stronach jako zwykłe litery,
+Od 0.6.4 znaki alfanumeryczne matematyczne (`𝑘` we wzorach Worda) liczę po obu stronach jako zwykłe litery,
 a podwojony glif Cambria Math (`𝑘𝑘`) po stronie PDF jako jedną literę. Miara porównuje więc to, co widać
 (`eval/math_glyphs_0.6.4.dev.md`).
 
@@ -452,7 +465,7 @@ innych aktów 2025–2026 (sprawdzone DU/2025/29, 360, 370: 0 z 36 losowych frag
 renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część stron drugi raz
 (inny język, obrót). Nowe akty: średnio 83 strony bez tekstu na miesiąc (od 1 do 306).
 
-### Obraz tekstu na stronie z warstwą tekstową (0.6.4.dev, też tylko z `--ocr`)
+### Obraz tekstu na stronie z warstwą tekstową (0.6.4, też tylko z `--ocr`)
 
 S. 1 umów międzynarodowych ma w warstwie tekstowej tylko winietę i tytuł. Preambuła i pierwsze artykuły są na
 tej samej stronie obrazem (np. MP/2026/869). Z `--ocr` konwerter czyta OCR-em największy obraz strony z warstwą
@@ -505,14 +518,14 @@ zbiorze 2025–2026 to ok. 35 min czasu jednego wątku.
 - Wklejone wzory z Worda: niewidoczna kopia wzoru bywa w PDF-ie pod widocznym wzorem i trafia do wyniku
   jako powtórzony tekst (DU/2025/452 s. 7).
 - Wzory Cambria Math: w 19 aktach DU 2025–2026 mapa ToUnicode daje jednemu glifowi dwie litery (`𝑘𝑘`).
-  Od 0.6.4.dev zapisuję je pojedynczo („k”, nie „kk”). W czterech z nich (DU/2025/454, 459, 1743, 1744) mapa jest
+  Od 0.6.4 zapisuję je pojedynczo („k”, nie „kk”). W czterech z nich (DU/2025/454, 459, 1743, 1744) mapa jest
   poza tym błędna i wzory pozostają nieczytelne. `eval/math_glyphs_0.6.4.dev.md`.
 - Wklejony PDF z Worda pod przepisanym tekstem Dziennika (DU/2026/40 s. 2–6): widać z niego tylko wzory.
   Do 0.6.3 pdfplumber gubił znacznik `PlacedPDF` po zagnieżdżonym `/Span … EMC` wzoru, więc reszta ukrytej kopii
-  w ogóle nie szła do testu tuszu. Od 0.6.4.dev znacznik zostaje (10 aktów 2025–2026). Test tuszu dalej przepuszcza
+  w ogóle nie szła do testu tuszu. Od 0.6.4 znacznik zostaje (10 aktów 2025–2026). Test tuszu dalej przepuszcza
   ukryte litery, których ramka nachodzi na tusz innego tekstu, więc akapity przy wzorach bywają wymieszane.
 - Umowy międzynarodowe: pierwsza strona (preambuła, art. 1) bywa obrazem tekstu na stronie, która ma warstwę
-  tekstową z samym tytułem (np. MP/2026/869). Do 0.6.3 OCR jej nie czytał. Od 0.6.4.dev z `--ocr` czyta taki
+  tekstową z samym tytułem (np. MP/2026/869). Do 0.6.3 OCR jej nie czytał. Od 0.6.4 z `--ocr` czyta taki
   obraz, gdy wygląda na tekst ciągły (opis wyżej, w sekcji o OCR). W 2025–2026 tak jest na 25 z 43 umów. Obrazy, w których przeważają
   krótkie linie (tytuły, nagłówki artykułów, np. MP/2012/646 s. 1), dalej zostają z notką.
 - Domyślnie bez OCR. W 2025–2026 62 akty mają strony bez warstwy tekstowej (1734 z 53 356 stron
