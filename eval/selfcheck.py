@@ -6,6 +6,11 @@ the output (multiset overlap, order ignored) and the share of output tokens foun
 The masthead and running headers are removed from the PDF side, as the output drops them too.
 Low values point at dropped text (e.g. text wrongly treated as hidden); scanned pages (no text layer)
 are invisible to this check.
+Since 0.6.4.dev the measure compares what is visible in formulas: mathematical alphanumerics (𝑘, 𝜆 in Word
+formulas; the converter writes k, λ) are plain letters on both sides (NFKC), and a glyph whose ToUnicode maps
+to its character twice ("𝑘𝑘" for one 𝑘 in Cambria Math, DU/2026/1236 p. 10) counts once on the PDF side. Before,
+the PDF's "𝑘𝑘" matched no output word, and the output's "kk" of 0.6.3 no PDF word. Scores of acts with such
+formulas differ from those of the earlier measure (eval/math_glyphs_0.6.4.dev.md).
 Usage: python eval/selfcheck.py DATA_ROOT [--limit N] [--out FILE] [--jobs N]
 """
 from __future__ import annotations
@@ -15,6 +20,7 @@ import csv
 import json
 import math
 import re
+import unicodedata
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -33,12 +39,27 @@ SCRIPTS = {ord(c): p for c, p in zip("⁰¹²³⁴⁵⁶⁷⁸⁹₀₁₂₃₄
 # 2026 prints bracket the index ("Art. 479[30f].", "Art. 6b[1]."), the converter writes it without brackets
 # ("479³⁰ᶠ", "6b¹")
 PDF_INDEX = re.compile(r"(?<=\w)\[(\d{1,3}[a-z]{0,3})\]")
+MATH_ALNUM = re.compile("[\U0001D400-\U0001D7FF]")
+DOUBLED_CLASS = re.compile("[\U0001D400-\U0001D7FF\u0370-\u03FF]")  # math alphanumerics, Greek
+
+
+def plain_math(text: str) -> str:
+    return MATH_ALNUM.sub(lambda m: unicodedata.normalize("NFKC", m.group()), text)
+
+
+def single_glyphs(p) -> None:
+    """A glyph of a math font whose text is its character twice ("𝑘𝑘") gets one (in place, on pdfplumber's
+    cached chars). Same rule as eli2md.pdf._doubled, kept here so that the check runs against any version."""
+    for c in p.chars:
+        t = c["text"]
+        if len(t) == 2 and t[0] == t[1] and DOUBLED_CLASS.match(t) and "Math" in (c.get("fontname") or ""):
+            c["text"] = t[0]
 
 
 def tokens(text: str) -> Counter:
     """Tokens keyed by their sorted letters: plain extract_words reads text on rotated pages
     (landscape tables) backwards ("isw" for "wsi"), which the converter reads correctly."""
-    return Counter("".join(sorted(t.lower())) for t in TOKEN.findall(text.translate(SCRIPTS)))
+    return Counter("".join(sorted(t.lower())) for t in TOKEN.findall(plain_math(text).translate(SCRIPTS)))
 
 
 def _angle(c: dict) -> int:
@@ -109,6 +130,7 @@ def check(md_file: Path, pdf_file: Path) -> dict:
             if n in skip:
                 parts.append("")
             else:
+                single_glyphs(p)
                 q = p.filter(lambda o: not watermark(o)) if any(watermark(c) for c in p.chars) else p
                 parts.append(page_text(q))
             p.close()

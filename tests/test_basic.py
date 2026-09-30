@@ -1,9 +1,9 @@
 import unittest
 
 from eli2md.eli import parse_eli
-from eli2md.pdf import (MASTHEAD_END, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _drop_watermark,
-                        _frame_lines, _free, _glyph_box, _join, _segment, _to_frame, _watermark, page_ranges,
-                        to_markdown)
+from eli2md.pdf import (MASTHEAD_END, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
+                        _drop_watermark, _frame_lines, _free, _glyph_box, _join, _plain_math, _segment,
+                        _single_glyphs, _to_frame, _watermark, page_ranges, to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Ustawa z dnia 1 stycznia 2025 r. o próbie", "type": "Ustawa",
         "pos": 1, "publisher": "DU", "keywords": ["a", "b"]}
@@ -82,6 +82,23 @@ class Basic(unittest.TestCase):
         self.assertEqual([(c["text"], c["x0"]) for c in _dedupe(chars)],
                          [("e", 10.0), ("i", 20.0), ("i", 20.9), ("e", 12.9), ("e", 12.2), ("e", 11.5), ("a", 10.0),
                           ("e", 10.2)])
+
+    def test_doubled_math_glyphs(self):
+        # Word's Cambria Math maps one glyph to its character twice: 𝑘 reads "𝑘𝑘", 𝜂 "𝜂𝜂" (DU/2026/1236 p. 10)
+        def ch(t, font="GOZOOC+CambriaMath"):
+            return {"text": t, "fontname": font}
+        for t in ("𝑘𝑘", "𝐿𝐿", "𝜂𝜂", "𝜆𝜆", "λλ"):
+            self.assertTrue(_doubled(ch(t)), t)
+        # ligatures stay ("ff" is two letters), as do two different chars, one char and other fonts
+        for c in (ch("ff", "ABCD+TimesNewRomanPSMT"), ch("ff"), ch("fi"), ch("𝑘𝑙"), ch("𝑘"), ch("=="), ch("11"),
+                  ch("𝑘𝑘", "ABCD+TimesNewRomanPS-ItalicMT"), ch("λλ", "ABCD+SymbolMT")):
+            self.assertFalse(_doubled(c), c)
+
+        class Page:
+            chars = [ch("𝑘𝑘"), ch("1"), ch("ff", "ABCD+Times")]
+        _single_glyphs(Page)
+        self.assertEqual([c["text"] for c in Page.chars], ["𝑘", "1", "ff"])
+        self.assertEqual(_plain_math("0,302∙𝑘1∙𝐴𝑝"), "0,302∙k1∙Ap")
 
     def test_dataset_index_roundtrip(self):
         import tempfile
