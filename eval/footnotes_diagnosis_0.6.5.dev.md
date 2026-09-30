@@ -28,7 +28,9 @@ Liczby dla s5109 z 0.6.4 są takie same jak w wynikach 0.6.3.dev (R 0.9001, P 0.
   „Strona N z M” brane za przypisy) albo przypisy, których HTML w ogóle nie ma (niesprawdzone).
 - Twierdzenie z README („niska precyzja przypisów to w dużej mierze właściwość referencji”) jest
   prawdziwe dla s5110, ale **nie dla recall** i tylko częściowo dla dev/s5109.
-- Naprawiłem błąd kreski przypisów (pdf.py, 1 test). s5110 przypisy: R 0.7826 → R_NEW, P 0.7563 → P_NEW.
+- Naprawiłem błąd kreski przypisów (pdf.py, 1 test). s5110 (diagnostycznie, próbka skonsumowana): przypisy
+  R 0.7826 → 0.9820, P 0.7563 → 0.7957, treść P 0.9959 → 0.9995, załączniki P 0.9796 → 0.9881.
+  Łagodna miara `notes*` na s5110 po poprawce: R 0.9998, P 0.9969.
 
 ## Tabela przyczyn (0.6.4)
 
@@ -108,6 +110,16 @@ Dev po poprawce vs 0.6.4 (evaluate): zmieniły się tylko 3 akty s2024, wszystki
   załączniki R 0.9349 → 0.9352, P 0.8247 → 0.8248.
 - s7: zmienił się tylko DU/2024/1334: przypisy P 0.505 → 0.598, załącznik R 0.991 → 0.994; TOTAL przypisy
   P 0.8528 → 0.8555, załączniki R 0.9965 → 0.9966 (reszta bez zmian).
+s5110 (skonsumowana, tylko diagnoza) po poprawce vs 0.6.4: zmieniły się 3 akty — DU/2024/1539 przypisy
+R 0.782 → 0.989; DU/2024/1505 R 0.551 → 0.989, P 0.896 → 0.940; DU/2024/1346 treść P 0.772 → 1.000,
+przypisy R 0.000 → 0.996. TOTAL: treść P 0.9959 → 0.9995, przypisy R 0.7826 → 0.9820, P 0.7563 → 0.7957,
+załączniki R 0.9801 bez zmian, P 0.9796 → 0.9881.
+
+s5109 (skonsumowana, tylko diagnoza) po poprawce vs 0.6.3.dev: zmieniły się 2 akty — DU/2024/1018 treść
+P 0.321 → 1.000, przypisy R 0.000 → 0.991; DU/2024/1659 treść P 0.818 → 1.000, przypisy R 0.079 → 0.989,
+P 0.018 → 0.188 (stopki „Strona N z 13” nadal jako przypis). TOTAL: treść P 0.9807 → 0.9990, przypisy
+R 0.9001 → 0.9716, P 0.9251 → 0.9293, załączniki bez zmian.
+
 structure s7: bez zmian; structure s2024: jedyna różnica „annex break unaligned 1440 → 1437”
 (P/R bez zmian). TREE_EVAL
 
@@ -121,9 +133,9 @@ błędem — to był realny błąd w 1346/1505/1539).
 | próbka | wersja | notes R | notes P | notes* R | notes* P |
 |---|---|---:|---:|---:|---:|
 | s5110 | 0.6.4 | 0.7826 | 0.7563 | ≈0.7997 | ≈0.9862 |
-| s5110 | 0.6.5.dev | R_NEW | P_NEW | RL_NEW | PL_NEW |
+| s5110 | 0.6.5.dev | 0.9820 | 0.7957 | 0.9998 | 0.9969 |
 | s5109 | 0.6.4 | 0.9001 | 0.9251 | ≈0.9278 | ≈0.9315 |
-| s5109 | 0.6.5.dev | R9_NEW | P9_NEW | RL9_NEW | PL9_NEW |
+| s5109 | 0.6.5.dev | 0.9716 | 0.9293 | 1.0000 | 0.9352 |
 | s2024 | 0.6.4 | 0.9539 | 0.9105 | ≈0.9799 | ≈0.9442 |
 | s7 | 0.6.4 | 0.9709 | 0.8528 | ≈0.9992 | ≈0.8972 |
 
