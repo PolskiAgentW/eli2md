@@ -859,7 +859,8 @@ def _segment(body: list[Line]) -> list[Block]:
 # The last page of an issue of 2011 or earlier ends with the publisher's colophon ("Wydawca: Kancelaria Prezesa Rady
 # Ministrów" … "ISSN 0867-3411", DU/2000/291) or is a publisher's notice ("Szanowni Państwo!" … prices of subscriptions,
 # DU/2003/577), above a bare page number "— 4096 —"
-COLOPHON = re.compile(r"^(?:Wydawca\s*:|Szanowni\s+Państwo!)")
+# "Szanowni Państwo" also without "!" over an advertisement for Monitor Polski B (DU/2002/933 p. 3)
+COLOPHON = re.compile(r"^(?:Wydawca\s*:|Szanowni\s+Państwo(?:!|$))")
 ISSN = re.compile(r"\bISSN\s*\d{4}\s*-\s*\d{3}[\dX]\b")
 BARE_PAGE_NUMBER = re.compile(r"^[—–-]\s*\d+\s*[—–-]$")
 
