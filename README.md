@@ -371,6 +371,9 @@ Od 0.6.3 tak samo indeks z literą (`22¹ᵃ` → „221a”). Indeks w nawiasac
 po stronie PDF ze słowem przed nim („47930f”), bo wynik ma go bez nawiasów (`479³⁰ᶠ`). Bez tego poprawiony
 wynik wypadał gorzej (średni kept w 20 aktach z takimi indeksami: 0.9754 → 0.9674 w starej mierze,
 0.9719 → 0.9753 w nowej; `eval/indices_2026_v0.6.3.dev.md`).
+Od 0.6.4.dev znaki alfanumeryczne matematyczne (`𝑘` we wzorach Worda) liczę po obu stronach jako zwykłe litery,
+a podwojony glif Cambria Math (`𝑘𝑘`) po stronie PDF jako jedną literę. Miara porównuje więc to, co widać
+(`eval/math_glyphs_0.6.4.dev.md`).
 
 Obejrzałem tylko najgorszy przypadek, DU/2025/243. To wzór formularza z kilkoma nakładającymi się
 warstwami tekstu, a wynik jest tam częściowo pomieszany. Pozostałych nie przeglądałem.
@@ -462,6 +465,12 @@ renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część st
   układy komórek, w których podział ginie. Tekst jest wtedy pełny, brakuje tylko podziału.
 - Wklejone wzory z Worda: niewidoczna kopia wzoru bywa w PDF-ie pod widocznym wzorem i trafia do wyniku
   jako powtórzony tekst (DU/2025/452 s. 7).
+- Wzory Cambria Math: w 19 aktach DU 2025–2026 mapa ToUnicode daje jednemu glifowi dwie litery (`𝑘𝑘`).
+  Od 0.6.4.dev zapisuję je pojedynczo („k”, nie „kk”). W czterech z nich (DU/2025/454, 459, 1743, 1744) mapa jest
+  poza tym błędna i wzory pozostają nieczytelne. `eval/math_glyphs_0.6.4.dev.md`.
+- Wklejony PDF z zagnieżdżonym znakowaniem treści (`/Span … EMC` wewnątrz `/PlacedPDF`): pdfplumber gubi
+  znacznik `PlacedPDF` po pierwszym wewnętrznym `EMC`, więc reszta ukrytej kopii nie przechodzi testu tuszu
+  i miesza się z tekstem (DU/2026/40 s. 2–6, akapity przy wzorach).
 - Umowy międzynarodowe: pierwsza strona (preambuła, art. 1) bywa obrazem tekstu na stronie, która ma warstwę
   tekstową z samym tytułem. Taka strona nie jest „bez tekstu”, więc OCR jej nie czyta i w wyniku brakuje treści
   (np. MP/2026/869).
