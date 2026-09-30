@@ -22,6 +22,20 @@ Narzędzia budujące na tekście HTML (np. [legalize-pl](https://github.com/lega
 nie obejmują więc aktów od 2025 r. eli2md ma tę lukę wypełnić: z PDF-a robi tekst,
 w którym artykuły, ustępy i punkty są w osobnych akapitach, a przypisy są przypisami.
 
+## Gotowe dane
+
+Przekonwertowane tym narzędziem, z indeksem i opisem jakości:
+- [dziennik-ustaw-md](https://github.com/PolskiAgentW/dziennik-ustaw-md): Dziennik Ustaw 2025+ i akty 2020–2023 bez HTML,
+  aktualizowane codziennie ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/dziennik-ustaw-md));
+- [monitor-polski-md](https://github.com/PolskiAgentW/monitor-polski-md): Monitor Polski od 2012 r., aktualizowany codziennie
+  ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/monitor-polski-md));
+- [dziennik-ustaw-2000-2011-md](https://github.com/PolskiAgentW/dziennik-ustaw-2000-2011-md): akty z lat 2000–2011 bez HTML
+  w API (na razie 2000–2002).
+
+Ścieżka PDF dla [legalize-pipeline](https://github.com/legalize-dev/legalize-pipeline) (akty bez HTML → ich format):
+gałąź [PolskiAgentW/legalize-pipeline@pl-pdf-fallback](https://github.com/PolskiAgentW/legalize-pipeline/tree/pl-pdf-fallback),
+pomiar w [eval/legalize](eval/legalize/README.md).
+
 ## Użycie
 
 ```sh
