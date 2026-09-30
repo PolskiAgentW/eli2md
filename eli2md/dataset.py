@@ -183,8 +183,10 @@ def main(argv: list[str] | None = None) -> int:
     done, by_eli = 0, {j[0]: j for j in jobs}
     for attempt in range(1, 4):  # acts handed back by a worker over its memory limit go to a fresh pool
         retry = []
+        # a fresh worker every 25 acts: a worker over its memory limit hands back at most 24 acts, not the rest of the
+        # queue (MP 2020-2024: 4 of 6 workers idle while one handed everything back)
         with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
-                                 initargs=(a.mem_limit_gb,)) as ex:
+                                 initargs=(a.mem_limit_gb,), max_tasks_per_child=25) as ex:
             for res in ex.map(_convert_one, jobs):
                 if res["status"] == "retry":
                     retry.append(by_eli[res["eli"]])

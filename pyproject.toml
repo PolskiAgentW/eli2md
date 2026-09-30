@@ -1,6 +1,6 @@
 [project]
 name = "eli2md"
-version = "0.6.14"
+version = "0.6.15"
 description = "Dziennik Ustaw (Polish Journal of Laws) PDF -> Markdown, with measured accuracy"
 readme = "README.md"
 license = "MIT"
