@@ -130,6 +130,19 @@ DU/2026/286), DU/2025/360 s. 4 (tekst angielski) i DU/2026/1027 s. 14. Tej ostat
 tekst OCR („numer prawa wykonywania zawodu diagnosty laboratoryjnego …”) wygląda na wzór dokumentu.
 Zostawiłem ostrzejsze progi.
 
+Sprawdziłem też wariant, w którym zmienia się tylko próg szerokości: ≥ 40% linii ≥ 60% szerokości zamiast 50%.
+Dodatkowo odrzuca on tekst z ciągiem ≥ 5 kropek, dwukropków lub kresek (miejsca do wpisania). Na 824 stronach
+przyjmuje 36 stron zamiast 34: dochodzą DU/2025/360 s. 1 i DU/2025/457 s. 1 (obie to tekst, obejrzane na
+arkuszu pominiętych). Bez testu kropek przeszedłby też wzór dyplomu DU/2026/1027 s. 14 (obejrzany).
+Przy progu 35% przechodzą formularze zezwoleń DU/2026/827 s. 7 i 10, a s. 10 ma 39%. Margines jest więc mały
+i wariantu nie włączyłem.
+
+**Starsze przykłady z opisu zadania** (poza zbiorem pomiarowym, tylko s. 1, ta sama funkcja):
+- MP/2017/813: przyjęta (147 słów, pewność 96,4),
+- MP/2024/803: przyjęta (90 słów, pewność 96,5; PDF pobrany przez `eli.fetch`),
+- MP/2012/646: **odrzucona** (181 słów, pewność 96,4). ≥ 45 znaków ma 59% linii, ale ≥ 60% szerokości tylko
+  48% linii. Nagłówki artykułów i ostatnie linie akapitów są krótkie. Wariant 40% by ją przyjął.
+
 **MP/2026/869 s. 1**, pełna konwersja `python -m eli2md MP/2026/869 --ocr` (62 s dla całego aktu, 13 stron,
 w tym 8 stron bez tekstu). Początek odzyskanego tekstu:
 
