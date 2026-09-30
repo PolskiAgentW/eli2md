@@ -82,6 +82,16 @@ def write_json(md: str, md_file: Path) -> None:
 _POISONED = False  # this worker hit its memory limit (see _convert_one)
 
 
+def _out_of_memory(e: BaseException) -> bool:
+    """A MemoryError wrapped by pdfplumber ("PdfminerException: " with the MemoryError as its cause, or "Unable to
+    allocate output buffer." from the image decoder, MP/2020/235)."""
+    while e is not None:
+        if isinstance(e, MemoryError) or "Unable to allocate" in str(e):
+            return True
+        e = e.__cause__ or e.__context__
+    return False
+
+
 def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
     """Worker: convert one downloaded act. Returns the index row fields it determines.
     After a MemoryError the worker's heap stays near the address-space limit: its next acts failed as
@@ -110,8 +120,11 @@ def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
     except MemoryError:
         _POISONED = True  # report below, once the frames holding the large objects are released
     except Exception as e:  # keep going; the failure is recorded in the index
-        return {"eli": eli, "status": "error", "error": f"{type(e).__name__}: {e}"[:300],
-                "trace": traceback.format_exc(limit=3), "secs": round(time.time() - t0, 1)}
+        if _out_of_memory(e):
+            _POISONED = True
+        else:
+            return {"eli": eli, "status": "error", "error": f"{type(e).__name__}: {e}"[:300],
+                    "trace": traceback.format_exc(limit=3), "secs": round(time.time() - t0, 1)}
     return {"eli": eli, "status": "error", "error": "MemoryError (over --mem-limit-gb)",
             "secs": round(time.time() - t0, 1)}
 
@@ -181,20 +194,23 @@ def main(argv: list[str] | None = None) -> int:
         jobs.append((eli, str(pdf), str(md_path(a.root, year, pos, a.publisher)), a.json, a.ocr))
 
     done, by_eli = 0, {j[0]: j for j in jobs}
+    # A fresh pool for every batch of 25 acts per worker: a worker over its memory limit hands back at most the rest of
+    # its batch, not the rest of the queue (MP 2020-2024: 4 of 6 workers idle while one handed everything back).
+    # Not max_tasks_per_child: in CPython 3.14 the pool then shrank to one worker (exited workers not replaced).
+    size = 25 * max(1, a.jobs)
     for attempt in range(1, 4):  # acts handed back by a worker over its memory limit go to a fresh pool
         retry = []
-        # a fresh worker every 25 acts: a worker over its memory limit hands back at most 24 acts, not the rest of the
-        # queue (MP 2020-2024: 4 of 6 workers idle while one handed everything back)
-        with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
-                                 initargs=(a.mem_limit_gb,), max_tasks_per_child=25) as ex:
-            for res in ex.map(_convert_one, jobs):
-                if res["status"] == "retry":
-                    retry.append(by_eli[res["eli"]])
-                    continue
-                done += _record(index, res)
-                if done % 50 == 0:
-                    print(f"converted {done}/{len(by_eli)}", flush=True)
-                    save_index(a.root, index)
+        for k in range(0, len(jobs), size):
+            with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
+                                     initargs=(a.mem_limit_gb,)) as ex:
+                for res in ex.map(_convert_one, jobs[k:k + size]):
+                    if res["status"] == "retry":
+                        retry.append(by_eli[res["eli"]])
+                        continue
+                    done += _record(index, res)
+                    if done % 50 == 0:
+                        print(f"converted {done}/{len(by_eli)}", flush=True)
+                        save_index(a.root, index)
         if not retry:
             break
         print(f"pass {attempt}: {len(retry)} acts handed back by a worker over its memory limit", flush=True)

@@ -166,6 +166,15 @@ class Basic(unittest.TestCase):
                              {"eli": "DU/2000/9", "status": "retry"})
         finally:
             ds._POISONED = False
+        try:  # pdfplumber wraps a MemoryError of pdfminer
+            try:
+                raise MemoryError()
+            except MemoryError as m:
+                raise ValueError("wrapped") from m
+        except ValueError as w:
+            self.assertTrue(ds._out_of_memory(w))
+        self.assertTrue(ds._out_of_memory(RuntimeError("Unable to allocate output buffer.")))
+        self.assertFalse(ds._out_of_memory(RuntimeError("broken xref")))
         # a missing meta.json is an error of that act, not of the run (it was read outside the try)
         self.assertEqual(ds._convert_one(("DU/2000/9", "/nonexistent/text.pdf", "x.md", False, None))["status"], "error")
 
