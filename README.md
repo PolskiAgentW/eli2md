@@ -378,6 +378,9 @@ Od 0.6.3 tak samo indeks z literą (`22¹ᵃ` → „221a”). Indeks w nawiasac
 po stronie PDF ze słowem przed nim („47930f”), bo wynik ma go bez nawiasów (`479³⁰ᶠ`). Bez tego poprawiony
 wynik wypadał gorzej (średni kept w 20 aktach z takimi indeksami: 0.9754 → 0.9674 w starej mierze,
 0.9719 → 0.9753 w nowej; `eval/indices_2026_v0.6.3.dev.md`).
+Od 0.6.4.dev znaki alfanumeryczne matematyczne (`𝑘` we wzorach Worda) liczę po obu stronach jako zwykłe litery,
+a podwojony glif Cambria Math (`𝑘𝑘`) po stronie PDF jako jedną literę. Miara porównuje więc to, co widać
+(`eval/math_glyphs_0.6.4.dev.md`).
 
 Obejrzałem tylko najgorszy przypadek, DU/2025/243. To wzór formularza z kilkoma nakładającymi się
 warstwami tekstu, a wynik jest tam częściowo pomieszany. Pozostałych nie przeglądałem.
@@ -501,6 +504,13 @@ zbiorze 2025–2026 to ok. 35 min czasu jednego wątku.
   układy komórek, w których podział ginie. Tekst jest wtedy pełny, brakuje tylko podziału.
 - Wklejone wzory z Worda: niewidoczna kopia wzoru bywa w PDF-ie pod widocznym wzorem i trafia do wyniku
   jako powtórzony tekst (DU/2025/452 s. 7).
+- Wzory Cambria Math: w 19 aktach DU 2025–2026 mapa ToUnicode daje jednemu glifowi dwie litery (`𝑘𝑘`).
+  Od 0.6.4.dev zapisuję je pojedynczo („k”, nie „kk”). W czterech z nich (DU/2025/454, 459, 1743, 1744) mapa jest
+  poza tym błędna i wzory pozostają nieczytelne. `eval/math_glyphs_0.6.4.dev.md`.
+- Wklejony PDF z Worda pod przepisanym tekstem Dziennika (DU/2026/40 s. 2–6): widać z niego tylko wzory.
+  Do 0.6.3 pdfplumber gubił znacznik `PlacedPDF` po zagnieżdżonym `/Span … EMC` wzoru, więc reszta ukrytej kopii
+  w ogóle nie szła do testu tuszu. Od 0.6.4.dev znacznik zostaje (10 aktów 2025–2026). Test tuszu dalej przepuszcza
+  ukryte litery, których ramka nachodzi na tusz innego tekstu, więc akapity przy wzorach bywają wymieszane.
 - Umowy międzynarodowe: pierwsza strona (preambuła, art. 1) bywa obrazem tekstu na stronie, która ma warstwę
   tekstową z samym tytułem (np. MP/2026/869). Do 0.6.3 OCR jej nie czytał. Od 0.6.4.dev z `--ocr` czyta taki
   obraz, gdy wygląda na tekst ciągły (opis wyżej, w sekcji o OCR). W 2025–2026 tak jest na 25 z 43 umów. Obrazy, w których przeważają

@@ -17,7 +17,32 @@ from collections import Counter
 from dataclasses import dataclass, field, replace
 
 import pdfplumber
+import pdfplumber.page
 from pdfplumber.utils import extract_words
+
+
+class _PlacedTags(pdfplumber.page.PDFPageAggregatorWithMarkedContent):
+    """pdfplumber keeps no stack of marked content: an EMC resets the tag to None. Word formulas in a placed
+    PDF nest "/Span <</ActualText …>> BDC … EMC" inside "/PlacedPDF BDC", so after the first formula the rest
+    of the placed page lost its tag and skipped the ink test: its hidden copy went into the output, mixed
+    with the visible text (DU/2026/40 p. 2-5: 7860 of 22175 placed chars; 10 of 118 acts with Cambria Math in
+    2025-2026, none in a random 300). Here everything inside /PlacedPDF is tagged PlacedPDF; other tags are
+    as in pdfplumber."""
+
+    def begin_tag(self, tag, props=None):
+        super().begin_tag(tag, props)
+        self._stack = getattr(self, "_stack", []) + [self.cur_tag]
+        if "PlacedPDF" in self._stack:
+            self.cur_tag = "PlacedPDF"
+
+    def end_tag(self):
+        self._stack = getattr(self, "_stack", [])[:-1]
+        super().end_tag()
+        if "PlacedPDF" in self._stack:
+            self.cur_tag = "PlacedPDF"
+
+
+pdfplumber.page.PDFPageAggregatorWithMarkedContent = _PlacedTags  # looked up by Page when it parses a page
 
 RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
 # "Pozycja 19": MP 2012 up to poz. 130; ") Poz. 1024*": the last act of a year has a note "*) Ostatnia pozycja"
@@ -127,6 +152,24 @@ def _drop_watermark(page):
     if not any(_watermark(c) for c in page.chars):
         return page
     return page.filter(lambda o: not (o.get("object_type") == "char" and _watermark(o)))
+
+
+def _doubled(c: dict) -> bool:
+    """A glyph whose ToUnicode maps to its character twice: Word exports Cambria Math so, one 𝑘 reads "𝑘𝑘"
+    (DU/2026/1236 p. 10, "kk" in 0.6.3; poppler reads it doubled too). Only mathematical alphanumerics (also
+    math Greek 𝜂) in a font named *Math*: in DU+MP 2025-2026 all 16 991 doubled chars of Cambria Math are such
+    (19 acts), while doubled chars of text fonts are ligatures ("ff", "tt"; eval/math_glyphs_0.6.4.dev.md)."""
+    t = c["text"]
+    return len(t) == 2 and t[0] == t[1] and bool(MATH.match(t)) and "Math" in (c.get("fontname") or "")
+
+
+def _single_glyphs(page):
+    """Chars of `_doubled` glyphs get their one character. Changes the page's char dicts in place (pdfplumber
+    caches them, so filtered pages and extract_words see the change)."""
+    for c in page.chars:
+        if _doubled(c):
+            c["text"] = c["text"][0]
+    return page
 
 
 def _to_frame(o: dict, rot: int, w: float, h: float) -> dict:
@@ -292,7 +335,7 @@ def _image_text(page, ocr: str):
 def _page_lines(page, pno: int) -> tuple[list[Line], list[Line]]:
     """Return (body_lines, footnote_lines) for one page."""
     body, notes = [], []
-    for k, (words, fw, fh, rects) in enumerate(_frames(_drop_hidden_placed(_drop_watermark(page)))):
+    for k, (words, fw, fh, rects) in enumerate(_frames(_drop_hidden_placed(_drop_watermark(_single_glyphs(page))))):
         b, n = _frame_lines(words, fw, fh, rects, pno)
         if k > 0:
             b = [l for l in b if not RUNNING_HEADER.match(l.text)]
