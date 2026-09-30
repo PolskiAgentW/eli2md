@@ -43,7 +43,7 @@ w przypisach HTML.
 | (c) j.w., kreska narysowana jako `line`, nie `rect`; przypisy jako akapit „[^1] Minister Zdrowia…” w treści głównej (treść P 0.772) | 680 | 0 | DU/2024/1346 (s. 1) | tak (pdfplumber) |
 | (e) numer przypisu („1)” w HTML, `[^1]` usuwany z naszych) | 221 | 0 | wszystkie 32 | — (miara) |
 | (a) przypisy załącznika pod kreską w PDF, w HTML jako tekst załącznika | 0 | 3217 | DU/2024/781 (3054), DU/2024/1505 (162), DU/2024/526 (1) | 781 tak (PNG s. 10: 9 przypisów pod kreską pod tabelą); 1505 nie |
-| (a') przypis formularza w załączniku, który HTML daje tylko jako link do PDF | 0 | 52 | DU/2024/1581 | nie (tylko: HTML ma 2 załączniki, oba link-only) |
+| (a') przypis formularza w załączniku, który HTML daje tylko jako link do PDF | 0 | 52 | DU/2024/1581 | tak (pdfplumber: przypisy 1)–3) pod kreską na s. 2–3 wzoru; HTML: 2 załączniki, oba link-only) |
 | razem | 2818 | 3269 | | |
 
 Realny błąd konwertera: R 2597/2818 (92% luki R), P 0/3269. Łącznie 2597 z 6087 niedopasowanych
@@ -93,8 +93,8 @@ konwerter błędnie wziął za przypis, też jest w HTML w załączniku (DU/2024
 ## Poprawka w pdf.py (0.6.5.dev)
 
 Kreska przypisów (`_frame_lines`): dotąd tylko `page.rects` i tylko poniżej 30% wysokości strony.
-Teraz kandydatami są też `page.lines` (DU/2024/1346, 1018, 1659), a kreska wyżej niż 30% (ale poniżej
-10%) albo narysowana linią liczy się tylko, gdy wszystko pod nią jest drukiem przypisu (< 9.5 pt).
+Teraz kandydatami są też `page.lines` (DU/2024/1346, 1018, 1659), a kreska w górnych 10–30% strony
+albo narysowana linią liczy się tylko, gdy wszystko pod nią jest drukiem przypisu (< 9.5 pt).
 Kreska-prostokąt poniżej 30% działa jak dotąd. Test: `test_footnote_rule_high_or_drawn_as_line`.
 
 Skutek na poszczególnych aktach (footnotes_diag, po poprawce): DU/2024/1346 brak 680 → 0,
@@ -106,7 +106,8 @@ Dev po poprawce vs 0.6.4 (evaluate): zmieniły się tylko 3 akty s2024, wszystki
 - DU/2024/1777: przypisy P 0.528 → 0.631, załącznik R 0.965 → 0.978.
 - TOTAL s2024: treść P 0.9830 → 0.9849; przypisy R 0.9539 → 0.9622, P 0.9105 → 0.9158;
   załączniki R 0.9349 → 0.9352, P 0.8247 → 0.8248.
-S7_EVAL
+- s7: zmienił się tylko DU/2024/1334: przypisy P 0.505 → 0.598, załącznik R 0.991 → 0.994; TOTAL przypisy
+  P 0.8528 → 0.8555, załączniki R 0.9965 → 0.9966 (reszta bez zmian).
 structure s7: bez zmian; structure s2024: jedyna różnica „annex break unaligned 1440 → 1437”
 (P/R bez zmian). TREE_EVAL
 
@@ -133,7 +134,8 @@ załączniku (tabela/formularz, np. DU/2024/1337) — tego miara nie odróżni o
 
 ## Czego nie zrobiłem / co zostaje
 
-- Nie sprawdziłem w PDF: DU/2024/1505 (nadmiar 162), 1581, 398, 1751, ani aktów dev z listy wyżej.
+- Nie sprawdziłem w PDF: DU/2024/1505 (nadmiar 162), 398, 1751, 1659 (poza typem kreski), ani aktów dev
+  z listy wyżej.
 - Realne błędy do dalszej pracy (nie naprawiałem):
   1. stopki formularzy „Strona N z M” (DU/2024/1659) jako przypis — pomijać wiersz pasujący do
      `^Strona \d+ z \d+$` pod kreską/na dole strony;
