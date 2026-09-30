@@ -164,6 +164,15 @@ class Tree(unittest.TestCase):
         self.assertEqual(a["body"][3]["text"], "[^3]")  # the marker printed before ust. 1 belongs to § 2
         self.assertEqual(t["footnotes"], {"2": "Dodany przez § 1.", "3": "W brzmieniu ustalonym przez § 1."})
 
+    def test_footnote_paragraphs(self):
+        # indented paragraphs after a footnote belong to it, not to the body (DU/2026/421)
+        t = md_to_tree(md("USTAWA[^1]", "##### Art. 1.", "Treść.", "*Prezydent: A. B*",
+                          "[^1]: Niniejsza ustawa:", "    1) wdraża dyrektywę;", "    2) służy stosowaniu.",
+                          "[^2]: Inny przypis."))
+        self.assertEqual(paths(t["body"]), ["art_1"])
+        self.assertEqual(t["footnotes"], {"1": "Niniejsza ustawa:\n\n1) wdraża dyrektywę;\n\n2) służy stosowaniu.",
+                                          "2": "Inny przypis."})
+
     def test_split_quoted_article_is_not_a_unit(self):
         # to_markdown splits "Art. 25. „1. …" into "Art. 25." + "„1. …" (not a heading)
         t = md_to_tree(md("##### Art. 1.", "Tekst jednolity nie obejmuje art. 25, który stanowi:",

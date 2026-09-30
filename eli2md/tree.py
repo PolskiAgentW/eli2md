@@ -337,17 +337,23 @@ def md_to_tree(md: str) -> dict:
             if k in out:
                 out[k] = json.loads(v)
         md = md[m.end():]
-    paras = [p.strip() for p in md.split("\n\n")]
-    paras = [p for p in paras if p]
+    paras = [p.strip("\n").rstrip() for p in md.split("\n\n")]  # leading spaces: see `note` below
+    paras = [p for p in paras if p.strip()]
     if paras and paras[0].startswith("# "):
         out["title"] = out["title"] or paras[0][2:].strip()
         paras = paras[1:]
     footnotes: dict[str, str] = {}
     blocks: list[tuple[str, str]] = []  # (kind, text) in the converter's block kinds
+    note = None  # label of the footnote whose indented paragraphs follow ("    1) wdraża…", DU/2026/421)
     for p in paras:
+        if note and p.startswith("    "):
+            footnotes[note] += "\n\n" + p.strip()
+            continue
+        p, note = p.strip(), None
         fm = re.match(r"^\[\^(\d+(?:_\d+)?)\]:\s*(.*)$", p, re.S)
         if fm:
             footnotes[fm.group(1)] = fm.group(2)
+            note = fm.group(1)
         elif p.startswith("## "):
             blocks.append(("annex", p[3:].strip()))
         elif p.startswith("##### "):

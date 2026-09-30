@@ -662,20 +662,32 @@ def convert(path: str, ocr: str | None = None) -> Document:
 
     doc.blocks = _segment(body)
 
-    cur, cur_page = None, 0
+    doc.footnotes, doc.footnote_pages = _group_notes(notes)
+    return doc
+
+
+def _group_notes(notes: list[Line]) -> tuple[list[str], list[int]]:
+    """Lines under the footnote rule -> footnotes ("[^3] text") and the page each starts on."""
+    texts, pages = [], []
+    cur, cur_page, item = None, 0, 0
     for l in notes:
-        if re.match(r"^\[\^\d+\]", l.text) or re.match(r"^\d+\)\s", l.text):
+        point = re.match(r"^(\d+)\)\s", l.text)
+        # "Niniejsza ustawa:" + "1) wdraża…" + "2) służy…": points of a footnote (DU/2026/421), a paragraph each;
+        # other lines "N) …" start a footnote whose marker is not set as a superscript
+        if cur is not None and point and int(point.group(1)) == item + 1 and (item or cur.rstrip().endswith(":")):
+            cur, item = cur + "\n\n" + l.text, item + 1
+        elif re.match(r"^\[\^\d+\]", l.text) or point:
             if cur is not None:
-                doc.footnotes.append(cur)
-                doc.footnote_pages.append(cur_page)
-            cur, cur_page = l.text, l.page
+                texts.append(cur)
+                pages.append(cur_page)
+            cur, cur_page, item = l.text, l.page, 0
         else:
             cur = l.text if cur is None else _join(cur, l.text)
             cur_page = cur_page or l.page
     if cur is not None:
-        doc.footnotes.append(cur)
-        doc.footnote_pages.append(cur_page)
-    return doc
+        texts.append(cur)
+        pages.append(cur_page)
+    return texts, pages
 
 
 UNIT_HEAD = {
@@ -926,7 +938,8 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
     seen: Counter = Counter()
     for f in doc.footnotes:
         if m := FN_LABEL.match(f):
-            out.append(f"[^{_fn_label(m.group(1), seen[m.group(1)])}]: {m.group(2)}")
+            text = m.group(2).replace("\n\n", "\n\n    ")  # later paragraphs of a footnote are indented
+            out.append(f"[^{_fn_label(m.group(1), seen[m.group(1)])}]: {text}")
             seen[m.group(1)] += 1
         else:
             out.append(f)

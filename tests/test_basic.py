@@ -1,7 +1,7 @@
 import unittest
 
 from eli2md.eli import parse_eli
-from eli2md.pdf import (MASTHEAD_END, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
+from eli2md.pdf import (MASTHEAD_END, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled, _group_notes,
                         _drop_watermark, _frame_lines, _free, _glyph_box, _join, _plain_math, _segment,
                         _single_glyphs, _to_frame, _watermark, page_ranges, to_markdown)
 
@@ -383,6 +383,18 @@ class Basic(unittest.TestCase):
         md = to_markdown(doc)
         self.assertIn("Tabela[^1_2].", md)
         self.assertIn("1 Arsen¹⁾ pasza", md)
+
+    def test_footnote_with_points(self):
+        # "Niniejsza ustawa:" + "1) wdraża…" + "2) służy…" is one footnote (DU/2026/421); "3) …" after "[^2]" and a
+        # plain "N)" footnote without an introducing colon start footnotes
+        lines = ["[^1] Niniejsza ustawa:", "1) wdraża dyrektywę", "2019/884;", "2) służy stosowaniu.",
+                 "[^2] Zmiany ogłoszono.", "3) Ustawa ogłoszona", "w dniu 5 maja."]
+        texts, pages = _group_notes([Line(2, 0, 0, 0, 9.0, t) for t in lines])
+        self.assertEqual(texts, ["[^1] Niniejsza ustawa:\n\n1) wdraża dyrektywę 2019/884;\n\n2) służy stosowaniu.",
+                                 "[^2] Zmiany ogłoszono.", "3) Ustawa ogłoszona w dniu 5 maja."])
+        self.assertEqual(pages, [2, 2, 2])
+        md = to_markdown(Document(blocks=[Block("p", "USTAWA[^1]", 1)], footnotes=texts[:1], footnote_pages=[1]))
+        self.assertIn("[^1]: Niniejsza ustawa:\n\n    1) wdraża dyrektywę 2019/884;\n\n    2) służy stosowaniu.\n", md)
 
     def test_masthead_end(self):
         for line in ("Poz. 5", "Poz. 1021", "Pozycja 19", ") Poz. 1024*", "Poz. 1024*)"):  # MP/2012/19, MP/2012/1024
