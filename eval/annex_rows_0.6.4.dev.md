@@ -36,12 +36,14 @@ Akapit, który parsuje się jako jednostka, zostaje tekstem (węzeł `text` w na
    „1)”–„3)” i „2. Jeżeli termin …” (sprawdzone w PDF) — `par_7/ust_2` jak w 0.6.3.
 
 Reguły działają w treści głównej i w załącznikach. W próbkach dev zadziałała tylko reguła 2 (DU/2024/1337);
-w danych 2025–2026 reguły 1–2 zmieniają tylko załączniki, reguła 3 tylko treść główną nowelizacji. Odrzucone: reguła 3 dla każdej jednostki (nie tylko ust.), która po zapowiedzi brzmienia nie kontynuuje listy.
+w danych 2025–2026 reguły 1–2 zmieniają tylko załączniki, reguła 3 tylko treść główną nowelizacji.
+
+Odrzucone: reguła 3 dla każdej jednostki (nie tylko ust.), która po zapowiedzi brzmienia nie kontynuuje listy.
 Próby dev bez zmian, ale w danych 2025–2026 dochodzi 19 aktów DU, a wśród zmian są prawdziwe jednostki
 zamienione w tekst (DU/2025/159 `art_1/pkt_10/lit_e`–`lit_h`, DU/2026/947 `par_1/pkt_4`–`pkt_6`, DU/2025/1052
-`par_1/pkt_2`, lit. r–x w DU/2025/1238), więc wróciłem do wersji tylko dla ust. Czego nie próbowałem: kolumny „Lp.” jako sygnału (w obu próbkach dev jest jeden akapit
-jednostki po nagłówku z „Lp.”, DU/2024/1973, i nie jest błędem), restartu numeracji („1.” po „7.” bez
-nagłówka), wierszy z samymi liczbami bez stopni.
+`par_1/pkt_2`, lit. r–x w DU/2025/1238), więc wróciłem do wersji tylko dla ust. Czego nie próbowałem: kolumny
+„Lp.” jako sygnału (w obu próbkach dev jest jeden akapit jednostki po nagłówku z „Lp.”, DU/2024/1973, i nie
+jest błędem), restartu numeracji („1.” po „7.” bez nagłówka), wierszy z samymi liczbami bez stopni.
 
 ## Próby deweloperskie (`eval/tree_eval.py`, HTML 2024)
 
@@ -89,7 +91,7 @@ MP 2272) w `/tmp`, drzewo zbudowane `tree.py` 0.6.3 (z gita) i nowym. Kontrola: 
   4879 → 314; DU/2025/947: 401 → 106, 295 punktów „N) 52°…”). Każda zmiana to jednostka → tekst.
 - **Treść główna**: 22 akty (21 DU + MP/2025/1248), wszystkie to nowelizacje, które wstawiają wiersze tabel
   bez cudzysłowu (taryfy opłat, wykazy świadczeń, zestawy danych), w DU/2026/1162 ustęp „1. Prawo jazdy …”
-  po „6) w § 16 ust. 1 otrzymuje brzmienie:” bez „„”. Węzłów jednostek w DU mniej o 156 netto
+  po „6) w § 16 ust. 1 otrzymuje brzmienie:” bez cudzysłowu otwierającego. Węzłów jednostek w DU mniej o 156 netto
   (184 jednostki → tekst, 28 nowych tiretów, 253 jednostki ze zmienioną ścieżką — to prawdziwe pkt/lit./tirety
   aktu, które wisiały pod fałszywym ust. wiersza, np. `par_1/ust_1a/lit_c` → `par_1/pkt_3/lit_c`, DU/2025/1238);
   w MP/2025/1248 +1 (3 ust. → tekst, 4 nowe tirety, 15 zmienionych ścieżek).
@@ -110,8 +112,8 @@ także całe fragmenty):
   „– w pkt 1.5:” w MP/2025/1248. Bez poprawy 1: DU/2025/852 `par_1/ust_1/pkt_6` → `par_1/pkt_6` (punkt z komórki
   tabeli efektów kształcenia; był pod fałszywym ust., teraz jest wprost pod § 1 — nadal fałszywy).
 
-Poza próbą obejrzałem pierwsze (do 14) zmiany każdego z 22 aktów z treścią główną: w 20 wszystkie obejrzane
-zmiany są poprawne.
+Poza próbą obejrzałem (w Markdown, nie w PDF) pierwsze (do 14) zmiany każdego z 22 aktów z treścią główną:
+w 20 wszystkie obejrzane zmiany są poprawne.
 DU/2025/852 częściowo (5 fałszywych jednostek mniej, ale tabela ma dwie kolumny list „1) zasady
 bezpieczeństwa 1) określa …” / „2) historia i wiedza …”, więc „2)” z tabeli kontynuuje „1)” aktu, tryb tabeli
 się kończy i dalej jest jak w 0.6.3; prawdziwe pkt 2–3 § 1 zostają pod fałszywym `ust_3`, jak w 0.6.3).
@@ -148,7 +150,8 @@ znaleźć siatkę tabeli (poziome i pionowe odcinki `rects`/`lines`, które się
 leżące w jej komórkach (`Line.cell`); (2) przenieść znacznik na `Block` w `_segment` (akapit zaczęty
 w komórce); (3) zapisać go w Markdown, bo drzewo buduje się z samego Markdown — np. prefiks albo komentarz
 HTML przy akapicie z komórki, co zmienia format publikowanych plików; (4) w `tree.py` akapit z komórki nigdy
-nie jest jednostką. Szacunek (niesprawdzony): 60–120 linii w `pdf.py`, kilka w `to_markdown` i `tree.py`,
+nie jest jednostką (do sprawdzenia: załączniki w całości w ramce i prawdziwe listy w komórkach, które HTML
+oznacza). Szacunek (niesprawdzony): 60–120 linii w `pdf.py`, kilka w `to_markdown` i `tree.py`,
 regeneracja całych danych i ponowna ocena słów/struktury, bo zmienia się Markdown. Nie ruszałem `pdf.py`
 (równolegle pracują nad nim inne wątki). Tabele bez ramek i listy jak w DU/2024/813 tego sygnału nie dadzą;
 nie sprawdzałem, ile ich jest (DU/2024/440 nie sprawdziłem: pdfplumber nie znalazł tekstu wiersza).
