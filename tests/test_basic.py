@@ -428,6 +428,82 @@ class Basic(unittest.TestCase):
         clean = Page([text, rect])
         self.assertIs(_drop_watermark(clean), clean)
 
+    @staticmethod
+    def _row(text, x0, x1, top, size=10.0):
+        """Words of a printed line set from x0 to x1 (justified: equal gaps, the last word ends at x1)."""
+        ws = text.split()
+        n = sum(5 * len(t) for t in ws)
+        gap = (x1 - x0 - n) / (len(ws) - 1) if len(ws) > 1 else 0.0
+        assert len(ws) == 1 or x1 - x0 > 300 or 1 < gap < size, (text, gap)  # a line of a column: word spaces
+        out, x = [], x0
+        for t in ws:
+            out.append({"text": t, "x0": x, "x1": x + 5 * len(t), "top": top, "bottom": top + size, "size": size})
+            x += 5 * len(t) + gap
+        return out
+
+    def _two_column_page(self, header):
+        # DU/2005/1255 p. 1: header, act number and title across the page, the text in two columns (38-292 and
+        # 303.3-557.4, rows of both columns on one baseline), then the next act
+        r = self._row
+        page = r(header, 38, 557, 52) + r("1255", 283, 313, 78) + r("USTAWA", 273, 322, 103)
+        page += r("o ratyfikacji Umowy z Anguillą", 225, 370, 125)
+        left = ["Art. 1. Wyraża się zgodę na dokonanie Prezy-", "denta ratyfikacji Umowy z Anguillą, podpisanej",
+                "w Warszawie dnia 17 grudnia 2004 r. oraz w dniu"]
+        right = ["Art. 2. Ustawa wchodzi w życie po 14 dniach", "od dnia ogłoszenia."]
+        for k, t in enumerate(left):
+            page += r(t, 38, 292, 150 + 11 * k)
+        page += r("21 stycznia 2005 r.", 38, 127, 183)
+        page += r(right[0], 320, 557.4, 150) + r(right[1], 303.3, 394.3, 161)
+        page += r("Prezydent: A. Kwaśniewski", 436.4, 557.4, 183)
+        page += r("1256", 283, 313, 230) + r("USTAWA", 273, 322, 255)
+        for k in range(3):
+            page += r("Art. 1. Treść lewej łamanej kolumny tekstu aż", 38, 292, 280 + 11 * k)
+            page += r("Treść prawej łamanej kolumny tekstu, wiersz tu", 303.3, 557.4, 280 + 11 * k)
+        return page
+
+    def test_two_columns(self):
+        body, _ = _frame_lines(self._two_column_page("Dziennik Ustaw Nr 150 — 9307 — Poz. 1255 i 1256"), 595, 842, [], 1)
+        self.assertEqual([l.text[:12] for l in body],
+                         ["Dziennik Ust", "1255", "USTAWA", "o ratyfikacj", "Art. 1. Wyra", "denta ratyfi",
+                          "w Warszawie ", "21 stycznia ", "Art. 2. Usta", "od dnia ogło", "Prezydent: A",
+                          "1256", "USTAWA"] + ["Art. 1. Treś"] * 3 + ["Treść prawej"] * 3)
+        self.assertEqual([(l.band, l.col) for l in body][3:9], [(7, 0), (8, 1), (8, 1), (8, 1), (8, 1), (8, 2)])
+        self.assertEqual({l.right for l in body if l.col == 1}, {292})  # each column has its own right edge
+        blocks = _segment(body)
+        self.assertEqual([b.text for b in blocks][4:7],
+                         ["Art. 1. Wyraża się zgodę na dokonanie Prezydenta ratyfikacji Umowy z Anguillą, podpisanej "
+                          "w Warszawie dnia 17 grudnia 2004 r. oraz w dniu 21 stycznia 2005 r.",
+                          "Art. 2. Ustawa wchodzi w życie po 14 dniach od dnia ogłoszenia.", "Prezydent: A. Kwaśniewski"])
+        self.assertEqual(blocks[6].kind, "signature")
+
+    def test_two_columns_only_in_old_issues(self):
+        # the same layout without an issue number in the header (a page of 2012 on) is read across as before
+        body, _ = _frame_lines(self._two_column_page("Dziennik Ustaw – 2 – Poz. 1255"), 595, 842, [], 1)
+        self.assertIn("Art. 1. Wyraża się zgodę na dokonanie Prezy- Art. 2. Ustawa", [l.text[:59] for l in body])
+        self.assertEqual({(l.band, l.col) for l in body}, {(0, 0)})
+        # a table of an old issue: cells far apart are not a column of text, the rows are read across
+        r = self._row
+        page = r("Dziennik Ustaw Nr 150 — 9307 — Poz. 1255", 38, 557, 52)
+        for k in range(6):
+            page += r("1.", 38, 48, 100 + 11 * k) + r("Minister", 120, 160, 100 + 11 * k)
+            page += r("Finansów", 252, 292, 100 + 11 * k) + r("100 zł", 303.3, 331.3, 100 + 11 * k)
+            page += r("Treść", 450, 475, 100 + 11 * k) + r("komórki", 522.4, 557.4, 100 + 11 * k)
+        body, _ = _frame_lines(page, 595, 842, [], 1)
+        self.assertEqual(body[1].text, "1. Minister Finansów 100 zł Treść komórki")
+        self.assertEqual({l.col for l in body}, {0})
+
+    def test_segment_column_break(self):
+        # from the bottom of the left column to the top of the right one: as at a page break, a new block only
+        # at a unit or after a sentence end, not by the (negative) gap
+        def line(top, col, text, x0=38.0, x1=292.0):
+            return Line(1, top, top + 10, x0, 10.0, text, x1=x1, right=x1, lead=1.0, band=2, col=col)
+        body = [line(100, 1, "Art. 1. Wyraża się zgodę na dokonanie przez Prezy-"),
+                line(111, 1, "denta ratyfikacji umowy."), line(100, 2, "w dniu 5 maja.", 303.3, 557.4)]
+        self.assertEqual([b.text for b in _segment(body)],
+                         ["Art. 1. Wyraża się zgodę na dokonanie przez Prezydenta ratyfikacji umowy.", "w dniu 5 maja."])
+        body[1].text = "denta ratyfikacji umowy podpisanej"
+        self.assertEqual(len(_segment(body)), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
