@@ -1,0 +1,4 @@
+   70 Ustawa         main R=0.841 P=0.805 (ref 6761, hyp 7065)  notes R=1.000 P=1.000   83.9s
+  179 Ustawa         main R=0.991 P=0.965 (ref 2198, hyp 2257)  notes R=1.000 P=1.000   29.7s
+scored 2/2 acts
+TOTAL body  (n=2): micro R=0.8776 P=0.8434  macro R=0.9158  R<0.95: 1  | P on complete refs (n=2): 0.8434
