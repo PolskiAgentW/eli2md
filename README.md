@@ -187,9 +187,13 @@ pod kreską w łamie (2010–2011) i pod wierszem „———” (2000–2009).
 z HTML, 59 poza próbami dev, zapisana w gicie przed oceną, oceniona raz; 0.6.7 i 0.6.8 tymi samymi skryptami):
 treść główna R 0.4743 → 0.9963, P 0.3975 → 0.8970 (macro R 0.9950); przypisy R 0.5046 → 0.9716, P 0.5014 → 0.9640;
 załączniki R 0.3640 → 0.6910, P 0.4770 → 0.9484; drzewo (tylko 0.6.8): treść R 0.9525, P 0.9885. Na próbach dev
-(s2000, s2011, po 40 aktów) treść R 0.9976 i 0.9909, P 0.7974 i 0.7433; bez dwóch aktów, w których wynik jest ponad
-3 razy dłuższy niż treść wzorca, P 0.9404 i 0.9782 (DU/2008/1547, DU/2004/1227: `evaluate.py` bierze ze starego HTML
-krótką „treść główną” — do sprawdzenia; orzeczenia TK z niepełnym HTML). Próba z HTML to głównie ustawy (30 z 40
+(s2000, s2011, po 40 aktów) treść R 0.9976 i 0.9909, P 0.7974 i 0.7433. Niska P na dev była w części błędem miary:
+starszy HTML ma tekst aktu w `div.block` poza sekcjami `part_N` (DU/2008/1547: 19 262 słowa poza, 132 w `part_1`),
+a `evaluate.py` brał za treść pierwszą sekcję. Po poprawce miary (po wydaniu 0.6.8; wyniki 2024 identyczne) dev:
+P 0.9449 i 0.9806; test s5200 bez zmian (brak takich aktów). Resztę nadmiaru na teście dają: DU/2002/664 (tekst
+jednolity, nagłówek załącznika nie rozpoznany: 13 016 z 16 284 nadmiarowych tokenów), stopka wydawcy na ostatniej
+stronie numeru („Zakład Wydawnictw i Poligrafii… ISSN 0867-3411”, DU/2003/577) i podpisy sędziów pod orzeczeniami TK,
+których HTML nie ma. Próba z HTML to głównie ustawy (30 z 40
 na dev), a akty bez HTML to głównie rozporządzenia i obwieszczenia, więc wynik dla nich może być inny. Znane błędy:
 rozdzielona pierwsza litera w PDF-ach z InDesign 2011 („s kładanie”, DU/2011/1134), odnośniki przypisów jako osobne
 linie, gdy przypisy mają większy udział niż treść (DU/2009/1323), spis treści na pierwszej stronie wydania (DU/2002/994),

@@ -66,7 +66,14 @@ def html_reference(html: str) -> dict:
     h1 = s.find("h1")
     title = h1.get_text(" ") if h1 else ""
     sections = s.select("section[id^=part_]")
-    if sections:
+    # HTML of older acts (DU 2000-2011) has the act's text in div.block outside the sections and the sections are
+    # its parts after it (DU/2008/1547: 19 262 words outside, 132 in part_1); in the 2024 HTML all text is in sections
+    outside = [b for b in s.select("div.block") if not b.find_parent("section")]
+    if sections and len(" ".join(b.get_text(" ") for b in outside).split()) > 50:
+        main = title + " " + " ".join(b.get_text(" ") for b in outside)
+        annexes = [(sec.get_text(" "), any(a.get("href", "").endswith("text.pdf") for a in sec.find_all("a")))
+                   for sec in sections]
+    elif sections:
         main = title + " " + sections[0].get_text(" ")
         annexes = [(sec.get_text(" "), any(a.get("href", "").endswith("text.pdf") for a in sec.find_all("a")))
                    for sec in sections[1:]]
