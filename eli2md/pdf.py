@@ -564,9 +564,34 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             small = bool(below) and all(w["size"] < FOOTNOTE_TYPE for w in below)
             if (r["top"] > ph * 0.3 and not r.get("line")) or (r["top"] > ph * 0.1 and small):
                 rule_top = r["top"] if rule_top is None else min(rule_top, r["top"])
+    # Two-column page: footnote rules as ((band, column), top). Under a rule are the lines of its column below it and
+    # the bands further down; the other column of its band goes on beside the footnotes.
+    col_rules: list[tuple[tuple[int, int], float]] = []
+    sep = None  # the row of dashes over the footnotes of a Quark page
+
+    def under(k: tuple[int, int], top: float, wk: tuple[int, int], wtop: float) -> bool:
+        return wtop > top and (wk == k or wk[0] > k[0])
+    if key is not None:
+        for r in rects:
+            # InDesign pages (DU 2010-2011): a ~70 pt line at a column's edge, footnotes under it in the column
+            # (DU/2011/1170 p. 2), also high on the page (DU/2010/626 p. 3), or across the page (ibid. p. 4)
+            if r["height"] < 1.5 and 50 < r["width"] < 160 and _free(r, rects):
+                below = [w for w in words if under(key(r), r["top"], key(w), w["top"])]
+                if below and all(w["size"] < FOOTNOTE_TYPE for w in below):
+                    col_rules.append((key(r), r["top"]))
+        for r in rows:
+            # QuarkXPress pages (DU 2000-2009): footnotes across the page under a row "———————" in the left
+            # column (DU/2009/1323 p. 1)
+            if re.fullmatch(r"[—–-]{3,}", "".join(w["text"] for w in r)) and r[0]["x1"] - r[0]["x0"] < 0.3 * pw:
+                below = [w for w in words if under(key(r[0]), r[0]["bottom"], key(w), w["top"])]
+                if below and all(w["size"] < r[0]["size"] - 0.5 for w in below):
+                    sep = r
+                    col_rules.append((key(r[0]), r[0]["top"]))
 
     body, notes = [], []
     for r in rows:
+        if r is sep:  # a rule, not text
+            continue
         r.sort(key=lambda w: w["x0"])
         parts: list[tuple[str, bool]] = []  # (text, glued to the previous word)
         base = [w for w in r if not w.get("sup") and not w.get("script")]
@@ -603,9 +628,9 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             band=band,
             col=col,
         )
-        is_note =(rule_top is not None and line.top > rule_top) or (
+        is_note = (rule_top is not None and line.top > rule_top) or (
             rule_top is None and line.size < body_size - 0.5 and line.top > ph * 0.6
-        )
+        ) or any(under(k, t, (band, col), line.top) for k, t in col_rules)
         if line.text:  # a line of unmapped glyphs only is empty now
             (notes if is_note else body).append(line)
     body.sort(key=lambda l: (l.band, l.col, l.top))  # down the page; a band's left column before its right one

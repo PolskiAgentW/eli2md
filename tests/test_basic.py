@@ -492,6 +492,31 @@ class Basic(unittest.TestCase):
         self.assertEqual(body[1].text, "1. Minister Finansów 100 zł Treść komórki")
         self.assertEqual({l.col for l in body}, {0})
 
+    def test_two_column_footnotes(self):
+        # InDesign (DU/2011/1170 p. 2): a 70 pt line at the right column's edge, footnotes (8.5 pt) under it in that
+        # column while the left column goes on; Quark (DU/2009/1323 p. 1): a row "———————" in the left column and
+        # footnotes across the page
+        r = self._row
+        text = r("Dziennik Ustaw Nr 197", 51, 150, 49) + r("— 11235 —", 270, 324, 49) + r("Poz. 1170", 500, 544, 49)
+        for k in range(6):
+            text += r("treść lewej kolumny tego aktu, wiersz numer dany", 51, 291.6, 80 + 11 * k, 9.5)
+        for k in range(3):
+            text += r("treść prawej kolumny tego aktu, wiersz numer dany", 303.7, 544.3, 80 + 11 * k, 9.5)
+        note = r("1) Zmiany tej ustawy zostały ogłoszone w Dz. U.", 303.7, 544.3, 125, 8.5)
+        note += r("z 2010 r. Nr 57, poz. 352.", 311.7, 420, 134, 8.5)
+        rule = {"x0": 303.7, "x1": 374.2, "top": 118.0, "bottom": 118.0, "width": 70.5, "height": 0.0, "line": True}
+        body, notes = _frame_lines(text + note, 595, 842, [rule], 1)
+        self.assertEqual([l.text[:6] for l in notes], ["1) Zmi", "z 2010"])
+        self.assertEqual([l.col for l in body].count(1), 6)
+        self.assertEqual(len(body), 10)
+        body, notes = _frame_lines(text + note, 595, 842, [], 1)  # without the rule the footnote stays in the text
+        self.assertEqual(notes, [])
+        page = text + r("———————", 51, 118, 150, 9.5)
+        page += r("1) Niniejsza ustawa zmienia ustawy: ustawę z dnia 31 stycznia 1980 r. o godle, barwach", 51, 544, 162, 8.5)
+        body, notes = _frame_lines(page, 595, 842, [], 1)
+        self.assertEqual([l.text[:6] for l in notes], ["1) Nin"])
+        self.assertNotIn("———————", [l.text for l in body])
+
     def test_segment_column_break(self):
         # from the bottom of the left column to the top of the right one: as at a page break, a new block only
         # at a unit or after a sentence end, not by the (negative) gap
