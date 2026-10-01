@@ -10,13 +10,14 @@ opendataloader-pdf (markdown, default options; needs Java), pdftotext (poppler; 
 each raw and with TABLE (MacRoman->MacCE for the
 Polish letters only, applied to the whole text), and eli2md (convert(), without OCR).
 Reference: HTML main text + annexes that are text in the HTML + footnotes (eval/evaluate.py html_reference).
-Metrics on word tokens (evaluate.tokens): aligned = difflib matching blocks (order counts: interleaved columns
-and moved blocks lose words), bag = multiset intersection (order ignored).
+Metrics on word tokens (evaluate.tokens): lcs = longest common subsequence (order counts: interleaved columns
+and moved blocks lose words; "aligned" = difflib matching blocks, not an LCS, kept for comparison), bag = multiset
+intersection (order ignored).
   recall = matched / reference words, precision = matched / extracted words (neighbouring acts lower it).
 Acts with a page without any text layer (scans) are left out: none of the tools reads them without OCR.
 Acts in earlier 2000-2011 samples are left out (eli2md was tuned on some of them).
 Usage: python eval/extractors_2000_2009.py SAMPLE_JSON [--out FILE] [--jobs N]
-(run with a Python that has eli2md's dependencies plus pypdf, pymupdf, opendataloader-pdf==2.4.7)
+(run with a Python that has eli2md's dependencies plus pypdf, pymupdf, opendataloader-pdf==2.4.7, rapidfuzz)
 """
 from __future__ import annotations
 
