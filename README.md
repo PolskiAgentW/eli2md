@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.17**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.18**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -188,6 +188,22 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.18** (2026-10-01). Kolofon zeszytu (Dziennik Ustaw do 2011 r.). Ostatnia strona zeszytu kończy się informacją
+wydawcy: gdzie kupić egzemplarze, gdzie składać reklamacje, „Wydawca: …”, cena, ISSN; w 2000 r. bywa nad nią lista
+wydawnictw z cenami. 0.6.17 wycinał ją od linii „Wydawca:” albo „Szanowni Państwo” w kolejności czytania, więc tekst nad
+„Wydawca:” zostawał na końcu ostatniego aktu zeszytu (DU/2003/2317, DU/2000/1051), a gdy pierwsza linia bloku wpadła
+w lewy łam, przecinał zdanie aktu z prawego łamu (DU/2003/1921: „…Rządem Repu- / Egzemplarze bieżące… / bliki
+Słowenii”). Teraz blok zaczyna się też od „Egzemplarze bieżące”, „Reklamacje z powodu niedoręczenia”, „O wszelkich
+zmianach nazwy”, „Dziennik Ustaw i Monitor Polski dostępne”, „Informacja o możliwości zakupu wydawnictw”, „Tłoczono
+z polecenia”, a wycinane jest wszystko od jego najwyższej linii w dół strony. Gdy nad nim zostaje tylko goły numer strony
+i obraz, strona należy do wydawcy i znika cała (DU/2003/2317 s. 10). Tylko ostatnia strona z ISSN, więc akty od 2012 r.
+(osobne PDF-y) się nie zmieniają. Sprawdzenie (`eval/colophon_check.py`): wszystkie akty 2000–2003 z ISSN na ostatniej
+stronie przekonwertowane ponownie i porównane akapit po akapicie z 0.6.17: z 6383 aktów 506 ma ISSN na ostatniej
+stronie, zmieniło się 276 (2000: 28, 2001: 64, 2002: 92, 2003: 92). W każdym ubył tylko tekst kolofonu; w 16 z nich
+zdanie aktu przecięte kolofonem jest znów całe (DU/2001/1144, DU/2003/2123 …). Wyniki:
+`eval/colophon_check_2000_2002_v0.6.18.json`, `eval/colophon_check_2003_v0.6.18.json`. Nie łapie kolofonu odczytanego
+przez OCR ze skanu ostatniej strony (DU/2000/175: warstwa tekstowa tej strony nie ma ISSN).
 
 **0.6.17** (2026-09-30). Tylko `eli2md.dataset`. Paczki z 0.6.16 czekały na najwolniejszy akt każdej paczki
 (przy MP 2020–2024 z OCR 5 z 6 procesów stało po kilkanaście minut). Teraz jest jedna pula, a proces po `MemoryError`

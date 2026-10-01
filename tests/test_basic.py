@@ -470,6 +470,31 @@ class Basic(unittest.TestCase):
                 Line(3, 77, 89, 242, 12, "Szanowni Państwo!"), Line(3, 780, 790, 264, 10, "ISSN 0867-3411")]
         self.assertEqual([l.text for l in _drop_colophon(body, [])[0]], ["Tekst aktu."])
         self.assertEqual(len(_drop_colophon(body[:3], [])[0]), 3)
+        # the colophon under the act, its first line read into the left column before the end of the right one
+        # (DU/2002/753): cut from its highest line down, not in reading order
+        body = [Line(1, 363, 373, 56, 10, "Podaje się niniejszym", band=20, col=1),
+                Line(1, 418, 428, 39, 10, "tej Polskiej dnia 28 grudnia 2001 r.", band=20, col=1),
+                Line(1, 538, 545, 39, 7, "Egzemplarze bieżące oraz archiwalne można nabywać:", band=20, col=1),
+                Line(1, 363, 373, 322, 10, "Wymiana dokumentów", band=20, col=2),
+                Line(1, 440, 450, 335, 10, "Minister Spraw Zagranicznych: W. Cimoszewicz", band=20, col=2),
+                Line(1, 594, 601, 88, 7, "Reklamacje z powodu niedoręczenia poszczególnych numerów", band=27),
+                Line(1, 780, 790, 264, 10, "ISSN 0867-3411", band=57)]
+        self.assertEqual([l.text for l in _drop_colophon(body, [])[0]],
+                         ["Podaje się niniejszym", "tej Polskiej dnia 28 grudnia 2001 r.", "Wymiana dokumentów",
+                          "Minister Spraw Zagranicznych: W. Cimoszewicz"])
+        # the publisher's page: a bare page number, the notice as an image, the colophon (DU/2003/2317 p. 10), or a
+        # list of the publisher's books (DU/2000/1051 p. 3): the page is dropped whole
+        for top in (Line(10, 77, 77, 0, 1, "", mark="image"),
+                    Line(10, 97, 107, 112, 10, "Informacja omożliwości zakupu wydawnictw Gospodarstwa Pomocniczego")):
+            body = [Line(9, 700, 710, 40, 10, "Tekst aktu."), Line(10, 51, 61, 269, 10, "— 16396 —"), top,
+                    Line(10, 543, 550, 37, 7, "Egzemplarze bieżące oraz archiwalne można nabywać:"),
+                    Line(10, 782, 792, 262, 9, "ISSN 0867-3411 (w tym 7% VAT)")]
+            self.assertEqual([l.text for l in _drop_colophon(body, [])[0]], ["Tekst aktu."])
+        # an image on the last page of an act, under its running header: it is kept
+        body = [Line(9, 100, 110, 40, 10, "Załącznik nr 2"), Line(9, 120, 120, 0, 1, "", mark="image"),
+                Line(9, 543, 550, 37, 7, "Egzemplarze bieżące oraz archiwalne można nabywać:"),
+                Line(9, 782, 792, 262, 9, "ISSN 0867-3411")]
+        self.assertEqual([l.mark for l in _drop_colophon(body, [])[0]], ["", "image"])
 
     def test_masthead_end(self):
         for line in ("Poz. 5", "Poz. 1021", "Pozycja 19", ") Poz. 1024*", "Poz. 1024*)"):  # MP/2012/19, MP/2012/1024

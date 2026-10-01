@@ -869,28 +869,39 @@ def _segment(body: list[Line]) -> list[Block]:
 # The last page of an issue of 2011 or earlier ends with the publisher's colophon ("Wydawca: Kancelaria Prezesa Rady
 # Ministrów" … "ISSN 0867-3411", DU/2000/291) or is a publisher's notice ("Szanowni Państwo!" … prices of subscriptions,
 # DU/2003/577), above a bare page number "— 4096 —"
-# "Szanowni Państwo" also without "!" over an advertisement for Monitor Polski B (DU/2002/933 p. 3)
-COLOPHON = re.compile(r"^(?:Wydawca\s*:|Szanowni\s+Państwo(?:!|$))")
+# "Szanowni Państwo" also without "!" over an advertisement for Monitor Polski B (DU/2002/933 p. 3). Above "Wydawca:"
+# stand where to buy copies and where to complain (DU/2002/753, DU/2003/2317), in 2000 under a list of the publisher's
+# books with prices ("Informacja o możliwości zakupu wydawnictw", DU/2000/1051 p. 3).
+COLOPHON = re.compile(r"^(?:Wydawca\s*:|Szanowni\s+Państwo(?:!|$)|Egzemplarze\s+bieżące|Reklamacje\s+z\s+powodu\s+niedoręcz"
+                      r"|O\s+wszelkich\s+zmianach\s+nazwy|Dziennik\s+Ustaw\s+i\s+Monitor\s+Polski\s+dostępne"
+                      r"|Informacja\s+o\s*możliwości\s+zakupu\s+wydawnictw|Tłoczono\s+z\s+polecenia)")
 ISSN = re.compile(r"\bISSN\s*\d{4}\s*-\s*\d{3}[\dX]\b")
 BARE_PAGE_NUMBER = re.compile(r"^[—–-]\s*\d+\s*[—–-]$")
 
 
 def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], list[Line]]:
     """Body and footnote lines without the colophon of an issue (COLOPHON): it is not text of the act. Only on the
-    last page, and only if that page names an ISSN; acts of 2012 on are single PDFs without it. The colophon may be
-    set small, under the footnotes (DU/2000/291: "Wydawca: …" read as footnotes, "Cena 3 zł 96 gr" and the ISSN as
-    body), so it starts at its first line in reading order, body or footnote."""
+    last page, and only if that page names an ISSN; acts of 2012 on are single PDFs without it. The colophon is set
+    across the page under the act, so everything from its highest line down is cut, body or footnote: it may be read
+    as footnotes (DU/2000/291: "Wydawca: …" as footnotes, "Cena 3 zł 96 gr" and the ISSN as body), and its first line
+    may fall into the left column, before the end of the right one (DU/2002/753). If only the bare page number and
+    markers of images are left above it, the page is the publisher's (DU/2003/2317 p. 10: the notice is an image) and
+    is dropped whole."""
     if not body:
         return body, notes
     last = max(l.page for l in body + notes)
     lines = [l for l in body + notes if l.page == last]
-    starts = [(l.band, l.col, l.top) for l in lines if COLOPHON.match(l.text)]
+    starts = [l.top for l in lines if COLOPHON.match(l.text)]
     if not starts or not any(ISSN.search(l.text) for l in lines):
         return body, notes
     at = min(starts)
+    above = [l for l in lines if l.top < at]
+    if any(BARE_PAGE_NUMBER.match(l.text) for l in above) and all(
+            BARE_PAGE_NUMBER.match(l.text) or l.mark in ("image", "notext") for l in above):
+        at = -1.0
 
     def keep(l: Line) -> bool:
-        return l.page != last or (l.band, l.col, l.top) < at
+        return l.page != last or l.top < at
     body = [l for l in body if keep(l)]
     if body and body[-1].page == last and BARE_PAGE_NUMBER.match(body[-1].text):
         body.pop()
