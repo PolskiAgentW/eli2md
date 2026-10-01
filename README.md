@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.20**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.21**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -205,6 +205,12 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.21** (2026-10-01). Poprawka 0.6.20: rozdzielczość dostaje tylko obraz całej strony. Dla obrazu wyciętego ze strony
+z warstwą tekstową (skan tekstu wklejony jako obraz) tesseract z rozdzielczością dzielił tekst na więcej linii i test „czy to
+skan tekstu” odrzucał taki obraz (DU/2000/416 s. 7: 42 → 55 linii, tekst strony znikał); tego przypadku 0.6.20 nie mierzył.
+Obrazy są więc czytane jak w 0.6.19, całe strony jak w 0.6.20. 0.6.20 działał ok. 25 minut (przeliczenia przerwane), żadne
+opublikowane dane z niego nie pochodzą.
 
 **0.6.20** (2026-10-01). OCR: obraz strony przekazywany do tesseracta ma zapisaną rozdzielczość (300 dpi). Bez niej
 tesseract zgadywał ją z wysokości liter („Estimating resolution as 384”) i na stronach z tabelami gubił odstępy między

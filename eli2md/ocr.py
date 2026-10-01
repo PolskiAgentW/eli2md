@@ -146,7 +146,10 @@ def _run(img, lang: str, fmt: str = "txt", psm: int = 3) -> str:
     # as 384") and on table pages loses the spaces between words, so the page fell below MIN_CONF (DU/2007/1006 p. 3:
     # "UrządCelnywkatowicach", confidence 62 -> 96 with the resolution). eval/ocr_dpi_check_2000_2007.json,
     # eval/ocr_eval_digital_s7310_v0.6.20.txt
-    img.save(buf, format="PNG", dpi=img.info.get("dpi", (DPI, DPI)))
+    # Only whole pages (render) carry it: on an image cut out of a page (ocr_page bbox) tesseract then splits lines
+    # differently and a scan of text failed text_image (DU/2000/416 p. 7: 42 -> 55 lines), not measured for images.
+    dpi = img.info.get("dpi")
+    img.save(buf, format="PNG", **({"dpi": dpi} if dpi else {}))
     env = {**os.environ, "OMP_THREAD_LIMIT": os.environ.get("OMP_THREAD_LIMIT", "1")}  # one thread by default
     cmd = [exe, "stdin", "stdout", "-l", lang, "--psm", str(psm)] + ([fmt] if fmt != "txt" else [])
     return subprocess.run(cmd, input=buf.getvalue(), capture_output=True, env=env, check=True,
@@ -260,6 +263,8 @@ def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None) 
     looking for the gazette header in it."""
     have = tesseract()[2]
     img = render(page.crop(bbox) if bbox else page, dpi)
+    if bbox:
+        del img.info["dpi"]  # see _run
     pno = getattr(page, "page_number", None)
     band = 0.0 if bbox else HEADER_BAND
     try:

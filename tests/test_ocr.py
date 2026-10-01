@@ -30,11 +30,12 @@ class Ocr(unittest.TestCase):
         with mock.patch.object(ocr, "tesseract", return_value=("t", "5.5.0", frozenset({"pol", "eng"}))), \
                 mock.patch.object(ocr.subprocess, "run", run):
             img = Image.new("L", (10, 10), 255)
+            img.info["dpi"] = (300, 300)  # as render() sets it for a whole page
             ocr._run(img, "pol")
-            self.assertEqual(tuple(round(x) for x in sent["dpi"]), (ocr.DPI, ocr.DPI))
-            img.info["dpi"] = (150, 150)
+            self.assertEqual(tuple(round(x) for x in sent["dpi"]), (300, 300))
+            del img.info["dpi"]  # an image cut out of a page (ocr_page with bbox): no resolution, as before 0.6.20
             ocr._run(img, "pol")
-            self.assertEqual(tuple(round(x) for x in sent["dpi"]), (150, 150))
+            self.assertIsNone(sent["dpi"])
 
     def test_parse_tsv(self):
         page = ocr.parse_tsv(tsv([
