@@ -1,0 +1,129 @@
+# 0.6.20 (DPI passed to tesseract), same sample and command as ocr_eval_digital_s7310.txt, pol+eng only, 2026-10-01.
+# The code before the change, run the same day: R micro 0.9706 / P micro 0.9757 (identical to the 2026-09-29 file).
+tesseract 5.5.0 lang pol+eng
+sample: eval/ocr_sample_digital_s7310.json, 95 pages (55 from agreements/government statements)
+DU/2025/1010  p1    Oświadczenie pl ref  151  pol+eng: R 0.987 P 0.993 2.73s
+DU/2025/1129  p9    Umowa między pl ref   72  pol+eng: R 1.000 P 1.000 1.58s
+DU/2026/685   p1    Oświadczenie pl ref  125  pol+eng: R 1.000 P 1.000 2.33s
+DU/2025/1130  p1    Oświadczenie pl ref  290  pol+eng: R 0.979 P 0.986 2.73s
+DU/2026/996   p3    Oświadczenie ?  ref   74  pol+eng: R 0.973 P 0.973 1.46s
+DU/2025/381   p1    Oświadczenie pl ref  205  pol+eng: R 0.995 P 1.000 1.78s
+DU/2025/1539  p1    Oświadczenie pl ref  208  pol+eng: R 0.971 P 0.990 3.49s
+DU/2025/975   p1    Oświadczenie pl ref  245  pol+eng: R 0.988 P 0.996 3.54s
+DU/2026/1177  p5    Oświadczenie ?  ref   83  pol+eng: R 0.988 P 1.000 1.15s
+DU/2026/287   p1    Oświadczenie pl ref  100  pol+eng: R 0.990 P 1.000 1.28s
+DU/2025/371   p1    Oświadczenie pl ref  246  pol+eng: R 0.988 P 0.992 3.27s
+DU/2025/723   p1    Oświadczenie pl ref  273  pol+eng: R 0.971 P 0.981 3.97s
+DU/2025/477   p1    Umowa między pl ref  103  pol+eng: R 1.000 P 1.000 1.45s
+DU/2025/474   p1    Oświadczenie pl ref  306  pol+eng: R 0.984 P 0.993 3.53s
+DU/2026/190   p1    Oświadczenie pl ref  163  pol+eng: R 1.000 P 1.000 2.42s
+DU/2025/30    p1    Oświadczenie pl ref  187  pol+eng: R 0.989 P 1.000 2.34s
+DU/2025/1513  p1    Umowa między pl ref  107  pol+eng: R 0.991 P 0.991 2.16s
+DU/2025/473   p1    Umowa między pl ref  175  pol+eng: R 0.994 P 0.994 3.38s
+DU/2025/1040  p6    Oświadczenie ?  ref   71  pol+eng: R 1.000 P 1.000 1.71s
+DU/2025/478   p1    Oświadczenie pl ref  178  pol+eng: R 0.983 P 0.989 2.91s
+DU/2026/818   p36   Umowa między pl ref   72  pol+eng: R 1.000 P 1.000 1.48s
+DU/2025/601   p1    Oświadczenie pl ref  341  pol+eng: R 0.979 P 0.979 4.03s
+DU/2026/969   p1    Oświadczenie pl ref  104  pol+eng: R 0.981 P 1.000 1.32s
+DU/2025/937   p1    Oświadczenie pl ref  155  pol+eng: R 0.981 P 0.987 2.1s
+DU/2026/205   p1    Oświadczenie pl ref  113  pol+eng: R 0.982 P 1.000 1.53s
+DU/2025/458   p3    Oświadczenie pl ref  290  pol+eng: R 0.983 P 0.993 1.67s
+DU/2026/684   p18   Umowa między pl ref   72  pol+eng: R 1.000 P 1.000 1.18s
+DU/2025/1605  p1    Oświadczenie pl ref  167  pol+eng: R 1.000 P 1.000 1.95s
+DU/2025/593   p1    Oświadczenie pl ref  278  pol+eng: R 0.986 P 0.989 3.25s
+DU/2025/1504  p1    Oświadczenie pl ref  150  pol+eng: R 0.973 P 0.986 1.24s
+DU/2025/1482  p3    Oświadczenie ?  ref   90  pol+eng: R 1.000 P 1.000 0.84s
+DU/2025/22    p2    Oświadczenie pl ref  140  pol+eng: R 0.957 P 0.978 2.01s
+DU/2025/457   p52   Umowa między pl ref  516  pol+eng: R 0.998 P 1.000 2.55s
+DU/2025/936   p1    Umowa między pl ref  104  pol+eng: R 1.000 P 1.000 0.85s
+DU/2026/995   p39   Umowa między pl ref   72  pol+eng: R 1.000 P 1.000 0.72s
+DU/2026/1016  p3    Oświadczenie ?  ref   78  pol+eng: R 0.923 P 0.935 1.3s
+DU/2026/1052  p4    Oświadczenie ?  ref   82  pol+eng: R 1.000 P 1.000 1.35s
+DU/2025/1503  p1    Umowa między pl ref  113  pol+eng: R 1.000 P 1.000 1.61s
+DU/2026/1166  p4    Oświadczenie ?  ref   95  pol+eng: R 1.000 P 1.000 0.78s
+DU/2025/1514  p1    Oświadczenie pl ref  435  pol+eng: R 0.993 P 0.993 4.32s
+DU/2026/952   p1    Oświadczenie pl ref  455  pol+eng: R 0.989 P 0.998 2.3s
+DU/2025/1009  p27   Umowa między pl ref   72  pol+eng: R 1.000 P 1.000 1.14s
+DU/2026/189   p36   Umowa między pl ref   72  pol+eng: R 1.000 P 1.000 1.13s
+DU/2025/56    p2    Oświadczenie en ref  381  pol+eng: R 0.966 P 0.961 1.97s
+DU/2026/1015  p49   Umowa między pl ref   72  pol+eng: R 0.986 P 0.986 1.21s
+DU/2025/120   p4    Oświadczenie en ref  290  pol+eng: R 0.993 P 0.993 2.85s
+DU/2025/21    p1    Oświadczenie pl ref  485  pol+eng: R 0.994 P 0.996 2.49s
+DU/2025/635   p6    Oświadczenie pl ref  120  pol+eng: R 1.000 P 1.000 1.43s
+DU/2025/762   p3    Oświadczenie ?  ref   84  pol+eng: R 0.988 P 1.000 1.3s
+DU/2026/366   p1    Oświadczenie pl ref  273  pol+eng: R 0.963 P 0.974 3.29s
+DU/2025/1538  p37   Umowa między pl ref   72  pol+eng: R 0.986 P 0.826 1.21s
+DU/2026/819   p1    Oświadczenie pl ref  152  pol+eng: R 0.987 P 1.000 1.73s
+DU/2025/361   p1    Oświadczenie pl ref  271  pol+eng: R 0.993 P 0.993 1.58s
+DU/2026/109   p3    Oświadczenie ?  ref   78  pol+eng: R 0.987 P 0.987 0.8s
+DU/2025/642   p1    Oświadczenie pl ref  220  pol+eng: R 0.991 P 0.995 1.43s
+DU/2026/8     p10   Obwieszczeni ?  ref  314  pol+eng: R 0.818 P 0.724 3.58s
+DU/2025/829   p10   Obwieszczeni pl ref  131  pol+eng: R 1.000 P 1.000 1.91s
+DU/2025/893   p1    Uchwała      pl ref  288  pol+eng: R 0.993 P 0.993 2.85s
+DU/2025/699   p3    Rozporządzen pl ref  597  pol+eng: R 0.982 P 0.988 6.2s
+DU/2025/645   p1    Rozporządzen pl ref  374  pol+eng: R 0.981 P 0.987 2.04s
+DU/2026/1103  p23   Obwieszczeni ?  ref   61  pol+eng: R 0.754 P 0.500 2.83s
+DU/2025/1017  p4    Ustawa       pl ref  654  pol+eng: R 0.995 P 0.995 6.03s
+DU/2025/1822  p13   Ustawa       pl ref  434  pol+eng: R 0.986 P 0.991 2.99s
+DU/2026/1057  p1    Rozporządzen pl ref  199  pol+eng: R 0.995 P 0.995 2.49s
+DU/2026/391   p1    Rozporządzen pl ref  197  pol+eng: R 0.949 P 0.964 1.52s
+DU/2025/1165  p2    Ustawa       pl ref  700  pol+eng: R 0.976 P 0.980 7.74s
+DU/2026/263   p1    Rozporządzen pl ref  225  pol+eng: R 0.987 P 0.991 2.91s
+DU/2025/1865  p1    Rozporządzen pl ref  157  pol+eng: R 1.000 P 1.000 1.25s
+DU/2025/664   p2    Obwieszczeni pl ref  151  pol+eng: R 0.974 P 0.980 2.0s
+DU/2026/307   p4    Rozporządzen ?  ref   61  pol+eng: R 0.066 P 0.078 1.08s
+DU/2026/154   p1    Rozporządzen pl ref  397  pol+eng: R 0.970 P 0.975 2.32s
+DU/2025/543   p1    Rozporządzen pl ref  262  pol+eng: R 0.962 P 0.962 3.52s
+DU/2025/672   p1    Rozporządzen pl ref  181  pol+eng: R 0.972 P 0.978 2.69s
+DU/2026/468   p207  Obwieszczeni pl ref  670  pol+eng: R 0.978 P 0.988 6.67s
+DU/2025/833   p1    Rozporządzen pl ref  313  pol+eng: R 0.955 P 0.974 2.6s
+DU/2026/271   p2    Rozporządzen pl ref  154  pol+eng: R 0.974 P 0.968 1.41s
+DU/2025/1866  p11   Rozporządzen ?  ref  293  pol+eng: R 0.997 P 0.997 2.46s
+DU/2025/954   p1    Rozporządzen pl ref  169  pol+eng: R 0.953 P 0.976 1.9s
+DU/2026/700   p4    Rozporządzen pl ref  488  pol+eng: R 0.977 P 0.988 3.86s
+DU/2026/463   p3    Rozporządzen pl ref  527  pol+eng: R 0.996 P 0.998 2.77s
+DU/2025/1535  p8    Ustawa       pl ref  530  pol+eng: R 0.958 P 0.971 5.32s
+DU/2026/591   p5    Obwieszczeni pl ref  642  pol+eng: R 0.964 P 0.969 5.31s
+DU/2025/1583  p1    Obwieszczeni pl ref  437  pol+eng: R 0.982 P 0.984 4.59s
+DU/2026/14    p22   Rozporządzen ?  ref   97  pol+eng: R 0.938 P 0.938 1.54s
+DU/2025/1092  p1    Rozporządzen pl ref  379  pol+eng: R 0.974 P 0.981 2.08s
+DU/2025/1588  p16   Obwieszczeni pl ref  669  pol+eng: R 0.967 P 0.982 6.4s
+DU/2025/919   p59   Obwieszczeni pl ref  520  pol+eng: R 0.996 P 0.998 5.05s
+DU/2025/1523  p8    Rozporządzen pl ref  260  pol+eng: R 0.981 P 0.981 1.62s
+DU/2025/1473  p1    Rozporządzen pl ref  364  pol+eng: R 0.989 P 0.992 3.83s
+DU/2025/1332  p6    Obwieszczeni pl ref  601  pol+eng: R 0.993 P 0.995 3.98s
+DU/2025/208   p1    Rozporządzen pl ref  330  pol+eng: R 0.955 P 0.957 3.05s
+DU/2026/76    p9    Obwieszczeni pl ref  392  pol+eng: R 0.997 P 0.997 1.91s
+DU/2025/599   p1    Obwieszczeni pl ref  229  pol+eng: R 0.978 P 0.991 2.28s
+DU/2026/895   p1    Rozporządzen pl ref  391  pol+eng: R 0.967 P 0.972 2.0s
+DU/2025/71    p1    Rozporządzen pl ref  325  pol+eng: R 0.994 P 0.997 2.39s
+
+== pol+eng
+all                      n= 95  R median 0.9868 micro 0.9773  P median 0.9926 micro 0.9792  pages R<0.99 57, R<0.95 6, R<0.90 3
+                         R ignoring order 0.9816, without accents 0.9783 | number tokens (n=3069): R 0.8957, ignoring order 0.9163
+agreements/statements    n= 55  R median 0.9893 micro 0.9868  P median 0.9959 micro 0.9902  pages R<0.99 28, R<0.95 1, R<0.90 0
+                         R ignoring order 0.9887, without accents 0.9875 | number tokens (n=1078): R 0.9128, ignoring order 0.9202
+other acts               n= 40  R median 0.9775 micro 0.9706  P median 0.9829 micro 0.9714  pages R<0.99 29, R<0.95 5, R<0.90 3
+                         R ignoring order 0.9766, without accents 0.9719 | number tokens (n=1991): R 0.8865, ignoring order 0.9141
+text language pl         n= 79  R median 0.9867 micro 0.9823  P median 0.9926 micro 0.9872  pages R<0.99 47, R<0.95 1, R<0.90 0
+                         R ignoring order 0.9859, without accents 0.9832 | number tokens (n=2681): R 0.9012, ignoring order 0.9247
+text language ?          n= 14  R median 0.9876 micro 0.9058  P median 0.9919 micro 0.8728  pages R<0.99 9, R<0.95 5, R<0.90 3
+                         R ignoring order 0.9161, without accents 0.9103 | number tokens (n=297): R 0.8249, ignoring order 0.8249
+text language en         n=  2  R median 0.9795 micro 0.9776  P median 0.9770 micro 0.9747  pages R<0.99 1, R<0.95 0, R<0.90 0
+                         R ignoring order 0.9925, without accents 0.9791 | number tokens (n=91): R 0.9670, ignoring order 0.9670
+OCR seconds/page (1 thread, 300 dpi): mean 2.53 median 2.16 max 7.74 (n=95); render mean 0.16
+
+== pol+eng fix_text
+all                      n= 95  R median 0.9881 micro 0.9785  P median 0.9926 micro 0.9792  pages R<0.99 52, R<0.95 6, R<0.90 3
+                         R ignoring order 0.9828, without accents 0.9795 | number tokens (n=3069): R 0.9052, ignoring order 0.9257
+agreements/statements    n= 55  R median 0.9918 micro 0.9880  P median 0.9959 micro 0.9902  pages R<0.99 23, R<0.95 1, R<0.90 0
+                         R ignoring order 0.9899, without accents 0.9887 | number tokens (n=1078): R 0.9239, ignoring order 0.9314
+other acts               n= 40  R median 0.9791 micro 0.9718  P median 0.9829 micro 0.9715  pages R<0.99 29, R<0.95 5, R<0.90 3
+                         R ignoring order 0.9778, without accents 0.9731 | number tokens (n=1991): R 0.8950, ignoring order 0.9227
+text language pl         n= 79  R median 0.9890 micro 0.9836  P median 0.9926 micro 0.9872  pages R<0.99 42, R<0.95 1, R<0.90 0
+                         R ignoring order 0.9872, without accents 0.9844 | number tokens (n=2681): R 0.9116, ignoring order 0.9351
+text language ?          n= 14  R median 0.9876 micro 0.9058  P median 0.9919 micro 0.8728  pages R<0.99 9, R<0.95 5, R<0.90 3
+                         R ignoring order 0.9161, without accents 0.9103 | number tokens (n=297): R 0.8249, ignoring order 0.8249
+text language en         n=  2  R median 0.9808 micro 0.9791  P median 0.9770 micro 0.9748  pages R<0.99 1, R<0.95 0, R<0.90 0
+                         R ignoring order 0.9940, without accents 0.9806 | number tokens (n=91): R 0.9780, ignoring order 0.9780
+OCR seconds/page (1 thread, 300 dpi): mean 2.53 median 2.16 max 7.74 (n=95); render mean 0.16

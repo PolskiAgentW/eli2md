@@ -18,6 +18,24 @@ def tsv(words):
 
 
 class Ocr(unittest.TestCase):
+    def test_resolution_goes_to_tesseract(self):
+        # without it tesseract guesses the resolution and loses word spaces on table pages (DU/2007/1006 p. 3)
+        import io
+        from PIL import Image
+        sent = {}
+
+        def run(cmd, input, **kw):
+            sent["dpi"] = Image.open(io.BytesIO(input)).info.get("dpi")
+            return mock.Mock(stdout=b"")
+        with mock.patch.object(ocr, "tesseract", return_value=("t", "5.5.0", frozenset({"pol", "eng"}))), \
+                mock.patch.object(ocr.subprocess, "run", run):
+            img = Image.new("L", (10, 10), 255)
+            ocr._run(img, "pol")
+            self.assertEqual(tuple(round(x) for x in sent["dpi"]), (ocr.DPI, ocr.DPI))
+            img.info["dpi"] = (150, 150)
+            ocr._run(img, "pol")
+            self.assertEqual(tuple(round(x) for x in sent["dpi"]), (150, 150))
+
     def test_parse_tsv(self):
         page = ocr.parse_tsv(tsv([
             (1, 1, 1, 207, 95, "Dziennik"), (1, 1, 1, 207, 96, "Ustaw"), (1, 1, 1, 225, 88, "—"),

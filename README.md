@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.19**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.20**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -205,6 +205,15 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.20** (2026-10-01). OCR: obraz strony przekazywany do tesseracta ma zapisaną rozdzielczość (300 dpi). Bez niej
+tesseract zgadywał ją z wysokości liter („Estimating resolution as 384”) i na stronach z tabelami gubił odstępy między
+słowami („UrządCelnywkatowicach”, DU/2007/1006 s. 3), więc strona wypadała poniżej progu pewności i zostawała tylko notka.
+Sprawdzenie: z 40 losowych takich stron Dz.U. 2000–2007 (z 1207) 16 daje teraz tekst (pewność 86–96); 40 losowych stron
+już odczytanych zostaje odczytanych, średnia pewność 95,3 → 95,4 (`eval/ocr_dpi_check_2000_2007.json`). Na 95 stronach
+cyfrowych z warstwą tekstową jako wzorcem (próbka s7310, `pol+eng`) słowa w kolejności R 0,9706 → 0,9773, P 0,9757 →
+0,9792, liczby R 0,872 → 0,896, stron z R < 0,95: 10 → 6 (`eval/ocr_eval_digital_s7310_v0.6.20.txt`; kod sprzed zmiany
+uruchomiony tego samego dnia dał te same liczby co 29.09).
 
 **0.6.19** (2026-10-01). Kolofon na stronie odczytanej przez OCR. Linie z OCR nie mają położenia na stronie (wszystkie
 mają górę 0), więc gdy ostatnią stronę zeszytu z ISSN czytał OCR, wycinanie kolofonu „od jego najwyższej linii w dół”

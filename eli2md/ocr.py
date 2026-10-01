@@ -133,14 +133,20 @@ def check(lang: str = LANG) -> str:
 
 
 def render(page, dpi: int = DPI):
-    """A pdfplumber page as a grayscale PIL image."""
-    return page.to_image(resolution=dpi).original.convert("L")
+    """A pdfplumber page as a grayscale PIL image, with its resolution in img.info["dpi"] (see _run)."""
+    img = page.to_image(resolution=dpi).original.convert("L")
+    img.info["dpi"] = (dpi, dpi)
+    return img
 
 
 def _run(img, lang: str, fmt: str = "txt", psm: int = 3) -> str:
     exe, _, _ = tesseract()
     buf = io.BytesIO()
-    img.save(buf, format="PNG")
+    # the PNG carries the resolution: without it tesseract guesses one from the text height ("Estimating resolution
+    # as 384") and on table pages loses the spaces between words, so the page fell below MIN_CONF (DU/2007/1006 p. 3:
+    # "UrządCelnywkatowicach", confidence 62 -> 96 with the resolution). eval/ocr_dpi_check_2000_2007.json,
+    # eval/ocr_eval_digital_s7310_v0.6.20.txt
+    img.save(buf, format="PNG", dpi=img.info.get("dpi", (DPI, DPI)))
     env = {**os.environ, "OMP_THREAD_LIMIT": os.environ.get("OMP_THREAD_LIMIT", "1")}  # one thread by default
     cmd = [exe, "stdin", "stdout", "-l", lang, "--psm", str(psm)] + ([fmt] if fmt != "txt" else [])
     return subprocess.run(cmd, input=buf.getvalue(), capture_output=True, env=env, check=True,
