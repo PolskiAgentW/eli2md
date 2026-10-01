@@ -28,6 +28,18 @@
     "aligned": 2131,
     "bag": 3688
    },
+   "pdftotext": {
+    "ref": 4512,
+    "hyp": 5471,
+    "aligned": 3260,
+    "bag": 3687
+   },
+   "pdftotext -layout": {
+    "ref": 4512,
+    "hyp": 5706,
+    "aligned": 1973,
+    "bag": 3551
+   },
    "pdfplumber+table": {
     "ref": 4512,
     "hyp": 4960,
@@ -51,6 +63,18 @@
     "hyp": 4963,
     "aligned": 2710,
     "bag": 4508
+   },
+   "pdftotext+table": {
+    "ref": 4512,
+    "hyp": 5009,
+    "aligned": 4149,
+    "bag": 4509
+   },
+   "pdftotext -layout+table": {
+    "ref": 4512,
+    "hyp": 5256,
+    "aligned": 2361,
+    "bag": 4289
    },
    "eli2md": {
     "ref": 4512,
@@ -89,6 +113,18 @@
     "aligned": 14459,
     "bag": 26211
    },
+   "pdftotext": {
+    "ref": 33307,
+    "hyp": 37508,
+    "aligned": 19319,
+    "bag": 26290
+   },
+   "pdftotext -layout": {
+    "ref": 33307,
+    "hyp": 39279,
+    "aligned": 11808,
+    "bag": 25208
+   },
    "pdfplumber+table": {
     "ref": 33307,
     "hyp": 33979,
@@ -112,6 +148,18 @@
     "hyp": 34051,
     "aligned": 18681,
     "bag": 33118
+   },
+   "pdftotext+table": {
+    "ref": 33307,
+    "hyp": 34281,
+    "aligned": 25395,
+    "bag": 33263
+   },
+   "pdftotext -layout+table": {
+    "ref": 33307,
+    "hyp": 36115,
+    "aligned": 4312,
+    "bag": 31514
    },
    "eli2md": {
     "ref": 33307,
@@ -150,6 +198,18 @@
     "aligned": 81,
     "bag": 81
    },
+   "pdftotext": {
+    "ref": 104,
+    "hyp": 524,
+    "aligned": 81,
+    "bag": 81
+   },
+   "pdftotext -layout": {
+    "ref": 104,
+    "hyp": 545,
+    "aligned": 61,
+    "bag": 79
+   },
    "pdfplumber+table": {
     "ref": 104,
     "hyp": 504,
@@ -173,6 +233,18 @@
     "hyp": 494,
     "aligned": 103,
     "bag": 103
+   },
+   "pdftotext+table": {
+    "ref": 104,
+    "hyp": 494,
+    "aligned": 103,
+    "bag": 103
+   },
+   "pdftotext -layout+table": {
+    "ref": 104,
+    "hyp": 515,
+    "aligned": 78,
+    "bag": 100
    },
    "eli2md": {
     "ref": 104,
@@ -211,6 +283,18 @@
     "aligned": 165,
     "bag": 247
    },
+   "pdftotext": {
+    "ref": 275,
+    "hyp": 999,
+    "aligned": 218,
+    "bag": 247
+   },
+   "pdftotext -layout": {
+    "ref": 275,
+    "hyp": 1021,
+    "aligned": 135,
+    "bag": 242
+   },
    "pdfplumber+table": {
     "ref": 275,
     "hyp": 932,
@@ -234,6 +318,18 @@
     "hyp": 947,
     "aligned": 152,
     "bag": 275
+   },
+   "pdftotext+table": {
+    "ref": 275,
+    "hyp": 938,
+    "aligned": 247,
+    "bag": 275
+   },
+   "pdftotext -layout+table": {
+    "ref": 275,
+    "hyp": 963,
+    "aligned": 151,
+    "bag": 268
    },
    "eli2md": {
     "ref": 275,
@@ -272,6 +368,18 @@
     "aligned": 128,
     "bag": 221
    },
+   "pdftotext": {
+    "ref": 253,
+    "hyp": 429,
+    "aligned": 221,
+    "bag": 221
+   },
+   "pdftotext -layout": {
+    "ref": 253,
+    "hyp": 434,
+    "aligned": 116,
+    "bag": 220
+   },
    "pdfplumber+table": {
     "ref": 253,
     "hyp": 388,
@@ -295,6 +403,18 @@
     "hyp": 410,
     "aligned": 151,
     "bag": 251
+   },
+   "pdftotext+table": {
+    "ref": 253,
+    "hyp": 405,
+    "aligned": 251,
+    "bag": 251
+   },
+   "pdftotext -layout+table": {
+    "ref": 253,
+    "hyp": 410,
+    "aligned": 134,
+    "bag": 247
    },
    "eli2md": {
     "ref": 253,
@@ -333,6 +453,18 @@
     "aligned": 46,
     "bag": 82
    },
+   "pdftotext": {
+    "ref": 102,
+    "hyp": 410,
+    "aligned": 82,
+    "bag": 82
+   },
+   "pdftotext -layout": {
+    "ref": 102,
+    "hyp": 417,
+    "aligned": 77,
+    "bag": 81
+   },
    "pdfplumber+table": {
     "ref": 102,
     "hyp": 372,
@@ -356,6 +488,18 @@
     "hyp": 393,
     "aligned": 56,
     "bag": 102
+   },
+   "pdftotext+table": {
+    "ref": 102,
+    "hyp": 393,
+    "aligned": 102,
+    "bag": 102
+   },
+   "pdftotext -layout+table": {
+    "ref": 102,
+    "hyp": 400,
+    "aligned": 97,
+    "bag": 101
    },
    "eli2md": {
     "ref": 102,
@@ -394,6 +538,18 @@
     "aligned": 3725,
     "bag": 6438
    },
+   "pdftotext": {
+    "ref": 7850,
+    "hyp": 8613,
+    "aligned": 3716,
+    "bag": 6466
+   },
+   "pdftotext -layout": {
+    "ref": 7850,
+    "hyp": 9025,
+    "aligned": 3211,
+    "bag": 6188
+   },
    "pdfplumber+table": {
     "ref": 7850,
     "hyp": 7940,
@@ -417,6 +573,18 @@
     "hyp": 7939,
     "aligned": 4730,
     "bag": 7811
+   },
+   "pdftotext+table": {
+    "ref": 7850,
+    "hyp": 8035,
+    "aligned": 4521,
+    "bag": 7846
+   },
+   "pdftotext -layout+table": {
+    "ref": 7850,
+    "hyp": 8463,
+    "aligned": 4085,
+    "bag": 7425
    },
    "eli2md": {
     "ref": 7850,
@@ -455,6 +623,18 @@
     "aligned": 54,
     "bag": 54
    },
+   "pdftotext": {
+    "ref": 66,
+    "hyp": 632,
+    "aligned": 54,
+    "bag": 54
+   },
+   "pdftotext -layout": {
+    "ref": 66,
+    "hyp": 643,
+    "aligned": 45,
+    "bag": 53
+   },
    "pdfplumber+table": {
     "ref": 66,
     "hyp": 587,
@@ -478,6 +658,18 @@
     "hyp": 606,
     "aligned": 66,
     "bag": 66
+   },
+   "pdftotext+table": {
+    "ref": 66,
+    "hyp": 605,
+    "aligned": 66,
+    "bag": 66
+   },
+   "pdftotext -layout+table": {
+    "ref": 66,
+    "hyp": 616,
+    "aligned": 46,
+    "bag": 65
    },
    "eli2md": {
     "ref": 66,
@@ -516,6 +708,18 @@
     "aligned": 1842,
     "bag": 8445
    },
+   "pdftotext": {
+    "ref": 10033,
+    "hyp": 10998,
+    "aligned": 1906,
+    "bag": 8468
+   },
+   "pdftotext -layout": {
+    "ref": 10033,
+    "hyp": 11487,
+    "aligned": 1950,
+    "bag": 8123
+   },
    "pdfplumber+table": {
     "ref": 10033,
     "hyp": 10125,
@@ -539,6 +743,18 @@
     "hyp": 10157,
     "aligned": 2516,
     "bag": 9988
+   },
+   "pdftotext+table": {
+    "ref": 10033,
+    "hyp": 10275,
+    "aligned": 1986,
+    "bag": 10023
+   },
+   "pdftotext -layout+table": {
+    "ref": 10033,
+    "hyp": 10784,
+    "aligned": 3681,
+    "bag": 9518
    },
    "eli2md": {
     "ref": 10033,
@@ -577,6 +793,18 @@
     "aligned": 156,
     "bag": 242
    },
+   "pdftotext": {
+    "ref": 320,
+    "hyp": 552,
+    "aligned": 246,
+    "bag": 246
+   },
+   "pdftotext -layout": {
+    "ref": 320,
+    "hyp": 575,
+    "aligned": 136,
+    "bag": 235
+   },
    "pdfplumber+table": {
     "ref": 320,
     "hyp": 523,
@@ -600,6 +828,18 @@
     "hyp": 522,
     "aligned": 181,
     "bag": 316
+   },
+   "pdftotext+table": {
+    "ref": 320,
+    "hyp": 518,
+    "aligned": 320,
+    "bag": 320
+   },
+   "pdftotext -layout+table": {
+    "ref": 320,
+    "hyp": 542,
+    "aligned": 161,
+    "bag": 299
    },
    "eli2md": {
     "ref": 320,
@@ -638,6 +878,18 @@
     "aligned": 167,
     "bag": 187
    },
+   "pdftotext": {
+    "ref": 219,
+    "hyp": 267,
+    "aligned": 179,
+    "bag": 187
+   },
+   "pdftotext -layout": {
+    "ref": 219,
+    "hyp": 273,
+    "aligned": 177,
+    "bag": 184
+   },
    "pdfplumber+table": {
     "ref": 219,
     "hyp": 220,
@@ -661,6 +913,18 @@
     "hyp": 233,
     "aligned": 192,
     "bag": 219
+   },
+   "pdftotext+table": {
+    "ref": 219,
+    "hyp": 254,
+    "aligned": 207,
+    "bag": 219
+   },
+   "pdftotext -layout+table": {
+    "ref": 219,
+    "hyp": 261,
+    "aligned": 204,
+    "bag": 212
    },
    "eli2md": {
     "ref": 219,
@@ -705,6 +969,18 @@
     "aligned": 35,
     "bag": 60
    },
+   "pdftotext": {
+    "ref": 70,
+    "hyp": 595,
+    "aligned": 60,
+    "bag": 60
+   },
+   "pdftotext -layout": {
+    "ref": 70,
+    "hyp": 616,
+    "aligned": 53,
+    "bag": 58
+   },
    "pdfplumber+table": {
     "ref": 70,
     "hyp": 553,
@@ -728,6 +1004,18 @@
     "hyp": 560,
     "aligned": 40,
     "bag": 70
+   },
+   "pdftotext+table": {
+    "ref": 70,
+    "hyp": 561,
+    "aligned": 70,
+    "bag": 70
+   },
+   "pdftotext -layout+table": {
+    "ref": 70,
+    "hyp": 582,
+    "aligned": 59,
+    "bag": 67
    },
    "eli2md": {
     "ref": 70,
@@ -766,6 +1054,18 @@
     "aligned": 399,
     "bag": 715
    },
+   "pdftotext": {
+    "ref": 783,
+    "hyp": 1146,
+    "aligned": 690,
+    "bag": 715
+   },
+   "pdftotext -layout": {
+    "ref": 783,
+    "hyp": 1173,
+    "aligned": 380,
+    "bag": 699
+   },
    "pdfplumber+table": {
     "ref": 783,
     "hyp": 1077,
@@ -789,6 +1089,18 @@
     "hyp": 1093,
     "aligned": 575,
     "bag": 780
+   },
+   "pdftotext+table": {
+    "ref": 783,
+    "hyp": 1079,
+    "aligned": 756,
+    "bag": 782
+   },
+   "pdftotext -layout+table": {
+    "ref": 783,
+    "hyp": 1106,
+    "aligned": 416,
+    "bag": 755
    },
    "eli2md": {
     "ref": 783,
@@ -827,6 +1139,18 @@
     "aligned": 2117,
     "bag": 11537
    },
+   "pdftotext": {
+    "ref": 14655,
+    "hyp": 16960,
+    "aligned": 1900,
+    "bag": 11559
+   },
+   "pdftotext -layout": {
+    "ref": 14655,
+    "hyp": 17568,
+    "aligned": 1683,
+    "bag": 11174
+   },
    "pdfplumber+table": {
     "ref": 14655,
     "hyp": 15396,
@@ -850,6 +1174,18 @@
     "hyp": 15257,
     "aligned": 2279,
     "bag": 14611
+   },
+   "pdftotext+table": {
+    "ref": 14655,
+    "hyp": 15276,
+    "aligned": 10161,
+    "bag": 14645
+   },
+   "pdftotext -layout+table": {
+    "ref": 14655,
+    "hyp": 15918,
+    "aligned": 6992,
+    "bag": 14063
    },
    "eli2md": {
     "ref": 14655,
@@ -888,6 +1224,18 @@
     "aligned": 106,
     "bag": 169
    },
+   "pdftotext": {
+    "ref": 198,
+    "hyp": 295,
+    "aligned": 98,
+    "bag": 169
+   },
+   "pdftotext -layout": {
+    "ref": 198,
+    "hyp": 303,
+    "aligned": 79,
+    "bag": 163
+   },
    "pdfplumber+table": {
     "ref": 198,
     "hyp": 280,
@@ -911,6 +1259,18 @@
     "hyp": 281,
     "aligned": 124,
     "bag": 194
+   },
+   "pdftotext+table": {
+    "ref": 198,
+    "hyp": 276,
+    "aligned": 111,
+    "bag": 194
+   },
+   "pdftotext -layout+table": {
+    "ref": 198,
+    "hyp": 285,
+    "aligned": 106,
+    "bag": 186
    },
    "eli2md": {
     "ref": 198,
@@ -949,6 +1309,18 @@
     "aligned": 384,
     "bag": 2748
    },
+   "pdftotext": {
+    "ref": 3617,
+    "hyp": 4739,
+    "aligned": 432,
+    "bag": 2756
+   },
+   "pdftotext -layout": {
+    "ref": 3617,
+    "hyp": 4919,
+    "aligned": 1426,
+    "bag": 2654
+   },
    "pdfplumber+table": {
     "ref": 3617,
     "hyp": 4438,
@@ -972,6 +1344,18 @@
     "hyp": 4321,
     "aligned": 2223,
     "bag": 3600
+   },
+   "pdftotext+table": {
+    "ref": 3617,
+    "hyp": 4333,
+    "aligned": 3066,
+    "bag": 3617
+   },
+   "pdftotext -layout+table": {
+    "ref": 3617,
+    "hyp": 4526,
+    "aligned": 398,
+    "bag": 3447
    },
    "eli2md": {
     "ref": 3617,
@@ -1010,6 +1394,18 @@
     "aligned": 4254,
     "bag": 28358
    },
+   "pdftotext": {
+    "ref": 38271,
+    "hyp": 46611,
+    "aligned": 4597,
+    "bag": 28459
+   },
+   "pdftotext -layout": {
+    "ref": 38271,
+    "hyp": 48531,
+    "aligned": 3779,
+    "bag": 27316
+   },
    "pdfplumber+table": {
     "ref": 38271,
     "hyp": 40159,
@@ -1033,6 +1429,18 @@
     "hyp": 42509,
     "aligned": 22944,
     "bag": 37681
+   },
+   "pdftotext+table": {
+    "ref": 38271,
+    "hyp": 41921,
+    "aligned": 32532,
+    "bag": 37860
+   },
+   "pdftotext -layout+table": {
+    "ref": 38271,
+    "hyp": 43964,
+    "aligned": 12254,
+    "bag": 35939
    },
    "eli2md": {
     "ref": 38271,
@@ -1071,6 +1479,18 @@
     "aligned": 102,
     "bag": 153
    },
+   "pdftotext": {
+    "ref": 169,
+    "hyp": 675,
+    "aligned": 152,
+    "bag": 152
+   },
+   "pdftotext -layout": {
+    "ref": 169,
+    "hyp": 696,
+    "aligned": 71,
+    "bag": 150
+   },
    "pdfplumber+table": {
     "ref": 169,
     "hyp": 616,
@@ -1094,6 +1514,18 @@
     "hyp": 639,
     "aligned": 113,
     "bag": 169
+   },
+   "pdftotext+table": {
+    "ref": 169,
+    "hyp": 637,
+    "aligned": 168,
+    "bag": 168
+   },
+   "pdftotext -layout+table": {
+    "ref": 169,
+    "hyp": 659,
+    "aligned": 82,
+    "bag": 166
    },
    "eli2md": {
     "ref": 169,
@@ -1132,6 +1564,18 @@
     "aligned": 3097,
     "bag": 4937
    },
+   "pdftotext": {
+    "ref": 6309,
+    "hyp": 7649,
+    "aligned": 4684,
+    "bag": 4947
+   },
+   "pdftotext -layout": {
+    "ref": 6309,
+    "hyp": 8014,
+    "aligned": 2689,
+    "bag": 4764
+   },
    "pdfplumber+table": {
     "ref": 6309,
     "hyp": 6932,
@@ -1155,6 +1599,18 @@
     "hyp": 6953,
     "aligned": 3972,
     "bag": 6275
+   },
+   "pdftotext+table": {
+    "ref": 6309,
+    "hyp": 6988,
+    "aligned": 5977,
+    "bag": 6295
+   },
+   "pdftotext -layout+table": {
+    "ref": 6309,
+    "hyp": 7369,
+    "aligned": 3313,
+    "bag": 5984
    },
    "eli2md": {
     "ref": 6309,
@@ -1193,6 +1649,18 @@
     "aligned": 185,
     "bag": 185
    },
+   "pdftotext": {
+    "ref": 230,
+    "hyp": 475,
+    "aligned": 185,
+    "bag": 185
+   },
+   "pdftotext -layout": {
+    "ref": 230,
+    "hyp": 490,
+    "aligned": 145,
+    "bag": 178
+   },
    "pdfplumber+table": {
     "ref": 230,
     "hyp": 428,
@@ -1216,6 +1684,18 @@
     "hyp": 448,
     "aligned": 229,
     "bag": 229
+   },
+   "pdftotext+table": {
+    "ref": 230,
+    "hyp": 448,
+    "aligned": 229,
+    "bag": 229
+   },
+   "pdftotext -layout+table": {
+    "ref": 230,
+    "hyp": 466,
+    "aligned": 177,
+    "bag": 220
    },
    "eli2md": {
     "ref": 230,
@@ -1254,6 +1734,18 @@
     "aligned": 281,
     "bag": 395
    },
+   "pdftotext": {
+    "ref": 426,
+    "hyp": 1394,
+    "aligned": 387,
+    "bag": 395
+   },
+   "pdftotext -layout": {
+    "ref": 426,
+    "hyp": 1439,
+    "aligned": 276,
+    "bag": 390
+   },
    "pdfplumber+table": {
     "ref": 426,
     "hyp": 1309,
@@ -1277,6 +1769,18 @@
     "hyp": 1279,
     "aligned": 309,
     "bag": 425
+   },
+   "pdftotext+table": {
+    "ref": 426,
+    "hyp": 1276,
+    "aligned": 420,
+    "bag": 425
+   },
+   "pdftotext -layout+table": {
+    "ref": 426,
+    "hyp": 1321,
+    "aligned": 292,
+    "bag": 417
    },
    "eli2md": {
     "ref": 426,
@@ -1315,6 +1819,18 @@
     "aligned": 1249,
     "bag": 5992
    },
+   "pdftotext": {
+    "ref": 7559,
+    "hyp": 8679,
+    "aligned": 1257,
+    "bag": 5998
+   },
+   "pdftotext -layout": {
+    "ref": 7559,
+    "hyp": 9174,
+    "aligned": 1229,
+    "bag": 5717
+   },
    "pdfplumber+table": {
     "ref": 7559,
     "hyp": 8174,
@@ -1338,6 +1854,18 @@
     "hyp": 7892,
     "aligned": 2087,
     "bag": 7438
+   },
+   "pdftotext+table": {
+    "ref": 7559,
+    "hyp": 7962,
+    "aligned": 5910,
+    "bag": 7444
+   },
+   "pdftotext -layout+table": {
+    "ref": 7559,
+    "hyp": 8480,
+    "aligned": 1293,
+    "bag": 6960
    },
    "eli2md": {
     "ref": 7559,
@@ -1376,6 +1904,18 @@
     "aligned": 73,
     "bag": 73
    },
+   "pdftotext": {
+    "ref": 90,
+    "hyp": 113,
+    "aligned": 73,
+    "bag": 73
+   },
+   "pdftotext -layout": {
+    "ref": 90,
+    "hyp": 116,
+    "aligned": 57,
+    "bag": 70
+   },
    "pdfplumber+table": {
     "ref": 90,
     "hyp": 101,
@@ -1399,6 +1939,18 @@
     "hyp": 104,
     "aligned": 89,
     "bag": 89
+   },
+   "pdftotext+table": {
+    "ref": 90,
+    "hyp": 104,
+    "aligned": 89,
+    "bag": 89
+   },
+   "pdftotext -layout+table": {
+    "ref": 90,
+    "hyp": 108,
+    "aligned": 68,
+    "bag": 85
    },
    "eli2md": {
     "ref": 90,
@@ -1437,6 +1989,18 @@
     "aligned": 1288,
     "bag": 2008
    },
+   "pdftotext": {
+    "ref": 2566,
+    "hyp": 3625,
+    "aligned": 1944,
+    "bag": 2018
+   },
+   "pdftotext -layout": {
+    "ref": 2566,
+    "hyp": 3775,
+    "aligned": 1019,
+    "bag": 1940
+   },
    "pdfplumber+table": {
     "ref": 2566,
     "hyp": 3231,
@@ -1460,6 +2024,18 @@
     "hyp": 3263,
     "aligned": 1578,
     "bag": 2552
+   },
+   "pdftotext+table": {
+    "ref": 2566,
+    "hyp": 3264,
+    "aligned": 2459,
+    "bag": 2565
+   },
+   "pdftotext -layout+table": {
+    "ref": 2566,
+    "hyp": 3423,
+    "aligned": 1285,
+    "bag": 2442
    },
    "eli2md": {
     "ref": 2566,
@@ -1498,6 +2074,18 @@
     "aligned": 558,
     "bag": 758
    },
+   "pdftotext": {
+    "ref": 828,
+    "hyp": 1239,
+    "aligned": 558,
+    "bag": 758
+   },
+   "pdftotext -layout": {
+    "ref": 828,
+    "hyp": 1262,
+    "aligned": 553,
+    "bag": 746
+   },
    "pdfplumber+table": {
     "ref": 828,
     "hyp": 1186,
@@ -1521,6 +2109,18 @@
     "hyp": 1178,
     "aligned": 567,
     "bag": 823
+   },
+   "pdftotext+table": {
+    "ref": 828,
+    "hyp": 1178,
+    "aligned": 567,
+    "bag": 823
+   },
+   "pdftotext -layout+table": {
+    "ref": 828,
+    "hyp": 1204,
+    "aligned": 559,
+    "bag": 808
    },
    "eli2md": {
     "ref": 828,
@@ -1559,6 +2159,18 @@
     "aligned": 199,
     "bag": 272
    },
+   "pdftotext": {
+    "ref": 294,
+    "hyp": 466,
+    "aligned": 199,
+    "bag": 272
+   },
+   "pdftotext -layout": {
+    "ref": 294,
+    "hyp": 472,
+    "aligned": 199,
+    "bag": 270
+   },
    "pdfplumber+table": {
     "ref": 294,
     "hyp": 436,
@@ -1582,6 +2194,18 @@
     "hyp": 445,
     "aligned": 211,
     "bag": 294
+   },
+   "pdftotext+table": {
+    "ref": 294,
+    "hyp": 445,
+    "aligned": 211,
+    "bag": 294
+   },
+   "pdftotext -layout+table": {
+    "ref": 294,
+    "hyp": 451,
+    "aligned": 207,
+    "bag": 289
    },
    "eli2md": {
     "ref": 294,
@@ -1620,6 +2244,18 @@
     "aligned": 1420,
     "bag": 2608
    },
+   "pdftotext": {
+    "ref": 3548,
+    "hyp": 4157,
+    "aligned": 1727,
+    "bag": 2621
+   },
+   "pdftotext -layout": {
+    "ref": 3548,
+    "hyp": 4333,
+    "aligned": 480,
+    "bag": 2525
+   },
    "pdfplumber+table": {
     "ref": 3548,
     "hyp": 3821,
@@ -1643,6 +2279,18 @@
     "hyp": 3741,
     "aligned": 2375,
     "bag": 3526
+   },
+   "pdftotext+table": {
+    "ref": 3548,
+    "hyp": 3753,
+    "aligned": 3056,
+    "bag": 3547
+   },
+   "pdftotext -layout+table": {
+    "ref": 3548,
+    "hyp": 3935,
+    "aligned": 510,
+    "bag": 3375
    },
    "eli2md": {
     "ref": 3548,
@@ -1681,6 +2329,18 @@
     "aligned": 120,
     "bag": 184
    },
+   "pdftotext": {
+    "ref": 229,
+    "hyp": 432,
+    "aligned": 153,
+    "bag": 184
+   },
+   "pdftotext -layout": {
+    "ref": 229,
+    "hyp": 445,
+    "aligned": 88,
+    "bag": 181
+   },
    "pdfplumber+table": {
     "ref": 229,
     "hyp": 409,
@@ -1704,6 +2364,18 @@
     "hyp": 408,
     "aligned": 146,
     "bag": 228
+   },
+   "pdftotext+table": {
+    "ref": 229,
+    "hyp": 406,
+    "aligned": 190,
+    "bag": 228
+   },
+   "pdftotext -layout+table": {
+    "ref": 229,
+    "hyp": 422,
+    "aligned": 107,
+    "bag": 221
    },
    "eli2md": {
     "ref": 229,
@@ -1742,6 +2414,18 @@
     "aligned": 2227,
     "bag": 18002
    },
+   "pdftotext": {
+    "ref": 22487,
+    "hyp": 25737,
+    "aligned": 2359,
+    "bag": 18002
+   },
+   "pdftotext -layout": {
+    "ref": 22487,
+    "hyp": 27230,
+    "aligned": 1054,
+    "bag": 17169
+   },
    "pdfplumber+table": {
     "ref": 22487,
     "hyp": 24595,
@@ -1765,6 +2449,18 @@
     "hyp": 23302,
     "aligned": 6820,
     "bag": 22468
+   },
+   "pdftotext+table": {
+    "ref": 22487,
+    "hyp": 23548,
+    "aligned": 8841,
+    "bag": 22470
+   },
+   "pdftotext -layout+table": {
+    "ref": 22487,
+    "hyp": 25130,
+    "aligned": 1096,
+    "bag": 21049
    },
    "eli2md": {
     "ref": 22487,
@@ -1803,6 +2499,18 @@
     "aligned": 88,
     "bag": 139
    },
+   "pdftotext": {
+    "ref": 155,
+    "hyp": 641,
+    "aligned": 109,
+    "bag": 139
+   },
+   "pdftotext -layout": {
+    "ref": 155,
+    "hyp": 651,
+    "aligned": 86,
+    "bag": 135
+   },
    "pdfplumber+table": {
     "ref": 155,
     "hyp": 584,
@@ -1826,6 +2534,18 @@
     "hyp": 624,
     "aligned": 125,
     "bag": 155
+   },
+   "pdftotext+table": {
+    "ref": 155,
+    "hyp": 623,
+    "aligned": 116,
+    "bag": 155
+   },
+   "pdftotext -layout+table": {
+    "ref": 155,
+    "hyp": 634,
+    "aligned": 93,
+    "bag": 149
    },
    "eli2md": {
     "ref": 155,
@@ -1864,6 +2584,18 @@
     "aligned": 96,
     "bag": 528
    },
+   "pdftotext": {
+    "ref": 647,
+    "hyp": 1169,
+    "aligned": 96,
+    "bag": 529
+   },
+   "pdftotext -layout": {
+    "ref": 647,
+    "hyp": 1212,
+    "aligned": 91,
+    "bag": 515
+   },
    "pdfplumber+table": {
     "ref": 647,
     "hyp": 1093,
@@ -1887,6 +2619,18 @@
     "hyp": 1066,
     "aligned": 530,
     "bag": 646
+   },
+   "pdftotext+table": {
+    "ref": 647,
+    "hyp": 1065,
+    "aligned": 591,
+    "bag": 647
+   },
+   "pdftotext -layout+table": {
+    "ref": 647,
+    "hyp": 1109,
+    "aligned": 99,
+    "bag": 621
    },
    "eli2md": {
     "ref": 647,
@@ -1925,6 +2669,18 @@
     "aligned": 324,
     "bag": 601
    },
+   "pdftotext": {
+    "ref": 736,
+    "hyp": 815,
+    "aligned": 324,
+    "bag": 601
+   },
+   "pdftotext -layout": {
+    "ref": 736,
+    "hyp": 875,
+    "aligned": 323,
+    "bag": 558
+   },
    "pdfplumber+table": {
     "ref": 736,
     "hyp": 776,
@@ -1948,6 +2704,18 @@
     "hyp": 743,
     "aligned": 456,
     "bag": 736
+   },
+   "pdftotext+table": {
+    "ref": 736,
+    "hyp": 757,
+    "aligned": 568,
+    "bag": 736
+   },
+   "pdftotext -layout+table": {
+    "ref": 736,
+    "hyp": 817,
+    "aligned": 362,
+    "bag": 677
    },
    "eli2md": {
     "ref": 736,
@@ -1986,6 +2754,18 @@
     "aligned": 880,
     "bag": 1123
    },
+   "pdftotext": {
+    "ref": 1315,
+    "hyp": 2105,
+    "aligned": 828,
+    "bag": 1123
+   },
+   "pdftotext -layout": {
+    "ref": 1315,
+    "hyp": 2183,
+    "aligned": 650,
+    "bag": 1076
+   },
    "pdfplumber+table": {
     "ref": 1315,
     "hyp": 2045,
@@ -2009,6 +2789,18 @@
     "hyp": 2046,
     "aligned": 1083,
     "bag": 1315
+   },
+   "pdftotext+table": {
+    "ref": 1315,
+    "hyp": 2046,
+    "aligned": 1081,
+    "bag": 1315
+   },
+   "pdftotext -layout+table": {
+    "ref": 1315,
+    "hyp": 2126,
+    "aligned": 727,
+    "bag": 1254
    },
    "eli2md": {
     "ref": 1315,
@@ -2047,6 +2839,18 @@
     "aligned": 106,
     "bag": 106
    },
+   "pdftotext": {
+    "ref": 130,
+    "hyp": 154,
+    "aligned": 106,
+    "bag": 106
+   },
+   "pdftotext -layout": {
+    "ref": 130,
+    "hyp": 159,
+    "aligned": 79,
+    "bag": 102
+   },
    "pdfplumber+table": {
     "ref": 130,
     "hyp": 132,
@@ -2070,6 +2874,18 @@
     "hyp": 143,
     "aligned": 130,
     "bag": 130
+   },
+   "pdftotext+table": {
+    "ref": 130,
+    "hyp": 143,
+    "aligned": 130,
+    "bag": 130
+   },
+   "pdftotext -layout+table": {
+    "ref": 130,
+    "hyp": 148,
+    "aligned": 93,
+    "bag": 125
    },
    "eli2md": {
     "ref": 130,
@@ -2108,6 +2924,18 @@
     "aligned": 7666,
     "bag": 11570
    },
+   "pdftotext": {
+    "ref": 14756,
+    "hyp": 16326,
+    "aligned": 11385,
+    "bag": 11611
+   },
+   "pdftotext -layout": {
+    "ref": 14756,
+    "hyp": 17184,
+    "aligned": 5452,
+    "bag": 11069
+   },
    "pdfplumber+table": {
     "ref": 14756,
     "hyp": 15034,
@@ -2131,6 +2959,18 @@
     "hyp": 14988,
     "aligned": 9635,
     "bag": 14681
+   },
+   "pdftotext+table": {
+    "ref": 14756,
+    "hyp": 15065,
+    "aligned": 14452,
+    "bag": 14747
+   },
+   "pdftotext -layout+table": {
+    "ref": 14756,
+    "hyp": 15972,
+    "aligned": 6445,
+    "bag": 13870
    },
    "eli2md": {
     "ref": 14756,
@@ -2169,6 +3009,18 @@
     "aligned": 295,
     "bag": 399
    },
+   "pdftotext": {
+    "ref": 469,
+    "hyp": 513,
+    "aligned": 267,
+    "bag": 400
+   },
+   "pdftotext -layout": {
+    "ref": 469,
+    "hyp": 525,
+    "aligned": 266,
+    "bag": 391
+   },
    "pdfplumber+table": {
     "ref": 469,
     "hyp": 461,
@@ -2192,6 +3044,18 @@
     "hyp": 484,
     "aligned": 345,
     "bag": 468
+   },
+   "pdftotext+table": {
+    "ref": 469,
+    "hyp": 483,
+    "aligned": 364,
+    "bag": 469
+   },
+   "pdftotext -layout+table": {
+    "ref": 469,
+    "hyp": 495,
+    "aligned": 308,
+    "bag": 457
    },
    "eli2md": {
     "ref": 469,
@@ -2230,6 +3094,18 @@
     "aligned": 540,
     "bag": 2359
    },
+   "pdftotext": {
+    "ref": 2905,
+    "hyp": 3192,
+    "aligned": 401,
+    "bag": 2359
+   },
+   "pdftotext -layout": {
+    "ref": 2905,
+    "hyp": 3381,
+    "aligned": 398,
+    "bag": 2212
+   },
    "pdfplumber+table": {
     "ref": 2905,
     "hyp": 2993,
@@ -2253,6 +3129,18 @@
     "hyp": 2915,
     "aligned": 2288,
     "bag": 2902
+   },
+   "pdftotext+table": {
+    "ref": 2905,
+    "hyp": 2950,
+    "aligned": 2728,
+    "bag": 2903
+   },
+   "pdftotext -layout+table": {
+    "ref": 2905,
+    "hyp": 3146,
+    "aligned": 428,
+    "bag": 2707
    },
    "eli2md": {
     "ref": 2905,
@@ -2291,6 +3179,18 @@
     "aligned": 780,
     "bag": 978
    },
+   "pdftotext": {
+    "ref": 1102,
+    "hyp": 1598,
+    "aligned": 746,
+    "bag": 978
+   },
+   "pdftotext -layout": {
+    "ref": 1102,
+    "hyp": 1658,
+    "aligned": 572,
+    "bag": 940
+   },
    "pdfplumber+table": {
     "ref": 1102,
     "hyp": 1451,
@@ -2314,6 +3214,18 @@
     "hyp": 1515,
     "aligned": 872,
     "bag": 1102
+   },
+   "pdftotext+table": {
+    "ref": 1102,
+    "hyp": 1514,
+    "aligned": 883,
+    "bag": 1102
+   },
+   "pdftotext -layout+table": {
+    "ref": 1102,
+    "hyp": 1578,
+    "aligned": 638,
+    "bag": 1056
    },
    "eli2md": {
     "ref": 1102,
@@ -2352,6 +3264,18 @@
     "aligned": 680,
     "bag": 1270
    },
+   "pdftotext": {
+    "ref": 1423,
+    "hyp": 1536,
+    "aligned": 657,
+    "bag": 1270
+   },
+   "pdftotext -layout": {
+    "ref": 1423,
+    "hyp": 1590,
+    "aligned": 712,
+    "bag": 1233
+   },
    "pdfplumber+table": {
     "ref": 1423,
     "hyp": 1443,
@@ -2375,6 +3299,18 @@
     "hyp": 1443,
     "aligned": 1115,
     "bag": 1423
+   },
+   "pdftotext+table": {
+    "ref": 1423,
+    "hyp": 1477,
+    "aligned": 900,
+    "bag": 1423
+   },
+   "pdftotext -layout+table": {
+    "ref": 1423,
+    "hyp": 1532,
+    "aligned": 788,
+    "bag": 1368
    },
    "eli2md": {
     "ref": 1423,
@@ -2413,6 +3349,18 @@
     "aligned": 217,
     "bag": 371
    },
+   "pdftotext": {
+    "ref": 425,
+    "hyp": 1167,
+    "aligned": 370,
+    "bag": 371
+   },
+   "pdftotext -layout": {
+    "ref": 425,
+    "hyp": 1184,
+    "aligned": 179,
+    "bag": 365
+   },
    "pdfplumber+table": {
     "ref": 425,
     "hyp": 1074,
@@ -2436,6 +3384,18 @@
     "hyp": 1108,
     "aligned": 278,
     "bag": 425
+   },
+   "pdftotext+table": {
+    "ref": 425,
+    "hyp": 1095,
+    "aligned": 424,
+    "bag": 425
+   },
+   "pdftotext -layout+table": {
+    "ref": 425,
+    "hyp": 1113,
+    "aligned": 208,
+    "bag": 415
    },
    "eli2md": {
     "ref": 425,
@@ -2474,6 +3434,18 @@
     "aligned": 159,
     "bag": 250
    },
+   "pdftotext": {
+    "ref": 304,
+    "hyp": 686,
+    "aligned": 250,
+    "bag": 250
+   },
+   "pdftotext -layout": {
+    "ref": 304,
+    "hyp": 701,
+    "aligned": 108,
+    "bag": 244
+   },
    "pdfplumber+table": {
     "ref": 304,
     "hyp": 611,
@@ -2497,6 +3469,18 @@
     "hyp": 642,
     "aligned": 194,
     "bag": 304
+   },
+   "pdftotext+table": {
+    "ref": 304,
+    "hyp": 628,
+    "aligned": 304,
+    "bag": 304
+   },
+   "pdftotext -layout+table": {
+    "ref": 304,
+    "hyp": 644,
+    "aligned": 174,
+    "bag": 293
    },
    "eli2md": {
     "ref": 304,
@@ -2535,6 +3519,18 @@
     "aligned": 2502,
     "bag": 3963
    },
+   "pdftotext": {
+    "ref": 5228,
+    "hyp": 6421,
+    "aligned": 3058,
+    "bag": 3975
+   },
+   "pdftotext -layout": {
+    "ref": 5228,
+    "hyp": 6716,
+    "aligned": 1968,
+    "bag": 3781
+   },
    "pdfplumber+table": {
     "ref": 5228,
     "hyp": 6004,
@@ -2558,6 +3554,18 @@
     "hyp": 5773,
     "aligned": 3429,
     "bag": 5209
+   },
+   "pdftotext+table": {
+    "ref": 5228,
+    "hyp": 5814,
+    "aligned": 4320,
+    "bag": 5222
+   },
+   "pdftotext -layout+table": {
+    "ref": 5228,
+    "hyp": 6139,
+    "aligned": 2588,
+    "bag": 4928
    },
    "eli2md": {
     "ref": 5228,
@@ -2596,6 +3604,18 @@
     "aligned": 326,
     "bag": 5268
    },
+   "pdftotext": {
+    "ref": 7412,
+    "hyp": 8570,
+    "aligned": 290,
+    "bag": 5272
+   },
+   "pdftotext -layout": {
+    "ref": 7412,
+    "hyp": 8981,
+    "aligned": 314,
+    "bag": 5035
+   },
    "pdfplumber+table": {
     "ref": 7412,
     "hyp": 7699,
@@ -2619,6 +3639,18 @@
     "hyp": 7379,
     "aligned": 4546,
     "bag": 7185
+   },
+   "pdftotext+table": {
+    "ref": 7412,
+    "hyp": 7448,
+    "aligned": 6887,
+    "bag": 7191
+   },
+   "pdftotext -layout+table": {
+    "ref": 7412,
+    "hyp": 7902,
+    "aligned": 363,
+    "bag": 6745
    },
    "eli2md": {
     "ref": 7412,
@@ -2657,6 +3689,18 @@
     "aligned": 112,
     "bag": 143
    },
+   "pdftotext": {
+    "ref": 157,
+    "hyp": 652,
+    "aligned": 143,
+    "bag": 143
+   },
+   "pdftotext -layout": {
+    "ref": 157,
+    "hyp": 667,
+    "aligned": 109,
+    "bag": 141
+   },
    "pdfplumber+table": {
     "ref": 157,
     "hyp": 605,
@@ -2680,6 +3724,18 @@
     "hyp": 609,
     "aligned": 118,
     "bag": 157
+   },
+   "pdftotext+table": {
+    "ref": 157,
+    "hyp": 609,
+    "aligned": 157,
+    "bag": 157
+   },
+   "pdftotext -layout+table": {
+    "ref": 157,
+    "hyp": 626,
+    "aligned": 112,
+    "bag": 153
    },
    "eli2md": {
     "ref": 157,
@@ -2718,6 +3774,18 @@
     "aligned": 2814,
     "bag": 3859
    },
+   "pdftotext": {
+    "ref": 5030,
+    "hyp": 6418,
+    "aligned": 3864,
+    "bag": 3864
+   },
+   "pdftotext -layout": {
+    "ref": 5030,
+    "hyp": 6766,
+    "aligned": 1191,
+    "bag": 3678
+   },
    "pdfplumber+table": {
     "ref": 5030,
     "hyp": 5837,
@@ -2741,6 +3809,18 @@
     "hyp": 5823,
     "aligned": 3725,
     "bag": 5022
+   },
+   "pdftotext+table": {
+    "ref": 5030,
+    "hyp": 5858,
+    "aligned": 5030,
+    "bag": 5030
+   },
+   "pdftotext -layout+table": {
+    "ref": 5030,
+    "hyp": 6221,
+    "aligned": 2582,
+    "bag": 4710
    },
    "eli2md": {
     "ref": 5030,
@@ -2779,6 +3859,18 @@
     "aligned": 7460,
     "bag": 20109
    },
+   "pdftotext": {
+    "ref": 24481,
+    "hyp": 27859,
+    "aligned": 9950,
+    "bag": 20117
+   },
+   "pdftotext -layout": {
+    "ref": 24481,
+    "hyp": 29164,
+    "aligned": 3527,
+    "bag": 19263
+   },
    "pdfplumber+table": {
     "ref": 24481,
     "hyp": 25569,
@@ -2802,6 +3894,18 @@
     "hyp": 25782,
     "aligned": 13820,
     "bag": 24309
+   },
+   "pdftotext+table": {
+    "ref": 24481,
+    "hyp": 25980,
+    "aligned": 19327,
+    "bag": 24363
+   },
+   "pdftotext -layout+table": {
+    "ref": 24481,
+    "hyp": 27338,
+    "aligned": 3941,
+    "bag": 23151
    },
    "eli2md": {
     "ref": 24481,
@@ -2840,6 +3944,18 @@
     "aligned": 90,
     "bag": 121
    },
+   "pdftotext": {
+    "ref": 137,
+    "hyp": 187,
+    "aligned": 94,
+    "bag": 121
+   },
+   "pdftotext -layout": {
+    "ref": 137,
+    "hyp": 194,
+    "aligned": 93,
+    "bag": 116
+   },
    "pdfplumber+table": {
     "ref": 137,
     "hyp": 172,
@@ -2863,6 +3979,18 @@
     "hyp": 165,
     "aligned": 91,
     "bag": 137
+   },
+   "pdftotext+table": {
+    "ref": 137,
+    "hyp": 179,
+    "aligned": 100,
+    "bag": 137
+   },
+   "pdftotext -layout+table": {
+    "ref": 137,
+    "hyp": 186,
+    "aligned": 100,
+    "bag": 130
    },
    "eli2md": {
     "ref": 137,
@@ -2901,6 +4029,18 @@
     "aligned": 120,
     "bag": 174
    },
+   "pdftotext": {
+    "ref": 213,
+    "hyp": 618,
+    "aligned": 132,
+    "bag": 174
+   },
+   "pdftotext -layout": {
+    "ref": 213,
+    "hyp": 634,
+    "aligned": 104,
+    "bag": 174
+   },
    "pdfplumber+table": {
     "ref": 213,
     "hyp": 596,
@@ -2924,6 +4064,18 @@
     "hyp": 594,
     "aligned": 139,
     "bag": 213
+   },
+   "pdftotext+table": {
+    "ref": 213,
+    "hyp": 593,
+    "aligned": 159,
+    "bag": 213
+   },
+   "pdftotext -layout+table": {
+    "ref": 213,
+    "hyp": 609,
+    "aligned": 126,
+    "bag": 208
    },
    "eli2md": {
     "ref": 213,
@@ -2962,6 +4114,18 @@
     "aligned": 96,
     "bag": 123
    },
+   "pdftotext": {
+    "ref": 137,
+    "hyp": 345,
+    "aligned": 85,
+    "bag": 123
+   },
+   "pdftotext -layout": {
+    "ref": 137,
+    "hyp": 357,
+    "aligned": 84,
+    "bag": 120
+   },
    "pdfplumber+table": {
     "ref": 137,
     "hyp": 323,
@@ -2985,6 +4149,18 @@
     "hyp": 323,
     "aligned": 104,
     "bag": 137
+   },
+   "pdftotext+table": {
+    "ref": 137,
+    "hyp": 322,
+    "aligned": 91,
+    "bag": 137
+   },
+   "pdftotext -layout+table": {
+    "ref": 137,
+    "hyp": 334,
+    "aligned": 89,
+    "bag": 132
    },
    "eli2md": {
     "ref": 137,
@@ -3023,6 +4199,18 @@
     "aligned": 105,
     "bag": 165
    },
+   "pdftotext": {
+    "ref": 178,
+    "hyp": 506,
+    "aligned": 149,
+    "bag": 164
+   },
+   "pdftotext -layout": {
+    "ref": 178,
+    "hyp": 508,
+    "aligned": 105,
+    "bag": 162
+   },
    "pdfplumber+table": {
     "ref": 178,
     "hyp": 468,
@@ -3046,6 +4234,18 @@
     "hyp": 494,
     "aligned": 110,
     "bag": 178
+   },
+   "pdftotext+table": {
+    "ref": 178,
+    "hyp": 480,
+    "aligned": 162,
+    "bag": 177
+   },
+   "pdftotext -layout+table": {
+    "ref": 178,
+    "hyp": 482,
+    "aligned": 110,
+    "bag": 175
    },
    "eli2md": {
     "ref": 178,
@@ -3084,6 +4284,18 @@
     "aligned": 3223,
     "bag": 10885
    },
+   "pdftotext": {
+    "ref": 13644,
+    "hyp": 16083,
+    "aligned": 3808,
+    "bag": 10952
+   },
+   "pdftotext -layout": {
+    "ref": 13644,
+    "hyp": 16717,
+    "aligned": 2672,
+    "bag": 10556
+   },
    "pdfplumber+table": {
     "ref": 13644,
     "hyp": 14055,
@@ -3107,6 +4319,18 @@
     "hyp": 14243,
     "aligned": 3719,
     "bag": 13533
+   },
+   "pdftotext+table": {
+    "ref": 13644,
+    "hyp": 14345,
+    "aligned": 10094,
+    "bag": 13627
+   },
+   "pdftotext -layout+table": {
+    "ref": 13644,
+    "hyp": 15042,
+    "aligned": 3009,
+    "bag": 12990
    },
    "eli2md": {
     "ref": 13644,
@@ -3145,6 +4369,18 @@
     "aligned": 875,
     "bag": 957
    },
+   "pdftotext": {
+    "ref": 1161,
+    "hyp": 2076,
+    "aligned": 876,
+    "bag": 960
+   },
+   "pdftotext -layout": {
+    "ref": 1161,
+    "hyp": 2153,
+    "aligned": 497,
+    "bag": 923
+   },
    "pdfplumber+table": {
     "ref": 1161,
     "hyp": 1947,
@@ -3168,6 +4404,18 @@
     "hyp": 1946,
     "aligned": 1053,
     "bag": 1154
+   },
+   "pdftotext+table": {
+    "ref": 1161,
+    "hyp": 1955,
+    "aligned": 1053,
+    "bag": 1160
+   },
+   "pdftotext -layout+table": {
+    "ref": 1161,
+    "hyp": 2036,
+    "aligned": 561,
+    "bag": 1106
    },
    "eli2md": {
     "ref": 1161,
@@ -3206,6 +4454,18 @@
     "aligned": 5513,
     "bag": 10075
    },
+   "pdftotext": {
+    "ref": 13607,
+    "hyp": 15472,
+    "aligned": 7849,
+    "bag": 10136
+   },
+   "pdftotext -layout": {
+    "ref": 13607,
+    "hyp": 16146,
+    "aligned": 4855,
+    "bag": 9726
+   },
    "pdfplumber+table": {
     "ref": 13607,
     "hyp": 14031,
@@ -3229,6 +4489,18 @@
     "hyp": 13798,
     "aligned": 7226,
     "bag": 13475
+   },
+   "pdftotext+table": {
+    "ref": 13607,
+    "hyp": 13858,
+    "aligned": 11160,
+    "bag": 13580
+   },
+   "pdftotext -layout+table": {
+    "ref": 13607,
+    "hyp": 14588,
+    "aligned": 3707,
+    "bag": 12864
    },
    "eli2md": {
     "ref": 13607,

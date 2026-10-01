@@ -6,7 +6,8 @@ whole issue, so its first and last page carry the neighbouring acts. The acts wi
 proxy for the PDF-only ones (same issues, same typesetting).
 
 Tools: pdfplumber (page.extract_text), pypdf (page.extract_text), PyMuPDF (page.get_text),
-opendataloader-pdf (markdown, default options; needs Java), each raw and with TABLE (MacRoman->MacCE for the
+opendataloader-pdf (markdown, default options; needs Java), pdftotext (poppler; default mode and -layout),
+each raw and with TABLE (MacRoman->MacCE for the
 Polish letters only, applied to the whole text), and eli2md (convert(), without OCR).
 Reference: HTML main text + annexes that are text in the HTML + footnotes (eval/evaluate.py html_reference).
 Metrics on word tokens (evaluate.tokens): aligned = difflib matching blocks (order counts: interleaved columns
@@ -43,7 +44,12 @@ from evaluate import CACHE, html_reference, tokens  # noqa: E402
 TABLE = str.maketrans({bytes([b]).decode("mac_roman"): bytes([b]).decode("mac_latin2")
                        for b in range(128, 256) if bytes([b]).decode("mac_latin2") in "ąćęłńśźżĄĆĘŁŃŚŹŻ"})
 ODL_JAR = None  # set in main()
-TOOLS = ["pdfplumber", "pypdf", "pymupdf", "opendataloader"]
+TOOLS = ["pdfplumber", "pypdf", "pymupdf", "opendataloader", "pdftotext", "pdftotext -layout"]
+
+
+def pdftotext(pdf: Path, *opts: str) -> str | None:
+    r = subprocess.run(["pdftotext", *opts, "-enc", "UTF-8", str(pdf), "-"], capture_output=True)
+    return r.stdout.decode("utf-8", "replace") if r.returncode == 0 else None
 
 
 def odl_text(pdf: Path) -> str | None:
@@ -77,6 +83,8 @@ def run_act(item: dict) -> dict:
     texts["pypdf"] = "\n".join(page.extract_text() or "" for page in pypdf.PdfReader(pdf).pages)
     texts["pymupdf"] = "\n".join(page.get_text() for page in fitz.open(pdf))
     texts["opendataloader"] = odl_text(pdf)
+    texts["pdftotext"] = pdftotext(pdf)
+    texts["pdftotext -layout"] = pdftotext(pdf, "-layout")
     for t in TOOLS:
         if texts[t] is not None:
             texts[t + "+table"] = texts[t].translate(TABLE)
