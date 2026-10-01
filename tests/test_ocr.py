@@ -37,6 +37,27 @@ class Ocr(unittest.TestCase):
             ocr._run(img, "pol")
             self.assertIsNone(sent["dpi"])
 
+    def test_resolution_only_on_second_reading(self):
+        # a whole page is read as before 0.6.20 (no resolution); only if that gives no usable text, once more with it
+        from PIL import Image
+        good = ocr.OcrPage(paragraphs=["tekst"], words=300, confidence=95.0)
+        bad = ocr.OcrPage(paragraphs=["UrządCelny"], words=300, confidence=62.0)
+        for first, second, bbox, want, dpis in ((good, None, None, good, [None]), (bad, good, None, good, [None, (300, 300)]),
+                                                (bad, bad, None, bad, [None, (300, 300)]), (bad, good, (0, 0, 9, 9), bad, [None])):
+            seen, answers = [], [first, second]
+
+            def one(img, *a):
+                seen.append(img.info.get("dpi"))
+                return answers[len(seen) - 1]
+            page = mock.Mock(page_number=3)
+            page.crop.return_value = page
+            img = Image.new("L", (10, 10), 255)
+            img.info["dpi"] = (300, 300)
+            with mock.patch.object(ocr, "tesseract", return_value=("t", "5.5.0", frozenset({"pol", "eng"}))), \
+                    mock.patch.object(ocr, "render", return_value=img), mock.patch.object(ocr, "_ocr", one):
+                self.assertIs(ocr.ocr_page(page, bbox=bbox), want)
+            self.assertEqual(seen, dpis)
+
     def test_parse_tsv(self):
         page = ocr.parse_tsv(tsv([
             (1, 1, 1, 207, 95, "Dziennik"), (1, 1, 1, 207, 96, "Ustaw"), (1, 1, 1, 225, 88, "—"),

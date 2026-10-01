@@ -146,8 +146,9 @@ def _run(img, lang: str, fmt: str = "txt", psm: int = 3) -> str:
     # as 384") and on table pages loses the spaces between words, so the page fell below MIN_CONF (DU/2007/1006 p. 3:
     # "UrządCelnywkatowicach", confidence 62 -> 96 with the resolution). eval/ocr_dpi_check_2000_2007.json,
     # eval/ocr_eval_digital_s7310_v0.6.20.txt
-    # Only whole pages (render) carry it: on an image cut out of a page (ocr_page bbox) tesseract then splits lines
-    # differently and a scan of text failed text_image (DU/2000/416 p. 7: 42 -> 55 lines), not measured for images.
+    # ocr_page gives it only on a second reading of a whole page that gave no usable text without it: on an image cut
+    # out of a page tesseract then splits lines differently and a scan of text failed text_image (DU/2000/416 p. 7:
+    # 42 -> 55 lines), and some pages read before fell below MIN_CONF (DU/2025/145).
     dpi = img.info.get("dpi")
     img.save(buf, format="PNG", **({"dpi": dpi} if dpi else {}))
     env = {**os.environ, "OMP_THREAD_LIMIT": os.environ.get("OMP_THREAD_LIMIT", "1")}  # one thread by default
@@ -263,16 +264,31 @@ def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None) 
     looking for the gazette header in it."""
     have = tesseract()[2]
     img = render(page.crop(bbox) if bbox else page, dpi)
-    if bbox:
-        del img.info["dpi"]  # see _run
+    info = getattr(img, "info", {})
+    info.pop("dpi", None)  # first reading as before 0.6.20: tesseract guesses the resolution (see _run)
     pno = getattr(page, "page_number", None)
     band = 0.0 if bbox else HEADER_BAND
+    read = _ocr(img, lang, pno, band, have)
+    if read is None:  # the page keeps only the note
+        return OcrPage(lang=BASE_LANG if lang == "auto" else lang)
+    if not bbox and not usable(read):
+        # a whole page without usable text: once more with the resolution given (see _run). Only then: with it,
+        # pages read before can fall below MIN_CONF too (DU/2025/145: 59 -> 53 pages read), so they keep their reading
+        info["dpi"] = (dpi, dpi)
+        again = _ocr(img, lang, pno, band, have)
+        if again is not None and usable(again):
+            read = again
+    return read
+
+
+def _ocr(img, lang: str, pno: int | None, band: float, have: frozenset[str]) -> OcrPage | None:
+    """One reading of ocr_page (with _retry); None if tesseract timed out or failed on the first pass."""
     try:
         read = _read(img, BASE_LANG if lang == "auto" else lang, pno, band=band)
-    except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:  # the page keeps only the note
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as e:
         why = f"took over {TIMEOUT} s" if isinstance(e, subprocess.TimeoutExpired) else f"failed ({e.returncode})"
         warnings.warn(f"page {pno}: tesseract {why}, page skipped")
-        return OcrPage(lang=BASE_LANG if lang == "auto" else lang)
+        return None
     try:
         return _retry(read, img, pno, lang, have, band)
     except (subprocess.TimeoutExpired, subprocess.CalledProcessError):  # keep the first reading
