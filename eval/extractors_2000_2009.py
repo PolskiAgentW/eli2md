@@ -33,6 +33,7 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import fitz
+from rapidfuzz.distance import LCSseq
 import pdfplumber
 import pypdf
 
@@ -65,7 +66,11 @@ def odl_text(pdf: Path) -> str | None:
 def score(ref: list[str], hyp: list[str]) -> dict:
     m = sum(b.size for b in difflib.SequenceMatcher(None, ref, hyp, autojunk=False).get_matching_blocks())
     bag = sum((collections.Counter(ref) & collections.Counter(hyp)).values())
-    return {"ref": len(ref), "hyp": len(hyp), "aligned": m, "bag": bag}
+    # lcs: longest common subsequence of the word lists (rapidfuzz, exact). The difflib matching blocks ("aligned",
+    # kept for comparison with the first version of this file) are not an LCS: difflib takes the longest block first
+    # and splits the rest around it, so one block in the wrong place (e.g. footnotes at the end of the HTML but inside
+    # the page text) can lose most of an act that is in order (DU/2004/870, pdf.js+table: 2428 vs LCS 18842).
+    return {"ref": len(ref), "hyp": len(hyp), "aligned": m, "lcs": LCSseq.similarity(ref, hyp), "bag": bag}
 
 
 def run_act(item: dict) -> dict:
@@ -119,14 +124,15 @@ def main() -> None:
     done = [r for r in rows if "scores" in r]
     print(f"scored {len(done)} of {len(rows)} acts; reference words {sum(r['scores']['eli2md']['ref'] for r in done)}")
     names = list(done[0]["scores"])
-    print("| tool | acts | aligned R | aligned P | bag R | bag P | words out / words in HTML |")
-    print("|---|---:|---:|---:|---:|---:|---:|")
+    print("| tool | acts | in order R (LCS) | in order P (LCS) | bag R | bag P | words out / words in HTML "
+          "| difflib blocks R |")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|")
     for n in names:
         sub = [r["scores"][n] for r in done if r["scores"].get(n)]
         ref, hyp = sum(s["ref"] for s in sub), sum(s["hyp"] for s in sub)
-        al, bag = sum(s["aligned"] for s in sub), sum(s["bag"] for s in sub)
-        print(f"| {n} | {len(sub)} | {al / ref:.3f} | {al / hyp:.3f} | {bag / ref:.3f} | {bag / hyp:.3f} | "
-              f"{hyp / ref:.2f} |")
+        lcs, al, bag = sum(s["lcs"] for s in sub), sum(s["aligned"] for s in sub), sum(s["bag"] for s in sub)
+        print(f"| {n} | {len(sub)} | {lcs / ref:.3f} | {lcs / hyp:.3f} | {bag / ref:.3f} | {bag / hyp:.3f} | "
+              f"{hyp / ref:.2f} | {al / ref:.3f} |")
     fails = sum(1 for r in done if r["scores"].get("opendataloader") is None)
     print(f"opendataloader failed on {fails} of {len(done)} PDFs")
     if a.out:
