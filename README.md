@@ -50,6 +50,18 @@ eli2md MP/2025/148                         # Monitor Polski (od 0.6.2)
 eli2md plik.pdf                            # lokalny PDF, wynik na stdout
 ```
 
+Z Pythona, gdy PDF jest już pobrany (np. `https://api.sejm.gov.pl/eli/acts/DU/2005/668/text.pdf`):
+
+```python
+from eli2md.pdf import convert, to_markdown
+
+md = to_markdown(convert("text.pdf", position=668))
+```
+
+`position` to numer pozycji aktu. W Dz.U. do 2011 r. PDF aktu to strony całego zeszytu, a `position` wycina z nich ten
+akt (DU/2005/668: 835 słów z `position`, 1291 bez). Metadane z API ELI w front matter: `to_markdown(doc, meta)`,
+gdzie `meta` to JSON z `https://api.sejm.gov.pl/eli/acts/DU/2005/668`.
+
 Cały rocznik (nowe i zmienione akty; indeks w `index.csv`):
 
 ```sh
