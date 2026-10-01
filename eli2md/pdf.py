@@ -916,7 +916,9 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
     reading order: a Quark page sets an act's footnotes under its text, above the next act's number (DU/2005/1369
     p. 2, DU/2007/1322 p. 1). The number itself is dropped: it is the position, as "Poz. N" closing the masthead of
     2012 on, which is not text of the act either. Returns (body, notes, first page, last page), or None if the
-    act's number is not found (then nothing is cut)."""
+    act's number is not found (then nothing is cut). The last act of an issue ends on the page of its last line
+    (marks of images and scans are lines too), so a publisher's page dropped by _drop_colophon does not count as a
+    page with an image (DU/2003/2317 p. 10)."""
     start = next((i for i, l in enumerate(body) if l.act == position), None)
     if start is None:
         return None
@@ -927,7 +929,8 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
     def at(l: Line) -> tuple:
         return l.page, l.band, l.col, l.top
     notes = [l for l in notes if at(first) < at(l) and (last is None or at(l) < at(last))]
-    return body[start + 1: end], notes, first.page, last.page if last else math.inf
+    own = body[start + 1: end]
+    return own, notes, first.page, last.page if last else max((l.page for l in own + notes), default=first.page)
 
 
 # an act starting on a page of an old issue read by OCR: its number and type in one paragraph ("56 ROZPORZĄDZENIE

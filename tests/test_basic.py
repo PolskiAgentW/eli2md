@@ -754,6 +754,7 @@ class Basic(unittest.TestCase):
         self.assertEqual(own[0].text, "USTAWA")
         self.assertTrue(all("1370" in l.text for l in own[1:]))
         self.assertEqual([l.text[:22] for l in own_notes], ["1) Przypis aktu 1370 n"])
+        self.assertEqual((lo, hi), (2, 2))  # the last act of the issue: up to its last line, not the PDF's end
         self.assertIsNone(_own_act(body, notes, 1400))  # the act's number is not there: nothing is cut
         # a page of 2012 on has no act numbers
         body, _ = _frame_lines(self._shared_page("Dziennik Ustaw – 2 – Poz. 1369"), 595, 842, [], 2)
