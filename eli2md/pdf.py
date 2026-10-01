@@ -891,6 +891,19 @@ def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], lis
         return body, notes
     last = max(l.page for l in body + notes)
     lines = [l for l in body + notes if l.page == last]
+    if all(l.mark == "ocr" and l.top == 0 for l in lines):
+        # a page read by OCR: its lines have no position (top 0), so cut in reading order; by top, everything
+        # on the page went (DU/2000/48, a one-page act at the end of its issue, came out empty)
+        cut = next((i for i, l in enumerate(body) if l.page == last and COLOPHON.match(l.text)), None)
+        if cut is None or not any(ISSN.search(l.text) for l in lines):
+            return body, notes
+        above = [l for l in body[:cut] if l.page == last]
+        if above and all(BARE_PAGE_NUMBER.match(l.text) for l in above):
+            cut -= len(above)
+        body = body[:cut]
+        if body and body[-1].page == last and BARE_PAGE_NUMBER.match(body[-1].text):
+            body.pop()
+        return body, notes
     starts = [l.top for l in lines if COLOPHON.match(l.text)]
     if not starts or not any(ISSN.search(l.text) for l in lines):
         return body, notes

@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.18**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.19**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -205,6 +205,16 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.19** (2026-10-01). Kolofon na stronie odczytanej przez OCR. Linie z OCR nie mają położenia na stronie (wszystkie
+mają górę 0), więc gdy ostatnią stronę zeszytu z ISSN czytał OCR, wycinanie kolofonu „od jego najwyższej linii w dół”
+z 0.6.18 usuwało całą stronę: akt jednostronicowy wychodził pusty (DU/2000/48), dłuższy tracił ostatnią stronę
+(DU/2000/135: 160 → 552 słów). Teraz na takiej stronie kolofon jest wycinany w kolejności czytania, więc znika też
+kolofon odczytany przez OCR, który 0.6.18 zostawiał (DU/2000/175). Sprawdzenie (`eval/colophon_ocr_check.py`) na
+opublikowanym Dz.U. 2000–2007: z 2463 aktów z OCR 300 ma ostatnią stronę bez warstwy tekstowej, 15 ma na niej kolofon
+z ISSN (wszystkie z 2000 r.); każdy zyskał tekst (razem +3064 słów), 5 przestało być pustych, żaden nie stracił słów.
+Wyniki: `eval/colophon_ocr_check_2000_2007_v0.6.19.json`. Poza tym: gdy akt jest ostatni w zeszycie, strona wydawcy
+usunięta razem z kolofonem nie liczy się już do stron z obrazami (DU/2003/2317: „7-8” zamiast „7-8, 10”); tekst bez zmian.
 
 **0.6.18** (2026-10-01). Kolofon zeszytu (Dziennik Ustaw do 2011 r.). Ostatnia strona zeszytu kończy się informacją
 wydawcy: gdzie kupić egzemplarze, gdzie składać reklamacje, „Wydawca: …”, cena, ISSN; w 2000 r. bywa nad nią lista

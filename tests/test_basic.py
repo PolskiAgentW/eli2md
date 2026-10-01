@@ -495,6 +495,13 @@ class Basic(unittest.TestCase):
                 Line(9, 543, 550, 37, 7, "Egzemplarze bieżące oraz archiwalne można nabywać:"),
                 Line(9, 782, 792, 262, 9, "ISSN 0867-3411")]
         self.assertEqual([l.mark for l in _drop_colophon(body, [])[0]], ["", "image"])
+        # a last page read by OCR: no positions (top 0), the colophon is cut in reading order (DU/2000/48)
+        ocr = [Line(1, 0, 0, 0, 1, t, mark="ocr", act=a) for t, a in (
+            ("48", 48), ("ROZPORZĄDZENIE MINISTRA PRACY", 0), ("Minister Pracy: L. Komołowski", 0),
+            ("Wydawca: Kancelaria Prezesa Rady Ministrów", 0), ("Cena 2 zł 40 gr", 0), ("ISSN 0867-3411", 0))]
+        self.assertEqual([l.text for l in _drop_colophon(ocr, [])[0]],
+                         ["48", "ROZPORZĄDZENIE MINISTRA PRACY", "Minister Pracy: L. Komołowski"])
+        self.assertEqual(len(_drop_colophon(ocr[:4], [])[0]), 4)  # no ISSN: nothing is cut
 
     def test_masthead_end(self):
         for line in ("Poz. 5", "Poz. 1021", "Pozycja 19", ") Poz. 1024*", "Poz. 1024*)"):  # MP/2012/19, MP/2012/1024

@@ -1,0 +1,115 @@
+{
+ "date": "2026-10-01",
+ "script": "eval/colophon_ocr_check.py",
+ "index": "dziennik-ustaw-2000-2011-md index.csv (Dz.U. 2000-2007), 2026-10-01 17:40",
+ "acts_with_ocr_pages": 2463,
+ "last_page_without_text_layer": 300,
+ "last_page_colophon_and_issn": 15,
+ "acts": [
+  {
+   "eli": "DU/2000/4",
+   "published_words": 565,
+   "published_converter": "eli2md 0.6.16",
+   "words_without_fix": 565,
+   "words_0.6.19": 722
+  },
+  {
+   "eli": "DU/2000/48",
+   "published_words": 0,
+   "published_converter": "eli2md 0.6.16",
+   "words_without_fix": 0,
+   "words_0.6.19": 178
+  },
+  {
+   "eli": "DU/2000/84",
+   "published_words": 265,
+   "published_converter": "eli2md 0.6.16",
+   "words_without_fix": 265,
+   "words_0.6.19": 395
+  },
+  {
+   "eli": "DU/2000/135",
+   "published_words": 160,
+   "published_converter": "eli2md 0.6.16",
+   "words_without_fix": 160,
+   "words_0.6.19": 552
+  },
+  {
+   "eli": "DU/2000/175",
+   "published_words": 954,
+   "published_converter": "eli2md 0.6.16",
+   "words_without_fix": 641,
+   "words_0.6.19": 731
+  },
+  {
+   "eli": "DU/2000/481",
+   "published_words": 14482,
+   "published_converter": "eli2md 0.6.16",
+   "words_without_fix": 14482,
+   "words_0.6.19": 14657
+  },
+  {
+   "eli": "DU/2000/620",
+   "published_words": 282,
+   "published_converter": "eli2md 0.6.16",
+   "words_without_fix": 282,
+   "words_0.6.19": 382
+  },
+  {
+   "eli": "DU/2000/680",
+   "published_words": 42692,
+   "published_converter": "eli2md 0.6.17",
+   "words_without_fix": 42692,
+   "words_0.6.19": 42761
+  },
+  {
+   "eli": "DU/2000/681",
+   "published_words": 0,
+   "published_converter": "eli2md 0.6.17",
+   "words_without_fix": 0,
+   "words_0.6.19": 82
+  },
+  {
+   "eli": "DU/2000/682",
+   "published_words": 0,
+   "published_converter": "eli2md 0.6.17",
+   "words_without_fix": 0,
+   "words_0.6.19": 141
+  },
+  {
+   "eli": "DU/2000/786",
+   "published_words": 0,
+   "published_converter": "eli2md 0.6.17",
+   "words_without_fix": 0,
+   "words_0.6.19": 282
+  },
+  {
+   "eli": "DU/2000/866",
+   "published_words": 1357,
+   "published_converter": "eli2md 0.6.17",
+   "words_without_fix": 1357,
+   "words_0.6.19": 1506
+  },
+  {
+   "eli": "DU/2000/886",
+   "published_words": 0,
+   "published_converter": "eli2md 0.6.17",
+   "words_without_fix": 0,
+   "words_0.6.19": 644
+  },
+  {
+   "eli": "DU/2000/967",
+   "published_words": 226,
+   "published_converter": "eli2md 0.6.17",
+   "words_without_fix": 226,
+   "words_0.6.19": 274
+  },
+  {
+   "eli": "DU/2000/1036",
+   "published_words": 901,
+   "published_converter": "eli2md 0.6.17",
+   "words_without_fix": 901,
+   "words_0.6.19": 1328
+  }
+ ]
+}
