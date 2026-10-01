@@ -22,6 +22,11 @@ Narzędzia budujące na tekście HTML (np. [legalize-pl](https://github.com/lega
 nie obejmują więc aktów od 2025 r. eli2md ma tę lukę wypełnić: z PDF-a robi tekst,
 w którym artykuły, ustępy i punkty są w osobnych akapitach, a przypisy są przypisami.
 
+W PDF-ach z lat 2000–2009 ogólne narzędzia (pdftotext, pdfplumber, pypdf, PyMuPDF, opendataloader-pdf) psują
+polskie litery („Si∏ Zbrojnych”, „u˝ytkowej”), mieszają łamy i biorą sąsiednie akty z tej samej strony. Na 53 aktach
+z HTML odczytują we właściwej kolejności 23–46% słów oficjalnego tekstu, eli2md 99,3%
+([pomiar i tabela naprawiająca same litery](eval/extractors_2000_2009_s5207.md)).
+
 ## Gotowe dane
 
 Przekonwertowane tym narzędziem, z indeksem i opisem jakości:
