@@ -1,0 +1,3241 @@
+[
+ {
+  "year": 2001,
+  "pos": 459,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 4512,
+    "hyp": 5413,
+    "aligned": 1711,
+    "bag": 3234
+   },
+   "pypdf": {
+    "ref": 4512,
+    "hyp": 5579,
+    "aligned": 3347,
+    "bag": 3475
+   },
+   "pymupdf": {
+    "ref": 4512,
+    "hyp": 5698,
+    "aligned": 3540,
+    "bag": 3552
+   },
+   "opendataloader": {
+    "ref": 4512,
+    "hyp": 5425,
+    "aligned": 2131,
+    "bag": 3688
+   },
+   "pdfplumber+table": {
+    "ref": 4512,
+    "hyp": 4960,
+    "aligned": 2061,
+    "bag": 3877
+   },
+   "pypdf+table": {
+    "ref": 4512,
+    "hyp": 5127,
+    "aligned": 4069,
+    "bag": 4164
+   },
+   "pymupdf+table": {
+    "ref": 4512,
+    "hyp": 5248,
+    "aligned": 4275,
+    "bag": 4290
+   },
+   "opendataloader+table": {
+    "ref": 4512,
+    "hyp": 4963,
+    "aligned": 2710,
+    "bag": 4508
+   },
+   "eli2md": {
+    "ref": 4512,
+    "hyp": 4517,
+    "aligned": 4512,
+    "bag": 4512
+   }
+  }
+ },
+ {
+  "year": 2003,
+  "pos": 148,
+  "type": "Obwieszczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 33307,
+    "hyp": 37207,
+    "aligned": 3987,
+    "bag": 21936
+   },
+   "pypdf": {
+    "ref": 33307,
+    "hyp": 35906,
+    "aligned": 16913,
+    "bag": 19778
+   },
+   "pymupdf": {
+    "ref": 33307,
+    "hyp": 39275,
+    "aligned": 21931,
+    "bag": 25208
+   },
+   "opendataloader": {
+    "ref": 33307,
+    "hyp": 37268,
+    "aligned": 14459,
+    "bag": 26211
+   },
+   "pdfplumber+table": {
+    "ref": 33307,
+    "hyp": 33979,
+    "aligned": 4373,
+    "bag": 27508
+   },
+   "pypdf+table": {
+    "ref": 33307,
+    "hyp": 32630,
+    "aligned": 22251,
+    "bag": 24994
+   },
+   "pymupdf+table": {
+    "ref": 33307,
+    "hyp": 36111,
+    "aligned": 27919,
+    "bag": 31514
+   },
+   "opendataloader+table": {
+    "ref": 33307,
+    "hyp": 34051,
+    "aligned": 18681,
+    "bag": 33118
+   },
+   "eli2md": {
+    "ref": 33307,
+    "hyp": 33216,
+    "aligned": 33142,
+    "bag": 33184
+   }
+  }
+ },
+ {
+  "year": 2004,
+  "pos": 1137,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 104,
+    "hyp": 534,
+    "aligned": 61,
+    "bag": 79
+   },
+   "pypdf": {
+    "ref": 104,
+    "hyp": 530,
+    "aligned": 46,
+    "bag": 73
+   },
+   "pymupdf": {
+    "ref": 104,
+    "hyp": 545,
+    "aligned": 79,
+    "bag": 79
+   },
+   "opendataloader": {
+    "ref": 104,
+    "hyp": 524,
+    "aligned": 81,
+    "bag": 81
+   },
+   "pdfplumber+table": {
+    "ref": 104,
+    "hyp": 504,
+    "aligned": 79,
+    "bag": 100
+   },
+   "pypdf+table": {
+    "ref": 104,
+    "hyp": 500,
+    "aligned": 56,
+    "bag": 93
+   },
+   "pymupdf+table": {
+    "ref": 104,
+    "hyp": 515,
+    "aligned": 100,
+    "bag": 100
+   },
+   "opendataloader+table": {
+    "ref": 104,
+    "hyp": 494,
+    "aligned": 103,
+    "bag": 103
+   },
+   "eli2md": {
+    "ref": 104,
+    "hyp": 109,
+    "aligned": 104,
+    "bag": 104
+   }
+  }
+ },
+ {
+  "year": 2007,
+  "pos": 721,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 275,
+    "hyp": 991,
+    "aligned": 124,
+    "bag": 235
+   },
+   "pypdf": {
+    "ref": 275,
+    "hyp": 1026,
+    "aligned": 238,
+    "bag": 241
+   },
+   "pymupdf": {
+    "ref": 275,
+    "hyp": 1021,
+    "aligned": 240,
+    "bag": 242
+   },
+   "opendataloader": {
+    "ref": 275,
+    "hyp": 1008,
+    "aligned": 165,
+    "bag": 247
+   },
+   "pdfplumber+table": {
+    "ref": 275,
+    "hyp": 932,
+    "aligned": 150,
+    "bag": 259
+   },
+   "pypdf+table": {
+    "ref": 275,
+    "hyp": 968,
+    "aligned": 264,
+    "bag": 267
+   },
+   "pymupdf+table": {
+    "ref": 275,
+    "hyp": 963,
+    "aligned": 266,
+    "bag": 268
+   },
+   "opendataloader+table": {
+    "ref": 275,
+    "hyp": 947,
+    "aligned": 152,
+    "bag": 275
+   },
+   "eli2md": {
+    "ref": 275,
+    "hyp": 291,
+    "aligned": 266,
+    "bag": 275
+   }
+  }
+ },
+ {
+  "year": 2000,
+  "pos": 438,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 253,
+    "hyp": 412,
+    "aligned": 101,
+    "bag": 202
+   },
+   "pypdf": {
+    "ref": 253,
+    "hyp": 422,
+    "aligned": 209,
+    "bag": 215
+   },
+   "pymupdf": {
+    "ref": 253,
+    "hyp": 434,
+    "aligned": 219,
+    "bag": 220
+   },
+   "opendataloader": {
+    "ref": 253,
+    "hyp": 434,
+    "aligned": 128,
+    "bag": 221
+   },
+   "pdfplumber+table": {
+    "ref": 253,
+    "hyp": 388,
+    "aligned": 117,
+    "bag": 225
+   },
+   "pypdf+table": {
+    "ref": 253,
+    "hyp": 398,
+    "aligned": 236,
+    "bag": 240
+   },
+   "pymupdf+table": {
+    "ref": 253,
+    "hyp": 410,
+    "aligned": 246,
+    "bag": 247
+   },
+   "opendataloader+table": {
+    "ref": 253,
+    "hyp": 410,
+    "aligned": 151,
+    "bag": 251
+   },
+   "eli2md": {
+    "ref": 253,
+    "hyp": 275,
+    "aligned": 252,
+    "bag": 252
+   }
+  }
+ },
+ {
+  "year": 2003,
+  "pos": 1066,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 102,
+    "hyp": 389,
+    "aligned": 67,
+    "bag": 75
+   },
+   "pypdf": {
+    "ref": 102,
+    "hyp": 381,
+    "aligned": 29,
+    "bag": 74
+   },
+   "pymupdf": {
+    "ref": 102,
+    "hyp": 417,
+    "aligned": 36,
+    "bag": 81
+   },
+   "opendataloader": {
+    "ref": 102,
+    "hyp": 410,
+    "aligned": 46,
+    "bag": 82
+   },
+   "pdfplumber+table": {
+    "ref": 102,
+    "hyp": 372,
+    "aligned": 87,
+    "bag": 95
+   },
+   "pypdf+table": {
+    "ref": 102,
+    "hyp": 361,
+    "aligned": 73,
+    "bag": 89
+   },
+   "pymupdf+table": {
+    "ref": 102,
+    "hyp": 400,
+    "aligned": 83,
+    "bag": 101
+   },
+   "opendataloader+table": {
+    "ref": 102,
+    "hyp": 393,
+    "aligned": 56,
+    "bag": 102
+   },
+   "eli2md": {
+    "ref": 102,
+    "hyp": 107,
+    "aligned": 102,
+    "bag": 102
+   }
+  }
+ },
+ {
+  "year": 2009,
+  "pos": 975,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 7850,
+    "hyp": 8507,
+    "aligned": 2383,
+    "bag": 5350
+   },
+   "pypdf": {
+    "ref": 7850,
+    "hyp": 8971,
+    "aligned": 5502,
+    "bag": 6188
+   },
+   "pymupdf": {
+    "ref": 7850,
+    "hyp": 8981,
+    "aligned": 5502,
+    "bag": 6188
+   },
+   "opendataloader": {
+    "ref": 7850,
+    "hyp": 8516,
+    "aligned": 3725,
+    "bag": 6438
+   },
+   "pdfplumber+table": {
+    "ref": 7850,
+    "hyp": 7940,
+    "aligned": 2943,
+    "bag": 6468
+   },
+   "pypdf+table": {
+    "ref": 7850,
+    "hyp": 8409,
+    "aligned": 6892,
+    "bag": 7425
+   },
+   "pymupdf+table": {
+    "ref": 7850,
+    "hyp": 8419,
+    "aligned": 6892,
+    "bag": 7425
+   },
+   "opendataloader+table": {
+    "ref": 7850,
+    "hyp": 7939,
+    "aligned": 4730,
+    "bag": 7811
+   },
+   "eli2md": {
+    "ref": 7850,
+    "hyp": 7849,
+    "aligned": 7843,
+    "bag": 7843
+   }
+  }
+ },
+ {
+  "year": 2004,
+  "pos": 1803,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 66,
+    "hyp": 615,
+    "aligned": 45,
+    "bag": 53
+   },
+   "pypdf": {
+    "ref": 66,
+    "hyp": 643,
+    "aligned": 52,
+    "bag": 53
+   },
+   "pymupdf": {
+    "ref": 66,
+    "hyp": 643,
+    "aligned": 52,
+    "bag": 53
+   },
+   "opendataloader": {
+    "ref": 66,
+    "hyp": 633,
+    "aligned": 54,
+    "bag": 54
+   },
+   "pdfplumber+table": {
+    "ref": 66,
+    "hyp": 587,
+    "aligned": 46,
+    "bag": 65
+   },
+   "pypdf+table": {
+    "ref": 66,
+    "hyp": 616,
+    "aligned": 64,
+    "bag": 65
+   },
+   "pymupdf+table": {
+    "ref": 66,
+    "hyp": 616,
+    "aligned": 64,
+    "bag": 65
+   },
+   "opendataloader+table": {
+    "ref": 66,
+    "hyp": 606,
+    "aligned": 66,
+    "bag": 66
+   },
+   "eli2md": {
+    "ref": 66,
+    "hyp": 71,
+    "aligned": 66,
+    "bag": 66
+   }
+  }
+ },
+ {
+  "year": 2009,
+  "pos": 700,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 10033,
+    "hyp": 10829,
+    "aligned": 1623,
+    "bag": 7089
+   },
+   "pypdf": {
+    "ref": 10033,
+    "hyp": 11428,
+    "aligned": 1762,
+    "bag": 8124
+   },
+   "pymupdf": {
+    "ref": 10033,
+    "hyp": 11437,
+    "aligned": 1761,
+    "bag": 8124
+   },
+   "opendataloader": {
+    "ref": 10033,
+    "hyp": 10878,
+    "aligned": 1842,
+    "bag": 8445
+   },
+   "pdfplumber+table": {
+    "ref": 10033,
+    "hyp": 10125,
+    "aligned": 1681,
+    "bag": 8279
+   },
+   "pypdf+table": {
+    "ref": 10033,
+    "hyp": 10725,
+    "aligned": 2222,
+    "bag": 9520
+   },
+   "pymupdf+table": {
+    "ref": 10033,
+    "hyp": 10734,
+    "aligned": 2220,
+    "bag": 9519
+   },
+   "opendataloader+table": {
+    "ref": 10033,
+    "hyp": 10157,
+    "aligned": 2516,
+    "bag": 9988
+   },
+   "eli2md": {
+    "ref": 10033,
+    "hyp": 10020,
+    "aligned": 10002,
+    "bag": 10002
+   }
+  }
+ },
+ {
+  "year": 2003,
+  "pos": 1758,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 320,
+    "hyp": 556,
+    "aligned": 133,
+    "bag": 233
+   },
+   "pypdf": {
+    "ref": 320,
+    "hyp": 563,
+    "aligned": 217,
+    "bag": 233
+   },
+   "pymupdf": {
+    "ref": 320,
+    "hyp": 575,
+    "aligned": 223,
+    "bag": 235
+   },
+   "opendataloader": {
+    "ref": 320,
+    "hyp": 556,
+    "aligned": 156,
+    "bag": 242
+   },
+   "pdfplumber+table": {
+    "ref": 320,
+    "hyp": 523,
+    "aligned": 164,
+    "bag": 297
+   },
+   "pypdf+table": {
+    "ref": 320,
+    "hyp": 530,
+    "aligned": 280,
+    "bag": 297
+   },
+   "pymupdf+table": {
+    "ref": 320,
+    "hyp": 542,
+    "aligned": 286,
+    "bag": 299
+   },
+   "opendataloader+table": {
+    "ref": 320,
+    "hyp": 522,
+    "aligned": 181,
+    "bag": 316
+   },
+   "eli2md": {
+    "ref": 320,
+    "hyp": 325,
+    "aligned": 320,
+    "bag": 320
+   }
+  }
+ },
+ {
+  "year": 2009,
+  "pos": 1332,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 219,
+    "hyp": 232,
+    "aligned": 105,
+    "bag": 151
+   },
+   "pypdf": {
+    "ref": 219,
+    "hyp": 252,
+    "aligned": 163,
+    "bag": 184
+   },
+   "pymupdf": {
+    "ref": 219,
+    "hyp": 270,
+    "aligned": 163,
+    "bag": 184
+   },
+   "opendataloader": {
+    "ref": 219,
+    "hyp": 246,
+    "aligned": 167,
+    "bag": 187
+   },
+   "pdfplumber+table": {
+    "ref": 219,
+    "hyp": 220,
+    "aligned": 114,
+    "bag": 174
+   },
+   "pypdf+table": {
+    "ref": 219,
+    "hyp": 240,
+    "aligned": 92,
+    "bag": 212
+   },
+   "pymupdf+table": {
+    "ref": 219,
+    "hyp": 258,
+    "aligned": 92,
+    "bag": 212
+   },
+   "opendataloader+table": {
+    "ref": 219,
+    "hyp": 233,
+    "aligned": 192,
+    "bag": 219
+   },
+   "eli2md": {
+    "ref": 219,
+    "hyp": 223,
+    "aligned": 218,
+    "bag": 218
+   }
+  }
+ },
+ {
+  "year": 2000,
+  "pos": 177,
+  "type": "Ustawa",
+  "skipped": "page_without_text_layer"
+ },
+ {
+  "year": 2003,
+  "pos": 374,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 70,
+    "hyp": 587,
+    "aligned": 43,
+    "bag": 54
+   },
+   "pypdf": {
+    "ref": 70,
+    "hyp": 590,
+    "aligned": 29,
+    "bag": 54
+   },
+   "pymupdf": {
+    "ref": 70,
+    "hyp": 616,
+    "aligned": 32,
+    "bag": 58
+   },
+   "opendataloader": {
+    "ref": 70,
+    "hyp": 594,
+    "aligned": 35,
+    "bag": 60
+   },
+   "pdfplumber+table": {
+    "ref": 70,
+    "hyp": 553,
+    "aligned": 40,
+    "bag": 63
+   },
+   "pypdf+table": {
+    "ref": 70,
+    "hyp": 556,
+    "aligned": 45,
+    "bag": 63
+   },
+   "pymupdf+table": {
+    "ref": 70,
+    "hyp": 582,
+    "aligned": 27,
+    "bag": 67
+   },
+   "opendataloader+table": {
+    "ref": 70,
+    "hyp": 560,
+    "aligned": 40,
+    "bag": 70
+   },
+   "eli2md": {
+    "ref": 70,
+    "hyp": 75,
+    "aligned": 70,
+    "bag": 70
+   }
+  }
+ },
+ {
+  "year": 2005,
+  "pos": 2020,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 783,
+    "hyp": 1144,
+    "aligned": 369,
+    "bag": 679
+   },
+   "pypdf": {
+    "ref": 783,
+    "hyp": 1175,
+    "aligned": 691,
+    "bag": 699
+   },
+   "pymupdf": {
+    "ref": 783,
+    "hyp": 1172,
+    "aligned": 692,
+    "bag": 700
+   },
+   "opendataloader": {
+    "ref": 783,
+    "hyp": 1160,
+    "aligned": 399,
+    "bag": 715
+   },
+   "pdfplumber+table": {
+    "ref": 783,
+    "hyp": 1077,
+    "aligned": 411,
+    "bag": 728
+   },
+   "pypdf+table": {
+    "ref": 783,
+    "hyp": 1108,
+    "aligned": 746,
+    "bag": 755
+   },
+   "pymupdf+table": {
+    "ref": 783,
+    "hyp": 1105,
+    "aligned": 747,
+    "bag": 756
+   },
+   "opendataloader+table": {
+    "ref": 783,
+    "hyp": 1093,
+    "aligned": 575,
+    "bag": 780
+   },
+   "eli2md": {
+    "ref": 783,
+    "hyp": 799,
+    "aligned": 782,
+    "bag": 782
+   }
+  }
+ },
+ {
+  "year": 2005,
+  "pos": 1495,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 14655,
+    "hyp": 17049,
+    "aligned": 4806,
+    "bag": 10525
+   },
+   "pypdf": {
+    "ref": 14655,
+    "hyp": 17566,
+    "aligned": 2119,
+    "bag": 11174
+   },
+   "pymupdf": {
+    "ref": 14655,
+    "hyp": 17568,
+    "aligned": 2119,
+    "bag": 11174
+   },
+   "opendataloader": {
+    "ref": 14655,
+    "hyp": 16939,
+    "aligned": 2117,
+    "bag": 11537
+   },
+   "pdfplumber+table": {
+    "ref": 14655,
+    "hyp": 15396,
+    "aligned": 6586,
+    "bag": 13279
+   },
+   "pypdf+table": {
+    "ref": 14655,
+    "hyp": 15916,
+    "aligned": 1912,
+    "bag": 14062
+   },
+   "pymupdf+table": {
+    "ref": 14655,
+    "hyp": 15918,
+    "aligned": 1912,
+    "bag": 14063
+   },
+   "opendataloader+table": {
+    "ref": 14655,
+    "hyp": 15257,
+    "aligned": 2279,
+    "bag": 14611
+   },
+   "eli2md": {
+    "ref": 14655,
+    "hyp": 14728,
+    "aligned": 14632,
+    "bag": 14635
+   }
+  }
+ },
+ {
+  "year": 2007,
+  "pos": 418,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 198,
+    "hyp": 298,
+    "aligned": 76,
+    "bag": 157
+   },
+   "pypdf": {
+    "ref": 198,
+    "hyp": 304,
+    "aligned": 157,
+    "bag": 165
+   },
+   "pymupdf": {
+    "ref": 198,
+    "hyp": 303,
+    "aligned": 155,
+    "bag": 163
+   },
+   "opendataloader": {
+    "ref": 198,
+    "hyp": 300,
+    "aligned": 106,
+    "bag": 169
+   },
+   "pdfplumber+table": {
+    "ref": 198,
+    "hyp": 280,
+    "aligned": 91,
+    "bag": 178
+   },
+   "pypdf+table": {
+    "ref": 198,
+    "hyp": 286,
+    "aligned": 179,
+    "bag": 188
+   },
+   "pymupdf+table": {
+    "ref": 198,
+    "hyp": 285,
+    "aligned": 177,
+    "bag": 186
+   },
+   "opendataloader+table": {
+    "ref": 198,
+    "hyp": 281,
+    "aligned": 124,
+    "bag": 194
+   },
+   "eli2md": {
+    "ref": 198,
+    "hyp": 215,
+    "aligned": 193,
+    "bag": 196
+   }
+  }
+ },
+ {
+  "year": 2004,
+  "pos": 95,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 3617,
+    "hyp": 4832,
+    "aligned": 1364,
+    "bag": 2610
+   },
+   "pypdf": {
+    "ref": 3617,
+    "hyp": 4917,
+    "aligned": 427,
+    "bag": 2652
+   },
+   "pymupdf": {
+    "ref": 3617,
+    "hyp": 4919,
+    "aligned": 427,
+    "bag": 2654
+   },
+   "opendataloader": {
+    "ref": 3617,
+    "hyp": 4724,
+    "aligned": 384,
+    "bag": 2748
+   },
+   "pdfplumber+table": {
+    "ref": 3617,
+    "hyp": 4438,
+    "aligned": 367,
+    "bag": 3392
+   },
+   "pypdf+table": {
+    "ref": 3617,
+    "hyp": 4524,
+    "aligned": 3363,
+    "bag": 3445
+   },
+   "pymupdf+table": {
+    "ref": 3617,
+    "hyp": 4526,
+    "aligned": 3367,
+    "bag": 3447
+   },
+   "opendataloader+table": {
+    "ref": 3617,
+    "hyp": 4321,
+    "aligned": 2223,
+    "bag": 3600
+   },
+   "eli2md": {
+    "ref": 3617,
+    "hyp": 3620,
+    "aligned": 3615,
+    "bag": 3615
+   }
+  }
+ },
+ {
+  "year": 2002,
+  "pos": 694,
+  "type": "Obwieszczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 38271,
+    "hyp": 44918,
+    "aligned": 8852,
+    "bag": 24358
+   },
+   "pypdf": {
+    "ref": 38271,
+    "hyp": 44356,
+    "aligned": 21184,
+    "bag": 24434
+   },
+   "pymupdf": {
+    "ref": 38271,
+    "hyp": 49466,
+    "aligned": 5349,
+    "bag": 27249
+   },
+   "opendataloader": {
+    "ref": 38271,
+    "hyp": 47134,
+    "aligned": 4254,
+    "bag": 28358
+   },
+   "pdfplumber+table": {
+    "ref": 38271,
+    "hyp": 40159,
+    "aligned": 3249,
+    "bag": 32213
+   },
+   "pypdf+table": {
+    "ref": 38271,
+    "hyp": 39504,
+    "aligned": 29288,
+    "bag": 32294
+   },
+   "pymupdf+table": {
+    "ref": 38271,
+    "hyp": 44875,
+    "aligned": 31857,
+    "bag": 35828
+   },
+   "opendataloader+table": {
+    "ref": 38271,
+    "hyp": 42509,
+    "aligned": 22944,
+    "bag": 37681
+   },
+   "eli2md": {
+    "ref": 38271,
+    "hyp": 41567,
+    "aligned": 37505,
+    "bag": 37655
+   }
+  }
+ },
+ {
+  "year": 2005,
+  "pos": 1993,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 169,
+    "hyp": 654,
+    "aligned": 65,
+    "bag": 147
+   },
+   "pypdf": {
+    "ref": 169,
+    "hyp": 675,
+    "aligned": 142,
+    "bag": 150
+   },
+   "pymupdf": {
+    "ref": 169,
+    "hyp": 695,
+    "aligned": 151,
+    "bag": 151
+   },
+   "opendataloader": {
+    "ref": 169,
+    "hyp": 677,
+    "aligned": 102,
+    "bag": 153
+   },
+   "pdfplumber+table": {
+    "ref": 169,
+    "hyp": 616,
+    "aligned": 76,
+    "bag": 162
+   },
+   "pypdf+table": {
+    "ref": 169,
+    "hyp": 638,
+    "aligned": 156,
+    "bag": 165
+   },
+   "pymupdf+table": {
+    "ref": 169,
+    "hyp": 658,
+    "aligned": 167,
+    "bag": 167
+   },
+   "opendataloader+table": {
+    "ref": 169,
+    "hyp": 639,
+    "aligned": 113,
+    "bag": 169
+   },
+   "eli2md": {
+    "ref": 169,
+    "hyp": 186,
+    "aligned": 165,
+    "bag": 168
+   }
+  }
+ },
+ {
+  "year": 2002,
+  "pos": 1069,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 6309,
+    "hyp": 7579,
+    "aligned": 2186,
+    "bag": 4184
+   },
+   "pypdf": {
+    "ref": 6309,
+    "hyp": 7800,
+    "aligned": 4343,
+    "bag": 4546
+   },
+   "pymupdf": {
+    "ref": 6309,
+    "hyp": 8014,
+    "aligned": 4704,
+    "bag": 4764
+   },
+   "opendataloader": {
+    "ref": 6309,
+    "hyp": 7612,
+    "aligned": 3097,
+    "bag": 4937
+   },
+   "pdfplumber+table": {
+    "ref": 6309,
+    "hyp": 6932,
+    "aligned": 2801,
+    "bag": 5283
+   },
+   "pypdf+table": {
+    "ref": 6309,
+    "hyp": 7153,
+    "aligned": 5539,
+    "bag": 5677
+   },
+   "pymupdf+table": {
+    "ref": 6309,
+    "hyp": 7369,
+    "aligned": 5942,
+    "bag": 5984
+   },
+   "opendataloader+table": {
+    "ref": 6309,
+    "hyp": 6953,
+    "aligned": 3972,
+    "bag": 6275
+   },
+   "eli2md": {
+    "ref": 6309,
+    "hyp": 6343,
+    "aligned": 6271,
+    "bag": 6303
+   }
+  }
+ },
+ {
+  "year": 2003,
+  "pos": 1186,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 230,
+    "hyp": 453,
+    "aligned": 115,
+    "bag": 161
+   },
+   "pypdf": {
+    "ref": 230,
+    "hyp": 457,
+    "aligned": 78,
+    "bag": 162
+   },
+   "pymupdf": {
+    "ref": 230,
+    "hyp": 490,
+    "aligned": 95,
+    "bag": 178
+   },
+   "opendataloader": {
+    "ref": 230,
+    "hyp": 475,
+    "aligned": 185,
+    "bag": 185
+   },
+   "pdfplumber+table": {
+    "ref": 230,
+    "hyp": 428,
+    "aligned": 147,
+    "bag": 197
+   },
+   "pypdf+table": {
+    "ref": 230,
+    "hyp": 433,
+    "aligned": 183,
+    "bag": 199
+   },
+   "pymupdf+table": {
+    "ref": 230,
+    "hyp": 466,
+    "aligned": 217,
+    "bag": 220
+   },
+   "opendataloader+table": {
+    "ref": 230,
+    "hyp": 448,
+    "aligned": 229,
+    "bag": 229
+   },
+   "eli2md": {
+    "ref": 230,
+    "hyp": 229,
+    "aligned": 218,
+    "bag": 218
+   }
+  }
+ },
+ {
+  "year": 2002,
+  "pos": 1306,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 426,
+    "hyp": 1427,
+    "aligned": 138,
+    "bag": 373
+   },
+   "pypdf": {
+    "ref": 426,
+    "hyp": 1371,
+    "aligned": 315,
+    "bag": 354
+   },
+   "pymupdf": {
+    "ref": 426,
+    "hyp": 1436,
+    "aligned": 387,
+    "bag": 390
+   },
+   "opendataloader": {
+    "ref": 426,
+    "hyp": 1397,
+    "aligned": 281,
+    "bag": 395
+   },
+   "pdfplumber+table": {
+    "ref": 426,
+    "hyp": 1309,
+    "aligned": 254,
+    "bag": 397
+   },
+   "pypdf+table": {
+    "ref": 426,
+    "hyp": 1252,
+    "aligned": 338,
+    "bag": 376
+   },
+   "pymupdf+table": {
+    "ref": 426,
+    "hyp": 1318,
+    "aligned": 414,
+    "bag": 417
+   },
+   "opendataloader+table": {
+    "ref": 426,
+    "hyp": 1279,
+    "aligned": 309,
+    "bag": 425
+   },
+   "eli2md": {
+    "ref": 426,
+    "hyp": 447,
+    "aligned": 422,
+    "bag": 425
+   }
+  }
+ },
+ {
+  "year": 2005,
+  "pos": 1490,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 7559,
+    "hyp": 8869,
+    "aligned": 1092,
+    "bag": 5362
+   },
+   "pypdf": {
+    "ref": 7559,
+    "hyp": 9178,
+    "aligned": 1248,
+    "bag": 5722
+   },
+   "pymupdf": {
+    "ref": 7559,
+    "hyp": 9176,
+    "aligned": 1248,
+    "bag": 5720
+   },
+   "opendataloader": {
+    "ref": 7559,
+    "hyp": 8609,
+    "aligned": 1249,
+    "bag": 5992
+   },
+   "pdfplumber+table": {
+    "ref": 7559,
+    "hyp": 8174,
+    "aligned": 1127,
+    "bag": 6508
+   },
+   "pypdf+table": {
+    "ref": 7559,
+    "hyp": 8484,
+    "aligned": 1466,
+    "bag": 6965
+   },
+   "pymupdf+table": {
+    "ref": 7559,
+    "hyp": 8482,
+    "aligned": 1466,
+    "bag": 6963
+   },
+   "opendataloader+table": {
+    "ref": 7559,
+    "hyp": 7892,
+    "aligned": 2087,
+    "bag": 7438
+   },
+   "eli2md": {
+    "ref": 7559,
+    "hyp": 7399,
+    "aligned": 7394,
+    "bag": 7394
+   }
+  }
+ },
+ {
+  "year": 2008,
+  "pos": 912,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 90,
+    "hyp": 110,
+    "aligned": 45,
+    "bag": 58
+   },
+   "pypdf": {
+    "ref": 90,
+    "hyp": 116,
+    "aligned": 34,
+    "bag": 70
+   },
+   "pymupdf": {
+    "ref": 90,
+    "hyp": 116,
+    "aligned": 34,
+    "bag": 70
+   },
+   "opendataloader": {
+    "ref": 90,
+    "hyp": 113,
+    "aligned": 73,
+    "bag": 73
+   },
+   "pdfplumber+table": {
+    "ref": 90,
+    "hyp": 101,
+    "aligned": 54,
+    "bag": 71
+   },
+   "pypdf+table": {
+    "ref": 90,
+    "hyp": 108,
+    "aligned": 39,
+    "bag": 85
+   },
+   "pymupdf+table": {
+    "ref": 90,
+    "hyp": 108,
+    "aligned": 39,
+    "bag": 85
+   },
+   "opendataloader+table": {
+    "ref": 90,
+    "hyp": 104,
+    "aligned": 89,
+    "bag": 89
+   },
+   "eli2md": {
+    "ref": 90,
+    "hyp": 95,
+    "aligned": 90,
+    "bag": 90
+   }
+  }
+ },
+ {
+  "year": 2001,
+  "pos": 539,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 2566,
+    "hyp": 3587,
+    "aligned": 895,
+    "bag": 1791
+   },
+   "pypdf": {
+    "ref": 2566,
+    "hyp": 3699,
+    "aligned": 1826,
+    "bag": 1909
+   },
+   "pymupdf": {
+    "ref": 2566,
+    "hyp": 3775,
+    "aligned": 1929,
+    "bag": 1940
+   },
+   "opendataloader": {
+    "ref": 2566,
+    "hyp": 3622,
+    "aligned": 1288,
+    "bag": 2008
+   },
+   "pdfplumber+table": {
+    "ref": 2566,
+    "hyp": 3231,
+    "aligned": 1114,
+    "bag": 2222
+   },
+   "pypdf+table": {
+    "ref": 2566,
+    "hyp": 3344,
+    "aligned": 2315,
+    "bag": 2391
+   },
+   "pymupdf+table": {
+    "ref": 2566,
+    "hyp": 3423,
+    "aligned": 2427,
+    "bag": 2442
+   },
+   "opendataloader+table": {
+    "ref": 2566,
+    "hyp": 3263,
+    "aligned": 1578,
+    "bag": 2552
+   },
+   "eli2md": {
+    "ref": 2566,
+    "hyp": 2571,
+    "aligned": 2566,
+    "bag": 2566
+   }
+  }
+ },
+ {
+  "year": 2005,
+  "pos": 1239,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 828,
+    "hyp": 1244,
+    "aligned": 539,
+    "bag": 736
+   },
+   "pypdf": {
+    "ref": 828,
+    "hyp": 1262,
+    "aligned": 558,
+    "bag": 746
+   },
+   "pymupdf": {
+    "ref": 828,
+    "hyp": 1262,
+    "aligned": 558,
+    "bag": 746
+   },
+   "opendataloader": {
+    "ref": 828,
+    "hyp": 1239,
+    "aligned": 558,
+    "bag": 758
+   },
+   "pdfplumber+table": {
+    "ref": 828,
+    "hyp": 1186,
+    "aligned": 545,
+    "bag": 797
+   },
+   "pypdf+table": {
+    "ref": 828,
+    "hyp": 1204,
+    "aligned": 567,
+    "bag": 808
+   },
+   "pymupdf+table": {
+    "ref": 828,
+    "hyp": 1204,
+    "aligned": 567,
+    "bag": 808
+   },
+   "opendataloader+table": {
+    "ref": 828,
+    "hyp": 1178,
+    "aligned": 567,
+    "bag": 823
+   },
+   "eli2md": {
+    "ref": 828,
+    "hyp": 831,
+    "aligned": 826,
+    "bag": 826
+   }
+  }
+ },
+ {
+  "year": 2005,
+  "pos": 2091,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 294,
+    "hyp": 457,
+    "aligned": 188,
+    "bag": 264
+   },
+   "pypdf": {
+    "ref": 294,
+    "hyp": 469,
+    "aligned": 260,
+    "bag": 270
+   },
+   "pymupdf": {
+    "ref": 294,
+    "hyp": 472,
+    "aligned": 262,
+    "bag": 270
+   },
+   "opendataloader": {
+    "ref": 294,
+    "hyp": 466,
+    "aligned": 199,
+    "bag": 272
+   },
+   "pdfplumber+table": {
+    "ref": 294,
+    "hyp": 436,
+    "aligned": 195,
+    "bag": 281
+   },
+   "pypdf+table": {
+    "ref": 294,
+    "hyp": 448,
+    "aligned": 277,
+    "bag": 288
+   },
+   "pymupdf+table": {
+    "ref": 294,
+    "hyp": 451,
+    "aligned": 280,
+    "bag": 289
+   },
+   "opendataloader+table": {
+    "ref": 294,
+    "hyp": 445,
+    "aligned": 211,
+    "bag": 294
+   },
+   "eli2md": {
+    "ref": 294,
+    "hyp": 310,
+    "aligned": 294,
+    "bag": 294
+   }
+  }
+ },
+ {
+  "year": 2007,
+  "pos": 850,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 3548,
+    "hyp": 4224,
+    "aligned": 291,
+    "bag": 2417
+   },
+   "pypdf": {
+    "ref": 3548,
+    "hyp": 4333,
+    "aligned": 576,
+    "bag": 2525
+   },
+   "pymupdf": {
+    "ref": 3548,
+    "hyp": 4333,
+    "aligned": 576,
+    "bag": 2525
+   },
+   "opendataloader": {
+    "ref": 3548,
+    "hyp": 4145,
+    "aligned": 1420,
+    "bag": 2608
+   },
+   "pdfplumber+table": {
+    "ref": 3548,
+    "hyp": 3821,
+    "aligned": 1426,
+    "bag": 3214
+   },
+   "pypdf+table": {
+    "ref": 3548,
+    "hyp": 3935,
+    "aligned": 645,
+    "bag": 3375
+   },
+   "pymupdf+table": {
+    "ref": 3548,
+    "hyp": 3935,
+    "aligned": 645,
+    "bag": 3375
+   },
+   "opendataloader+table": {
+    "ref": 3548,
+    "hyp": 3741,
+    "aligned": 2375,
+    "bag": 3526
+   },
+   "eli2md": {
+    "ref": 3548,
+    "hyp": 3548,
+    "aligned": 3543,
+    "bag": 3543
+   }
+  }
+ },
+ {
+  "year": 2007,
+  "pos": 720,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 229,
+    "hyp": 433,
+    "aligned": 83,
+    "bag": 175
+   },
+   "pypdf": {
+    "ref": 229,
+    "hyp": 446,
+    "aligned": 179,
+    "bag": 180
+   },
+   "pymupdf": {
+    "ref": 229,
+    "hyp": 445,
+    "aligned": 180,
+    "bag": 181
+   },
+   "opendataloader": {
+    "ref": 229,
+    "hyp": 434,
+    "aligned": 120,
+    "bag": 184
+   },
+   "pdfplumber+table": {
+    "ref": 229,
+    "hyp": 409,
+    "aligned": 84,
+    "bag": 213
+   },
+   "pypdf+table": {
+    "ref": 229,
+    "hyp": 423,
+    "aligned": 219,
+    "bag": 220
+   },
+   "pymupdf+table": {
+    "ref": 229,
+    "hyp": 422,
+    "aligned": 220,
+    "bag": 221
+   },
+   "opendataloader+table": {
+    "ref": 229,
+    "hyp": 408,
+    "aligned": 146,
+    "bag": 228
+   },
+   "eli2md": {
+    "ref": 229,
+    "hyp": 245,
+    "aligned": 228,
+    "bag": 228
+   }
+  }
+ },
+ {
+  "year": 2004,
+  "pos": 870,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 22487,
+    "hyp": 26700,
+    "aligned": 889,
+    "bag": 16613
+   },
+   "pypdf": {
+    "ref": 22487,
+    "hyp": 27011,
+    "aligned": 2301,
+    "bag": 17021
+   },
+   "pymupdf": {
+    "ref": 22487,
+    "hyp": 27230,
+    "aligned": 2355,
+    "bag": 17169
+   },
+   "opendataloader": {
+    "ref": 22487,
+    "hyp": 25491,
+    "aligned": 2227,
+    "bag": 18002
+   },
+   "pdfplumber+table": {
+    "ref": 22487,
+    "hyp": 24595,
+    "aligned": 921,
+    "bag": 20256
+   },
+   "pypdf+table": {
+    "ref": 22487,
+    "hyp": 24910,
+    "aligned": 2374,
+    "bag": 20774
+   },
+   "pymupdf+table": {
+    "ref": 22487,
+    "hyp": 25129,
+    "aligned": 2428,
+    "bag": 21048
+   },
+   "opendataloader+table": {
+    "ref": 22487,
+    "hyp": 23302,
+    "aligned": 6820,
+    "bag": 22468
+   },
+   "eli2md": {
+    "ref": 22487,
+    "hyp": 22636,
+    "aligned": 22456,
+    "bag": 22470
+   }
+  }
+ },
+ {
+  "year": 2000,
+  "pos": 1087,
+  "type": "Obwieszczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 155,
+    "hyp": 601,
+    "aligned": 66,
+    "bag": 127
+   },
+   "pypdf": {
+    "ref": 155,
+    "hyp": 651,
+    "aligned": 132,
+    "bag": 135
+   },
+   "pymupdf": {
+    "ref": 155,
+    "hyp": 651,
+    "aligned": 134,
+    "bag": 135
+   },
+   "opendataloader": {
+    "ref": 155,
+    "hyp": 642,
+    "aligned": 88,
+    "bag": 139
+   },
+   "pdfplumber+table": {
+    "ref": 155,
+    "hyp": 584,
+    "aligned": 77,
+    "bag": 140
+   },
+   "pypdf+table": {
+    "ref": 155,
+    "hyp": 634,
+    "aligned": 146,
+    "bag": 149
+   },
+   "pymupdf+table": {
+    "ref": 155,
+    "hyp": 634,
+    "aligned": 148,
+    "bag": 149
+   },
+   "opendataloader+table": {
+    "ref": 155,
+    "hyp": 624,
+    "aligned": 125,
+    "bag": 155
+   },
+   "eli2md": {
+    "ref": 155,
+    "hyp": 160,
+    "aligned": 155,
+    "bag": 155
+   }
+  }
+ },
+ {
+  "year": 2006,
+  "pos": 1030,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 647,
+    "hyp": 1196,
+    "aligned": 85,
+    "bag": 513
+   },
+   "pypdf": {
+    "ref": 647,
+    "hyp": 1212,
+    "aligned": 96,
+    "bag": 515
+   },
+   "pymupdf": {
+    "ref": 647,
+    "hyp": 1212,
+    "aligned": 96,
+    "bag": 515
+   },
+   "opendataloader": {
+    "ref": 647,
+    "hyp": 1170,
+    "aligned": 96,
+    "bag": 528
+   },
+   "pdfplumber+table": {
+    "ref": 647,
+    "hyp": 1093,
+    "aligned": 92,
+    "bag": 619
+   },
+   "pypdf+table": {
+    "ref": 647,
+    "hyp": 1109,
+    "aligned": 105,
+    "bag": 621
+   },
+   "pymupdf+table": {
+    "ref": 647,
+    "hyp": 1109,
+    "aligned": 105,
+    "bag": 621
+   },
+   "opendataloader+table": {
+    "ref": 647,
+    "hyp": 1066,
+    "aligned": 530,
+    "bag": 646
+   },
+   "eli2md": {
+    "ref": 647,
+    "hyp": 651,
+    "aligned": 646,
+    "bag": 646
+   }
+  }
+ },
+ {
+  "year": 2009,
+  "pos": 119,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 736,
+    "hyp": 835,
+    "aligned": 278,
+    "bag": 499
+   },
+   "pypdf": {
+    "ref": 736,
+    "hyp": 875,
+    "aligned": 466,
+    "bag": 558
+   },
+   "pymupdf": {
+    "ref": 736,
+    "hyp": 875,
+    "aligned": 466,
+    "bag": 558
+   },
+   "opendataloader": {
+    "ref": 736,
+    "hyp": 801,
+    "aligned": 324,
+    "bag": 601
+   },
+   "pdfplumber+table": {
+    "ref": 736,
+    "hyp": 776,
+    "aligned": 322,
+    "bag": 603
+   },
+   "pypdf+table": {
+    "ref": 736,
+    "hyp": 817,
+    "aligned": 564,
+    "bag": 677
+   },
+   "pymupdf+table": {
+    "ref": 736,
+    "hyp": 817,
+    "aligned": 564,
+    "bag": 677
+   },
+   "opendataloader+table": {
+    "ref": 736,
+    "hyp": 743,
+    "aligned": 456,
+    "bag": 736
+   },
+   "eli2md": {
+    "ref": 736,
+    "hyp": 740,
+    "aligned": 735,
+    "bag": 735
+   }
+  }
+ },
+ {
+  "year": 2007,
+  "pos": 273,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 1315,
+    "hyp": 2103,
+    "aligned": 592,
+    "bag": 1060
+   },
+   "pypdf": {
+    "ref": 1315,
+    "hyp": 2183,
+    "aligned": 1075,
+    "bag": 1076
+   },
+   "pymupdf": {
+    "ref": 1315,
+    "hyp": 2183,
+    "aligned": 1075,
+    "bag": 1076
+   },
+   "opendataloader": {
+    "ref": 1315,
+    "hyp": 2105,
+    "aligned": 880,
+    "bag": 1123
+   },
+   "pdfplumber+table": {
+    "ref": 1315,
+    "hyp": 2045,
+    "aligned": 677,
+    "bag": 1235
+   },
+   "pypdf+table": {
+    "ref": 1315,
+    "hyp": 2126,
+    "aligned": 1253,
+    "bag": 1254
+   },
+   "pymupdf+table": {
+    "ref": 1315,
+    "hyp": 2126,
+    "aligned": 1253,
+    "bag": 1254
+   },
+   "opendataloader+table": {
+    "ref": 1315,
+    "hyp": 2046,
+    "aligned": 1083,
+    "bag": 1315
+   },
+   "eli2md": {
+    "ref": 1315,
+    "hyp": 1319,
+    "aligned": 1314,
+    "bag": 1314
+   }
+  }
+ },
+ {
+  "year": 2008,
+  "pos": 1010,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 130,
+    "hyp": 144,
+    "aligned": 54,
+    "bag": 74
+   },
+   "pypdf": {
+    "ref": 130,
+    "hyp": 159,
+    "aligned": 38,
+    "bag": 102
+   },
+   "pymupdf": {
+    "ref": 130,
+    "hyp": 159,
+    "aligned": 38,
+    "bag": 102
+   },
+   "opendataloader": {
+    "ref": 130,
+    "hyp": 154,
+    "aligned": 106,
+    "bag": 106
+   },
+   "pdfplumber+table": {
+    "ref": 130,
+    "hyp": 132,
+    "aligned": 72,
+    "bag": 93
+   },
+   "pypdf+table": {
+    "ref": 130,
+    "hyp": 148,
+    "aligned": 57,
+    "bag": 125
+   },
+   "pymupdf+table": {
+    "ref": 130,
+    "hyp": 148,
+    "aligned": 57,
+    "bag": 125
+   },
+   "opendataloader+table": {
+    "ref": 130,
+    "hyp": 143,
+    "aligned": 130,
+    "bag": 130
+   },
+   "eli2md": {
+    "ref": 130,
+    "hyp": 135,
+    "aligned": 130,
+    "bag": 130
+   }
+  }
+ },
+ {
+  "year": 2001,
+  "pos": 1085,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 14756,
+    "hyp": 16267,
+    "aligned": 3427,
+    "bag": 9665
+   },
+   "pypdf": {
+    "ref": 14756,
+    "hyp": 16333,
+    "aligned": 9242,
+    "bag": 9774
+   },
+   "pymupdf": {
+    "ref": 14756,
+    "hyp": 17184,
+    "aligned": 10945,
+    "bag": 11069
+   },
+   "opendataloader": {
+    "ref": 14756,
+    "hyp": 16244,
+    "aligned": 7666,
+    "bag": 11570
+   },
+   "pdfplumber+table": {
+    "ref": 14756,
+    "hyp": 15034,
+    "aligned": 5725,
+    "bag": 12182
+   },
+   "pypdf+table": {
+    "ref": 14756,
+    "hyp": 15102,
+    "aligned": 12143,
+    "bag": 12305
+   },
+   "pymupdf+table": {
+    "ref": 14756,
+    "hyp": 15972,
+    "aligned": 13747,
+    "bag": 13870
+   },
+   "opendataloader+table": {
+    "ref": 14756,
+    "hyp": 14988,
+    "aligned": 9635,
+    "bag": 14681
+   },
+   "eli2md": {
+    "ref": 14756,
+    "hyp": 14766,
+    "aligned": 14753,
+    "bag": 14755
+   }
+  }
+ },
+ {
+  "year": 2008,
+  "pos": 1180,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 469,
+    "hyp": 494,
+    "aligned": 217,
+    "bag": 336
+   },
+   "pypdf": {
+    "ref": 469,
+    "hyp": 525,
+    "aligned": 376,
+    "bag": 391
+   },
+   "pymupdf": {
+    "ref": 469,
+    "hyp": 525,
+    "aligned": 376,
+    "bag": 391
+   },
+   "opendataloader": {
+    "ref": 469,
+    "hyp": 514,
+    "aligned": 295,
+    "bag": 399
+   },
+   "pdfplumber+table": {
+    "ref": 469,
+    "hyp": 461,
+    "aligned": 245,
+    "bag": 394
+   },
+   "pypdf+table": {
+    "ref": 469,
+    "hyp": 495,
+    "aligned": 439,
+    "bag": 457
+   },
+   "pymupdf+table": {
+    "ref": 469,
+    "hyp": 495,
+    "aligned": 439,
+    "bag": 457
+   },
+   "opendataloader+table": {
+    "ref": 469,
+    "hyp": 484,
+    "aligned": 345,
+    "bag": 468
+   },
+   "eli2md": {
+    "ref": 469,
+    "hyp": 473,
+    "aligned": 468,
+    "bag": 468
+   }
+  }
+ },
+ {
+  "year": 2008,
+  "pos": 1113,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 2905,
+    "hyp": 3229,
+    "aligned": 333,
+    "bag": 1976
+   },
+   "pypdf": {
+    "ref": 2905,
+    "hyp": 3382,
+    "aligned": 522,
+    "bag": 2212
+   },
+   "pymupdf": {
+    "ref": 2905,
+    "hyp": 3381,
+    "aligned": 522,
+    "bag": 2212
+   },
+   "opendataloader": {
+    "ref": 2905,
+    "hyp": 3157,
+    "aligned": 540,
+    "bag": 2359
+   },
+   "pdfplumber+table": {
+    "ref": 2905,
+    "hyp": 2993,
+    "aligned": 364,
+    "bag": 2431
+   },
+   "pypdf+table": {
+    "ref": 2905,
+    "hyp": 3147,
+    "aligned": 608,
+    "bag": 2707
+   },
+   "pymupdf+table": {
+    "ref": 2905,
+    "hyp": 3146,
+    "aligned": 607,
+    "bag": 2707
+   },
+   "opendataloader+table": {
+    "ref": 2905,
+    "hyp": 2915,
+    "aligned": 2288,
+    "bag": 2902
+   },
+   "eli2md": {
+    "ref": 2905,
+    "hyp": 2906,
+    "aligned": 2900,
+    "bag": 2900
+   }
+  }
+ },
+ {
+  "year": 2002,
+  "pos": 731,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 1102,
+    "hyp": 1532,
+    "aligned": 463,
+    "bag": 817
+   },
+   "pypdf": {
+    "ref": 1102,
+    "hyp": 1657,
+    "aligned": 934,
+    "bag": 940
+   },
+   "pymupdf": {
+    "ref": 1102,
+    "hyp": 1658,
+    "aligned": 934,
+    "bag": 940
+   },
+   "opendataloader": {
+    "ref": 1102,
+    "hyp": 1599,
+    "aligned": 780,
+    "bag": 978
+   },
+   "pdfplumber+table": {
+    "ref": 1102,
+    "hyp": 1451,
+    "aligned": 511,
+    "bag": 921
+   },
+   "pypdf+table": {
+    "ref": 1102,
+    "hyp": 1577,
+    "aligned": 1049,
+    "bag": 1056
+   },
+   "pymupdf+table": {
+    "ref": 1102,
+    "hyp": 1578,
+    "aligned": 1049,
+    "bag": 1056
+   },
+   "opendataloader+table": {
+    "ref": 1102,
+    "hyp": 1515,
+    "aligned": 872,
+    "bag": 1102
+   },
+   "eli2md": {
+    "ref": 1102,
+    "hyp": 1107,
+    "aligned": 1102,
+    "bag": 1102
+   }
+  }
+ },
+ {
+  "year": 2009,
+  "pos": 1164,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 1423,
+    "hyp": 1501,
+    "aligned": 482,
+    "bag": 1105
+   },
+   "pypdf": {
+    "ref": 1423,
+    "hyp": 1570,
+    "aligned": 807,
+    "bag": 1233
+   },
+   "pymupdf": {
+    "ref": 1423,
+    "hyp": 1584,
+    "aligned": 807,
+    "bag": 1233
+   },
+   "opendataloader": {
+    "ref": 1423,
+    "hyp": 1502,
+    "aligned": 680,
+    "bag": 1270
+   },
+   "pdfplumber+table": {
+    "ref": 1423,
+    "hyp": 1443,
+    "aligned": 525,
+    "bag": 1223
+   },
+   "pypdf+table": {
+    "ref": 1423,
+    "hyp": 1512,
+    "aligned": 886,
+    "bag": 1368
+   },
+   "pymupdf+table": {
+    "ref": 1423,
+    "hyp": 1526,
+    "aligned": 886,
+    "bag": 1368
+   },
+   "opendataloader+table": {
+    "ref": 1423,
+    "hyp": 1443,
+    "aligned": 1115,
+    "bag": 1423
+   },
+   "eli2md": {
+    "ref": 1423,
+    "hyp": 1422,
+    "aligned": 1417,
+    "bag": 1417
+   }
+  }
+ },
+ {
+  "year": 2006,
+  "pos": 1614,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 425,
+    "hyp": 1145,
+    "aligned": 188,
+    "bag": 350
+   },
+   "pypdf": {
+    "ref": 425,
+    "hyp": 1188,
+    "aligned": 342,
+    "bag": 365
+   },
+   "pymupdf": {
+    "ref": 425,
+    "hyp": 1182,
+    "aligned": 343,
+    "bag": 365
+   },
+   "opendataloader": {
+    "ref": 425,
+    "hyp": 1180,
+    "aligned": 217,
+    "bag": 371
+   },
+   "pdfplumber+table": {
+    "ref": 425,
+    "hyp": 1074,
+    "aligned": 208,
+    "bag": 400
+   },
+   "pypdf+table": {
+    "ref": 425,
+    "hyp": 1117,
+    "aligned": 412,
+    "bag": 415
+   },
+   "pymupdf+table": {
+    "ref": 425,
+    "hyp": 1111,
+    "aligned": 413,
+    "bag": 415
+   },
+   "opendataloader+table": {
+    "ref": 425,
+    "hyp": 1108,
+    "aligned": 278,
+    "bag": 425
+   },
+   "eli2md": {
+    "ref": 425,
+    "hyp": 442,
+    "aligned": 416,
+    "bag": 424
+   }
+  }
+ },
+ {
+  "year": 2006,
+  "pos": 1380,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 304,
+    "hyp": 668,
+    "aligned": 111,
+    "bag": 232
+   },
+   "pypdf": {
+    "ref": 304,
+    "hyp": 704,
+    "aligned": 232,
+    "bag": 244
+   },
+   "pymupdf": {
+    "ref": 304,
+    "hyp": 700,
+    "aligned": 232,
+    "bag": 244
+   },
+   "opendataloader": {
+    "ref": 304,
+    "hyp": 700,
+    "aligned": 159,
+    "bag": 250
+   },
+   "pdfplumber+table": {
+    "ref": 304,
+    "hyp": 611,
+    "aligned": 152,
+    "bag": 277
+   },
+   "pypdf+table": {
+    "ref": 304,
+    "hyp": 647,
+    "aligned": 292,
+    "bag": 293
+   },
+   "pymupdf+table": {
+    "ref": 304,
+    "hyp": 643,
+    "aligned": 292,
+    "bag": 293
+   },
+   "opendataloader+table": {
+    "ref": 304,
+    "hyp": 642,
+    "aligned": 194,
+    "bag": 304
+   },
+   "eli2md": {
+    "ref": 304,
+    "hyp": 321,
+    "aligned": 301,
+    "bag": 304
+   }
+  }
+ },
+ {
+  "year": 2004,
+  "pos": 288,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 5228,
+    "hyp": 6583,
+    "aligned": 1857,
+    "bag": 3687
+   },
+   "pypdf": {
+    "ref": 5228,
+    "hyp": 6667,
+    "aligned": 3587,
+    "bag": 3755
+   },
+   "pymupdf": {
+    "ref": 5228,
+    "hyp": 6717,
+    "aligned": 3664,
+    "bag": 3781
+   },
+   "opendataloader": {
+    "ref": 5228,
+    "hyp": 6380,
+    "aligned": 2502,
+    "bag": 3963
+   },
+   "pdfplumber+table": {
+    "ref": 5228,
+    "hyp": 6004,
+    "aligned": 2405,
+    "bag": 4761
+   },
+   "pypdf+table": {
+    "ref": 5228,
+    "hyp": 6089,
+    "aligned": 4691,
+    "bag": 4881
+   },
+   "pymupdf+table": {
+    "ref": 5228,
+    "hyp": 6140,
+    "aligned": 4782,
+    "bag": 4928
+   },
+   "opendataloader+table": {
+    "ref": 5228,
+    "hyp": 5773,
+    "aligned": 3429,
+    "bag": 5209
+   },
+   "eli2md": {
+    "ref": 5228,
+    "hyp": 5270,
+    "aligned": 5226,
+    "bag": 5226
+   }
+  }
+ },
+ {
+  "year": 2007,
+  "pos": 873,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 7412,
+    "hyp": 8782,
+    "aligned": 1716,
+    "bag": 4837
+   },
+   "pypdf": {
+    "ref": 7412,
+    "hyp": 9015,
+    "aligned": 391,
+    "bag": 5099
+   },
+   "pymupdf": {
+    "ref": 7412,
+    "hyp": 8982,
+    "aligned": 388,
+    "bag": 5036
+   },
+   "opendataloader": {
+    "ref": 7412,
+    "hyp": 8501,
+    "aligned": 326,
+    "bag": 5268
+   },
+   "pdfplumber+table": {
+    "ref": 7412,
+    "hyp": 7699,
+    "aligned": 2958,
+    "bag": 6395
+   },
+   "pypdf+table": {
+    "ref": 7412,
+    "hyp": 7936,
+    "aligned": 6574,
+    "bag": 6808
+   },
+   "pymupdf+table": {
+    "ref": 7412,
+    "hyp": 7903,
+    "aligned": 6510,
+    "bag": 6746
+   },
+   "opendataloader+table": {
+    "ref": 7412,
+    "hyp": 7379,
+    "aligned": 4546,
+    "bag": 7185
+   },
+   "eli2md": {
+    "ref": 7412,
+    "hyp": 7429,
+    "aligned": 7388,
+    "bag": 7393
+   }
+  }
+ },
+ {
+  "year": 2006,
+  "pos": 441,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 157,
+    "hyp": 648,
+    "aligned": 73,
+    "bag": 139
+   },
+   "pypdf": {
+    "ref": 157,
+    "hyp": 667,
+    "aligned": 140,
+    "bag": 141
+   },
+   "pymupdf": {
+    "ref": 157,
+    "hyp": 667,
+    "aligned": 140,
+    "bag": 141
+   },
+   "opendataloader": {
+    "ref": 157,
+    "hyp": 652,
+    "aligned": 112,
+    "bag": 143
+   },
+   "pdfplumber+table": {
+    "ref": 157,
+    "hyp": 605,
+    "aligned": 107,
+    "bag": 149
+   },
+   "pypdf+table": {
+    "ref": 157,
+    "hyp": 626,
+    "aligned": 152,
+    "bag": 153
+   },
+   "pymupdf+table": {
+    "ref": 157,
+    "hyp": 626,
+    "aligned": 152,
+    "bag": 153
+   },
+   "opendataloader+table": {
+    "ref": 157,
+    "hyp": 609,
+    "aligned": 118,
+    "bag": 157
+   },
+   "eli2md": {
+    "ref": 157,
+    "hyp": 162,
+    "aligned": 157,
+    "bag": 157
+   }
+  }
+ },
+ {
+  "year": 2001,
+  "pos": 1150,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 5030,
+    "hyp": 6391,
+    "aligned": 1235,
+    "bag": 3230
+   },
+   "pypdf": {
+    "ref": 5030,
+    "hyp": 6591,
+    "aligned": 3243,
+    "bag": 3553
+   },
+   "pymupdf": {
+    "ref": 5030,
+    "hyp": 6766,
+    "aligned": 3501,
+    "bag": 3678
+   },
+   "opendataloader": {
+    "ref": 5030,
+    "hyp": 6383,
+    "aligned": 2814,
+    "bag": 3859
+   },
+   "pdfplumber+table": {
+    "ref": 5030,
+    "hyp": 5837,
+    "aligned": 2138,
+    "bag": 4180
+   },
+   "pypdf+table": {
+    "ref": 5030,
+    "hyp": 6043,
+    "aligned": 4397,
+    "bag": 4534
+   },
+   "pymupdf+table": {
+    "ref": 5030,
+    "hyp": 6219,
+    "aligned": 4666,
+    "bag": 4707
+   },
+   "opendataloader+table": {
+    "ref": 5030,
+    "hyp": 5823,
+    "aligned": 3725,
+    "bag": 5022
+   },
+   "eli2md": {
+    "ref": 5030,
+    "hyp": 5035,
+    "aligned": 5030,
+    "bag": 5030
+   }
+  }
+ },
+ {
+  "year": 2002,
+  "pos": 448,
+  "type": "Obwieszczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 24481,
+    "hyp": 27430,
+    "aligned": 7527,
+    "bag": 16759
+   },
+   "pypdf": {
+    "ref": 24481,
+    "hyp": 27776,
+    "aligned": 14175,
+    "bag": 17192
+   },
+   "pymupdf": {
+    "ref": 24481,
+    "hyp": 29161,
+    "aligned": 5181,
+    "bag": 19263
+   },
+   "opendataloader": {
+    "ref": 24481,
+    "hyp": 27658,
+    "aligned": 7460,
+    "bag": 20109
+   },
+   "pdfplumber+table": {
+    "ref": 24481,
+    "hyp": 25569,
+    "aligned": 9550,
+    "bag": 20237
+   },
+   "pypdf+table": {
+    "ref": 24481,
+    "hyp": 25920,
+    "aligned": 18139,
+    "bag": 20712
+   },
+   "pymupdf+table": {
+    "ref": 24481,
+    "hyp": 27335,
+    "aligned": 14035,
+    "bag": 23151
+   },
+   "opendataloader+table": {
+    "ref": 24481,
+    "hyp": 25782,
+    "aligned": 13820,
+    "bag": 24309
+   },
+   "eli2md": {
+    "ref": 24481,
+    "hyp": 25269,
+    "aligned": 24263,
+    "bag": 24303
+   }
+  }
+ },
+ {
+  "year": 2009,
+  "pos": 531,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 137,
+    "hyp": 180,
+    "aligned": 78,
+    "bag": 107
+   },
+   "pypdf": {
+    "ref": 137,
+    "hyp": 181,
+    "aligned": 107,
+    "bag": 115
+   },
+   "pymupdf": {
+    "ref": 137,
+    "hyp": 190,
+    "aligned": 108,
+    "bag": 116
+   },
+   "opendataloader": {
+    "ref": 137,
+    "hyp": 173,
+    "aligned": 90,
+    "bag": 121
+   },
+   "pdfplumber+table": {
+    "ref": 137,
+    "hyp": 172,
+    "aligned": 80,
+    "bag": 120
+   },
+   "pypdf+table": {
+    "ref": 137,
+    "hyp": 173,
+    "aligned": 120,
+    "bag": 129
+   },
+   "pymupdf+table": {
+    "ref": 137,
+    "hyp": 182,
+    "aligned": 121,
+    "bag": 130
+   },
+   "opendataloader+table": {
+    "ref": 137,
+    "hyp": 165,
+    "aligned": 91,
+    "bag": 137
+   },
+   "eli2md": {
+    "ref": 137,
+    "hyp": 153,
+    "aligned": 137,
+    "bag": 137
+   }
+  }
+ },
+ {
+  "year": 2007,
+  "pos": 96,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 213,
+    "hyp": 621,
+    "aligned": 122,
+    "bag": 173
+   },
+   "pypdf": {
+    "ref": 213,
+    "hyp": 634,
+    "aligned": 158,
+    "bag": 174
+   },
+   "pymupdf": {
+    "ref": 213,
+    "hyp": 634,
+    "aligned": 158,
+    "bag": 174
+   },
+   "opendataloader": {
+    "ref": 213,
+    "hyp": 619,
+    "aligned": 120,
+    "bag": 174
+   },
+   "pdfplumber+table": {
+    "ref": 213,
+    "hyp": 596,
+    "aligned": 121,
+    "bag": 207
+   },
+   "pypdf+table": {
+    "ref": 213,
+    "hyp": 609,
+    "aligned": 190,
+    "bag": 208
+   },
+   "pymupdf+table": {
+    "ref": 213,
+    "hyp": 609,
+    "aligned": 190,
+    "bag": 208
+   },
+   "opendataloader+table": {
+    "ref": 213,
+    "hyp": 594,
+    "aligned": 139,
+    "bag": 213
+   },
+   "eli2md": {
+    "ref": 213,
+    "hyp": 218,
+    "aligned": 213,
+    "bag": 213
+   }
+  }
+ },
+ {
+  "year": 2003,
+  "pos": 1906,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 137,
+    "hyp": 346,
+    "aligned": 70,
+    "bag": 114
+   },
+   "pypdf": {
+    "ref": 137,
+    "hyp": 356,
+    "aligned": 120,
+    "bag": 120
+   },
+   "pymupdf": {
+    "ref": 137,
+    "hyp": 357,
+    "aligned": 120,
+    "bag": 120
+   },
+   "opendataloader": {
+    "ref": 137,
+    "hyp": 346,
+    "aligned": 96,
+    "bag": 123
+   },
+   "pdfplumber+table": {
+    "ref": 137,
+    "hyp": 323,
+    "aligned": 74,
+    "bag": 125
+   },
+   "pypdf+table": {
+    "ref": 137,
+    "hyp": 333,
+    "aligned": 132,
+    "bag": 132
+   },
+   "pymupdf+table": {
+    "ref": 137,
+    "hyp": 334,
+    "aligned": 132,
+    "bag": 132
+   },
+   "opendataloader+table": {
+    "ref": 137,
+    "hyp": 323,
+    "aligned": 104,
+    "bag": 137
+   },
+   "eli2md": {
+    "ref": 137,
+    "hyp": 153,
+    "aligned": 134,
+    "bag": 137
+   }
+  }
+ },
+ {
+  "year": 2008,
+  "pos": 1095,
+  "type": "Orzeczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 178,
+    "hyp": 494,
+    "aligned": 100,
+    "bag": 158
+   },
+   "pypdf": {
+    "ref": 178,
+    "hyp": 511,
+    "aligned": 161,
+    "bag": 161
+   },
+   "pymupdf": {
+    "ref": 178,
+    "hyp": 507,
+    "aligned": 163,
+    "bag": 163
+   },
+   "opendataloader": {
+    "ref": 178,
+    "hyp": 520,
+    "aligned": 105,
+    "bag": 165
+   },
+   "pdfplumber+table": {
+    "ref": 178,
+    "hyp": 468,
+    "aligned": 103,
+    "bag": 168
+   },
+   "pypdf+table": {
+    "ref": 178,
+    "hyp": 485,
+    "aligned": 174,
+    "bag": 174
+   },
+   "pymupdf+table": {
+    "ref": 178,
+    "hyp": 481,
+    "aligned": 176,
+    "bag": 176
+   },
+   "opendataloader+table": {
+    "ref": 178,
+    "hyp": 494,
+    "aligned": 110,
+    "bag": 178
+   },
+   "eli2md": {
+    "ref": 178,
+    "hyp": 194,
+    "aligned": 178,
+    "bag": 178
+   }
+  }
+ },
+ {
+  "year": 2002,
+  "pos": 370,
+  "type": "Obwieszczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 13644,
+    "hyp": 15742,
+    "aligned": 2725,
+    "bag": 9240
+   },
+   "pypdf": {
+    "ref": 13644,
+    "hyp": 15873,
+    "aligned": 7508,
+    "bag": 9422
+   },
+   "pymupdf": {
+    "ref": 13644,
+    "hyp": 16713,
+    "aligned": 3831,
+    "bag": 10556
+   },
+   "opendataloader": {
+    "ref": 13644,
+    "hyp": 15970,
+    "aligned": 3223,
+    "bag": 10885
+   },
+   "pdfplumber+table": {
+    "ref": 13644,
+    "hyp": 14055,
+    "aligned": 5567,
+    "bag": 11252
+   },
+   "pypdf+table": {
+    "ref": 13644,
+    "hyp": 14186,
+    "aligned": 9853,
+    "bag": 11479
+   },
+   "pymupdf+table": {
+    "ref": 13644,
+    "hyp": 15038,
+    "aligned": 4131,
+    "bag": 12990
+   },
+   "opendataloader+table": {
+    "ref": 13644,
+    "hyp": 14243,
+    "aligned": 3719,
+    "bag": 13533
+   },
+   "eli2md": {
+    "ref": 13644,
+    "hyp": 13551,
+    "aligned": 13522,
+    "bag": 13524
+   }
+  }
+ },
+ {
+  "year": 2001,
+  "pos": 1087,
+  "type": "Ustawa",
+  "scores": {
+   "pdfplumber": {
+    "ref": 1161,
+    "hyp": 2068,
+    "aligned": 419,
+    "bag": 827
+   },
+   "pypdf": {
+    "ref": 1161,
+    "hyp": 2056,
+    "aligned": 767,
+    "bag": 843
+   },
+   "pymupdf": {
+    "ref": 1161,
+    "hyp": 2152,
+    "aligned": 917,
+    "bag": 923
+   },
+   "opendataloader": {
+    "ref": 1161,
+    "hyp": 2067,
+    "aligned": 875,
+    "bag": 957
+   },
+   "pdfplumber+table": {
+    "ref": 1161,
+    "hyp": 1947,
+    "aligned": 503,
+    "bag": 998
+   },
+   "pypdf+table": {
+    "ref": 1161,
+    "hyp": 1935,
+    "aligned": 942,
+    "bag": 1015
+   },
+   "pymupdf+table": {
+    "ref": 1161,
+    "hyp": 2035,
+    "aligned": 1098,
+    "bag": 1106
+   },
+   "opendataloader+table": {
+    "ref": 1161,
+    "hyp": 1946,
+    "aligned": 1053,
+    "bag": 1154
+   },
+   "eli2md": {
+    "ref": 1161,
+    "hyp": 1166,
+    "aligned": 1161,
+    "bag": 1161
+   }
+  }
+ },
+ {
+  "year": 2008,
+  "pos": 848,
+  "type": "Obwieszczenie",
+  "scores": {
+   "pdfplumber": {
+    "ref": 13607,
+    "hyp": 15603,
+    "aligned": 4370,
+    "bag": 9045
+   },
+   "pypdf": {
+    "ref": 13607,
+    "hyp": 16146,
+    "aligned": 8845,
+    "bag": 9726
+   },
+   "pymupdf": {
+    "ref": 13607,
+    "hyp": 16145,
+    "aligned": 8844,
+    "bag": 9725
+   },
+   "opendataloader": {
+    "ref": 13607,
+    "hyp": 15402,
+    "aligned": 5513,
+    "bag": 10075
+   },
+   "pdfplumber+table": {
+    "ref": 13607,
+    "hyp": 14031,
+    "aligned": 5613,
+    "bag": 11846
+   },
+   "pypdf+table": {
+    "ref": 13607,
+    "hyp": 14588,
+    "aligned": 11927,
+    "bag": 12864
+   },
+   "pymupdf+table": {
+    "ref": 13607,
+    "hyp": 14587,
+    "aligned": 11926,
+    "bag": 12863
+   },
+   "opendataloader+table": {
+    "ref": 13607,
+    "hyp": 13798,
+    "aligned": 7226,
+    "bag": 13475
+   },
+   "eli2md": {
+    "ref": 13607,
+    "hyp": 13590,
+    "aligned": 13555,
+    "bag": 13557
+   }
+  }
+ }
+]
