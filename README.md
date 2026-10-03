@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.23**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.24**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -205,6 +205,13 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.24** (2026-10-03). Wycinanie aktu ze strony zeszytu (do 2011 r.) odczytanej przez OCR: numer pozycji zaczyna akt
+także wtedy, gdy między nim a rodzajem aktu stoi numer rejestru („626” + „Rej. 182/2000 POSTANOWIENIE …”, postanowienia
+Prezydenta w M.P.) albo gdy OCR zgubił polskie litery w rodzaju aktu („OSWIADCZENIE RZADOWE”). Do 0.6.23 taki akt nie
+był wycinany: plik miał całe strony, z końcem poprzednich i początkiem następnych aktów (MP/2000/626: 521 słów zamiast
+142). Na 49 aktach z OCR, w których tekście został ich własny numer (29 z M.P., 20 z DU 2000–2011), 0.6.24 wyciął
+23 z M.P. (MP/2000/611–634, MP/2002/122); w DU żaden nie zmienił się przez tę poprawkę.
 
 **0.6.23** (2026-10-03). Strona zeszytu z lat 2000–2011 odczytana przez OCR: z pierwszego akapitu odczytu znika tylko
 nagłówek zeszytu („Dziennik Ustaw Nr 32 — 2018 — Poz. 393”). Do 0.6.22 znikał cały akapit, a tesseract czasem łączy

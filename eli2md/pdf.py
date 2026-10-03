@@ -955,7 +955,14 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
 OCR_ACT_TYPE = (r"(?:ROZPORZĄDZENIE|USTAWA|OBWIESZCZENIE|UCHWAŁA|POSTANOWIENIE|ZARZĄDZENIE|OŚWIADCZENIE|UMOWA"
                 r"|KONWENCJA|PROTOKÓŁ|WYROK|ORZECZENIE|TRAKTAT|POROZUMIENIE|KOMUNIKAT|DEKRET|INFORMACJA|AKT|STATUT"
                 r"|REGULAMIN|ZAŁĄCZNIK)\b")
-OCR_ACT_START = re.compile(rf"^(\d{{1,4}})(?:\s+(?={OCR_ACT_TYPE})|$)")
+# OCR may lose the diacritics ("OSWIADCZENIE RZADOWE", MP/2002/122)
+OCR_ACT_TYPE = "".join({"Ą": "[ĄA]", "Ę": "[ĘE]", "Ł": "[ŁL]", "Ó": "[ÓO]", "Ś": "[ŚS]", "Ż": "[ŻZ]"}.get(c, c)
+                       for c in OCR_ACT_TYPE)
+# M.P.: an act of the President has its register number between the number and the type, on the line of either
+# ("626" + "Rej. 182/2000 POSTANOWIENIE …", "627 Rej. 149/2000" + "POSTANOWIENIE …"; MP/2000/626); also "Rej. 87/00 MPM"
+OCR_REJ = r"Rej\.?\s*\d+/\d{2,4}(?:\s+MPM)?"
+OCR_ACT_START = re.compile(rf"^(\d{{1,4}})(?:\s+(?=(?:{OCR_REJ}\s+)?{OCR_ACT_TYPE})|\s+(?={OCR_REJ}$)|$)")
+OCR_TYPE_NEXT = re.compile(rf"(?:{OCR_REJ}\s*)?{OCR_ACT_TYPE}")
 
 
 def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: int | None) -> list[Line]:
@@ -972,8 +979,9 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
     out = []
     for k, t in enumerate(paragraphs):
         m = OCR_ACT_START.match(t) if position is not None else None
-        if m and not t[m.end():] and not (k + 1 < len(paragraphs) and re.match(OCR_ACT_TYPE, paragraphs[k + 1])):
-            m = None  # a bare number not followed by an act type
+        if m and not OCR_TYPE_NEXT.match(t[m.end():]) and not (k + 1 < len(paragraphs) and OCR_TYPE_NEXT.match(
+                paragraphs[k + 1] if not t[m.end():] else f"{t[m.end():]} {paragraphs[k + 1]}")):
+            m = None  # a bare number (or one with a register number) not followed by an act type
         if m and position <= int(m.group(1)) <= position + ACT_NUMBER_NEXT:
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, m.group(1), pw, ph, mark="ocr", act=int(m.group(1))))
             t = t[m.end():].strip()

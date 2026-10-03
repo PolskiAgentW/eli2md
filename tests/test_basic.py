@@ -724,6 +724,20 @@ class Basic(unittest.TestCase):
                           (0, "§ 1. Tekst."), (0, "57"), (0, "Poz. 56, 57"), (58, "58"), (0, "ROZPORZĄDZENIE M")])
         self.assertEqual([l.text for l in _ocr_lines(paras[1:3], 1, 595, 842, None)], paras[1:3])  # no position: as read
 
+    def test_ocr_act_start_with_register_number(self):
+        # MP/2000/626 p. 1 read by OCR: the President's acts have "Rej. N/YYYY" between their number and type
+        paras = ["511. Zawada Ludwik, 512. Zawada Helena.", "626", "Rej. 182/2000 POSTANOWIENIE PREZYDENTA", "Tekst 626.",
+                 "627 Rej. 149/2000", "POSTANOWIENIE PREZYDENTA", "Tekst 627.", "628 Rej. 87/00 MPM POSTANOWIENIE"]
+        lines = _ocr_lines(paras, 1, 595, 842, 626)
+        self.assertEqual([(l.act, l.text[:13]) for l in lines],
+                         [(0, "511. Zawada L"), (626, "626"), (0, "Rej. 182/2000"), (0, "Tekst 626."), (627, "627"),
+                          (0, "Rej. 149/2000"), (0, "POSTANOWIENIE"), (0, "Tekst 627."), (628, "628"),
+                          (0, "Rej. 87/00 MP")])
+        # a number and a register number not followed by an act type stay text
+        self.assertEqual([l.act for l in _ocr_lines(["627 Rej. 149/2000", "Tekst."], 1, 595, 842, 626)], [0, 0])
+        # OCR without diacritics (MP/2002/122)
+        self.assertEqual([l.act for l in _ocr_lines(["122", "OSWIADCZENIE RZADOWE"], 1, 595, 842, 122)], [122, 0])
+
     def test_ocr_header_joined_with_text(self):
         # MP/2008/470: tesseract read the scan as one paragraph, header first; only the header goes
         paras = ["Monitor Polski Nr 53 — 2020 — Poz. 470 470 POSTANOWIENIE PREZYDENTA RZECZYPOSPOLITEJ POLSKIEJ z dnia "
