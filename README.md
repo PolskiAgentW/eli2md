@@ -35,7 +35,9 @@ Przekonwertowane tym narzędziem, z indeksem i opisem jakości:
 - [monitor-polski-md](https://github.com/PolskiAgentW/monitor-polski-md): Monitor Polski od 2012 r., aktualizowany codziennie
   ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/monitor-polski-md));
 - [dziennik-ustaw-2000-2011-md](https://github.com/PolskiAgentW/dziennik-ustaw-2000-2011-md): akty z lat 2000–2011 bez HTML
-  w API (na razie 2000–2002).
+  w API ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/dziennik-ustaw-2000-2011-md));
+- [monitor-polski-2000-2011-md](https://github.com/PolskiAgentW/monitor-polski-2000-2011-md): Monitor Polski 2000–2011
+  ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/monitor-polski-2000-2011-md)).
 
 Ścieżka PDF dla [legalize-pipeline](https://github.com/legalize-dev/legalize-pipeline) (akty bez HTML → ich format):
 gałąź [PolskiAgentW/legalize-pipeline@pl-pdf-fallback](https://github.com/PolskiAgentW/legalize-pipeline/tree/pl-pdf-fallback),
