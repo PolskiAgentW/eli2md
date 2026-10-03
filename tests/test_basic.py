@@ -724,6 +724,19 @@ class Basic(unittest.TestCase):
                           (0, "§ 1. Tekst."), (0, "57"), (0, "Poz. 56, 57"), (58, "58"), (0, "ROZPORZĄDZENIE M")])
         self.assertEqual([l.text for l in _ocr_lines(paras[1:3], 1, 595, 842, None)], paras[1:3])  # no position: as read
 
+    def test_ocr_header_joined_with_text(self):
+        # MP/2008/470: tesseract read the scan as one paragraph, header first; only the header goes
+        paras = ["Monitor Polski Nr 53 — 2020 — Poz. 470 470 POSTANOWIENIE PREZYDENTA RZECZYPOSPOLITEJ POLSKIEJ z dnia "
+                 "25 czerwca 2008 r."]
+        self.assertEqual([(l.act, l.text[:13]) for l in _ocr_lines(paras, 1, 595, 842, 470)],
+                         [(470, "470"), (0, "POSTANOWIENIE")])
+        # DU/2000/393 p. 126; a header alone, or with a rest without letters, still goes
+        for p, kept in (("Dziennik Ustaw Nr 32 — 2018 — Poz. 393 Objaśnienia do wzoru nr 3", ["Objaśnienia do wzoru nr 3"]),
+                        ("Dziennik Ustaw Nr 150 — 9307 — Poz. 1255, 1256 i 1257", []),
+                        ("Monitor Polski Nr 26 — 1149 —", []), ("Dziennik Ustaw Nr 56 — 2407 — Poz. 392 1", []),
+                        ("Dziennik Ustaw Nr 157 WYPEŁNIAĆ NA MASZYNIE", ["WYPEŁNIAĆ NA MASZYNIE"])):
+            self.assertEqual([l.text for l in _ocr_lines([p, "Tekst."], 1, 595, 842, 393)], kept + ["Tekst."])
+
     def _shared_page(self, header):
         # DU/2005/1369 p. 2: the end of act 1369 in two columns, its footnote under "———" in the left column, then
         # act 1370 from its number (14 pt, centred) with its own footnote at the bottom of the page

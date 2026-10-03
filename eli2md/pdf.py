@@ -82,6 +82,9 @@ IMAGE_TEXT_CHARS = 30  # more text-layer chars than this over an image: the imag
 # — 9307 — Poz. 1255, 1256 i 1257", DU/2005/1255), the first page of an issue has "Nr 115" under the masthead
 # (DU/2002/994). Those years set acts in two columns; from 2012 there are no issues and one column.
 OLD_HEADER = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\s*\d+")
+# The whole header as OCR reads it, page number and positions optional ("Monitor Polski Nr 26 — 1149 —")
+OLD_HEADER_OCR = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\s*\d+(?:\s*[—–-]+\s*\d+)?(?:\s*[—–-]+)?"
+                            r"(?:\s*Poz[.,]?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?")
 OLD_MASTHEAD = re.compile(r"^(?:DZIENNIK\s*USTAW|MONITOR\s*POLSKI)")
 OLD_ISSUE = re.compile(r"^Nr\s*\d+$")
 GUTTER = (6.0, 20.0)  # pt; the gap between the columns is 11.3-12 pt in DU 2000-2011 (DU/2005/1255, DU/2011/1134)
@@ -958,9 +961,14 @@ OCR_ACT_START = re.compile(rf"^(\d{{1,4}})(?:\s+(?={OCR_ACT_TYPE})|$)")
 def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: int | None) -> list[Line]:
     """Lines of a page read by OCR. On a page of an old issue the running header ("Dziennik Ustaw Nr 5 Poz. 55 i 56")
     is dropped, and the number of this act or of one after it becomes a line of its own (act=N), so that _own_act
-    cuts the act out as on pages with a text layer (DU/2000/56: the page held all of act 55 before it)."""
-    if paragraphs and OLD_HEADER.match(paragraphs[0]):
-        paragraphs = paragraphs[1:]
+    cuts the act out as on pages with a text layer (DU/2000/56: the page held all of act 55 before it).
+    Only the header goes: tesseract may join it with the text under it into one paragraph (MP/2008/470: the whole
+    act; DU/2000/393 p. 126: "Objaśnienia do wzoru nr 3 …"), which went with it up to 0.6.22. A rest without
+    letters ("Poz. 392 1") goes too, unless it is the act's number."""
+    if paragraphs and (h := OLD_HEADER_OCR.match(paragraphs[0])):
+        rest = paragraphs[0][h.end():].strip()
+        number = rest.isdigit() and position is not None and position <= int(rest) <= position + ACT_NUMBER_NEXT
+        paragraphs = ([rest] if re.search(r"[^\W\d_]", rest) or number else []) + paragraphs[1:]
     out = []
     for k, t in enumerate(paragraphs):
         m = OCR_ACT_START.match(t) if position is not None else None
