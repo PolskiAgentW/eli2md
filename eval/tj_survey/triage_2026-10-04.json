@@ -1,0 +1,88 @@
+{
+ "uklad": {
+  "articles": 92,
+  "acts": 61,
+  "examples": [
+   "DU/2025/1079 art. 106",
+   "DU/2025/1079 art. 25",
+   "DU/2025/1131 art. 35",
+   "DU/2025/1226 art. 90",
+   "DU/2025/1461 art. 19a"
+  ]
+ },
+ "zakres_artykulow": {
+  "articles": 61,
+  "acts": 57,
+  "examples": [
+   "DU/2025/1354 art. 21",
+   "DU/2025/1490 art. 57",
+   "DU/2025/1577 art. 13",
+   "DU/2025/1584 art. 13",
+   "DU/2025/1591 art. 8"
+  ]
+ },
+ "przypis_w_tresci": {
+  "articles": 47,
+  "acts": 36,
+  "examples": [
+   "DU/2025/1131 art. 2",
+   "DU/2025/1131 art. 279",
+   "DU/2025/1228 art. 151",
+   "DU/2025/1332 art. 23",
+   "DU/2025/1461 art. 2"
+  ]
+ },
+ "inne": {
+  "articles": 35,
+  "acts": 20,
+  "examples": [
+   "DU/2023/1215 art. 29",
+   "DU/2025/1131 art. 118",
+   "DU/2025/1483 art. 243",
+   "DU/2025/195 art. 45",
+   "DU/2025/498 art. 10"
+  ]
+ },
+ "wzor": {
+  "articles": 35,
+  "acts": 15,
+  "examples": [
+   "DU/2025/1483 art. 112aa",
+   "DU/2025/1483 art. 112ab",
+   "DU/2025/1483 art. 112d",
+   "DU/2025/204 art. 14a",
+   "DU/2025/204 art. 4"
+  ]
+ },
+ "indeks_z_litera": {
+  "articles": 8,
+  "acts": 6,
+  "examples": [
+   "DU/2025/1131 art. 22",
+   "DU/2025/1490 art. 54",
+   "DU/2025/1490 art. 54d",
+   "DU/2025/1490 art. 80",
+   "DU/2025/1891 art. 2"
+  ]
+ },
+ "naglowek_w_tresci": {
+  "articles": 4,
+  "acts": 4,
+  "examples": [
+   "DU/2025/1900 art. 93",
+   "DU/2025/911 art. 241",
+   "DU/2026/438 art. 115",
+   "DU/2026/468 art. 1096"
+  ]
+ },
+ "art_z_l": {
+  "articles": 4,
+  "acts": 4,
+  "examples": [
+   "DU/2025/633 art. 106l",
+   "DU/2026/38 art. 48l",
+   "DU/2026/554 art. 16l",
+   "DU/2026/592 art. 22l"
+  ]
+ }
+}
