@@ -62,6 +62,11 @@ POINT_START = re.compile(rf"^„?(\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s)"
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
 ANNEX_UNDER_SIGNATURE = re.compile(r"^„?(?:Załącznik|ZAŁĄCZNIK)")
+# the header of an annex in a paragraph read by OCR, which has no position on the page: "Załącznik do obwieszczenia
+# Ministra … z dnia 27 marca 1997 r. (poz. 224)" (DU/1997/224 p. 2), "ZAŁĄCZNIK Nr 2"; not "Załącznik do ustawy określa …"
+ANNEX_OCR = re.compile(r"^(?:Załącznik|ZAŁĄCZNIK)(?:\s+(?:nr|Nr|NR)\s*\S+)?(?:\s+do\s+(?:ustawy|rozporządzenia|obwieszczenia"
+                       r"|uchwały|zarządzenia|postanowienia|dekretu|umowy|konwencji|protokołu)\b(?!.*\b(?:stanowi|określa|zawiera)\b)"
+                       r"|\s*$)")
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
 DUP_TOL = 0.3  # pt; a char drawn twice repeats within this distance (<= 0.1pt in DU/2025/1095; see _dedupe)
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
@@ -107,7 +112,8 @@ class Line:
     text: str
     pw: float = 595.0
     ph: float = 842.0
-    mark: str = ""  # "notext" | "image": position marker for content that is not text; "ocr": text read by OCR
+    mark: str = ""  # "notext" | "image": position marker for content that is not text; "ocr": text read by OCR;
+    # "scan": a paragraph read by OCR from a scan whose own text layer is unreliable (_hidden_ocr_scan): text, so units
     x1: float = 0.0
     right: float = 0.0  # right edge of justified text in this frame (0 = unknown)
     lead: float = -1.0  # usual gap between lines in this frame (-1 = unknown)
@@ -119,7 +125,7 @@ class Line:
 
 @dataclass
 class Block:
-    kind: str  # "p" | "signature" | "annex" (annex header) | "notext" | "image" | "ocr" (see Line.mark)
+    kind: str  # "p" | "signature" | "annex" (annex header) | "notext" | "image" | "ocr" | "scan" (see Line.mark)
     text: str
     page: int
 
@@ -363,13 +369,14 @@ HIDDEN_OCR_FONT = re.compile(r"Hidden(Horz|Vert)OCR")  # Adobe Acrobat "Paper Ca
 def _hidden_ocr_scan(page) -> bool:
     """A scanned page whose text layer is Acrobat's invisible OCR (Dz.U. 1918-1999, DU/1997/78): an image over most of
     the page and chars in a "HiddenHorzOCR" font. Acrobat sets the words it matched to a font in "Helvetica" or
-    "Times-Roman" and the rest in "HiddenHorzOCR" (DU/1997/78 p. 1: 2491, 663 and 836 chars), all invisible. The layer
+    "Times-Roman" and the rest in "HiddenHorzOCR" (DU/1997/78 p. 1: 2491, 663 and 836 chars; DU/1997/224 p. 3: 447 of
+    5540 in "HiddenHorzOCR"), all invisible; born-digital pages do not use that font. The layer
     puts words in other lines ("zarządza się, następuje:" at the end of DU/1997/78) and has its own misreadings
     ("pOdstawie", "Nr l"), so with OCR the page is read again."""
     chars = page.chars
     if not chars or _large_image(page, min_share=0.8) is None:
         return False
-    return sum(bool(HIDDEN_OCR_FONT.search(c["fontname"])) for c in chars) >= 0.1 * len(chars)
+    return sum(bool(HIDDEN_OCR_FONT.search(c["fontname"])) for c in chars) >= 10
 
 
 def _largest_image_box(page) -> tuple[float, float, float, float] | None:
@@ -838,7 +845,9 @@ def _segment(body: list[Line]) -> list[Block]:
     prev: Line | None = None
     for l in body:
         kind = "p"
-        if l.mark:
+        if l.mark == "scan" and ANNEX_OCR.match(l.text) and len(l.text.split()) <= 40:
+            kind = "annex"
+        elif l.mark:
             kind = l.mark
         elif ANNEX.match(l.text) and (l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph) \
                 or l.old and cur is not None and cur.kind == "signature" and ANNEX_UNDER_SIGNATURE.match(l.text):
@@ -849,7 +858,7 @@ def _segment(body: list[Line]) -> list[Block]:
             kind = "signature"
         if prev is None or cur is None:
             new = True
-        elif kind != "p" or cur.kind in ("signature", "notext", "image", "ocr", "unmapped"):
+        elif kind != "p" or cur.kind in ("signature", "notext", "image", "ocr", "unmapped", "scan"):
             new = not (kind == "annex" and cur.kind == "annex" and l.page == prev.page)
         elif cur.kind == "annex":
             # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
@@ -899,6 +908,7 @@ def _segment(body: list[Line]) -> list[Block]:
 # stand where to buy copies and where to complain (DU/2002/753, DU/2003/2317), in 2000 under a list of the publisher's
 # books with prices ("Informacja o możliwości zakupu wydawnictw", DU/2000/1051 p. 3).
 COLOPHON = re.compile(r"^(?:Wydawca\s*:|Szanowni\s+Państwo(?:!|$)|Egzemplarze\s+bieżące|Reklamacje\s+z\s+powodu\s+niedoręcz"
+                      r"|Pojedyncze\s+egzemplarze\s+Dziennika\s+Ustaw"  # 1990s, over "Egzemplarze bieżące" (DU/1995/68)
                       r"|O\s+wszelkich\s+zmianach\s+nazwy|Dziennik\s+Ustaw\s+i\s+Monitor\s+Polski\s+dostępne"
                       r"|Informacja\s+o\s*możliwości\s+zakupu\s+wydawnictw|Tłoczono\s+z\s+polecenia)")
 ISSN = re.compile(r"\bISSN\s*\d{4}\s*-\s*\d{3}[\dX]\b")
@@ -917,7 +927,7 @@ def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], lis
         return body, notes
     last = max(l.page for l in body + notes)
     lines = [l for l in body + notes if l.page == last]
-    if all(l.mark == "ocr" and l.top == 0 for l in lines):
+    if all(l.mark in ("ocr", "scan") and l.top == 0 for l in lines):
         # a page read by OCR: its lines have no position (top 0), so cut in reading order; by top, everything
         # on the page went (DU/2000/48, a one-page act at the end of its issue, came out empty)
         cut = next((i for i, l in enumerate(body) if l.page == last and COLOPHON.match(l.text)), None)
@@ -988,7 +998,21 @@ OCR_ACT_START = re.compile(rf"^(\d{{1,4}})(?:\s+(?=(?:{OCR_REJ}\s+)?{OCR_ACT_TYP
 OCR_TYPE_NEXT = re.compile(rf"(?:{OCR_REJ}\s*)?{OCR_ACT_TYPE}")
 
 
-def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: int | None) -> list[Line]:
+# "§" read by tesseract as "8", "$" or "S" at a paragraph's start ("8 2. Traci moc", DU/2000/53) and as "$" in the
+# text ("w $ 13 w ust. 1", DU/1997/78); "$" is not a character of Polish acts of those years
+SECTION_START_OCR = re.compile(r"^(?:[8$S5]|§)\s?(\d+[a-z]?\.)(?=\s+\S)")
+SECTION_IN_TEXT_OCR = re.compile(r"\$(?=\s?\d)")
+# and as "8" after a preposition ("1) w 8 1 skreśla się pkt 3", DU/1997/224 p. 1)
+SECTION_AFTER_WORD_OCR = re.compile(r"\b(w|we|z|ze|do|od|na|po|i|oraz|lub|albo|przez)\s8\s(?=\d+[a-z]?\b)")
+
+
+def _fix_section_sign(t: str) -> str:
+    t = SECTION_START_OCR.sub(r"§ \1", t)
+    return SECTION_AFTER_WORD_OCR.sub(r"\1 § ", SECTION_IN_TEXT_OCR.sub("§", t))
+
+
+def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: int | None,
+               mark: str = "ocr") -> list[Line]:
     """Lines of a page read by OCR. On a page of an old issue the running header ("Dziennik Ustaw Nr 5 Poz. 55 i 56")
     is dropped, and the number of this act or of one after it becomes a line of its own (act=N), so that _own_act
     cuts the act out as on pages with a text layer (DU/2000/56: the page held all of act 55 before it).
@@ -1010,7 +1034,7 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
             t = t[m.end():].strip()
             if not t:
                 continue
-        out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, t, pw, ph, mark="ocr"))
+        out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, _fix_section_sign(t) if mark == "scan" else t, pw, ph, mark=mark))
     return out
 
 
@@ -1032,7 +1056,8 @@ def convert(path: str, ocr: str | None = None, position: int | None = None,
         doc.ocr_engine = f"tesseract {ocr_mod.check(ocr)}"
     with pdfplumber.open(path) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
-            b, n = ([], []) if ocr and _hidden_ocr_scan(page) else _page_lines(page, pno, gut)
+            scan = bool(ocr) and _hidden_ocr_scan(page)
+            b, n = ([], []) if scan else _page_lines(page, pno, gut)
             layer = None  # text layer of a page mostly of glyphs without Unicode (forms, DU/2025/161): OCR first
             if _unmapped_share(page) > 0.1:
                 layer, b, n = (b, n), [], []
@@ -1053,7 +1078,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None,
                     doc.no_text_pages.append(pno)
                     doc.ocr_pages.append(pno)
                     doc.ocr_langs[pno] = read.lang
-                    b = _ocr_lines(read.paragraphs, pno, page.width, page.height, position)
+                    b = _ocr_lines(read.paragraphs, pno, page.width, page.height, position, "scan" if scan else "ocr")
                 elif layer and (layer[0] or layer[1]):
                     # no OCR or an unreadable one: the text layer without the unmapped glyphs beats a bare note
                     doc.unmapped_pages.append(pno)
@@ -1220,6 +1245,11 @@ def no_text_note(pages: list[int]) -> str:
 
 def ocr_note(page: int, engine: str) -> str:
     return (f"> [Strona {page} PDF nie ma czytelnej warstwy tekstowej. Tekst poniżej odczytał OCR ({engine}). "
+            "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
+
+
+def scan_note(page: int, engine: str) -> str:
+    return (f"> [Strona {page} PDF jest skanem. Tekst poniżej odczytał OCR ({engine}), a nie warstwa tekstowa PDF. "
             "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
 
 
@@ -1399,6 +1429,9 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
                 "# " + meta["title"]]
     run: list[int] = []  # consecutive pages without text get one note
     for i, b in enumerate(doc.blocks):
+        if b.kind == "scan" and (i == 0 or doc.blocks[i - 1].kind != "scan" or doc.blocks[i - 1].page != b.page):
+            lang = doc.ocr_langs.get(b.page)
+            out.append(scan_note(b.page, f"{doc.ocr_engine}, {lang}" if lang else doc.ocr_engine))
         if b.kind == "ocr":  # each OCR page (or image of text) starts with its own note
             if i == 0 or doc.blocks[i - 1].kind != "ocr" or doc.blocks[i - 1].page != b.page:
                 lang = doc.ocr_langs.get(b.page)

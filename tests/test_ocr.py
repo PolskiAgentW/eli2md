@@ -1,9 +1,10 @@
 import shutil
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 from eli2md import ocr
-from eli2md.pdf import Block, Document, to_markdown
+from eli2md.pdf import ANNEX_OCR, Block, Document, _fix_section_sign, _hidden_ocr_scan, to_markdown
 
 META = {"ELI": "DU/2025/1", "title": "Umowa", "type": "Umowa międzynarodowa", "pos": 1, "publisher": "DU"}
 HEAD = "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext"
@@ -256,6 +257,43 @@ class Ocr(unittest.TestCase):
         words = [(1, 1, 1, 20, 95, "–"), (1, 1, 1, 20, 95, "2"), (1, 1, 1, 20, 95, "–"), (2, 1, 1, 900, 95, "Dalej")]
         self.assertEqual(ocr.parse_tsv(tsv(words), 3508).paragraphs, ["Dalej"])
         self.assertEqual(ocr.parse_tsv(tsv(words), 3508, band=0.0).paragraphs, ["– 2 – Dalej"])
+
+
+class Scan(unittest.TestCase):
+    """Pages scanned with Acrobat's invisible OCR layer (Dz.U. 1918-1999), read again by OCR."""
+
+    def page(self, fonts, image=(0, 0, 600, 840)):
+        chars = [{"fontname": f} for f in fonts]
+        images = [dict(zip(("x0", "top", "x1", "bottom"), image))] if image else []
+        return SimpleNamespace(chars=chars, images=images, width=600, height=840)
+
+    def test_hidden_ocr_scan(self):
+        self.assertTrue(_hidden_ocr_scan(self.page(["Helvetica"] * 500 + ["HiddenHorzOCR"] * 10)))
+        self.assertFalse(_hidden_ocr_scan(self.page(["Helvetica"] * 500 + ["HiddenHorzOCR"] * 9)))
+        self.assertFalse(_hidden_ocr_scan(self.page(["HiddenHorzOCR"] * 50, image=(0, 0, 600, 400))))  # half a page
+        self.assertFalse(_hidden_ocr_scan(self.page(["Times-Roman"] * 50)))  # a digital page under an image
+
+    def test_section_sign(self):
+        self.assertEqual(_fix_section_sign("8 2. Rozporządzenie wchodzi w życie"), "§ 2. Rozporządzenie wchodzi w życie")
+        self.assertEqual(_fix_section_sign("1) w 8 1 skreśla się pkt 3, w $ 13 w ust. 1"),
+                         "1) w § 1 skreśla się pkt 3, w § 13 w ust. 1")
+        for t in ("8. Zadania gminy", "w 8 dni od dnia", "8 osób"):
+            self.assertEqual(_fix_section_sign(t), t)
+
+    def test_annex_header(self):
+        self.assertTrue(ANNEX_OCR.match("Załącznik do obwieszczenia Ministra z dnia 27 marca 1997 r. (poz. 224)"))
+        self.assertTrue(ANNEX_OCR.match("ZAŁĄCZNIK Nr 2"))
+        self.assertFalse(ANNEX_OCR.match("Załącznik do ustawy określa wzór wniosku."))
+
+    def test_markdown(self):
+        doc = Document(blocks=[Block("scan", "§ 1. Tekst.", 1), Block("scan", "Dalej.", 1), Block("scan", "§ 2. Koniec.", 2)],
+                       no_text_pages=[1, 2], ocr_pages=[1, 2], ocr_engine="tesseract 5.5.0",
+                       ocr_langs={1: "pol+eng", 2: "pol+eng"})
+        md = to_markdown(doc, META)
+        self.assertIn("> [Strona 1 PDF jest skanem. Tekst poniżej odczytał OCR (tesseract 5.5.0, pol+eng), a nie warstwa "
+                      "tekstowa PDF. Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]\n\n##### § 1.\n\nTekst.\n\n"
+                      "Dalej.\n\n> [Strona 2 PDF jest skanem.", md)
+        self.assertIn("##### § 2.\n\nKoniec.", md)
 
 
 @unittest.skipUnless(shutil.which("tesseract"), "tesseract not installed")
