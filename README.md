@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.28**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.29**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -210,6 +210,13 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.29** (2026-10-05). Skany w dwóch łamach: sam numer pozycji (2–4 cyfry) wyśrodkowany na stronie (± 1,5% szerokości
+tekstu) zaczyna pas jak wiersz na całą szerokość. To numer aktu nad tytułem na całą szerokość („21” nad „USTAWA”,
+DU/1993/20 s. 2); do 0.6.28 trafiał do lewego łamu przed koniec poprzedniego aktu z prawego, więc akt nie był
+wycinany i miał początek następnego (znana usterka z 0.6.28). Próby: dev s5401 0,9862 / 0,9816 → 0,9862 / 0,9845
+(lepiej 2 akty, gorzej 0); test s5403 0,9827 / 0,9518 → 0,9827 / 0,9621 (lepiej 6, gorzej 0; DU/1997/1041 P 0,378 → 0,985).
+Szersza reguła (każdy krótki wiersz przy środku strony) psuła strony z wąskim odstępem między łamami (dev 0,9474).
 
 **0.6.28** (2026-10-05). Skany (po kontroli wzrokowej DU/1990/380, akt bez HTML):
 - poprawka słów uzupełnia też zgubione znaki diakrytyczne (jedna albo dwie litery: „Rozporzadzenie” → „Rozporządzenie”,

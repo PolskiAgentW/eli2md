@@ -369,7 +369,13 @@ def _column_order(lines: dict, width: int, height: int = 0) -> dict:
         # DU/1990/380 p. 2), so parse_tsv drops it whole
         joined = left and right and len(left) + len(right) == len(ws) and \
             min(w[4] for w in right) - max(w[5] for w in left) >= gap and min(w[0] for w in ws) >= HEADER_BAND * height
-        if left and right and not joined or len(left) + len(right) < len(ws):
+        # an act's number centred on the page over its title across both columns ("21" over "USTAWA", DU/1993/20 p. 2)
+        # starts a band too, though it does not reach over the gutter; only a bare number of 2-4 digits: short ends of
+        # paragraphs at the start of the right column stand near the middle as well ("ną.", DU/1994/415)
+        a, b = min(w[4] for w in ws), max(w[5] for w in ws)
+        centred = len(ws) == 1 and re.fullmatch(r"\d{2,4}", ws[0][2]) is not None \
+            and abs((a + b) / 2 - (x0 + x1) / 2) < 0.015 * (x1 - x0)
+        if left and right and not joined or len(left) + len(right) < len(ws) or centred:
             items.append((min(w[0] for w in ws), 0, ws))
             continue
         for side, part in ((1, left), (2, right)):

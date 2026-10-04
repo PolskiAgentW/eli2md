@@ -320,6 +320,13 @@ class Scan(unittest.TestCase):
         out = [" ".join(w[2] for w in ws) for ws in ocr._column_order(lines, 1000).values()]
         self.assertEqual(out, ["TYTUŁ AKTU"] + [f"lewy{k} tekst" for k in range(7)] + [f"prawy{k} tekst" for k in range(7)]
                          + ["Wydawca: tekst na całą szerokość strony"])
+        # an act's number centred on the page over a title across the page starts a band (DU/1993/20)
+        lines2 = dict(lines)
+        lines2[(5, 0, 0)] = line(100 + 40 * 3 + 5, "21", 485, 515)
+        out2 = [" ".join(w[2] for w in ws) for ws in ocr._column_order(lines2, 1000).values()]
+        self.assertEqual(out2, ["TYTUŁ AKTU"] + [f"lewy{k} tekst" for k in range(4)] + [f"prawy{k} tekst" for k in range(4)]
+                         + ["21"] + [f"lewy{k} tekst" for k in range(4, 7)] + [f"prawy{k} tekst" for k in range(4, 7)]
+                         + ["Wydawca: tekst na całą szerokość strony"])
         one = {(0, 0, k): line(100 + 40 * k, "tekst w jednym łamie", 100, 900) for k in range(12)}
         self.assertIs(ocr._column_order(one, 1000), one)
 
