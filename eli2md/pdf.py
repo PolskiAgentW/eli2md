@@ -357,6 +357,21 @@ def _large_image(page, min_share: float = 0.1) -> float | None:
     return best[1] if best and area >= min_share * page.width * page.height else None
 
 
+HIDDEN_OCR_FONT = re.compile(r"Hidden(Horz|Vert)OCR")  # Adobe Acrobat "Paper Capture" text under a scan
+
+
+def _hidden_ocr_scan(page) -> bool:
+    """A scanned page whose text layer is Acrobat's invisible OCR (Dz.U. 1918-1999, DU/1997/78): an image over most of
+    the page and chars in a "HiddenHorzOCR" font. Acrobat sets the words it matched to a font in "Helvetica" or
+    "Times-Roman" and the rest in "HiddenHorzOCR" (DU/1997/78 p. 1: 2491, 663 and 836 chars), all invisible. The layer
+    puts words in other lines ("zarządza się, następuje:" at the end of DU/1997/78) and has its own misreadings
+    ("pOdstawie", "Nr l"), so with OCR the page is read again."""
+    chars = page.chars
+    if not chars or _large_image(page, min_share=0.8) is None:
+        return False
+    return sum(bool(HIDDEN_OCR_FONT.search(c["fontname"])) for c in chars) >= 0.1 * len(chars)
+
+
 def _largest_image_box(page) -> tuple[float, float, float, float] | None:
     """(x0, top, x1, bottom) of the largest image, clipped to the page."""
     best = None
@@ -1017,7 +1032,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None,
         doc.ocr_engine = f"tesseract {ocr_mod.check(ocr)}"
     with pdfplumber.open(path) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
-            b, n = _page_lines(page, pno, gut)
+            b, n = ([], []) if ocr and _hidden_ocr_scan(page) else _page_lines(page, pno, gut)
             layer = None  # text layer of a page mostly of glyphs without Unicode (forms, DU/2025/161): OCR first
             if _unmapped_share(page) > 0.1:
                 layer, b, n = (b, n), [], []
