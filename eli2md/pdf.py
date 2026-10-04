@@ -1036,11 +1036,16 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
     out = []
     for k, t in enumerate(paragraphs):
         m = OCR_ACT_START.match(t) if position is not None else None
-        if m and not OCR_TYPE_NEXT.match(t[m.end():]) and not (k + 1 < len(paragraphs) and OCR_TYPE_NEXT.match(
-                paragraphs[k + 1] if not t[m.end():] else f"{t[m.end():]} {paragraphs[k + 1]}")):
+        # on a scan read in columns the previous act's signature or a page number of the table of contents may stand
+        # between the number and the type ("369", "Prezydent Rzeczypospolitej Polskiej: L. Wałęsa", "USTAWA";
+        # DU/1992/369; "669", ". 2352", "USTAWA"; DU/1994/669)
+        after = [p for p in paragraphs[k + 1: k + 3]
+                 if not (mark == "scan" and (SIGNATURE_OCR.match(p) or not re.search(r"[^\W\d_]{3}", p)))][:1]
+        if m and not OCR_TYPE_NEXT.match(t[m.end():]) and not (after and OCR_TYPE_NEXT.match(
+                after[0] if not t[m.end():] else f"{t[m.end():]} {after[0]}")):
             m = None  # a bare number (or one with a register number) not followed by an act type
         if m and position <= int(m.group(1)) <= position + ACT_NUMBER_NEXT:
-            out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, m.group(1), pw, ph, mark="ocr", act=int(m.group(1))))
+            out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, m.group(1), pw, ph, mark=mark, act=int(m.group(1))))
             t = t[m.end():].strip()
             if not t:
                 continue
