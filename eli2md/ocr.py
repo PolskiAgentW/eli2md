@@ -16,6 +16,7 @@ Facts this relies on (the 1734 pages without text in DU 2025-2026, checked 2026-
 """
 from __future__ import annotations
 
+import hashlib
 import io
 import os
 import re
@@ -26,6 +27,7 @@ import warnings
 from collections import Counter
 from dataclasses import dataclass, field
 from functools import lru_cache
+from pathlib import Path
 
 from .pdf import UNIT_START
 
@@ -108,6 +110,8 @@ class OcrPage:
     width: int = 0  # of the image read, in pixels (0 = unknown)
     line_widths: list[int] = field(default_factory=list)  # of the lines kept, in pixels
     line_chars: list[int] = field(default_factory=list)  # characters of the lines kept
+    tsv: str = field(default="", repr=False)  # tesseract's output, to read it again in columns (ocr_page)
+    height: int = 0  # of the image read, in pixels
 
 
 @lru_cache(maxsize=None)
@@ -153,8 +157,22 @@ def _run(img, lang: str, fmt: str = "txt", psm: int = 3) -> str:
     img.save(buf, format="PNG", **({"dpi": dpi} if dpi else {}))
     env = {**os.environ, "OMP_THREAD_LIMIT": os.environ.get("OMP_THREAD_LIMIT", "1")}  # one thread by default
     cmd = [exe, "stdin", "stdout", "-l", lang, "--psm", str(psm)] + ([fmt] if fmt != "txt" else [])
-    return subprocess.run(cmd, input=buf.getvalue(), capture_output=True, env=env, check=True,
-                          timeout=TIMEOUT).stdout.decode("utf-8", errors="replace")
+    # ELI2MD_OCR_CACHE=DIR keeps each reading (key: the image and the command), so a reconversion after a change in
+    # what is done with the reading (order, cutting) does not read the pages again
+    cache = os.environ.get("ELI2MD_OCR_CACHE")
+    if cache:
+        key = hashlib.sha256(buf.getvalue() + " ".join(cmd[3:] + [tesseract()[1]]).encode()).hexdigest()
+        f = Path(cache) / key[:2] / key
+        if f.exists():
+            return f.read_text(encoding="utf-8")
+    out = subprocess.run(cmd, input=buf.getvalue(), capture_output=True, env=env, check=True,
+                         timeout=TIMEOUT).stdout.decode("utf-8", errors="replace")
+    if cache:
+        f.parent.mkdir(parents=True, exist_ok=True)
+        tmp = f.with_suffix(f".{os.getpid()}")
+        tmp.write_text(out, encoding="utf-8")
+        tmp.replace(f)
+    return out
 
 
 def ocr_image(img, lang: str = BASE_LANG) -> str:
@@ -162,7 +180,8 @@ def ocr_image(img, lang: str = BASE_LANG) -> str:
     return _run(img, lang, "txt")
 
 
-def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float = HEADER_BAND) -> OcrPage:
+def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float = HEADER_BAND,
+              columns: bool = False) -> OcrPage:
     """Tesseract TSV -> paragraphs. Lines are joined (hyphenated words glued back), the gazette
     header at the top of the page is dropped (also when read in another script: a short line in the
     header band with the page number). band: share of the image height searched for the header
@@ -178,6 +197,8 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
         key = (int(f[2]), int(f[3]), int(f[4]))  # block, paragraph, line
         lines.setdefault(key, []).append((int(f[7]), int(f[7]) + int(f[9]), f[11].strip(), float(f[10]),
                                           int(f[6]), int(f[6]) + int(f[8])))
+    if columns:
+        lines = _column_order(lines, page.width)
     confs: list[float] = []
     kept = []  # (block, top, bottom, text) without the header
     for (blk, _, _), words in lines.items():
@@ -200,6 +221,9 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
     for blk, top, bottom, text in kept:
         new = (prev is None or top <= prev[1] or top - prev[2] > 1.5 * gap + 0.2 * (bottom - top)
                or UNIT_START.match(text) or OCR_UNIT.match(text))
+        if new and columns and prev is not None and top <= prev[1] and not UNIT_START.match(text) \
+                and not OCR_UNIT.match(text) and re.match(rf"[{LOWER}]", text) and not re.search(r"[.:;!?]$", paras[-1]):
+            new = False  # a sentence going on at the top of the next column
         if new:
             paras.append(text)
         elif re.search(rf"[{LOWER}]-$", paras[-1]) and re.match(rf"[{LOWER}]", text):
@@ -211,6 +235,55 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
     page.words = len(confs)
     page.confidence = statistics.median(confs) if confs else 0.0
     return page
+
+
+def _column_order(lines: dict, width: int) -> dict:
+    """Tesseract's lines of a two-column page in reading order. Columns are justified, so many lines end at the
+    left column's right edge and many start at the right column's left edge, both in the middle of the page; the
+    gutter lies between them (lines over the whole width, as a title or the publisher's colophon, do not matter:
+    DU/1995/68). A line with words on both sides of the gutter is two lines, one per column, if the gap between them
+    is about as wide as the gutter (tesseract joined them), else it spans the page and starts a band; within a band
+    the left column comes before the right one. Tesseract's own order of blocks mixes the columns of some scans
+    (DU/1995/68, DU/1993/20). lines: as in parse_tsv, (block, paragraph, line) -> words (top, bottom, text, conf,
+    left, right). A page without such edges is kept as it is."""
+    if width <= 0 or len(lines) < 10:
+        return lines
+    lo, hi, step = 0.3 * width, 0.7 * width, max(1, width // 300)  # step: 8 px at 300 dpi
+
+    def edge(xs: list[int]) -> int | None:
+        """The x (to `step`) shared by the most of xs, if at least 5 lines share it."""
+        bins = Counter(x // step for x in xs if lo <= x <= hi)
+        best = max(bins, key=lambda b: bins[b - 1] + bins[b] + bins[b + 1], default=None)
+        return best * step if best is not None and bins[best - 1] + bins[best] + bins[best + 1] >= 5 else None
+
+    right_col = edge([min(w[4] for w in ws) for ws in lines.values()])
+    left_col = edge([max(w[5] for w in ws) for ws in lines.values() if right_col and max(w[5] for w in ws) < right_col])
+    if right_col is None or left_col is None or not 2 * step <= right_col - left_col <= 0.1 * width:
+        return lines  # one column
+    g, gap = (left_col + right_col) // 2, right_col - left_col
+    items = []  # (top, side, words); side 0 = spans, 1 = left, 2 = right
+    for ws in lines.values():
+        left, right = [w for w in ws if w[5] <= g], [w for w in ws if w[4] >= g]
+        joined = left and right and len(left) + len(right) == len(ws) and \
+            min(w[4] for w in right) - max(w[5] for w in left) >= 0.7 * gap
+        if left and right and not joined or len(left) + len(right) < len(ws):
+            items.append((min(w[0] for w in ws), 0, ws))
+            continue
+        for side, part in ((1, left), (2, right)):
+            if part:
+                items.append((min(w[0] for w in part), side, part))
+    items.sort(key=lambda i: i[0])
+    out: list = []
+    band: list = []
+    for it in items + [(None, 0, None)]:
+        if it[1] == 0:
+            out += [i for i in band if i[1] == 1] + [i for i in band if i[1] == 2]
+            band = []
+            if it[2] is not None:
+                out.append(it)
+        else:
+            band.append(it)
+    return {(k, 0, 0): ws for k, (_, _, ws) in enumerate(out)}
 
 
 def usable(page: OcrPage) -> bool:
@@ -249,19 +322,21 @@ def osd(img) -> tuple[int, str]:
 
 
 def _read(img, lang: str, pno: int | None, rotated: int = 0, band: float = HEADER_BAND) -> OcrPage:
-    page = parse_tsv(_run(img, lang, "tsv"), img.height, pno, band)
-    page.lang, page.rotated = lang, rotated
+    tsv = _run(img, lang, "tsv")
+    page = parse_tsv(tsv, img.height, pno, band)
+    page.lang, page.rotated, page.tsv, page.height = lang, rotated, tsv, img.height
     return page
 
 
-def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None) -> OcrPage:
+def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None, columns: bool = False) -> OcrPage:
     """OCR of a pdfplumber page: paragraphs, word count, median word confidence, language used.
 
     lang: tesseract language(s), or "auto" (see the module docstring). A page whose text is unusable
     is tried again turned as orientation detection says (DU/2025/15 is printed sideways: median
     confidence 47 -> 96) and, with "auto", in the detected script's language (Greek).
     bbox: (x0, top, x1, bottom) in points: read only this part of the page (an image), without
-    looking for the gazette header in it."""
+    looking for the gazette header in it.
+    columns: put the lines in the order of the page's two columns (_column_order), for scans of gazette pages."""
     have = tesseract()[2]
     img = render(page.crop(bbox) if bbox else page, dpi)
     info = getattr(img, "info", {})
@@ -278,6 +353,10 @@ def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None) 
         again = _ocr(img, lang, pno, band, have)
         if again is not None and usable(again):
             read = again
+    if columns and read.tsv:
+        again = parse_tsv(read.tsv, read.height, pno, band, columns=True)
+        again.lang, again.rotated, again.tsv, again.height = read.lang, read.rotated, read.tsv, read.height
+        read = again
     return read
 
 

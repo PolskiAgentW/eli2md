@@ -285,6 +285,24 @@ class Scan(unittest.TestCase):
         self.assertTrue(ANNEX_OCR.match("ZAŁĄCZNIK Nr 2"))
         self.assertFalse(ANNEX_OCR.match("Załącznik do ustawy określa wzór wniosku."))
 
+    def test_column_order(self):
+        def line(top, text, left, right):  # words (top, bottom, text, conf, left, right) spread over left-right
+            ws = text.split()
+            w = (right - left) // len(ws)
+            return [(top, top + 30, t, 95.0, left + k * w, left + (k + 1) * w - 10) for k, t in enumerate(ws)]
+        lines = {(0, 0, 0): line(10, "TYTUŁ AKTU", 400, 600)}
+        for k in range(6):  # tesseract gives the right column's block first, and joins one line across the gutter
+            lines[(1, 0, k)] = line(100 + 40 * k, f"prawy{k} tekst", 520, 900)
+        for k in range(6):
+            lines[(2, 0, k)] = line(100 + 40 * k, f"lewy{k} tekst", 100, 480)
+        lines[(3, 0, 0)] = line(340, "lewy6 tekst", 100, 480) + line(340, "prawy6 tekst", 520, 900)
+        lines[(4, 0, 0)] = line(400, "Wydawca: tekst na całą szerokość strony", 100, 900)
+        out = [" ".join(w[2] for w in ws) for ws in ocr._column_order(lines, 1000).values()]
+        self.assertEqual(out, ["TYTUŁ AKTU"] + [f"lewy{k} tekst" for k in range(7)] + [f"prawy{k} tekst" for k in range(7)]
+                         + ["Wydawca: tekst na całą szerokość strony"])
+        one = {(0, 0, k): line(100 + 40 * k, "tekst w jednym łamie", 100, 900) for k in range(12)}
+        self.assertIs(ocr._column_order(one, 1000), one)
+
     def test_markdown(self):
         doc = Document(blocks=[Block("scan", "§ 1. Tekst.", 1), Block("scan", "Dalej.", 1), Block("scan", "§ 2. Koniec.", 2)],
                        no_text_pages=[1, 2], ocr_pages=[1, 2], ocr_engine="tesseract 5.5.0",

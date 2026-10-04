@@ -1073,7 +1073,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None,
             elif b and (RUNNING_HEADER.match(b[0].text) or OLD_HEADER.match(b[0].text)):
                 b = b[1:]
             if not b and not n:
-                read = ocr_mod.ocr_page(page, ocr) if ocr else None
+                read = ocr_mod.ocr_page(page, ocr, columns=scan) if ocr else None
                 if read and ocr_mod.usable(read):
                     doc.no_text_pages.append(pno)
                     doc.ocr_pages.append(pno)
