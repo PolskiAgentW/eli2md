@@ -494,18 +494,23 @@ class Basic(unittest.TestCase):
                                  "stosowaniu:\n\n1) rozporządzenia C;\n\n2) rozporządzenia D.", "[^2] Zmiany ogłoszono."])
 
     def test_footnote_number_not_superscript(self):
-        # consolidated texts print the footnote of the title as "1)I) Niniejsza ustawa…" (DU/2025/1131): footnote 1
-        # (the text has "[^1]"), not a paragraph after the last article; so is a plain "3) …" without a marker
+        # consolidated texts print the footnote of the title as "1)I) Niniejsza ustawa…" (DU/2025/1131): the text has
+        # "[^1]", so it is footnote 1, not a paragraph after the last article; without a "[^3]" in the text a plain
+        # "3) …" stays as printed (a definition nothing refers to is not shown)
         doc = Document(blocks=[Block("p", "o Krajowej Administracji Skarbowej[^1]", 1), Block("p", "Art. 1. Treść.", 1)],
                        footnotes=["1)I) Niniejsza ustawa wdraża:\n\n1) dyrektywę A.", "[^2] Dodany.", "3) Ogłoszona."],
                        footnote_pages=[1, 2, 2])
         md = to_markdown(doc)
         self.assertIn("##### Art. 1.\n\nTreść.\n\n[^1]: I) Niniejsza ustawa wdraża:\n\n    1) dyrektywę A.\n\n"
-                      "[^2]: Dodany.\n\n[^3]: Ogłoszona.\n", md)
+                      "[^2]: Dodany.\n\n3) Ogłoszona.\n", md)
         # a number that another footnote has stays as printed
         doc = Document(blocks=[Block("p", "Art. 1. Treść[^1].", 1)], footnotes=["[^1] Dodany.", "1) Inny."],
                        footnote_pages=[1, 1])
         self.assertIn("[^1]: Dodany.\n\n1) Inny.\n", to_markdown(doc))
+        # a marker that opens a line labels a note printed in a table ("²⁾ H …"), it is not a reference (MP/2011/560)
+        doc = Document(blocks=[Block("p", "Pestycydy", 1), Block("p", "[^2] H mg/l", 1)], footnotes=["2) H ) ) Tabela 7."],
+                       footnote_pages=[1])
+        self.assertIn("²⁾ H mg/l\n\n2) H ) ) Tabela 7.\n", to_markdown(doc))
 
     def test_letter_footnotes(self):
         # the announcement of a consolidated text has footnotes a), b) ("Zmiany tekstu jednolitego wymienionej ustawy
@@ -513,19 +518,31 @@ class Basic(unittest.TestCase):
         def w(text, x0, top=100.0, size=10.0):
             return {"text": text, "x0": x0, "x1": x0 + 5 * len(text), "top": top, "bottom": top + size, "size": size}
         body, _ = _frame_lines([w("z", 50), w("późn.", 60), w("zm.", 90), w("b)", 105.5, 98, 6), w(")", 116),
-                                w("oraz", 130), w("c)", 156, 98, 6)], 600, 800, [], 1)
-        self.assertEqual([l.text for l in body], ["z późn. zm.[^b]) oraz [^c]"])
+                                w("oraz", 130), w("c)", 156, 98, 6), w("zm.", 180), w("za)", 195.5, 98, 6)], 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["z późn. zm.[^b]) oraz [^c] zm.[^za]"])
         texts, _ = _group_notes([Line(2, 0, 0, 0, 9.0, t) for t in
                                  ["a) Zmiany ustawy A", "ogłoszono.", "b) Zmiany ustawy B.", "[^1] Niniejsza ustawa wdraża:",
                                   "a) dyrektywę;", "b) dyrektywę."]])
         self.assertEqual(texts, ["a) Zmiany ustawy A ogłoszono.", "b) Zmiany ustawy B.",
                                  "[^1] Niniejsza ustawa wdraża: a) dyrektywę; b) dyrektywę."])
-        doc = Document(blocks=[Block("p", "poz. 1530, z późn. zm.[^b]) oraz [^c]", 1), Block("p", "Art. 1. Treść[^1].", 3)],
+        # "1)I)" starts the footnote of the title, whose "b)" is a point, not footnote b) (DU/2026/711); after "z)"
+        # comes "za)" (DU/2023/1206)
+        title, _ = _group_notes([Line(2, 0, 0, 0, 9.0, t) for t in
+                                 ["a) Zmiany decyzji ogłoszono.", "1)I) Niniejsza ustawa:", "1) wdraża:", "a) dyrektywę A;",
+                                  "b) dyrektywę B.", "z) Zmiana Z.", "za) Zmiana ZA."]])
+        self.assertEqual(title, ["a) Zmiany decyzji ogłoszono.",
+                                 "1)I) Niniejsza ustawa:\n\n1) wdraża: a) dyrektywę A; b) dyrektywę B. z) Zmiana Z. za) Zmiana ZA."])
+        za, _ = _group_notes([Line(2, 0, 0, 0, 9.0, t) for t in ["y) Zmiana Y.", "z) Zmiana Z.", "za) Zmiana ZA."]])
+        self.assertEqual(za, ["y) Zmiana Y.", "z) Zmiana Z.", "za) Zmiana ZA."])
+        doc = Document(blocks=[Block("p", "zm.[^a]) i zm.[^b]) oraz [^c]", 1), Block("p", "Art. 1. Treść[^1].", 3)],
                        footnotes=texts, footnote_pages=[1, 1, 3])
         md = to_markdown(doc)
         # a marker without a footnote of that letter is written back as printed
-        self.assertIn("poz. 1530, z późn. zm.[^b]) oraz c)\n\n##### Art. 1.\n\nTreść[^1].\n\n"
+        self.assertIn("zm.[^a]) i zm.[^b]) oraz c)\n\n##### Art. 1.\n\nTreść[^1].\n\n"
                       "[^a]: Zmiany ustawy A ogłoszono.\n\n[^b]: Zmiany ustawy B.\n\n[^1]: Niniejsza ustawa wdraża:", md)
+        # a footnote b) without a marker stays as printed
+        doc = Document(blocks=[Block("p", "zm.[^a])", 1)], footnotes=texts[:2], footnote_pages=[1, 1])
+        self.assertIn("[^a]: Zmiany ustawy A ogłoszono.\n\nb) Zmiany ustawy B.\n", to_markdown(doc))
 
     def test_colophon_of_an_issue(self):
         # the last page of an old issue: the colophon may be read as footnotes, price and ISSN as body (DU/2000/291)

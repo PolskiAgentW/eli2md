@@ -371,7 +371,7 @@ def md_to_tree(md: str) -> dict:
             footnotes[note] += "\n\n" + p.strip()
             continue
         p, note = p.strip(), None
-        fm = re.match(r"^\[\^(\d+(?:_\d+)?|[a-z](?:_\d+)?)\]:\s*(.*)$", p, re.S)  # [^a]: footnotes a), b)
+        fm = re.match(r"^\[\^(\d+(?:_\d+)?|[a-z]{1,2}(?:_\d+)?)\]:\s*(.*)$", p, re.S)  # [^a]: footnotes a), b)
         if fm:
             footnotes[fm.group(1)] = fm.group(2)
             note = fm.group(1)

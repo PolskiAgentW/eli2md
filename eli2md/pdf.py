@@ -66,7 +66,7 @@ INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box
 DUP_TOL = 0.3  # pt; a char drawn twice repeats within this distance (<= 0.1pt in DU/2025/1095; see _dedupe)
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
 CID = re.compile(r"\(cid:\d+\)")  # a glyph the PDF font does not map to Unicode (pdfminer's placeholder)
-FOOTNOTE_MARK = re.compile(r"^(?:\d{1,3}\)?|[a-z]\))[,.;:]?$")  # "3)", letters too: "b)" (see _letter_refs)
+FOOTNOTE_MARK = re.compile(r"^(?:\d{1,3}\)?|[a-z]{1,2}\))[,.;:]?$")  # "3)", letters too: "b)", "za)" (_letter_refs)
 FOOTNOTE_TYPE = 9.5  # pt; footnotes are set in 9pt, body text in 10pt
 # Small digits without ")" are not footnote markers but unit numbers (Art. 41¹), units (m²)
 # or chemical subscripts (P₂O₅). Kept as Unicode super/subscript digits.
@@ -695,7 +695,7 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
         mid = sum((w["top"] + w["bottom"]) / 2 for w in base) / len(base) if base else None
         for k, w in enumerate(r):
             if w.get("sup"):
-                m = re.match(r"^(\d+|[a-z])\)?(.*)$", w["text"])
+                m = re.match(r"^(\d+|[a-z]{1,2})\)?(.*)$", w["text"])
                 # a letter keeps the space it was printed after: without a footnote of that letter it is written
                 # back as printed (_letter_refs)
                 glued = m.group(1).isdigit() or k == 0 or w["x0"] - r[k - 1]["x1"] < 1.0
@@ -1080,22 +1080,29 @@ def convert(path: str, ocr: str | None = None, position: int | None = None,
     return doc
 
 
+def _next_label(s: str) -> str:
+    return s + "a" if s.endswith("z") else s[:-1] + chr(ord(s[-1]) + 1)  # "b" -> "c", "z" -> "za" (DU/2023/1206)
+
+
 def _group_notes(notes: list[Line]) -> tuple[list[str], list[int]]:
     """Lines under the footnote rule -> footnotes ("[^3] text") and the page each starts on."""
     texts, pages = [], []
     cur, cur_page, item = None, 0, 0
     for l in notes:
         point = re.match(r"^(\d+)\)\s", l.text)
-        letter = re.match(r"^([a-z])\)\s", l.text)
+        letter = re.match(r"^([a-z]{1,2})\)\s", l.text)
+        title = re.match(r"^\d+\)[IVXL]+\)\s", l.text)  # "1)I) Niniejsza ustawa…": the title's footnote (t.j.)
         # "Niniejsza ustawa:" + "1) wdraża…" + "2) służy…": points of a footnote (DU/2026/421), a paragraph each;
         # other lines "N) …" start a footnote whose marker is not set as a superscript
         # a second list after another colon starts at 1 again ("Niniejsza ustawa służy stosowaniu:", DU/2026/43)
         if cur is not None and point and (int(point.group(1)) == item + 1 and item
                                           or int(point.group(1)) == 1 and cur.rstrip().endswith(":")):
             cur, item = cur + "\n\n" + l.text, int(point.group(1))
-        elif re.match(r"^\[\^(?:\d+|[a-z])\]", l.text) or point or letter and cur is not None and (
-                prev := re.match(r"^(?:\[\^([a-z])\]|([a-z])\))", cur)) \
-                and ord(letter.group(1)) == ord(prev.group(1) or prev.group(2)) + 1:  # footnotes a), b) (_letter_refs)
+        # footnotes a), b) (_letter_refs): the next letter after a footnote that ends a sentence; "b) …" after "a) …;"
+        # is a point of that footnote
+        elif re.match(r"^\[\^(?:\d+|[a-z]{1,2})\]", l.text) or point or title or letter and cur is not None \
+                and cur.rstrip().endswith(".") and (prev := re.match(r"^(?:\[\^([a-z]{1,2})\]|([a-z]{1,2})\))", cur)) \
+                and letter.group(1) == _next_label(prev.group(1) or prev.group(2)):
             if cur is not None:
                 texts.append(cur)
                 pages.append(cur_page)
@@ -1261,19 +1268,26 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
     return "\n".join(lines)
 
 
-FN_LABEL = re.compile(r"^\[\^(\d+|[a-z])\]\s*(.*)$", re.S)
-PLAIN_LABEL = re.compile(r"^(\d+|[a-z])\)\s*(\S.*)$", re.S)  # a label in body type: "1)I) Niniejsza…", "a) Zmiany…"
-LETTER_REF = re.compile(r"\[\^([a-z])\]")
+FN_LABEL = re.compile(r"^\[\^(\d+|[a-z]{1,2})\]\s*(.*)$", re.S)
+PLAIN_LABEL = re.compile(r"^(\d+|[a-z]{1,2})\)\s*(\S.*)$", re.S)  # a label in body type: "1)I) Niniejsza…", "a) Zmiany…"
+LETTER_REF = re.compile(r"\[\^([a-z]{1,2})\]")
+NOTE_REF = re.compile(r"\[\^(\d+|[a-z]{1,2})\]")
+ANY_LABEL = re.compile(r"(?:^|(?<=\s))[„“]?\[\^(?:\d+|[a-z]{1,2})\](?=\s)")  # as BODY_LABEL, letters too
 
 
 def _plain_labels(doc: Document) -> Document:
     """A footnote whose label is printed in body type ("1)I) Niniejsza ustawa wdraża…" in consolidated texts,
     DU/2025/1131; "a) Zmiany tekstu jednolitego…" of the announcement, DU/2026/1245) is a footnote with that label,
-    not a paragraph after the last article, unless another footnote has the label: then it stays as printed."""
+    not a paragraph after the last article, if the text has its marker and no other footnote has the label.
+    Otherwise it stays as printed: a definition nothing refers to is not shown by Markdown viewers, and text of
+    a table read as a footnote would vanish (MP/2011/560: "2) H ) ) ) Tabela 7. …")."""
     have = {m.group(1) for f in doc.footnotes if (m := FN_LABEL.match(f))}
+    if not any((m := PLAIN_LABEL.match(f)) and m.group(1) not in have for f in doc.footnotes):
+        return doc
+    marked = {n for b in doc.blocks for n in NOTE_REF.findall(ANY_LABEL.sub("", b.text))}  # not labels (_body_notes)
     out = []
     for f in doc.footnotes:
-        if (m := PLAIN_LABEL.match(f)) and m.group(1) not in have:
+        if (m := PLAIN_LABEL.match(f)) and m.group(1) in marked and m.group(1) not in have:
             have.add(m.group(1))
             f = f"[^{m.group(1)}] {m.group(2)}"
         out.append(f)

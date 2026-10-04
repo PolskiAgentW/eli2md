@@ -31,7 +31,7 @@ def main():
             if tag == "equal":
                 continue
             report.append(f"@@ {tag} old {i1 + 1}-{i2} new {j1 + 1}-{j2}")
-            report += ["- " + l[:300] for l in a[i1:i2]] + ["+ " + l[:300] for l in b[j1:j2]]
+            report += ["- " + l for l in a[i1:i2]] + ["+ " + l for l in b[j1:j2]]
     print(f"files {len(files)}: same {same}, changed {len(changed)}, missing in new {len(missing)}")
     for rel in changed:
         print("  changed", rel)
