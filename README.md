@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.26**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.27**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -210,6 +210,13 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.27** (2026-10-05). Poprawka słów ze skanów (0.6.26) nie zmienia słów, które zna słownik angielski (en_US),
+ani akapitów, których słowa funkcyjne są w innym języku (umowy drukowane w dwóch językach: „final” zostaje „final”,
+nie „finał”). Sprawdzenie na 300 losowych aktach DU 2000–2011 z poprawną warstwą tekstową (413 584 słowa, każda zmiana
+to błąd albo naprawa fragmentu, który już w źródle nie jest słowem): zmienione słowa 501 (0.6.26) → 307, w umowach,
+konwencjach i oświadczeniach rządowych 199 → 10; pozostałe to głównie fragmenty z warstwy („osługiwać”, „asady”)
+i sklejenia („wsprawie” → „w sprawie”). Próby DU 1990–1999 dev i test: wynik taki sam jak 0.6.26.
 
 **0.6.26** (2026-10-05). Skany zeszytów Dziennika Ustaw sprzed 2012 r. (opis wyżej, „Skany zeszytów sprzed 2012 r.”).
 Dotyczy tylko konwersji z `--ocr` stron ze skanami starych zeszytów; w PDF-ach DU i M.P. z lat 2012–2026 (cały cache

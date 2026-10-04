@@ -262,10 +262,11 @@ class _Speller:
 
 
 @lru_cache(maxsize=None)
-def speller() -> _Speller | None:
-    """The Polish speller, or None if libhunspell or the dictionary is missing (then words are not corrected)."""
+def speller(lang: str = "pl_PL") -> _Speller | None:
+    """A speller (pl_PL; en_US to leave English words of bilingual agreements alone), or None if libhunspell or the
+    dictionary is missing (then words are not corrected)."""
     try:
-        return _Speller()
+        return _Speller(f"/usr/share/hunspell/{lang}.aff", f"/usr/share/hunspell/{lang}.dic")
     except OSError:
         return None
 
@@ -280,17 +281,18 @@ def fix_words(text: str) -> str:
     """Words of a scan read by tesseract that the Polish dictionary does not know, corrected where one fix makes them
     known: "ł" read as "t" or "l" (one or two of them: "ogtoszenia" -> "ogłoszenia", "dziata" -> "działa") and a
     one-letter preposition glued to the next word ("Wrozporządzeniu" -> "W rozporządzeniu"; also "wart." -> "w art.",
-    "zdnia" -> "z dnia"). Several possible fixes: the word stays. Without the dictionary the text is kept.
+    "zdnia" -> "z dnia"). Several possible fixes: the word stays. Words the English dictionary knows and paragraphs
+    whose function words are of another language stay. Without the Polish dictionary the text is kept.
     Measured on DU 1990-1999 (eval/scans_1990_1999/): see the README, 0.6.26."""
-    sp = speller()
-    if sp is None:
-        return text
+    sp, en = speller(), speller("en_US")
+    if sp is None or language(re.findall(r"\w+", text.lower())) not in ("pl", "?"):
+        return text  # a paragraph in another language (an agreement printed in two languages)
     text = GLUED_ABBR.sub(r"\1 \2.", re.sub(r"\b([zZ])dnia\b", r"\1 dnia", text))
 
     def fix(m: re.Match) -> str:
         w = m.group()
-        if sp.ok(w) or sp.ok(w.lower()):
-            return w
+        if sp.ok(w) or sp.ok(w.lower()) or en is not None and (en.ok(w) or en.ok(w.lower())):
+            return w  # known, also as an English word ("final", "Material": not "finał", "Materiał")
         at = [i for i, c in enumerate(w) if c in "tl"]
         cands = set()
         if 0 < len(at) <= 6:
