@@ -216,15 +216,23 @@ Dotyczy tylko konwersji z `--ocr` stron ze skanami starych zeszytów; w PDF-ach 
 zbiorów) nie ma ani jednego z czcionką „HiddenHorzOCR”, a ich strony z OCR nie mają nagłówka „Dziennik Ustaw Nr”.
 Pomiar (`eval/evaluate.py --ocr`, wzorzec: oficjalny HTML aktów 1990–1999, które go mają):
 
-| próba | 0.6.25 (warstwa Acrobata) body R / P | 0.6.26 body R / P | aktów z R < 0,90 (0.6.25 → 0.6.26) |
-|---|---|---|---|
-| dev s5401 (n=40, na niej strojone) | 0,6697 / 0,6161 | 0,9759 / 0,9717 | 32 → 2 |
-| test s5403 (n=60, niewidziana) | TODO | TODO | TODO |
+| próba | 0.6.25 (warstwa Acrobata) body R / P | 0.6.26 body R / P | aktów z R < 0,90 (0.6.25 → 0.6.26) | załączniki R (0.6.25 → 0.6.26) |
+|---|---|---|---|---|
+| dev s5401 (n=40, na niej strojone) | 0,6697 / 0,6161 | 0,9853 / 0,9804 | 32 → 2 | 0,2432 → 0,9508 (n=6) |
+| test s5403 (n=60, niewidziana) | 0,6638 / 0,5679 | 0,9813 / 0,9498 | 52 → 6 | 0,3644 → 0,9605 (n=6) |
+
+R = odsetek słów oficjalnego tekstu odczytanych we właściwej kolejności, P = odsetek słów wyniku obecnych w oficjalnym
+tekście. Na próbie dev: OCR bez kolejności łamów 0,9689 / 0,9599, z kolejnością łamów 0,9759 / 0,9717, z poprawką
+słów ze słownikiem 0,9853 / 0,9804 (ani jeden akt gorzej, 30 z 40 lepiej). Poprawka słów potrzebuje libhunspell
+i słownika `hunspell-pl` (`apt install libhunspell-1.7-0 hunspell-pl`); bez nich tekst zostaje bez niej. Słowo, którego
+słownik nie zna, jest zmieniane tylko wtedy, gdy dokładnie jedna zamiana „t”/„l” na „ł” (jedna albo dwie litery) daje
+słowo znane („ogtoszenia” → „ogłoszenia”, „Zatącznik” → „Załącznik”), albo gdy oddzielenie jednoliterowego przyimka
+daje słowo znane („Wrozporządzeniu” → „W rozporządzeniu”); do tego „wart.” → „w art.”, „zdnia” → „z dnia”.
 
 Na próbie s5402 (n=60) wersja przed dwiema ostatnimi poprawkami (wycinanie aktu, gdy między numerem a rodzajem aktu
 stoi podpis albo numer strony spisu treści) dała 0,9576 / 0,9363 (0.6.25: 0,6738 / 0,5662); te poprawki powstały po
 obejrzeniu jej wyników, więc liczbą testową jest s5403. Skany z 2000 r. (s5202, s5205): DU/2000/70 R 0,937 → 0,982,
-DU/2000/179 0,991 → 0,991, DU/2000/985 0,986 → 0,986. Najczęstsze błędy, które zostają: „ł” odczytane jako „t”
+DU/2000/179 0,991 → 0,991, DU/2000/985 0,986 → 0,986 (bez poprawki słów). Najczęstsze błędy, które zostają: „ł” odczytane jako „t”
 („ogtoszenia”), brak spacji („wart.” zamiast „w art.”), pierwsza strona zeszytu ze spisem treści (krótki akt pod spisem:
 DU/1999/728 R 0,792), słabe skany (DU/1990/390). Wyniki: `eval/scans_1990_1999/`.
 
@@ -794,7 +802,9 @@ skan zeszytu:
   strony stoi notka `> [Strona N PDF jest skanem. Tekst poniżej odczytał OCR (…), a nie warstwa tekstowa PDF. …]`;
 - „§” odczytany jako „8”, „$” albo „S” na początku akapitu i po przyimku („w 8 1”) staje się „§”; rozpoznawane są
   kolofon wydawcy z lat 90., nagłówki załączników i podpisy; akt jest wycinany spośród sąsiednich jak w 2000–2011.
-Przypisy na skanach nie są rozpoznawane (zostają akapitami). Z `ELI2MD_OCR_CACHE=katalog` odczyty tesseracta są
+Słowa, których słownik pl_PL nie zna, a jedna zamiana „t”/„l” na „ł” albo oddzielenie przyimka czyni znanymi, są
+poprawiane (`ocr.fix_words`, jeśli jest libhunspell i `hunspell-pl`). Przypisy na skanach nie są rozpoznawane
+(zostają akapitami). Z `ELI2MD_OCR_CACHE=katalog` odczyty tesseracta są
 zapamiętywane, więc ponowna konwersja po zmianie w dalszej obróbce nie czyta stron od nowa.
 
 ### Obraz tekstu na stronie z warstwą tekstową (0.6.4, też tylko z `--ocr`)
