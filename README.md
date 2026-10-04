@@ -213,7 +213,9 @@ także wtedy, gdy między nim a rodzajem aktu stoi numer rejestru („626” + �
 Prezydenta w M.P.) albo gdy OCR zgubił polskie litery w rodzaju aktu („OSWIADCZENIE RZADOWE”). Do 0.6.23 taki akt nie
 był wycinany: plik miał całe strony, z końcem poprzednich i początkiem następnych aktów (MP/2000/626: 521 słów zamiast
 142). Na 49 aktach z OCR, w których tekście został ich własny numer (29 z M.P., 20 z DU 2000–2011), 0.6.24 wyciął
-23 z M.P. (MP/2000/611–634, MP/2002/122); w DU żaden nie zmienił się przez tę poprawkę.
+23 z M.P. (MP/2000/611–634, MP/2002/122); w DU żaden nie zmienił się przez tę poprawkę. Przy przeliczeniu wszystkich
+3 425 aktów z OCR z DU 2000–2011 (2026-10-04) 0.6.24 wyciął jednak 5 aktów z 2000 r.
+(DU/2000/71, 89, 90, 101, 1343; razem −1 209 słów tekstu sąsiednich pozycji).
 
 **0.6.23** (2026-10-03). Strona zeszytu z lat 2000–2011 odczytana przez OCR: z pierwszego akapitu odczytu znika tylko
 nagłówek zeszytu („Dziennik Ustaw Nr 32 — 2018 — Poz. 393”). Do 0.6.22 znikał cały akapit, a tesseract czasem łączy
