@@ -30,7 +30,7 @@ def kanon(num):
 
 
 def norm(s):
-    s = re.sub(r"\[\^\d+\]", " ", s)            # znaczniki przypisów w MD
+    s = re.sub(r"\[\^\w+\]", " ", s)            # znaczniki przypisów w MD ([^12], [^1_2], [^a])
     s = s.replace("\xad", "")
     s = re.sub(r"[‐‑‒–—−]", "-", s)
     s = re.sub(r"[„”“\"]", '"', s)
@@ -41,7 +41,7 @@ def norm(s):
 
 def md_artykuly(path):
     t = path.read_text()
-    t = re.split(r"^\[\^\d+\]:", t, maxsplit=1, flags=re.M)[0]  # definicje przypisów na końcu
+    t = re.split(r"^\[\^\w+\]:", t, maxsplit=1, flags=re.M)[0]  # definicje przypisów na końcu
     ms = list(HEAD.finditer(t))
     out = []
     for i, m in enumerate(ms):
@@ -74,8 +74,8 @@ async def main():
         key = core._klucz_pl(info)
         zr = core._zrodlo.get(key)
         html = {}
-        for n, t in core._jednostki_html(key, core._html_cache[key]):
-            html.setdefault(n, t)               # pierwsze brzmienie = obowiązujące
+        for unit in core._jednostki_html(key, core._html_cache[key]):  # 06c82da: (num, text, date)
+            html.setdefault(unit[0], unit[1])   # pierwsze brzmienie = obowiązujące
         md = md_artykuly(MD / plik)
         md_d = {}
         dup = []

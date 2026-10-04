@@ -250,6 +250,23 @@ class Basic(unittest.TestCase):
         self.assertTrue(md.startswith("##### Art. 479³⁰ᶠ.\n\nTreść."))
         self.assertTrue(UNIT_START.match("5¹ᵃ) treść"))
 
+    def test_article_range_is_a_heading(self):
+        # consolidated texts: "Art. 266–280." / "Art. 22–28. (pominięte)" is a unit of its own, not the end of the
+        # article before it (DU/2026/1245 art. 265, DU/2025/1584 art. 13)
+        doc = Document(blocks=[Block("p", "Art. 265. § 1. Treść.", 1), Block("p", "Art. 266–280.[^52]", 1),
+                               Block("p", "Art. 22–28a. (pominięte)", 1), Block("p", "Art. 281. Treść.", 1)])
+        md = to_markdown(doc)
+        self.assertIn("##### Art. 265.\n\n§ 1. Treść.\n\n##### Art. 266–280.\n\n[^52]\n\n"
+                      "##### Art. 22–28a.\n\n(pominięte)\n\n##### Art. 281.", md)
+        # a reference to a range in the text is not a heading
+        md = to_markdown(Document(blocks=[Block("p", "Art. 1. Treść.", 1), Block("p", "Art. 5–7 stosuje się.", 1)]))
+        self.assertEqual(md.count("##### "), 1)
+
+    def test_article_letter_l_stroke(self):
+        # art. 106ł follows art. 106l (DU/2025/633): a heading of its own
+        md = to_markdown(Document(blocks=[Block("p", "Art. 106l. Treść.", 1), Block("p", "Art. 106ł. § 1. Kto.", 1)]))
+        self.assertIn("##### Art. 106l.\n\nTreść.\n\n##### Art. 106ł.\n\n§ 1. Kto.", md)
+
     def test_quoted_units_are_not_headings(self):
         doc = Document(blocks=[Block("p", "Art. 1. W ustawie wprowadza się zmiany:", 1),
                                Block("p", "1) art. 29 i art. 30 otrzymują brzmienie:", 1),
@@ -361,6 +378,18 @@ class Basic(unittest.TestCase):
                 line(131.5, 66, 429, "4) pozostałych kategorii lub podkategorii 164")]
         self.assertEqual([b.text[:5] for b in _segment(body)], ["5. Wy", "1) B1", "2) B1"])
 
+    def test_segment_left_out_unit_ends_at_page_break(self):
+        # "Art. 1096. (uchylony)" at the foot of a page, "KSIĘGA PIERWSZA" at the top of the next (DU/2026/468):
+        # "(uchylony)" / "(pominięty)" is the whole text of the unit, the heading is not its continuation
+        def line(page, top, text):
+            return Line(page, top, top + 10, 56, 10.0, text, x1=300, right=524)
+        body = [line(1, 700, "Art. 1096. (uchylony)"), line(2, 80, "KSIĘGA PIERWSZA"), line(2, 100, "JURYSDYKCJA KRAJOWA"),
+                line(2, 130, "Art. 115. (pominięty)"), line(3, 80, "TYTUŁ VI"),
+                line(3, 130, "Art. 7. Wyrazy w nawiasie (skreślony"), line(4, 80, "wyraz) zostają.")]
+        self.assertEqual([b.text for b in _segment(body)],
+                         ["Art. 1096. (uchylony)", "KSIĘGA PIERWSZA", "JURYSDYKCJA KRAJOWA", "Art. 115. (pominięty)",
+                          "TYTUŁ VI", "Art. 7. Wyrazy w nawiasie (skreślony wyraz) zostają."])
+
     def test_segment_wide_line_spacing(self):
         # DU/2024/853: lines of a paragraph 7 pt apart at 12 pt (over 0.45 * size), paragraphs 17 pt apart;
         # the threshold follows the usual gap before continuation lines on that page, and only on that page
@@ -455,6 +484,48 @@ class Basic(unittest.TestCase):
         self.assertEqual(pages, [2, 2, 2])
         md = to_markdown(Document(blocks=[Block("p", "USTAWA[^1]", 1)], footnotes=texts[:1], footnote_pages=[1]))
         self.assertIn("[^1]: Niniejsza ustawa:\n\n    1) wdraża dyrektywę 2019/884;\n\n    2) służy stosowaniu.\n", md)
+
+    def test_footnote_with_two_lists(self):
+        # "Niniejsza ustawa wdraża:" 1)–4), then "Niniejsza ustawa służy stosowaniu:" 1)–8): one footnote (DU/2026/43)
+        lines = ["[^1] Niniejsza ustawa wdraża:", "1) dyrektywę A;", "2) dyrektywę B.", "Niniejsza ustawa służy stosowaniu:",
+                 "1) rozporządzenia C;", "2) rozporządzenia D.", "[^2] Zmiany ogłoszono."]
+        texts, _ = _group_notes([Line(2, 0, 0, 0, 9.0, t) for t in lines])
+        self.assertEqual(texts, ["[^1] Niniejsza ustawa wdraża:\n\n1) dyrektywę A;\n\n2) dyrektywę B. Niniejsza ustawa służy "
+                                 "stosowaniu:\n\n1) rozporządzenia C;\n\n2) rozporządzenia D.", "[^2] Zmiany ogłoszono."])
+
+    def test_footnote_number_not_superscript(self):
+        # consolidated texts print the footnote of the title as "1)I) Niniejsza ustawa…" (DU/2025/1131): footnote 1
+        # (the text has "[^1]"), not a paragraph after the last article; so is a plain "3) …" without a marker
+        doc = Document(blocks=[Block("p", "o Krajowej Administracji Skarbowej[^1]", 1), Block("p", "Art. 1. Treść.", 1)],
+                       footnotes=["1)I) Niniejsza ustawa wdraża:\n\n1) dyrektywę A.", "[^2] Dodany.", "3) Ogłoszona."],
+                       footnote_pages=[1, 2, 2])
+        md = to_markdown(doc)
+        self.assertIn("##### Art. 1.\n\nTreść.\n\n[^1]: I) Niniejsza ustawa wdraża:\n\n    1) dyrektywę A.\n\n"
+                      "[^2]: Dodany.\n\n[^3]: Ogłoszona.\n", md)
+        # a number that another footnote has stays as printed
+        doc = Document(blocks=[Block("p", "Art. 1. Treść[^1].", 1)], footnotes=["[^1] Dodany.", "1) Inny."],
+                       footnote_pages=[1, 1])
+        self.assertIn("[^1]: Dodany.\n\n1) Inny.\n", to_markdown(doc))
+
+    def test_letter_footnotes(self):
+        # the announcement of a consolidated text has footnotes a), b) ("Zmiany tekstu jednolitego wymienionej ustawy
+        # zostały ogłoszone…") with small markers "zm.b))" (DU/2026/1245): footnotes, not text after the last article
+        def w(text, x0, top=100.0, size=10.0):
+            return {"text": text, "x0": x0, "x1": x0 + 5 * len(text), "top": top, "bottom": top + size, "size": size}
+        body, _ = _frame_lines([w("z", 50), w("późn.", 60), w("zm.", 90), w("b)", 105.5, 98, 6), w(")", 116),
+                                w("oraz", 130), w("c)", 156, 98, 6)], 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["z późn. zm.[^b]) oraz [^c]"])
+        texts, _ = _group_notes([Line(2, 0, 0, 0, 9.0, t) for t in
+                                 ["a) Zmiany ustawy A", "ogłoszono.", "b) Zmiany ustawy B.", "[^1] Niniejsza ustawa wdraża:",
+                                  "a) dyrektywę;", "b) dyrektywę."]])
+        self.assertEqual(texts, ["a) Zmiany ustawy A ogłoszono.", "b) Zmiany ustawy B.",
+                                 "[^1] Niniejsza ustawa wdraża: a) dyrektywę; b) dyrektywę."])
+        doc = Document(blocks=[Block("p", "poz. 1530, z późn. zm.[^b]) oraz [^c]", 1), Block("p", "Art. 1. Treść[^1].", 3)],
+                       footnotes=texts, footnote_pages=[1, 1, 3])
+        md = to_markdown(doc)
+        # a marker without a footnote of that letter is written back as printed
+        self.assertIn("poz. 1530, z późn. zm.[^b]) oraz c)\n\n##### Art. 1.\n\nTreść[^1].\n\n"
+                      "[^a]: Zmiany ustawy A ogłoszono.\n\n[^b]: Zmiany ustawy B.\n\n[^1]: Niniejsza ustawa wdraża:", md)
 
     def test_colophon_of_an_issue(self):
         # the last page of an old issue: the colophon may be read as footnotes, price and ISSN as body (DU/2000/291)

@@ -27,6 +27,15 @@ class Tree(unittest.TestCase):
                          ["par_1/ust_1/pkt_1", "par_1/ust_1/pkt_2", "text", "text"])
         self.assertEqual(paths(t["body"]), ["par_1", "par_1/ust_1", "par_1/ust_1/pkt_1", "par_1/ust_1/pkt_2", "par_1/ust_2"])
 
+    def test_article_range(self):
+        # "##### Art. 266–280." (consolidated text): an art node of its own; the article before keeps its text
+        t = md_to_tree(md("##### Art. 265.", "§ 1. Treść.", "##### Art. 266–280.", "[^52]",
+                          "##### Art. 22–28a.", "(pominięte)", "[^52]: Przez art. 1 ustawy."))
+        self.assertEqual(paths(t["body"]), ["art_265", "art_265/par_1", "art_266–280", "art_22–28a"])
+        self.assertEqual([n["text"] for n in t["body"]][1:], ["[^52]", "(pominięte)"])
+        t = md_to_tree(md("##### Art. 106l.", "Treść.", "##### Art. 106ł.", "§ 1. Kto."))
+        self.assertEqual(paths(t["body"]), ["art_106l", "art_106ł", "art_106ł/par_1"])
+
     def test_item_text_split_by_layout_is_not_common_part(self):
         # a boxed layout splits an item into lines; a lit that follows shows the line was the item's own text
         t = md_to_tree(md("##### § 1.", "1. Wniosek zawiera:", "3) wdrożone środki mające na celu zapobieganie",

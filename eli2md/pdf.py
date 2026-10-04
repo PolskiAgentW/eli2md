@@ -66,7 +66,7 @@ INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box
 DUP_TOL = 0.3  # pt; a char drawn twice repeats within this distance (<= 0.1pt in DU/2025/1095; see _dedupe)
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
 CID = re.compile(r"\(cid:\d+\)")  # a glyph the PDF font does not map to Unicode (pdfminer's placeholder)
-FOOTNOTE_MARK = re.compile(r"^\d{1,3}\)?[,.;:]?$")
+FOOTNOTE_MARK = re.compile(r"^(?:\d{1,3}\)?|[a-z]\))[,.;:]?$")  # "3)", letters too: "b)" (see _letter_refs)
 FOOTNOTE_TYPE = 9.5  # pt; footnotes are set in 9pt, body text in 10pt
 # Small digits without ")" are not footnote markers but unit numbers (Art. 41¹), units (m²)
 # or chemical subscripts (P₂O₅). Kept as Unicode super/subscript digits.
@@ -695,8 +695,11 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
         mid = sum((w["top"] + w["bottom"]) / 2 for w in base) / len(base) if base else None
         for k, w in enumerate(r):
             if w.get("sup"):
-                m = re.match(r"^(\d+)\)?(.*)$", w["text"])
-                parts.append((f"[^{m.group(1)}]{m.group(2)}", True))
+                m = re.match(r"^(\d+|[a-z])\)?(.*)$", w["text"])
+                # a letter keeps the space it was printed after: without a footnote of that letter it is written
+                # back as printed (_letter_refs)
+                glued = m.group(1).isdigit() or k == 0 or w["x0"] - r[k - 1]["x1"] < 1.0
+                parts.append((f"[^{m.group(1)}]{m.group(2)}", glued))
             elif w.get("index"):  # "30f" -> "³⁰ᶠ"; as printed if a char has no superscript form ("[1q]")
                 sup = w["text"].translate(SUPER)
                 parts.append((sup if all(c in SUP_CHARS for c in sup) else f"[{w['text']}]", True))
@@ -807,6 +810,9 @@ def _follows(a: str, b: str) -> bool:
     return not x.isdigit() and not y.isdigit() and ord(y) == ord(x) + 1
 
 
+LEFT_OUT = re.compile(r"\((?:uchylon|pominię[tc]|skreślon)[a-z]*\)$")
+
+
 def _segment(body: list[Line]) -> list[Block]:
     """Group lines into blocks (paragraphs): by the vertical gap (relative to font size and to the usual
     gap on the page), at page breaks by content. Annex headers and signatures always start a block."""
@@ -834,8 +840,10 @@ def _segment(body: list[Line]) -> list[Block]:
             # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
             new = not (l.page == prev.page and l.x0 > 0.4 * l.pw and l.top - prev.bottom < 0.8 * l.size)
         elif l.page != prev.page or (prev.col == 1 and l.col == 2 and l.band == prev.band):
-            # a page break, or the break from the bottom of the left column to the top of the right one
-            new = bool(UNIT_START.match(l.text)) or bool(re.search(r"[.:;”]$", prev.text))
+            # a page break, or the break from the bottom of the left column to the top of the right one;
+            # "(uchylony)" / "(pominięty)" is the whole text of its unit (DU/2026/468: "KSIĘGA PIERWSZA" on the next page)
+            new = bool(UNIT_START.match(l.text)) or bool(re.search(r"[.:;”]$", prev.text)) \
+                or bool(LEFT_OUT.search(prev.text))
         else:
             # Some PDFs set units with little extra space (2 pt over the usual gap between lines, not 6),
             # or none: then a unit starts after a line that ends short of the right margin (the last line
@@ -1078,11 +1086,16 @@ def _group_notes(notes: list[Line]) -> tuple[list[str], list[int]]:
     cur, cur_page, item = None, 0, 0
     for l in notes:
         point = re.match(r"^(\d+)\)\s", l.text)
+        letter = re.match(r"^([a-z])\)\s", l.text)
         # "Niniejsza ustawa:" + "1) wdraża…" + "2) służy…": points of a footnote (DU/2026/421), a paragraph each;
         # other lines "N) …" start a footnote whose marker is not set as a superscript
-        if cur is not None and point and int(point.group(1)) == item + 1 and (item or cur.rstrip().endswith(":")):
-            cur, item = cur + "\n\n" + l.text, item + 1
-        elif re.match(r"^\[\^\d+\]", l.text) or point:
+        # a second list after another colon starts at 1 again ("Niniejsza ustawa służy stosowaniu:", DU/2026/43)
+        if cur is not None and point and (int(point.group(1)) == item + 1 and item
+                                          or int(point.group(1)) == 1 and cur.rstrip().endswith(":")):
+            cur, item = cur + "\n\n" + l.text, int(point.group(1))
+        elif re.match(r"^\[\^(?:\d+|[a-z])\]", l.text) or point or letter and cur is not None and (
+                prev := re.match(r"^(?:\[\^([a-z])\]|([a-z])\))", cur)) \
+                and ord(letter.group(1)) == ord(prev.group(1) or prev.group(2)) + 1:  # footnotes a), b) (_letter_refs)
             if cur is not None:
                 texts.append(cur)
                 pages.append(cur_page)
@@ -1096,21 +1109,23 @@ def _group_notes(notes: list[Line]) -> tuple[list[str], list[int]]:
     return texts, pages
 
 
+# "Art. 266–280." / "Art. 22–28. (pominięte)": articles left out of a consolidated text, a unit of their own
+ART_RANGE = rf"(?:\s*[–-]\s*(?:Art\.\s*)?\d+[a-zł]*[{SUP_CHARS}]*)?"
 UNIT_HEAD = {
-    "Art.": re.compile(rf"^(Art\.\s*\d+[a-z]*[{SUP_CHARS}]*\.)\s*(.*)$", re.S),
+    "Art.": re.compile(rf"^(Art\.\s*\d+[a-zł]*[{SUP_CHARS}]*{ART_RANGE}\.)\s*(.*)$", re.S),  # art. 106ł too
     "§": re.compile(rf"^(§\s*\d+[a-z]*[{SUP_CHARS}]*\.)\s*(.*)$", re.S),
 }
 # A quoted unit that opens with its ust. 1 or § 1 (codes): "„Art. 21. 1. Treść" -> "„Art. 21." + "1. Treść",
 # "Art. 14t. § 1. Treść" -> "Art. 14t." + "§ 1. Treść"
 QUOTED_UNIT = re.compile(
-    rf"^(„?(?:Art\.|§)\s*\d+[a-z]*[{SUP_CHARS}]*\.)\s+(„?(?:§\s*)?\d+[a-z]*[{SUP_CHARS}]*\.\s.*)$", re.S)
+    rf"^(„?(?:Art\.|§)\s*\d+[a-zł]*[{SUP_CHARS}]*\.)\s+(„?(?:§\s*)?\d+[a-z]*[{SUP_CHARS}]*\.\s.*)$", re.S)
 # ” after minutes is the seconds sign in coordinates (16°41’56,70”), not a closing quote
 SECONDS = re.compile(r"\d[’′']\s?\d+(?:[,.]\d+)?”")
 # a quote that opens a block, possibly after the unit number: "„Art. 5.", "Art. 30. „1.", "1) „a)"
-QUOTE_HEAD = re.compile(rf"^(?:(?:Art\.|§)\s*\d+[a-z]*[{SUP_CHARS}]*\.\s*|\d+[a-z]*[{SUP_CHARS}]*[.)]\s*|[a-z]{{1,3}}\)\s*)?[„“]")
+QUOTE_HEAD = re.compile(rf"^(?:(?:Art\.|§)\s*\d+[a-zł]*[{SUP_CHARS}]*\.\s*|\d+[a-z]*[{SUP_CHARS}]*[.)]\s*|[a-z]{{1,3}}\)\s*)?[„“]")
 
 
-ART_NUMBER_AT = re.compile(r"^Art\.\s*(\d+[a-z]*)\.")  # the number of "Art. 2. W ustawie …" (quote_depths)
+ART_NUMBER_AT = re.compile(r"^Art\.\s*(\d+[a-zł]*)\.")  # the number of "Art. 2. W ustawie …" (quote_depths)
 ART_DIGITS = re.compile(r"\d+")
 
 
@@ -1246,7 +1261,32 @@ def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[i
     return "\n".join(lines)
 
 
-FN_LABEL = re.compile(r"^\[\^(\d+)\]\s*(.*)$", re.S)
+FN_LABEL = re.compile(r"^\[\^(\d+|[a-z])\]\s*(.*)$", re.S)
+PLAIN_LABEL = re.compile(r"^(\d+|[a-z])\)\s*(\S.*)$", re.S)  # a label in body type: "1)I) Niniejsza…", "a) Zmiany…"
+LETTER_REF = re.compile(r"\[\^([a-z])\]")
+
+
+def _plain_labels(doc: Document) -> Document:
+    """A footnote whose label is printed in body type ("1)I) Niniejsza ustawa wdraża…" in consolidated texts,
+    DU/2025/1131; "a) Zmiany tekstu jednolitego…" of the announcement, DU/2026/1245) is a footnote with that label,
+    not a paragraph after the last article, unless another footnote has the label: then it stays as printed."""
+    have = {m.group(1) for f in doc.footnotes if (m := FN_LABEL.match(f))}
+    out = []
+    for f in doc.footnotes:
+        if (m := PLAIN_LABEL.match(f)) and m.group(1) not in have:
+            have.add(m.group(1))
+            f = f"[^{m.group(1)}] {m.group(2)}"
+        out.append(f)
+    return replace(doc, footnotes=out)
+
+
+def _letter_refs(doc: Document) -> Document:
+    """A small "b)" in the text ("z późn. zm.b))") is a marker only if the act has footnote b); otherwise it is
+    written back as printed (a label in small type, not a footnote)."""
+    have = {m.group(1) for f in doc.footnotes if (m := FN_LABEL.match(f)) and m.group(1).isalpha()}
+    sub = lambda m: m.group(0) if m.group(1) in have else m.group(1) + ")"  # noqa: E731
+    return replace(doc, blocks=[replace(b, text=LETTER_REF.sub(sub, b.text)) if "[^" in b.text else b
+                                for b in doc.blocks])
 
 
 def _footnote_pages(doc: Document) -> dict[str, list[int]]:
@@ -1308,6 +1348,7 @@ def _body_notes(doc: Document, occ: dict[str, list[int]]) -> Document:
 
 def to_markdown(doc: Document, meta: dict | None = None) -> str:
     """Markdown body: one block per paragraph, top-level units (Art. or, if none, §) as h5."""
+    doc = _letter_refs(_plain_labels(doc))
     occ = _footnote_pages(doc)
     doc = _body_notes(doc, occ)
     if any(len(v) > 1 for v in occ.values()):

@@ -5,7 +5,10 @@ ma w HTML (artykuły wg `_jednostki_html` z legal-cite-pl). Artykuły niezmienio
 identyczny tekst. Różniące się sprawdzane z warstwą tekstową PDF (pdftotext) tego samego t.j. (tj_pdfcheck2.ocen):
 zgodne z PDF → różnica wobec HTML to zmiana stanu prawnego, nie błąd konwersji.
 
-    /tmp/lc-venv/bin/python tools/legalcite/tj_survey.py OUT_DIR [--limit N]
+    /tmp/lc-venv/bin/python tools/legalcite/tj_survey.py OUT_DIR [--limit N] [--acts AKTY.jsonl]
+
+--acts: lista ustaw (baza, md) z akty.jsonl wcześniejszego przebiegu zamiast wyboru z index.csv (ten sam zbiór).
+TJ_MD_ROOT=DIR: Markdown brany z DIR/DU/<rok>/DU-<rok>-<poz>.md (np. z tj_convert.py) zamiast ze zbioru.
 
 Wynik: OUT_DIR/akty.jsonl (wiersz na ustawę), OUT_DIR/do_oceny.jsonl (artykuły do oceny ręcznej), podsumowanie na stdout.
 Pobrania (metadane, HTML) w ~/cache/tjsurvey/, 0,3 s przerwy między zapytaniami do API.
@@ -19,6 +22,7 @@ from tj_pdfcheck2 import ocen, przypisy_md, ODN  # noqa: E402
 ROOT = pathlib.Path.home() / "data/dziennik-ustaw-md"
 CACHE = pathlib.Path.home() / "cache/eli"
 SC = pathlib.Path.home() / "cache/tjsurvey"
+MD_ROOT = pathlib.Path(os.environ.get("TJ_MD_ROOT", ROOT))
 API = "https://api.sejm.gov.pl/eli/acts"
 
 
@@ -70,7 +74,7 @@ def html_tj(baza, przed):
 def jeden(baza, eli_md):
     rec = dict(baza=baza, md=eli_md)
     y, p = eli_md.split("/")[1:]
-    md_path = ROOT / "DU" / y / f"DU-{y}-{p}.md"
+    md_path = MD_ROOT / "DU" / y / f"DU-{y}-{p}.md"
     md = md_artykuly(md_path)
     rec["md_art"] = len(md)
     data_md = meta(eli_md).get("announcementDate") or ""
@@ -83,8 +87,8 @@ def jeden(baza, eli_md):
     key = "S:" + h[1]
     core._jedn_cache.clear()
     html = {}
-    for n, t in core._jednostki_html(key, raw):
-        html.setdefault(n, t)
+    for unit in core._jednostki_html(key, raw):  # a855ad1: (num, text); 06c82da: (num, text, date)
+        html.setdefault(unit[0], unit[1])
     md_d = {}
     for k, _, b in md:
         md_d.setdefault(k, b)
@@ -116,7 +120,10 @@ def main():
     out = pathlib.Path(sys.argv[1])
     out.mkdir(parents=True, exist_ok=True)
     limit = int(sys.argv[sys.argv.index("--limit") + 1]) if "--limit" in sys.argv else None
-    wyb = sorted(wybierz().items(), key=lambda kv: kv[1][1])
+    if "--acts" in sys.argv:
+        wyb = [(r["baza"], (None, r["md"])) for r in map(json.loads, open(sys.argv[sys.argv.index("--acts") + 1]))]
+    else:
+        wyb = sorted(wybierz().items(), key=lambda kv: kv[1][1])
     print("ustaw z t.j. w zbiorze:", len(wyb), flush=True)
     done = set()
     akty_f = out / "akty.jsonl"

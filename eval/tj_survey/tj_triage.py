@@ -13,15 +13,15 @@ Klasy (pierwsza pasująca):
   uklad              wszystkie różnice ≤ 3 znaki (etykiety „a)”, dzielenie wyrazów, numery odnośników)
   brak_naglowka      w PDF nie ma nagłówka artykułu
   inne               do obejrzenia ręcznie
-Wynik: OUT/triage.jsonl + liczby na stdout.
+Wynik: OUT/triage.jsonl + liczby na stdout. TJ_MD_ROOT=DIR: Markdown z DIR (jak w tj_survey.py).
 """
-import collections, json, pathlib, re, subprocess, sys
+import collections, json, os, pathlib, re, subprocess, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from tj_compare import md_artykuly  # noqa: E402
 from tj_pdfcheck2 import ocen, przypisy_md, norm, ODN  # noqa: E402
 
-ROOT = pathlib.Path.home() / "data/dziennik-ustaw-md"
+ROOT = pathlib.Path(os.environ.get("TJ_MD_ROOT", pathlib.Path.home() / "data/dziennik-ustaw-md"))
 CACHE = pathlib.Path.home() / "cache/eli"
 SC = pathlib.Path.home() / "cache/tjsurvey"
 MATH = re.compile(r"[\U0001D400-\U0001D7FF∑∗⋅≤≥×√∆]")

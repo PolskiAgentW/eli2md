@@ -48,7 +48,7 @@ from __future__ import annotations
 import json
 import re
 
-from .pdf import LOWER, QUOTE_HEAD, SECONDS, SUP_CHARS, SUP_DIGITS
+from .pdf import ART_RANGE, LOWER, QUOTE_HEAD, SECONDS, SUP_CHARS, SUP_DIGITS
 
 SUP = SUP_CHARS  # digits and letters of an index: "41¹", "22¹ᵃ"
 UPPER = "A-ZĄĆĘŁŃÓŚŹŻ"
@@ -56,7 +56,7 @@ NOTE = rf"(?:\[\^\d+(?:_\d+)?\]|[{SUP_DIGITS}]+⁾)*"  # footnote markers glued 
 # "Art. 5.[^3]", or markers of notes printed in the text: "2)²⁾ zamówień" (pdf._body_notes)
 LEAD_NOTES = re.compile(r"^((?:\[\^\d+(?:_\d+)?\]\s*)+)(.*)$", re.S)  # "[^7] 1. Treść" (marker of the Art. heading)
 UNIT_RES = [  # (type, regex); groups: number, footnote markers, rest
-    ("art", re.compile(rf"^Art\.\s*(\d+[a-z]*[{SUP}]*)\.({NOTE})\s*(.*)$", re.S)),
+    ("art", re.compile(rf"^Art\.\s*(\d+[a-zł]*[{SUP}]*{ART_RANGE})\.({NOTE})\s*(.*)$", re.S)),  # 106ł, 266–280
     ("par", re.compile(rf"^§\s*(\d+[a-z]*[{SUP}]*)\.({NOTE})\s*(.*)$", re.S)),
     # "2.Ustala się" (no space in the PDF) is a unit too, "1.1. Cel" is not
     ("ust", re.compile(rf"^(\d+[a-z]*[{SUP}]*)\.({NOTE})(?:\s+|(?=[{UPPER}]))(\S.*)$", re.S)),
@@ -371,7 +371,7 @@ def md_to_tree(md: str) -> dict:
             footnotes[note] += "\n\n" + p.strip()
             continue
         p, note = p.strip(), None
-        fm = re.match(r"^\[\^(\d+(?:_\d+)?)\]:\s*(.*)$", p, re.S)
+        fm = re.match(r"^\[\^(\d+(?:_\d+)?|[a-z](?:_\d+)?)\]:\s*(.*)$", p, re.S)  # [^a]: footnotes a), b)
         if fm:
             footnotes[fm.group(1)] = fm.group(2)
             note = fm.group(1)
