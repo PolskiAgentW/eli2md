@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from eli2md import ocr
-from eli2md.pdf import ANNEX_OCR, Block, Document, _fix_section_sign, _hidden_ocr_scan, to_markdown
+from eli2md.pdf import ANNEX_OCR, Block, Document, _fix_section_sign, _hidden_ocr_scan, _ocr_lines, _segment, to_markdown
 
 META = {"ELI": "DU/2025/1", "title": "Umowa", "type": "Umowa międzynarodowa", "pos": 1, "publisher": "DU"}
 HEAD = "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext"
@@ -279,6 +279,15 @@ class Scan(unittest.TestCase):
                          "1) w § 1 skreśla się pkt 3, w § 13 w ust. 1")
         for t in ("8. Zadania gminy", "w 8 dni od dnia", "8 osób"):
             self.assertEqual(_fix_section_sign(t), t)
+
+    def test_signature(self):
+        lines = _ocr_lines(["Art. 3. Ustawa wchodzi w życie z dniem ogłoszenia. Prezydent Rzeczypospolitej Polskiej: "
+                            "W. Jaruzelski", "Minister Finansów może określić, w drodze rozporządzenia: 1) wzory"],
+                           1, 600, 840, None, "scan")
+        self.assertEqual([l.text for l in lines], ["Art. 3. Ustawa wchodzi w życie z dniem ogłoszenia.",
+                                                   "Prezydent Rzeczypospolitej Polskiej: W. Jaruzelski",
+                                                   "Minister Finansów może określić, w drodze rozporządzenia: 1) wzory"])
+        self.assertEqual([b.kind for b in _segment(lines)], ["scan", "signature", "scan"])
 
     def test_annex_header(self):
         self.assertTrue(ANNEX_OCR.match("Załącznik do obwieszczenia Ministra z dnia 27 marca 1997 r. (poz. 224)"))

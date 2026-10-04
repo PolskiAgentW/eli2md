@@ -83,6 +83,13 @@ SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
 # without the brackets, so both prints give "Art. 479³⁰ᶠ." ("1" alone is a script digit, see FOOTNOTE_MARK).
 INDEX = re.compile(r"^(?:\[(\d{1,3}[a-z]{0,3})\]|(\d{1,3}[a-z]{1,3}))$")
 SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+$")
+# a signature read by OCR, which has no position on the page to tell it ("Prezes Trybunału Konstytucyjnego: A. Zo//",
+# "Minister Finansów: w z. H. Wasilewska-Trenkner"); also at the end of the last paragraph ("… z dniem ogłoszenia.
+# Prezydent Rzeczypospolitej Polskiej: W. Jaruzelski", DU/1990/390)
+SIGNER_OCR = r"(?:Prezydent|Prezes|Wiceprezes|Minister|Marszałek|Przewodnicząc[ya]|Sekretarz|Pierwszy|Szef|Kierownik)"
+SIGNER_NAME_OCR = r":\s*(?:w\s?z\.\s*)?(?:[A-ZŁŚŻĆ]\w{0,2}\.\s*)+[A-ZŁŚŻĆ][\w/'’-]+(?:[- ][A-ZŁŚŻĆ][\w-]+)?\s*$"
+SIGNATURE_OCR = re.compile(rf"^{SIGNER_OCR}[\w ,-]{{2,90}}{SIGNER_NAME_OCR}")
+SIGNATURE_AFTER_OCR = re.compile(rf"(?<=[.;])\s+({SIGNER_OCR}[\w ,-]{{2,90}}{SIGNER_NAME_OCR})")
 IMAGE_TEXT_CHARS = 30  # more text-layer chars than this over an image: the image is a background, not read by OCR
 # Dz.U. (and M.P.) up to 2011 came out in numbered issues: the page header names the issue ("Dziennik Ustaw Nr 150
 # — 9307 — Poz. 1255, 1256 i 1257", DU/2005/1255), the first page of an issue has "Nr 115" under the masthead
@@ -848,6 +855,8 @@ def _segment(body: list[Line]) -> list[Block]:
         kind = "p"
         if l.mark == "scan" and ANNEX_OCR.match(l.text) and len(l.text.split()) <= 40:
             kind = "annex"
+        elif l.mark == "scan" and SIGNATURE_OCR.match(l.text) and len(l.text.split()) <= 14:
+            kind = "signature"
         elif l.mark:
             kind = l.mark
         elif ANNEX.match(l.text) and (l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph) \
@@ -1035,7 +1044,12 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
             t = t[m.end():].strip()
             if not t:
                 continue
-        out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, _fix_section_sign(t) if mark == "scan" else t, pw, ph, mark=mark))
+        if mark == "scan":
+            t = _fix_section_sign(t)
+            if (sig := SIGNATURE_AFTER_OCR.search(t)) and len(sig.group(1).split()) <= 14:
+                out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, t[:sig.start()], pw, ph, mark=mark))
+                t = sig.group(1)
+        out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, t, pw, ph, mark=mark))
     return out
 
 
