@@ -289,6 +289,13 @@ class Scan(unittest.TestCase):
                                                    "Minister Finansów może określić, w drodze rozporządzenia: 1) wzory"])
         self.assertEqual([b.kind for b in _segment(lines)], ["scan", "signature", "scan"])
 
+    @unittest.skipUnless(ocr.speller(), "libhunspell or hunspell-pl not installed")
+    def test_fix_words(self):
+        self.assertEqual(ocr.fix_words("Wrozporządzeniu zdnia 4 maja, wart. 5 dziata od dnia ogtoszenia"),
+                         "W rozporządzeniu z dnia 4 maja, w art. 5 działa od dnia ogłoszenia")
+        for t in ("Bielsko", "lata", "tak", "Ustawa wchodzi w życie"):
+            self.assertEqual(ocr.fix_words(t), t)
+
     def test_annex_header(self):
         self.assertTrue(ANNEX_OCR.match("Załącznik do obwieszczenia Ministra z dnia 27 marca 1997 r. (poz. 224)"))
         self.assertTrue(ANNEX_OCR.match("ZAŁĄCZNIK Nr 2"))

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import itertools
 import os
 import re
 import shutil
@@ -235,6 +236,76 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
     page.words = len(confs)
     page.confidence = statistics.median(confs) if confs else 0.0
     return page
+
+
+class _Speller:
+    """libhunspell with the Polish dictionary (packages libhunspell-1.7-0 and hunspell-pl), through ctypes."""
+
+    def __init__(self, aff: str = "/usr/share/hunspell/pl_PL.aff", dic: str = "/usr/share/hunspell/pl_PL.dic"):
+        import ctypes
+        self.lib = ctypes.CDLL("libhunspell-1.7.so.0")
+        self.lib.Hunspell_create.restype = ctypes.c_void_p
+        self.lib.Hunspell_create.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+        self.lib.Hunspell_spell.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+        enc = re.search(r"^SET\s+(\S+)", Path(aff).read_text(encoding="latin-1"), re.M)
+        self.enc = enc.group(1) if enc else "utf-8"
+        self.h = self.lib.Hunspell_create(aff.encode(), dic.encode())
+        self.known: dict[str, bool] = {}
+
+    def ok(self, w: str) -> bool:
+        if w not in self.known:
+            try:
+                self.known[w] = bool(self.lib.Hunspell_spell(self.h, w.encode(self.enc)))
+            except UnicodeEncodeError:
+                self.known[w] = False
+        return self.known[w]
+
+
+@lru_cache(maxsize=None)
+def speller() -> _Speller | None:
+    """The Polish speller, or None if libhunspell or the dictionary is missing (then words are not corrected)."""
+    try:
+        return _Speller()
+    except OSError:
+        return None
+
+
+SPELL_WORD = re.compile(r"[^\W\d_]{3,}")
+# a one-letter preposition or conjunction glued to the next word ("Wrozporządzeniu", "zdnia", "wart. 5")
+GLUED = ("w", "z", "o", "i", "a", "u")
+GLUED_ABBR = re.compile(r"\b([wW])(art|ust|pkt|lit)\.")
+
+
+def fix_words(text: str) -> str:
+    """Words of a scan read by tesseract that the Polish dictionary does not know, corrected where one fix makes them
+    known: "ł" read as "t" or "l" (one or two of them: "ogtoszenia" -> "ogłoszenia", "dziata" -> "działa") and a
+    one-letter preposition glued to the next word ("Wrozporządzeniu" -> "W rozporządzeniu"; also "wart." -> "w art.",
+    "zdnia" -> "z dnia"). Several possible fixes: the word stays. Without the dictionary the text is kept.
+    Measured on DU 1990-1999 (eval/scans_1990_1999/): see the README, 0.6.26."""
+    sp = speller()
+    if sp is None:
+        return text
+    text = GLUED_ABBR.sub(r"\1 \2.", re.sub(r"\b([zZ])dnia\b", r"\1 dnia", text))
+
+    def fix(m: re.Match) -> str:
+        w = m.group()
+        if sp.ok(w) or sp.ok(w.lower()):
+            return w
+        at = [i for i, c in enumerate(w) if c in "tl"]
+        cands = set()
+        if 0 < len(at) <= 6:
+            for n in (1, 2):
+                for some in itertools.combinations(at, n):
+                    v = "".join("ł" if i in some else c for i, c in enumerate(w))
+                    if sp.ok(v) or sp.ok(v.lower()):
+                        cands.add(v)
+        if len(cands) == 1:
+            return cands.pop()
+        if not cands and w[0].lower() in GLUED and len(w) >= 5 and (sp.ok(w[1:]) or sp.ok(w[1:].lower())):
+            return f"{w[0]} {w[1:]}"
+        return w
+
+    return SPELL_WORD.sub(fix, text)
 
 
 def _column_order(lines: dict, width: int) -> dict:

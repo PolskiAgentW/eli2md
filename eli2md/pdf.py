@@ -1050,7 +1050,8 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
             if not t:
                 continue
         if mark == "scan":
-            t = _fix_section_sign(t)
+            from .ocr import fix_words
+            t = fix_words(_fix_section_sign(t))
             if (sig := SIGNATURE_AFTER_OCR.search(t)) and len(sig.group(1).split()) <= 14:
                 out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, t[:sig.start()], pw, ph, mark=mark))
                 t = sig.group(1)
