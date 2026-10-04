@@ -238,34 +238,42 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
 
 
 def _column_order(lines: dict, width: int) -> dict:
-    """Tesseract's lines of a two-column page in reading order. Columns are justified, so many lines end at the
-    left column's right edge and many start at the right column's left edge, both in the middle of the page; the
-    gutter lies between them (lines over the whole width, as a title or the publisher's colophon, do not matter:
-    DU/1995/68). A line with words on both sides of the gutter is two lines, one per column, if the gap between them
-    is about as wide as the gutter (tesseract joined them), else it spans the page and starts a band; within a band
-    the left column comes before the right one. Tesseract's own order of blocks mixes the columns of some scans
+    """Tesseract's lines of a two-column page in reading order. The gutter is the x near the middle of the text that
+    the most lines vote for: a line ending just left of it (the left column is justified), one starting just right of
+    it, or one with a gap between two words over it (tesseract joined the lines of both columns: DU/1990/390, under
+    a table of contents across the page). Lines over the whole width (a title, the publisher's colophon: DU/1995/68)
+    do not vote. A line with words on both sides of the gutter and a wide gap there is two lines, one per column; a
+    line with a word over the gutter or only a narrow gap there spans the page and starts a band; within a band the
+    left column comes before the right one. Tesseract's own order of blocks mixes the columns of some scans
     (DU/1995/68, DU/1993/20). lines: as in parse_tsv, (block, paragraph, line) -> words (top, bottom, text, conf,
-    left, right). A page without such edges is kept as it is."""
+    left, right). A page with fewer than 5 votes for any x is kept as it is."""
     if width <= 0 or len(lines) < 10:
         return lines
-    lo, hi, step = 0.3 * width, 0.7 * width, max(1, width // 300)  # step: 8 px at 300 dpi
-
-    def edge(xs: list[int]) -> int | None:
-        """The x (to `step`) shared by the most of xs, if at least 5 lines share it."""
-        bins = Counter(x // step for x in xs if lo <= x <= hi)
-        best = max(bins, key=lambda b: bins[b - 1] + bins[b] + bins[b + 1], default=None)
-        return best * step if best is not None and bins[best - 1] + bins[best] + bins[best + 1] >= 5 else None
-
-    right_col = edge([min(w[4] for w in ws) for ws in lines.values()])
-    left_col = edge([max(w[5] for w in ws) for ws in lines.values() if right_col and max(w[5] for w in ws) < right_col])
-    if right_col is None or left_col is None or not 2 * step <= right_col - left_col <= 0.1 * width:
+    spans = sorted((min(w[4] for w in ws), max(w[5] for w in ws)) for ws in lines.values())
+    x0 = sorted(a for a, _ in spans)[len(spans) // 20]
+    x1 = sorted(b for _, b in spans)[-1 - len(spans) // 20]
+    step, gap = max(1, width // 300), max(2, width // 80)  # 8 and 33 px at 300 dpi; a space between words: 15-25 px
+    lo, hi = ((x0 + x1) // 2 - (x1 - x0) // 16) // step, ((x0 + x1) // 2 + (x1 - x0) // 16) // step
+    votes: Counter = Counter()
+    for ws in lines.values():
+        bins = set()
+        a, b = min(w[4] for w in ws), max(w[5] for w in ws)
+        bins.update(range(b // step, (b + gap) // step + 1))
+        bins.update(range((a - gap) // step, a // step + 1))
+        for w1, w2 in zip(ws, ws[1:]):
+            if w2[4] - w1[5] >= gap:
+                bins.update(range(w1[5] // step, w2[4] // step + 1))
+        votes.update(x for x in bins if lo <= x <= hi)
+    if not votes or max(votes.values()) < 5:
         return lines  # one column
-    g, gap = (left_col + right_col) // 2, right_col - left_col
+    top = max(votes.values())
+    best = [x for x in range(lo, hi + 1) if votes[x] == top]
+    g = best[len(best) // 2] * step + step // 2
     items = []  # (top, side, words); side 0 = spans, 1 = left, 2 = right
     for ws in lines.values():
         left, right = [w for w in ws if w[5] <= g], [w for w in ws if w[4] >= g]
         joined = left and right and len(left) + len(right) == len(ws) and \
-            min(w[4] for w in right) - max(w[5] for w in left) >= 0.7 * gap
+            min(w[4] for w in right) - max(w[5] for w in left) >= gap
         if left and right and not joined or len(left) + len(right) < len(ws):
             items.append((min(w[0] for w in ws), 0, ws))
             continue

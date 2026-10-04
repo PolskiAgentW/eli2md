@@ -64,9 +64,10 @@ ANNEX = re.compile(r"^Załącznik")
 ANNEX_UNDER_SIGNATURE = re.compile(r"^„?(?:Załącznik|ZAŁĄCZNIK)")
 # the header of an annex in a paragraph read by OCR, which has no position on the page: "Załącznik do obwieszczenia
 # Ministra … z dnia 27 marca 1997 r. (poz. 224)" (DU/1997/224 p. 2), "ZAŁĄCZNIK Nr 2"; not "Załącznik do ustawy określa …"
-ANNEX_OCR = re.compile(r"^(?:Załącznik|ZAŁĄCZNIK)(?:\s+(?:nr|Nr|NR)\s*\S+)?(?:\s+do\s+(?:ustawy|rozporządzenia|obwieszczenia"
-                       r"|uchwały|zarządzenia|postanowienia|dekretu|umowy|konwencji|protokołu)\b(?!.*\b(?:stanowi|określa|zawiera)\b)"
-                       r"|\s*$)")
+ANNEX_OCR = re.compile(r"^(?:Załącznik|ZAŁĄCZNIK)(?:i|I)?(?:\s+(?:nr|Nr|NR)\s*\S+)?(?:\s+do\s+(?:ustawy|rozporządzenia"
+                       r"|obwieszczenia|uchwały|zarządzenia|postanowienia|dekretu|umowy|konwencji|protokołu)\b"
+                       r"(?!.*\b(?:stanowi|określa|zawiera)\b)|\s*$|\s+[A-ZĄĆĘŁŃÓŚŹŻ]{3,}\b)")
+# "Załączniki do ustawy z dnia 9 grudnia 1993 r. (poz. 599)", "Załącznik nr 1 WYKAZ TOWARÓW …" (DU/1993/599)
 INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
 DUP_TOL = 0.3  # pt; a char drawn twice repeats within this distance (<= 0.1pt in DU/2025/1095; see _dedupe)
 MATH = re.compile("[\U0001D400-\U0001D7FF]")
@@ -1054,9 +1055,15 @@ def convert(path: str, ocr: str | None = None, position: int | None = None,
     if ocr:
         from . import ocr as ocr_mod
         doc.ocr_engine = f"tesseract {ocr_mod.check(ocr)}"
+    # a PDF of scans with Acrobat's OCR layer (Dz.U. 1918-1999) also has scans without it: read them as scans too
+    with open(path, "rb") as fh:
+        raw = fh.read()
+    scanned = bool(ocr) and (b"HiddenHorzOCR" in raw or b"HiddenVertOCR" in raw)
+    del raw
     with pdfplumber.open(path) as pdf:
         for pno, page in enumerate(pdf.pages, start=1):
-            scan = bool(ocr) and _hidden_ocr_scan(page)
+            scan = bool(ocr) and (_hidden_ocr_scan(page) or scanned and not page.chars
+                                  and _large_image(page, min_share=0.8) is not None)
             b, n = ([], []) if scan else _page_lines(page, pno, gut)
             layer = None  # text layer of a page mostly of glyphs without Unicode (forms, DU/2025/161): OCR first
             if _unmapped_share(page) > 0.1:
@@ -1428,8 +1435,10 @@ def to_markdown(doc: Document, meta: dict | None = None) -> str:
                             image_ocr_pages=doc.image_ocr_pages),
                 "# " + meta["title"]]
     run: list[int] = []  # consecutive pages without text get one note
+    noted: set[int] = set()  # scanned pages with their note
     for i, b in enumerate(doc.blocks):
-        if b.kind == "scan" and (i == 0 or doc.blocks[i - 1].kind != "scan" or doc.blocks[i - 1].page != b.page):
+        if b.kind == "scan" and b.page not in noted:  # once per page, also over an annex header on it
+            noted.add(b.page)
             lang = doc.ocr_langs.get(b.page)
             out.append(scan_note(b.page, f"{doc.ocr_engine}, {lang}" if lang else doc.ocr_engine))
         if b.kind == "ocr":  # each OCR page (or image of text) starts with its own note
