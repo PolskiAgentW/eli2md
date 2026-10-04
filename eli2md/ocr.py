@@ -238,37 +238,48 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
 
 
 def _column_order(lines: dict, width: int) -> dict:
-    """Tesseract's lines of a two-column page in reading order. The gutter is the x near the middle of the text that
-    the most lines vote for: a line ending just left of it (the left column is justified), one starting just right of
-    it, or one with a gap between two words over it (tesseract joined the lines of both columns: DU/1990/390, under
-    a table of contents across the page). Lines over the whole width (a title, the publisher's colophon: DU/1995/68)
-    do not vote. A line with words on both sides of the gutter and a wide gap there is two lines, one per column; a
-    line with a word over the gutter or only a narrow gap there spans the page and starts a band; within a band the
-    left column comes before the right one. Tesseract's own order of blocks mixes the columns of some scans
+    """Tesseract's lines of a two-column page in reading order. Near the middle of the text the lines of the left
+    column end and those of the right column start; the gutter is the x that best keeps the ends left of it and the
+    starts right of it (the middle of the best stretch: a right column with a hanging indent starts its items left of
+    its other lines, DU/1997/840). A line tesseract joined across the gutter (DU/1990/390, under a table of contents
+    across the page) gives an end and a start at its wide gap between two words. Lines over the whole width (a title,
+    the publisher's colophon: DU/1995/68) end and start far from the middle. The words are first put as if the scan
+    were straight (_deskew). A line with words on both sides of the gutter and a wide gap there is two lines, one per
+    column; a line with a word over the gutter or only a narrow gap there spans the page and starts a band; within a
+    band the left column comes before the right one. Tesseract's own order of blocks mixes the columns of some scans
     (DU/1995/68, DU/1993/20). lines: as in parse_tsv, (block, paragraph, line) -> words (top, bottom, text, conf,
-    left, right). A page with fewer than 5 votes for any x is kept as it is."""
+    left, right). A page with fewer than 5 ends or starts on either side is kept as it is."""
     if width <= 0 or len(lines) < 10:
         return lines
+    original = lines
+    lines = _deskew(lines)
     spans = sorted((min(w[4] for w in ws), max(w[5] for w in ws)) for ws in lines.values())
     x0 = sorted(a for a, _ in spans)[len(spans) // 20]
     x1 = sorted(b for _, b in spans)[-1 - len(spans) // 20]
     step, gap = max(1, width // 300), max(2, width // 80)  # 8 and 33 px at 300 dpi; a space between words: 15-25 px
     lo, hi = ((x0 + x1) // 2 - (x1 - x0) // 16) // step, ((x0 + x1) // 2 + (x1 - x0) // 16) // step
-    votes: Counter = Counter()
+    # ends of left-column lines and starts of right-column lines near the middle; a line tesseract joined across the
+    # gutter gives both at its wide gap between two words
+    ends, starts = [], []
     for ws in lines.values():
-        bins = set()
         a, b = min(w[4] for w in ws), max(w[5] for w in ws)
-        bins.update(range(b // step, (b + gap) // step + 1))
-        bins.update(range((a - gap) // step, a // step + 1))
+        ends += [b] if lo * step <= b <= hi * step else []
+        starts += [a] if lo * step <= a <= hi * step else []
         for w1, w2 in zip(ws, ws[1:]):
-            if w2[4] - w1[5] >= gap:
-                bins.update(range(w1[5] // step, w2[4] // step + 1))
-        votes.update(x for x in bins if lo <= x <= hi)
-    if not votes or max(votes.values()) < 5:
-        return lines  # one column
-    top = max(votes.values())
-    best = [x for x in range(lo, hi + 1) if votes[x] == top]
-    g = best[len(best) // 2] * step + step // 2
+            if w2[4] - w1[5] >= gap and (lo * step <= w1[5] <= hi * step or lo * step <= w2[4] <= hi * step):
+                ends.append(w1[5])
+                starts.append(w2[4])
+    if len(ends) < 5 or len(starts) < 5:
+        return original  # one column
+    # the x that best puts the ends left of it and the starts right of it; the middle of the best stretch
+    # (a right column with a hanging indent starts its items left of its other lines: DU/1997/840)
+    score = {x: sum(e <= x * step for e in ends) - sum(e > x * step for e in ends)
+             + sum(t >= x * step for t in starts) - sum(t < x * step for t in starts) for x in range(lo, hi + 1)}
+    top = max(score.values())
+    best = [x for x in range(lo, hi + 1) if score[x] == top]
+    g = (best[0] + best[-1]) // 2 * step + step // 2
+    if sum(e <= g for e in ends) < 5 or sum(t >= g for t in starts) < 5:
+        return original
     items = []  # (top, side, words); side 0 = spans, 1 = left, 2 = right
     for ws in lines.values():
         left, right = [w for w in ws if w[5] <= g], [w for w in ws if w[4] >= g]
@@ -291,7 +302,24 @@ def _column_order(lines: dict, width: int) -> dict:
                 out.append(it)
         else:
             band.append(it)
-    return {(k, 0, 0): ws for k, (_, _, ws) in enumerate(out)}
+    return {(k, 0, 0): [w[6] for w in ws] for k, (_, _, ws) in enumerate(out)}
+
+
+def _deskew(lines: dict) -> dict:
+    """The words with x moved as if the scan were straight; each word gets its original as a 7th field. The slope is
+    the Theil-Sen estimate over the left edges of the lines at the page's left margin (indented ones are off it).
+    A slanted scan moves a column's edge by tens of pixels from top to bottom (DU/1991/512 p. 1), more than the
+    gutter is wide."""
+    rows = [(sum(w[0] + w[1] for w in ws) / (2 * len(ws)), min(w[4] for w in ws)) for ws in lines.values()]
+    margin = sorted(a for _, a in rows)[len(rows) // 10]
+    pts = sorted((y, a) for y, a in rows if abs(a - margin) <= 40)
+    slopes = [(a2 - a1) / (y2 - y1) for i, (y1, a1) in enumerate(pts) for y2, a2 in pts[i + 1:] if y2 - y1 > 200]
+    slope = statistics.median(slopes) if len(slopes) >= 10 else 0.0
+    if abs(slope) > 0.05:
+        slope = 0.0  # not a slant: lines of other blocks at the margin
+    ref = statistics.median(y for y, _ in pts) if pts else 0.0
+    return {k: [(w[0], w[1], w[2], w[3], round(w[4] - slope * ((w[0] + w[1]) / 2 - ref)),
+                 round(w[5] - slope * ((w[0] + w[1]) / 2 - ref)), w) for w in ws] for k, ws in lines.items()}
 
 
 def usable(page: OcrPage) -> bool:
