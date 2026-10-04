@@ -100,8 +100,10 @@ def parse_unit(text: str) -> tuple[str, str, str] | None:
     for typ, rx in UNIT_RES:
         m = rx.match(text)
         if m:
-            rest = m.group(3)
-            return typ, m.group(1), (m.group(2) + " " + rest).strip() if m.group(2) else rest
+            rest, num = m.group(3), m.group(1)
+            if typ == "art":  # "Art. 41a–Art. 41i." -> "41a–41i" (DU/2025/18)
+                num = re.sub(r"\s*([–-])\s*(?:Art\.\s*)?", r"\1", num)
+            return typ, num, (m.group(2) + " " + rest).strip() if m.group(2) else rest
     m = TIRET.match(text)
     if m:
         return "tir", str(m.group(1).count("–")), m.group(2)

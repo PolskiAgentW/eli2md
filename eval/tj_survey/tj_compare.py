@@ -19,7 +19,7 @@ SUPL = str.maketrans("ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛ
 # nagłówki struktury jako zwykła linia; tytułowa pisownia tylko z numerem („Tytuł wykonawczy…” to treść art. 803 k.p.c.)
 STRUKT = re.compile(r"^(?:(?:KSIĘGA|CZĘŚĆ|TYTUŁ|DZIAŁ|ROZDZIAŁ|ODDZIAŁ)\b"
                     r"|(?:Księga|Część|Tytuł|Dział|Rozdział|Oddział) [IVXLC\d¹²³⁴⁵⁶⁷⁸⁹⁰]+[A-Za-zᵃᵇᶜᵈᵉᶠᵍ]*(?:\s|$)).*$", re.M)
-HEAD = re.compile(r"^##### Art\. (\S+?)\.\s*$", re.M)
+HEAD = re.compile(r"^##### Art\. (\S+?(?:\s*[–-]\s*Art\.\s*\S+?)?)\.\s*$", re.M)  # też „Art. 41a–Art. 41i.”
 
 
 def kanon(num):

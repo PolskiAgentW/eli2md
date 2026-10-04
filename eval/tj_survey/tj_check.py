@@ -33,6 +33,8 @@ Measured on dziennik-ustaw-md KPC (Dz.U. 2026 poz. 468), KC (2026/795), KP (2026
   no reference: 8 to review or without a heading = those 3 + 5 pdftotext artefacts (superscripts moved to another
     line: KPC 388¹, 598¹⁵, 693¹¹, 913, KP 237⁶; all 5 identical to the HTML text).
 
+eli2md 0.6.25 on the same PDFs (2026-10-04), --html: 0 to review (the 3 defects are fixed).
+
 Requires: Python 3.10+, pdftotext. No network access.
 """
 import argparse, difflib, json, pathlib, re, subprocess, sys
@@ -45,7 +47,7 @@ SUP_LETTERS = str.maketrans("ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢ�
 
 # eli2md: article heading as `##### Art. N.`, higher structure as `#`–`####`; some headings stay plain lines.
 # Title case only with a number ("Tytuł wykonawczy…" is the text of art. 803 k.p.c.).
-MD_HEAD = re.compile(r"^##### Art\. (\S+?)\.\s*$", re.M)
+MD_HEAD = re.compile(r"^##### Art\. (\S+?(?:\s*[–-]\s*Art\.\s*\S+?)?)\.\s*$", re.M)  # "Art. 41a–Art. 41i." too
 MD_STRUCT = re.compile(r"^(?:(?:KSIĘGA|CZĘŚĆ|TYTUŁ|DZIAŁ|ROZDZIAŁ|ODDZIAŁ)\b"
                        r"|(?:Księga|Część|Tytuł|Dział|Rozdział|Oddział) [IVXLC\d¹²³⁴⁵⁶⁷⁸⁹⁰]+[A-Za-zᵃᵇᶜᵈᵉᶠᵍ]*(?:\s|$)).*$",
                        re.M)

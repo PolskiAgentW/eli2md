@@ -33,6 +33,8 @@ class Tree(unittest.TestCase):
                           "##### Art. 22–28a.", "(pominięte)", "[^52]: Przez art. 1 ustawy."))
         self.assertEqual(paths(t["body"]), ["art_265", "art_265/par_1", "art_266–280", "art_22–28a"])
         self.assertEqual([n["text"] for n in t["body"]][1:], ["[^52]", "(pominięte)"])
+        t = md_to_tree(md("##### Art. 41a–Art. 41i.", "(uchylone)"))
+        self.assertEqual(paths(t["body"]), ["art_41a–41i"])
         t = md_to_tree(md("##### Art. 106l.", "Treść.", "##### Art. 106ł.", "§ 1. Kto."))
         self.assertEqual(paths(t["body"]), ["art_106l", "art_106ł", "art_106ł/par_1"])
 

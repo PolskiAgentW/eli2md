@@ -254,10 +254,11 @@ class Basic(unittest.TestCase):
         # consolidated texts: "Art. 266–280." / "Art. 22–28. (pominięte)" is a unit of its own, not the end of the
         # article before it (DU/2026/1245 art. 265, DU/2025/1584 art. 13)
         doc = Document(blocks=[Block("p", "Art. 265. § 1. Treść.", 1), Block("p", "Art. 266–280.[^52]", 1),
-                               Block("p", "Art. 22–28a. (pominięte)", 1), Block("p", "Art. 281. Treść.", 1)])
+                               Block("p", "Art. 22–28a. (pominięte)", 1), Block("p", "Art. 41a–Art. 41i. (uchylone)", 1),
+                               Block("p", "Art. 281. Treść.", 1)])
         md = to_markdown(doc)
         self.assertIn("##### Art. 265.\n\n§ 1. Treść.\n\n##### Art. 266–280.\n\n[^52]\n\n"
-                      "##### Art. 22–28a.\n\n(pominięte)\n\n##### Art. 281.", md)
+                      "##### Art. 22–28a.\n\n(pominięte)\n\n##### Art. 41a–Art. 41i.\n\n(uchylone)\n\n##### Art. 281.", md)
         # a reference to a range in the text is not a heading
         md = to_markdown(Document(blocks=[Block("p", "Art. 1. Treść.", 1), Block("p", "Art. 5–7 stosuje się.", 1)]))
         self.assertEqual(md.count("##### "), 1)

@@ -1,0 +1,103 @@
+{
+ "date": "2026-10-04",
+ "acts": "eval/tj_survey: 404 consolidated texts of dziennik-ustaw-md (survey_v2 list), converted from the same PDFs",
+ "legal_cite": "06c82da",
+ "summary": {
+  "0.6.24": {
+   "ustaw": 404,
+   "bledy": 0,
+   "bez_html": 23,
+   "md_bez_artykulow": 0,
+   "wspolne": 50823,
+   "zgodne": 43531,
+   "rozne": 7292,
+   "tylko_md": 1182,
+   "tylko_html": 444,
+   "pdf_zgodne": 1932,
+   "pdf_tylko_przypisy": 5074,
+   "pdf_do_oceny": 286,
+   "pdf_brak_naglowka": 0,
+   "porownane_ustawy": 381
+  },
+  "0.6.25": {
+   "ustaw": 404,
+   "bledy": 0,
+   "bez_html": 23,
+   "md_bez_artykulow": 0,
+   "wspolne": 50828,
+   "zgodne": 43611,
+   "rozne": 7217,
+   "tylko_md": 1442,
+   "tylko_html": 439,
+   "pdf_zgodne": 1943,
+   "pdf_tylko_przypisy": 5085,
+   "pdf_do_oceny": 189,
+   "pdf_brak_naglowka": 0,
+   "porownane_ustawy": 381
+  }
+ },
+ "triage": {
+  "0.6.24": {
+   "uklad": {
+    "artykuly": 92,
+    "akty": 61
+   },
+   "zakres_artykulow": {
+    "artykuly": 61,
+    "akty": 57
+   },
+   "przypis_w_tresci": {
+    "artykuly": 47,
+    "akty": 36
+   },
+   "inne": {
+    "artykuly": 35,
+    "akty": 20
+   },
+   "wzor": {
+    "artykuly": 35,
+    "akty": 15
+   },
+   "indeks_z_litera": {
+    "artykuly": 8,
+    "akty": 6
+   },
+   "naglowek_w_tresci": {
+    "artykuly": 4,
+    "akty": 4
+   },
+   "art_z_l": {
+    "artykuly": 4,
+    "akty": 4
+   }
+  },
+  "0.6.25": {
+   "uklad": {
+    "artykuly": 93,
+    "akty": 61
+   },
+   "inne": {
+    "artykuly": 42,
+    "akty": 26
+   },
+   "wzor": {
+    "artykuly": 35,
+    "akty": 15
+   },
+   "przypis_w_tresci": {
+    "artykuly": 10,
+    "akty": 10
+   },
+   "indeks_z_litera": {
+    "artykuly": 8,
+    "akty": 6
+   },
+   "naglowek_w_tresci": {
+    "artykuly": 1,
+    "akty": 1
+   }
+  }
+ },
+ "to_review_new_in_0.6.25": 0,
+ "to_review_resolved": 97
+}
