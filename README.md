@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.27**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.28**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -210,6 +210,20 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.28** (2026-10-05). Skany (po kontroli wzrokowej DU/1990/380, akt bez HTML):
+- poprawka słów uzupełnia też zgubione znaki diakrytyczne (jedna albo dwie litery: „Rozporzadzenie” → „Rozporządzenie”,
+  „zycie” → „życie”, „pazdziernika” → „października”), nadal tylko gdy wynik jest jeden i znany słownikowi;
+- „§” sklejony z numerem po przyimku przed dalszym ciągiem odesłania: „w 81 w ust. 1:” → „w § 1 w ust. 1:”, „w82:” → „w § 2:”;
+- podpis poprzedniego aktu odczytany po numerze następnego wraca przed ten numer (był na początku następnego aktu);
+- nagłówek strony nad oboma łamami nie jest dzielony na łamy („Poz. 380 i 381” zostawał w tekście).
+Próby: dev s5401 0,9853 / 0,9804 → 0,9862 / 0,9816 (lepiej 16 aktów, gorzej 2: DU/1992/20 R 0,948 → 0,923,
+DU/1993/181 P 0,940 → 0,937); test s5403 0,9813 / 0,9498 → 0,9827 / 0,9518 (lepiej 27, gorzej 4, każdy o ≤ 0,003).
+Na 300 aktach DU 2000–2011 z poprawną warstwą (`eval/scans_1990_1999/word_fixes_on_clean_text.py`) zmienione słowa
+307 → 456 z 413 584 (głównie fragmenty z warstwy i kilka słów niemieckich: „das”, „zur”).
+Znana usterka: gdy OCR nie da numeru pozycji następnego aktu jako osobnego akapitu przed jego rodzajem (numer sklejony
+z tekstem drugiego łamu), akt kończy się dopiero z końcem PDF-a, więc ma też początek następnego aktu z ostatniej
+wspólnej strony (DU/1993/20: P 0,577).
 
 **0.6.27** (2026-10-05). Poprawka słów ze skanów (0.6.26) nie zmienia słów, które zna słownik angielski (en_US),
 ani akapitów, których słowa funkcyjne są w innym języku (umowy drukowane w dwóch językach: „final” zostaje „final”,

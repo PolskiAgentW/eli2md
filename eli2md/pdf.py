@@ -1016,8 +1016,14 @@ SECTION_IN_TEXT_OCR = re.compile(r"\$(?=\s?\d)")
 SECTION_AFTER_WORD_OCR = re.compile(r"\b(w|we|z|ze|do|od|na|po|i|oraz|lub|albo|przez)\s8\s(?=\d+[a-z]?\b)")
 
 
+# glued to its number after a preposition, before what follows a § reference ("1) w 81 w ust. 1:", "2) w82:";
+# DU/1990/380)
+SECTION_GLUED_OCR = re.compile(r"\b(w|we|z|ze|do|od|na|po|i|oraz|lub|albo|przez)\s?8(\d{1,3}[a-z]?)(?=\s*(?::|w\s+ust\.|ust\."
+                               r"|pkt|lit\.|otrzymuje|dodaje|skreśla|uchyla|po\s+wyrazach|wyrazy))")
+
+
 def _fix_section_sign(t: str) -> str:
-    t = SECTION_START_OCR.sub(r"§ \1", t)
+    t = SECTION_GLUED_OCR.sub(r"\1 § \2", SECTION_START_OCR.sub(r"§ \1", t))
     return SECTION_AFTER_WORD_OCR.sub(r"\1 § ", SECTION_IN_TEXT_OCR.sub("§", t))
 
 
@@ -1033,6 +1039,11 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
         rest = paragraphs[0][h.end():].strip()
         number = rest.isdigit() and position is not None and position <= int(rest) <= position + ACT_NUMBER_NEXT
         paragraphs = ([rest] if re.search(r"[^\W\d_]", rest) or number else []) + paragraphs[1:]
+    if mark == "scan":  # the previous act's signature read after the next act's number goes back before it (DU/1990/380)
+        paragraphs = list(paragraphs)
+        for k in range(len(paragraphs) - 1):
+            if OCR_ACT_START.fullmatch(paragraphs[k].strip()) and SIGNATURE_OCR.match(paragraphs[k + 1]):
+                paragraphs[k], paragraphs[k + 1] = paragraphs[k + 1], paragraphs[k]
     out = []
     for k, t in enumerate(paragraphs):
         m = OCR_ACT_START.match(t) if position is not None else None

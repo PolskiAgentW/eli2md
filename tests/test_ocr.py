@@ -277,7 +277,9 @@ class Scan(unittest.TestCase):
         self.assertEqual(_fix_section_sign("8 2. Rozporządzenie wchodzi w życie"), "§ 2. Rozporządzenie wchodzi w życie")
         self.assertEqual(_fix_section_sign("1) w 8 1 skreśla się pkt 3, w $ 13 w ust. 1"),
                          "1) w § 1 skreśla się pkt 3, w § 13 w ust. 1")
-        for t in ("8. Zadania gminy", "w 8 dni od dnia", "8 osób"):
+        self.assertEqual(_fix_section_sign("1) w 81 w ust. 1:"), "1) w § 1 w ust. 1:")
+        self.assertEqual(_fix_section_sign("2) w82:"), "2) w § 2:")
+        for t in ("8. Zadania gminy", "w 8 dni od dnia", "8 osób", "w 81 przypadkach"):
             self.assertEqual(_fix_section_sign(t), t)
 
     def test_signature(self):
@@ -293,7 +295,9 @@ class Scan(unittest.TestCase):
     def test_fix_words(self):
         self.assertEqual(ocr.fix_words("Wrozporządzeniu zdnia 4 maja, wart. 5 dziata od dnia ogtoszenia"),
                          "W rozporządzeniu z dnia 4 maja, w art. 5 działa od dnia ogłoszenia")
-        for t in ("Bielsko", "lata", "tak", "Ustawa wchodzi w życie"):
+        self.assertEqual(ocr.fix_words("Rozporzadzenie wchodzi w zycie z dniem 1 pazdziernika"),
+                         "Rozporządzenie wchodzi w życie z dniem 1 października")
+        for t in ("Bielsko", "lata", "tak", "Ustawa wchodzi w życie", "final", "Material"):
             self.assertEqual(ocr.fix_words(t), t)
 
     def test_annex_header(self):

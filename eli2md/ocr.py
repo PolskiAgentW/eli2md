@@ -38,7 +38,7 @@ OCR_UNIT = re.compile(r"^(Artykuł|ARTYKUŁ|Article|ARTICLE|Artigo|ARTIGO|Άρθ
 LANG = "auto"
 BASE_LANG = "pol+eng"  # first pass of "auto"; must be installed
 # a header line (or its pieces) at the top of the page: "Dziennik Ustaw — 58 — Poz. 975", "— 58 —"
-OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw|Monitor\s*Polski)?[\s\-–—.,|\d]*(Poz\.?\s*\d+)?$", re.I)
+OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw|Monitor\s*Polski)?[\s\-–—.,|\d]*(Poz\.?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?$", re.I)
 HEADER_BAND = 0.08  # share of the page height where the gazette header sits
 MIN_WORDS, MIN_CONF = 20, 80.0  # below either, the page keeps only the note (eval/ocr_eval_scans_*.txt)
 # seconds per tesseract call. Pages take ~2 s, but a guilloche background (DU/2026/14 p19, excise
@@ -199,7 +199,7 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
         lines.setdefault(key, []).append((int(f[7]), int(f[7]) + int(f[9]), f[11].strip(), float(f[10]),
                                           int(f[6]), int(f[6]) + int(f[8])))
     if columns:
-        lines = _column_order(lines, page.width)
+        lines = _column_order(lines, page.width, height)
     confs: list[float] = []
     kept = []  # (block, top, bottom, text) without the header
     for (blk, _, _), words in lines.items():
@@ -272,6 +272,10 @@ def speller(lang: str = "pl_PL") -> _Speller | None:
 
 
 SPELL_WORD = re.compile(r"[^\W\d_]{3,}")
+# letters tesseract reads for Polish ones: "ł" as "t" or "l", and a letter without its diacritic ("Rozporzadzenie",
+# "zycie", "pazdziernika": DU/1990/380)
+DIACRITIC = {"t": "ł", "l": "ł", "a": "ą", "e": "ę", "c": "ć", "n": "ń", "o": "ó", "s": "ś", "z": "żź",
+             "A": "Ą", "E": "Ę", "C": "Ć", "N": "Ń", "O": "Ó", "S": "Ś", "Z": "ŻŹ", "L": "Ł"}
 # a one-letter preposition or conjunction glued to the next word ("Wrozporządzeniu", "zdnia", "wart. 5")
 GLUED = ("w", "z", "o", "i", "a", "u")
 GLUED_ABBR = re.compile(r"\b([wW])(art|ust|pkt|lit)\.")
@@ -279,7 +283,8 @@ GLUED_ABBR = re.compile(r"\b([wW])(art|ust|pkt|lit)\.")
 
 def fix_words(text: str) -> str:
     """Words of a scan read by tesseract that the Polish dictionary does not know, corrected where one fix makes them
-    known: "ł" read as "t" or "l" (one or two of them: "ogtoszenia" -> "ogłoszenia", "dziata" -> "działa") and a
+    known: one or two letters read without their diacritic, "ł" also as "t" or "l" ("ogtoszenia" -> "ogłoszenia",
+    "dziata" -> "działa", "Rozporzadzenie" -> "Rozporządzenie", DIACRITIC) and a
     one-letter preposition glued to the next word ("Wrozporządzeniu" -> "W rozporządzeniu"; also "wart." -> "w art.",
     "zdnia" -> "z dnia"). Several possible fixes: the word stays. Words the English dictionary knows and paragraphs
     whose function words are of another language stay. Without the Polish dictionary the text is kept.
@@ -293,14 +298,18 @@ def fix_words(text: str) -> str:
         w = m.group()
         if sp.ok(w) or sp.ok(w.lower()) or en is not None and (en.ok(w) or en.ok(w.lower())):
             return w  # known, also as an English word ("final", "Material": not "finał", "Materiał")
-        at = [i for i, c in enumerate(w) if c in "tl"]
+        at = [i for i, c in enumerate(w) if c in DIACRITIC]
         cands = set()
-        if 0 < len(at) <= 6:
+        if 0 < len(at) <= 12:
             for n in (1, 2):
                 for some in itertools.combinations(at, n):
-                    v = "".join("ł" if i in some else c for i, c in enumerate(w))
-                    if sp.ok(v) or sp.ok(v.lower()):
-                        cands.add(v)
+                    for repl in itertools.product(*(DIACRITIC[w[i]] for i in some)):
+                        v = list(w)
+                        for i, r in zip(some, repl):
+                            v[i] = r
+                        v = "".join(v)
+                        if sp.ok(v) or sp.ok(v.lower()):
+                            cands.add(v)
         if len(cands) == 1:
             return cands.pop()
         if not cands and w[0].lower() in GLUED and len(w) >= 5 and (sp.ok(w[1:]) or sp.ok(w[1:].lower())):
@@ -310,7 +319,7 @@ def fix_words(text: str) -> str:
     return SPELL_WORD.sub(fix, text)
 
 
-def _column_order(lines: dict, width: int) -> dict:
+def _column_order(lines: dict, width: int, height: int = 0) -> dict:
     """Tesseract's lines of a two-column page in reading order. Near the middle of the text the lines of the left
     column end and those of the right column start; the gutter is the x that best keeps the ends left of it and the
     starts right of it (the middle of the best stretch: a right column with a hanging indent starts its items left of
@@ -356,8 +365,10 @@ def _column_order(lines: dict, width: int) -> dict:
     items = []  # (top, side, words); side 0 = spans, 1 = left, 2 = right
     for ws in lines.values():
         left, right = [w for w in ws if w[5] <= g], [w for w in ws if w[4] >= g]
+        # the gazette header over both columns stays one line ("Dziennik Ustaw Nr 66 — 926 —" … "Poz. 380 i 381",
+        # DU/1990/380 p. 2), so parse_tsv drops it whole
         joined = left and right and len(left) + len(right) == len(ws) and \
-            min(w[4] for w in right) - max(w[5] for w in left) >= gap
+            min(w[4] for w in right) - max(w[5] for w in left) >= gap and min(w[0] for w in ws) >= HEADER_BAND * height
         if left and right and not joined or len(left) + len(right) < len(ws):
             items.append((min(w[0] for w in ws), 0, ws))
             continue
