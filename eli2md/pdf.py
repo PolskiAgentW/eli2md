@@ -1095,6 +1095,8 @@ def convert(path: str, ocr: str | None = None, position: int | None = None,
                 b = b[1:]
             if not b and not n:
                 read = ocr_mod.ocr_page(page, ocr, columns=scan) if ocr else None
+                if read and not scan and ocr_mod.old_gazette(read):  # a scan of a gazette page without any text layer
+                    scan, read = True, ocr_mod.in_columns(read, pno)  # (DU/1993/181, DU 2000)
                 if read and ocr_mod.usable(read):
                     doc.no_text_pages.append(pno)
                     doc.ocr_pages.append(pno)

@@ -361,11 +361,28 @@ def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None, 
         again = _ocr(img, lang, pno, band, have)
         if again is not None and usable(again):
             read = again
-    if columns and read.tsv:
-        again = parse_tsv(read.tsv, read.height, pno, band, columns=True)
-        again.lang, again.rotated, again.tsv, again.height = read.lang, read.rotated, read.tsv, read.height
-        read = again
-    return read
+    return in_columns(read, pno, band) if columns else read
+
+
+# the header of a gazette issue of 2011 or earlier, as OCR reads it (from 2012 there are no numbered issues)
+OLD_GAZETTE = re.compile(r"(?:Dziennik|DZIENNIK)\s*(?:Ustaw|USTAW)\s*(?:—\s*)?Nr\.?\s*\d+|(?:Monitor|MONITOR)\s*(?:Polski|POLSKI)"
+                         r"\s*(?:—\s*)?Nr\.?\s*\d+|Warszawa,\s*dnia\s.{5,30}\d{4}\s*r\.\s*Nr\.?\s*\d+")
+
+
+def old_gazette(read: OcrPage) -> bool:
+    """The page read is a page of a gazette issue of 2011 or earlier: its first 80 words name the issue ("Dziennik
+    Ustaw Nr 40 — 766 —", "Warszawa, dnia 19 maja 1993 r. Nr 40" under the masthead; DU/1993/181)."""
+    words = [f[11] for f in (r.split("\t") for r in read.tsv.splitlines()[1:]) if len(f) >= 12 and f[0] == "5" and f[11].strip()]
+    return bool(OLD_GAZETTE.search(" ".join(words[:80])))
+
+
+def in_columns(read: OcrPage, pno: int | None = None, band: float = HEADER_BAND) -> OcrPage:
+    """The reading again, its lines in the order of the page's two columns (parse_tsv columns=True)."""
+    if not read.tsv:
+        return read
+    again = parse_tsv(read.tsv, read.height, pno, band, columns=True)
+    again.lang, again.rotated, again.tsv, again.height = read.lang, read.rotated, read.tsv, read.height
+    return again
 
 
 def _ocr(img, lang: str, pno: int | None, band: float, have: frozenset[str]) -> OcrPage | None:
