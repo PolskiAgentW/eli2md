@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.25**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.26**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -37,7 +37,10 @@ Przekonwertowane tym narzędziem, z indeksem i opisem jakości:
 - [dziennik-ustaw-2000-2011-md](https://github.com/PolskiAgentW/dziennik-ustaw-2000-2011-md): akty z lat 2000–2011 bez HTML
   w API ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/dziennik-ustaw-2000-2011-md));
 - [monitor-polski-2000-2011-md](https://github.com/PolskiAgentW/monitor-polski-2000-2011-md): Monitor Polski 2000–2011
-  ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/monitor-polski-2000-2011-md)).
+  ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/monitor-polski-2000-2011-md));
+- [dziennik-ustaw-1990-1999-md](https://github.com/PolskiAgentW/dziennik-ustaw-1990-1999-md): akty z lat 1990–1999 bez HTML
+  w API, odczytane ze skanów przez OCR (od 0.6.26; publikowane rocznikami)
+  ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/dziennik-ustaw-1990-1999-md)).
 
 Ścieżka PDF dla [legalize-pipeline](https://github.com/legalize-dev/legalize-pipeline) (akty bez HTML → ich format):
 gałąź [PolskiAgentW/legalize-pipeline@pl-pdf-fallback](https://github.com/PolskiAgentW/legalize-pipeline/tree/pl-pdf-fallback),
@@ -207,6 +210,23 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.26** (2026-10-05). Skany zeszytów Dziennika Ustaw sprzed 2012 r. (opis wyżej, „Skany zeszytów sprzed 2012 r.”).
+Dotyczy tylko konwersji z `--ocr` stron ze skanami starych zeszytów; w PDF-ach DU i M.P. z lat 2012–2026 (cały cache
+zbiorów) nie ma ani jednego z czcionką „HiddenHorzOCR”, a ich strony z OCR nie mają nagłówka „Dziennik Ustaw Nr”.
+Pomiar (`eval/evaluate.py --ocr`, wzorzec: oficjalny HTML aktów 1990–1999, które go mają):
+
+| próba | 0.6.25 (warstwa Acrobata) body R / P | 0.6.26 body R / P | aktów z R < 0,90 (0.6.25 → 0.6.26) |
+|---|---|---|---|
+| dev s5401 (n=40, na niej strojone) | 0,6697 / 0,6161 | 0,9759 / 0,9717 | 32 → 2 |
+| test s5403 (n=60, niewidziana) | TODO | TODO | TODO |
+
+Na próbie s5402 (n=60) wersja przed dwiema ostatnimi poprawkami (wycinanie aktu, gdy między numerem a rodzajem aktu
+stoi podpis albo numer strony spisu treści) dała 0,9576 / 0,9363 (0.6.25: 0,6738 / 0,5662); te poprawki powstały po
+obejrzeniu jej wyników, więc liczbą testową jest s5403. Skany z 2000 r. (s5202, s5205): DU/2000/70 R 0,937 → 0,982,
+DU/2000/179 0,991 → 0,991, DU/2000/985 0,986 → 0,986. Najczęstsze błędy, które zostają: „ł” odczytane jako „t”
+(„ogtoszenia”), brak spacji („wart.” zamiast „w art.”), pierwsza strona zeszytu ze spisem treści (krótki akt pod spisem:
+DU/1999/728 R 0,792), słabe skany (DU/1990/390). Wyniki: `eval/scans_1990_1999/`.
 
 **0.6.25** (2026-10-04). Teksty jednolite: cztery klasy usterek z pomiaru `eval/tj_survey_2026-10-04.md`.
 - Linia „Art. 266–280.” albo „Art. 22–28. (pominięte)” (artykuły pominięte w tekście jednolitym) jest nagłówkiem
@@ -758,6 +778,24 @@ innych aktów 2025–2026 (sprawdzone DU/2025/29, 360, 370: 0 z 36 losowych frag
 **Koszt.** Ok. 2.1 s CPU tesseracta na stronę (1 wątek, i5-1335U, 40 losowych stron) plus 0.2 s
 renderowania; 1734 strony to ok. 66 min jednego wątku. `auto` czyta część stron drugi raz
 (inny język, obrót). Nowe akty: średnio 83 strony bez tekstu na miesiąc (od 1 do 306).
+
+### Skany zeszytów sprzed 2012 r. (od 0.6.26, też tylko z `--ocr`)
+
+PDF-y Dziennika Ustaw z lat 1918–1999 to skany stron zeszytów: dwa łamy, kilka aktów na stronie. Większość ma
+niewidoczną warstwę tekstu z OCR Adobe Acrobata (czcionka „HiddenHorzOCR”); ta warstwa przestawia wyrazy między
+wierszami („zarządza się, następuje:” na końcu DU/1997/78) i ma własne błędy. Z `--ocr` taka strona (obraz na ≥ 80%
+strony i ≥ 10 znaków w „HiddenHorzOCR”), strona-obraz bez tekstu w PDF z taką warstwą oraz strona bez warstwy, której
+odczyt zawiera nagłówek starego zeszytu („Dziennik Ustaw Nr 40”, także skany z 2000 r.) jest czytana tesseractem jak
+skan zeszytu:
+- wiersze w kolejności łamów (`ocr._column_order`): odstęp między łamami to położenie, które najlepiej oddziela końce
+  wierszy lewego łamu od początków wierszy prawego (po wyprostowaniu przekrzywionego skanu); wiersz, który tesseract
+  skleił przez odstęp, jest dzielony; wiersze na całą szerokość (tytuł, kolofon) dzielą stronę na pasy;
+- akapity są zwykłym tekstem z jednostkami (`##### § 1.`, `##### Art. 1.`), a nie cytatami; przed tekstem każdej
+  strony stoi notka `> [Strona N PDF jest skanem. Tekst poniżej odczytał OCR (…), a nie warstwa tekstowa PDF. …]`;
+- „§” odczytany jako „8”, „$” albo „S” na początku akapitu i po przyimku („w 8 1”) staje się „§”; rozpoznawane są
+  kolofon wydawcy z lat 90., nagłówki załączników i podpisy; akt jest wycinany spośród sąsiednich jak w 2000–2011.
+Przypisy na skanach nie są rozpoznawane (zostają akapitami). Z `ELI2MD_OCR_CACHE=katalog` odczyty tesseracta są
+zapamiętywane, więc ponowna konwersja po zmianie w dalszej obróbce nie czyta stron od nowa.
 
 ### Obraz tekstu na stronie z warstwą tekstową (0.6.4, też tylko z `--ocr`)
 

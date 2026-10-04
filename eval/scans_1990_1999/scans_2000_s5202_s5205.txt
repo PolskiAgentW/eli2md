@@ -1,0 +1,18 @@
+   70 Ustawa         main R=0.937 P=0.936 (ref 6761, hyp 6773)  notes R=1.000 P=1.000   113.3s
+  179 Ustawa         main R=0.991 P=0.987 (ref 2198, hyp 2208)  notes R=1.000 P=1.000   31.8s
+scored 2/2 acts
+TOTAL body  (n=2): micro R=0.9507 P=0.9483  macro R=0.9644  R<0.95: 1  | P on complete refs (n=2): 0.9483
+<frozen site>:107: RuntimeWarning: Unexpected value in sys.prefix, expected /home/ai/workspace/.venv, got /home/ai/workspace/eli2md/../.venv
+<frozen site>:107: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /home/ai/workspace/.venv, got /home/ai/workspace/eli2md/../.venv
+   70 Ustawa         main R=0.982 P=0.982 (ref 6761, hyp 6763)  notes R=1.000 P=1.000   107.7s
+  179 Ustawa         main R=0.991 P=0.989 (ref 2198, hyp 2203)  notes R=1.000 P=1.000   33.3s
+scored 2/2 acts
+TOTAL body  (n=2): micro R=0.9845 P=0.9837  macro R=0.9868  R<0.95: 0  | P on complete refs (n=2): 0.9837
+  985 Ustawa         main R=0.986 P=0.984 (ref 6527, hyp 6540)  notes R=1.000 P=1.000   118.7s
+scored 1/1 acts
+TOTAL body  (n=1): micro R=0.9858 P=0.9838  macro R=0.9858  R<0.95: 0  | P on complete refs (n=1): 0.9838
+<frozen site>:107: RuntimeWarning: Unexpected value in sys.prefix, expected /home/ai/workspace/.venv, got /home/ai/workspace/eli2md/../.venv
+<frozen site>:107: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /home/ai/workspace/.venv, got /home/ai/workspace/eli2md/../.venv
+  985 Ustawa         main R=0.986 P=0.985 (ref 6527, hyp 6533)  notes R=1.000 P=1.000   118.3s
+scored 1/1 acts
+TOTAL body  (n=1): micro R=0.9861 P=0.9852  macro R=0.9861  R<0.95: 0  | P on complete refs (n=1): 0.9852

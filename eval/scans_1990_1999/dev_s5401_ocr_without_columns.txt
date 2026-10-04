@@ -1,0 +1,43 @@
+body   n= 40 micro R=0.9689 P=0.9599  P(complete)=0.9599  R<0.95: 12  R<0.90: 8
+annex  n=  6 micro R=0.9152 P=0.8964  P(complete)=0.8964  R<0.95: 3  R<0.90: 3
+notes  n=  2 micro R=0.0000 P=0.0000  P(complete)=0.0000  R<0.95: 2  R<0.90: 2
+     390 body R=0.575 P=0.598 ref=424
+     181 body R=0.582 P=0.590 ref=237
+      20 body R=0.625 P=0.711 ref=248
+     512 body R=0.679 P=0.679 ref=967
+      20 body R=0.702 P=0.676 ref=131
+     728 body R=0.792 P=0.627 ref=53
+      68 body R=0.833 P=0.825 ref=210
+     402 body R=0.878 P=0.867 ref=4558
+     690 body R=0.909 P=0.833 ref=99
+     102 body R=0.922 P=0.894 ref=593
+     113 body R=0.931 P=0.934 ref=5609
+     224 body R=0.945 P=0.925 ref=236
+     461 body R=0.951 P=0.923 ref=163
+     357 body R=0.957 P=0.960 ref=2039
+     599 body R=0.959 P=0.755 ref=3141
+     692 body R=0.965 P=0.971 ref=4415
+    1019 body R=0.966 P=0.964 ref=412
+     336 body R=0.969 P=0.899 ref=64
+     347 body R=0.972 P=0.941 ref=180
+     200 body R=0.973 P=0.935 ref=74
+     363 body R=0.975 P=0.987 ref=1771
+     926 body R=0.977 P=0.970 ref=27579
+     840 body R=0.978 P=0.961 ref=407
+     121 body R=0.979 P=0.989 ref=931
+     403 body R=0.980 P=0.956 ref=198
+    1125 body R=0.980 P=0.978 ref=1746
+     585 body R=0.980 P=0.955 ref=150
+     746 body R=0.981 P=0.975 ref=361
+     117 body R=0.981 P=0.975 ref=29156
+     449 body R=0.981 P=0.981 ref=4936
+     602 body R=0.982 P=0.981 ref=17484
+     298 body R=0.983 P=0.982 ref=3641
+     415 body R=0.984 P=0.989 ref=6586
+     731 body R=0.985 P=0.915 ref=66
+     916 body R=0.988 P=0.973 ref=775
+     616 body R=0.991 P=0.965 ref=223
+     385 body R=0.991 P=0.991 ref=15803
+     196 body R=0.996 P=0.938 ref=274
+     464 body R=1.000 P=0.907 ref=49
+      54 body R=1.000 P=0.899 ref=125
