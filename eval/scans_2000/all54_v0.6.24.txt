@@ -1,0 +1,5 @@
+    1 Ustawa         main R=0.984 P=0.453 (ref 2846, hyp 6183)  notes R=1.000 P=1.000 annex R=1.000*  76.1s
+   67 Orzeczenie     main R=0.989 P=0.886 (ref 180, hyp 201)  notes R=1.000 P=1.000   7.7s
+   68 Obwieszczenie  main R=0.974 P=0.937 (ref 153, hyp 159)  notes R=1.000 P=1.000   3.0s
+   69 Ustawa         main R=0.970 P=0.970 (ref 1684, hyp 1685)  notes R=1.000 P=1.000   9.4s
+   70 Ustawa         main R=0.937 P=0.936 (ref 6761, hyp 6773)  notes R=1.000 P=1.000   67.4s
