@@ -125,45 +125,62 @@ class Basic(unittest.TestCase):
         self.assertIsNone(d.cur_tag)
 
     def test_dataset_worker_over_memory_limit(self):
-        # after a MemoryError a worker exits at its next act; the pool breaks and the acts not recorded are converted
-        # in a fresh pool (MP/2020/1070)
+        # after a MemoryError a worker exits at its next act; the pool breaks and the acts in flight are converted
+        # one at a time, the rest in a fresh pool (MP/2020/1070). An act that kills its worker every time is the
+        # only one recorded as an error (MP/2019/230: up to 0.6.31 every act after it failed)
         import json as _json
         import tempfile
+        from collections import Counter
+        from concurrent.futures import Future
         from concurrent.futures.process import BrokenProcessPool
         from pathlib import Path
         from unittest import mock
         import eli2md.dataset as ds
         from eli2md.dataset import load_index, main
         items = [{"ELI": f"DU/2000/{k}", "year": 2000, "pos": k, "type": "Ustawa", "title": "t", "changeDate": "c",
-                  "textPDF": True} for k in (1, 2, 3, 4)]
-        calls = []
+                  "textPDF": True} for k in (1, 2, 3, 4, 5, 6)]
 
-        def convert_one(job):
-            calls.append(job[0])
-            if job[0] == "DU/2000/1":
-                return {"eli": job[0], "status": "error", "error": "MemoryError (over --mem-limit-gb)"}
-            if job[0] == "DU/2000/2" and calls.count(job[0]) == 1:
-                raise BrokenProcessPool("a worker exited")  # what the pool reports after os._exit in the worker
-            return {"eli": job[0], "status": "ok", "error": "", "pages": 1, "words": 5}
-
-        class Pool:  # in-process stand-in for ProcessPoolExecutor
-            def __init__(self, **kw): pass
+        class Pool:  # in-process stand-in for ProcessPoolExecutor: an act runs at submit
+            def __init__(self, max_workers=1, **kw):
+                self.broken = False
             def __enter__(self): return self
             def __exit__(self, *a): return False
-            def map(self, f, jobs):
-                for j in jobs:
-                    yield f(j)
-        with tempfile.TemporaryDirectory() as d:
-            pdf = Path(d) / "text.pdf"
-            pdf.write_bytes(b"%PDF-1.4")
-            with mock.patch.object(ds, "get", return_value=_json.dumps({"items": items}).encode()), \
-                    mock.patch.object(ds, "fetch", return_value=({}, pdf)), mock.patch.object(ds.time, "sleep"), \
-                    mock.patch.object(ds, "ProcessPoolExecutor", Pool), mock.patch.object(ds, "_convert_one", convert_one):
-                main(["--root", d, "--years", "2000"])
-            idx = load_index(Path(d))
-        self.assertEqual(calls, ["DU/2000/1", "DU/2000/2", "DU/2000/2", "DU/2000/3", "DU/2000/4"])
-        self.assertEqual({k: v["status"] for k, v in idx.items()},
-                         {"DU/2000/1": "error", "DU/2000/2": "ok", "DU/2000/3": "ok", "DU/2000/4": "ok"})
+            def submit(self, f, job):
+                if self.broken:
+                    raise BrokenProcessPool("the pool is broken")
+                fut = Future()
+                try:
+                    fut.set_result(f(job))
+                except BrokenProcessPool as e:  # what the pool reports after a worker died
+                    self.broken = True
+                    fut.set_exception(e)
+                return fut
+
+        for jobs in ("1", "3"):
+            calls = []
+
+            def convert_one(job):
+                calls.append(job[0])
+                if job[0] == "DU/2000/1":
+                    return {"eli": job[0], "status": "error", "error": "MemoryError (over --mem-limit-gb)"}
+                if job[0] == "DU/2000/2" and calls.count(job[0]) == 1 or job[0] == "DU/2000/4":
+                    raise BrokenProcessPool("a worker exited")  # 2: poisoned worker, once; 4: dies every time
+                return {"eli": job[0], "status": "ok", "error": "", "pages": 1, "words": 5}
+            with tempfile.TemporaryDirectory() as d:
+                pdf = Path(d) / "text.pdf"
+                pdf.write_bytes(b"%PDF-1.4")
+                with mock.patch.object(ds, "get", return_value=_json.dumps({"items": items}).encode()), \
+                        mock.patch.object(ds, "fetch", return_value=({}, pdf)), \
+                        mock.patch.object(ds.time, "sleep"), mock.patch.object(ds, "ProcessPoolExecutor", Pool), \
+                        mock.patch.object(ds, "_convert_one", convert_one):
+                    main(["--root", d, "--years", "2000", "--jobs", jobs])
+                idx = load_index(Path(d))
+            self.assertEqual({k: v["status"] for k, v in idx.items()},
+                             {"DU/2000/1": "error", "DU/2000/2": "ok", "DU/2000/3": "ok", "DU/2000/4": "error",
+                              "DU/2000/5": "ok", "DU/2000/6": "ok"}, jobs)
+            self.assertEqual(idx["DU/2000/4"]["error"], "worker died (over --mem-limit-gb?)")
+            self.assertEqual(Counter(calls), {"DU/2000/1": 1, "DU/2000/2": 2, "DU/2000/3": 1, "DU/2000/4": 2,
+                                              "DU/2000/5": 1, "DU/2000/6": 1}, jobs)
         ds._POISONED = True  # a poisoned worker exits
         try:
             with mock.patch.object(ds.os, "_exit", side_effect=SystemExit(3)):

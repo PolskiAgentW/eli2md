@@ -24,7 +24,7 @@ import resource
 import sys
 import time
 import traceback
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
 from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 
@@ -196,25 +196,58 @@ def main(argv: list[str] | None = None) -> int:
         index[eli] = {**_base_row(it), "pdf_sha256": sha}
         jobs.append((eli, str(pdf), str(md_path(a.root, year, pos, a.publisher)), a.json, a.ocr))
 
-    done, recorded = 0, set()
-    for attempt in range(1, 6):  # a worker over its memory limit ends the pool; the acts not recorded go to a new one
-        pending = [j for j in jobs if j[0] not in recorded]
-        if not pending:
-            break
+    done = 0
+
+    def put(res: dict) -> None:
+        nonlocal done
+        done += _record(index, res)
+        if done % 50 == 0:
+            print(f"converted {done}/{len(jobs)}", flush=True)
+            save_index(a.root, index)
+
+    # A worker that dies (os._exit after a MemoryError, see _convert_one, or killed in native code without one:
+    # MP/2019/230, 270 OCR pages, at --mem-limit-gb 1.6) breaks the pool and fails every act in flight. Only --jobs
+    # acts are in flight at a time, and after a break each of them is converted alone in a fresh pool, so only the
+    # act that kills its worker is recorded as an error; the rest go on in parallel. (Up to 0.6.31 the acts went to
+    # a new pool in the same order: the act that killed its worker came first again, and after 5 passes every act
+    # after it was recorded as an error, in each later run too. Fixed in 0.6.25.1 and 0.6.32.)
+    pending = list(jobs)
+    while pending:
+        inflight, k = {}, 0
         try:
             with ProcessPoolExecutor(max_workers=max(1, a.jobs), initializer=_limit_memory,
                                      initargs=(a.mem_limit_gb,)) as ex:
-                for res in ex.map(_convert_one, pending):
-                    recorded.add(res["eli"])
-                    done += _record(index, res)
-                    if done % 50 == 0:
-                        print(f"converted {done}/{len(jobs)}", flush=True)
-                        save_index(a.root, index)
+                while k < len(pending) and len(inflight) < max(1, a.jobs):
+                    inflight[ex.submit(_convert_one, pending[k])] = pending[k]
+                    k += 1
+                while inflight:
+                    for f in wait(inflight, return_when=FIRST_COMPLETED).done:
+                        put(f.result())
+                        del inflight[f]
+                        if k < len(pending):
+                            inflight[ex.submit(_convert_one, pending[k])] = pending[k]
+                            k += 1
+            pending = []
         except BrokenProcessPool:
-            print(f"pass {attempt}: a worker over its memory limit ended the pool; "
-                  f"{len(jobs) - len(recorded)} acts go to a new one", flush=True)
-    for eli, *_ in [j for j in jobs if j[0] not in recorded]:  # still not converted after the last pass
-        done += _record(index, {"eli": eli, "status": "error", "error": "MemoryError in an earlier act (not retried)"})
+            suspects = []
+            for f, j in inflight.items():
+                if f.done() and f.exception() is None:
+                    put(f.result())
+                else:
+                    suspects.append(j)
+            print(f"a worker died; {len(suspects)} acts in flight are converted one at a time", flush=True)
+            for j in suspects:
+                try:
+                    with ProcessPoolExecutor(max_workers=1, initializer=_limit_memory,
+                                             initargs=(a.mem_limit_gb,)) as ex1:
+                        put(ex1.submit(_convert_one, j).result())
+                except BrokenProcessPool:
+                    put({"eli": j[0], "status": "error", "error": "worker died (over --mem-limit-gb?)"})
+            if not suspects and k == 0:  # the pool breaks before any act: give up rather than loop
+                for j in pending:
+                    put({"eli": j[0], "status": "error", "error": "process pool broke before the act"})
+                k = len(pending)
+            pending = pending[k:]
     save_index(a.root, index)
     ok = sum(1 for r in index.values() if r["status"] == "ok")
     print(f"done: {done} converted this run; index: {ok} ok / {len(index)} total; "
