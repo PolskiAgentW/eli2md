@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.25.1**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.25.2**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -207,6 +207,12 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.25.2** (2026-10-05). Tylko wydajność, wynik bez zmian (ta sama zmiana jest w 0.6.35). Sklejanie wierszy
+akapitu (`_join`) przeszukiwało przy każdym wierszu cały dotychczasowy tekst akapitu; akt ze spłaszczonym spisem
+inwentarza (MP/2021/437: PDF 57 MB, 6,6 MB tekstu) był przez to w `_join` jeszcze po 54 min konwersji; w GitHub
+Actions (limit runu 180 min) taki akt mógłby przekraczać limit w każdym runie, bo nieprzeliczony akt wraca w następnym.
+Teraz sprawdzane są 3 ostatnie znaki (te same dopasowania).
 
 **0.6.25.1** (2026-10-05). Tylko `eli2md.dataset`, konwersja bez zmian (ta sama zmiana jest w 0.6.32). Akt, który zabija proces roboczy bez `MemoryError`
 (przeliczenie MP 2012–2026 przy `--mem-limit-gb 1.6`: MP/2019/230, 304 strony, 270 z OCR), psuł pulę procesów,

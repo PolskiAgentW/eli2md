@@ -774,9 +774,13 @@ def _plain_math(text: str) -> str:
 
 
 def _join(prev: str, nxt: str) -> str:
-    if re.search(rf"[{LOWER}]-$", prev) and re.match(rf"[{LOWER}]", nxt):
+    # only the end of prev is searched (the same matches: a letter and "-" before the end or a final newline); over
+    # all of it, each line of a block of a flattened inventory (MP/2021/437, 6.6 MB of text) took longer and the act
+    # ran for hours
+    end = prev[-3:]
+    if re.search(rf"[{LOWER}]-$", end) and re.match(rf"[{LOWER}]", nxt):
         return prev[:-1] + nxt
-    if re.search(r"\w-$", prev) and re.match(r"-\w", nxt):  # "rolno-" "-środowiskowy": the hyphen is repeated
+    if re.search(r"\w-$", end) and re.match(r"-\w", nxt):  # "rolno-" "-środowiskowy": the hyphen is repeated
         return prev + nxt[1:]
     return prev + " " + nxt
 
