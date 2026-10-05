@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.35**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.36**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -210,6 +210,22 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.36** (2026-10-05). Skany zeszytów sprzed 2012 r., dwie poprawki.
+(1) Kolofon pod kolumnami. Na ostatniej stronie zeszytu pierwszy wiersz kolofonu bywa krótki i stoi w obrębie lewej
+kolumny („Egzemplarze bieżące i z lat ubiegłych oraz załączniki można nabywać:”). Od 0.6.26 kolejność kolumn ze skanu
+stawiała go za lewą kolumną, a przed prawą; obcięcie kolofonu zabierało wtedy całą prawą kolumnę ostatniego aktu
+zeszytu (DU/2000/214: wyrok TK bez sentencji, R 0,464). Teraz wiersz, który zaczyna kolofon, zamyka obie kolumny.
+(2) Załącznik cytowany w noweli. Nagłówek „Załącznik nr 3” w nowym brzmieniu załączników zmienianej ustawy (bez „„”,
+które OCR zgubił) był brany za początek załączników aktu, a art. 3–12 i podpis lądowały w „załączniku”
+(DU/2000/1315). Teraz nagłówek załącznika ze skanu zostaje tekstem aktu, gdy przed nim nie ma podpisu, a po nim jest,
+albo gdy pierwszy artykuł po nim jest następnym artykułem aktu („Art. 3.” po „Art. 2.”).
+Pomiar: 54 skany wśród 205 pobranych aktów DU 2000 z HTML (`eval/sample_2000_scans_n54_all.json`; spis, nie
+losowanie): treść główna micro R 0,849 → 0,981, P 0,950 → 0,952 (0.6.35 → 0.6.36). Zmiana o więcej niż 0,005 w 8 aktach: R w górę
+we wszystkich 8 (DU/2000/1315 0,177 → 0,957, 214 0,464 → 0,995, 921 0,515 → 0,988, 1215 0,624 → 0,985, 115 0,659 →
+0,992), P w dół w 6 z nich o 0,006–0,019 (odzyskany tekst ma błędy OCR, np. „biedow”, „szkoty” w DU/2000/68). Próby z
+HTML z lat 1990–1999 (s5401, s5402, s5403; 160 aktów): wynik każdego aktu taki sam jak w 0.6.34. Wyniki per akt:
+`eval/scans_2000/all54_v0.6.3[56].txt`, `eval/scans_1990_1999/*_v0.6.36.txt`.
 
 **0.6.35** (2026-10-05). Tylko wydajność, wynik bez zmian (ta sama zmiana jest w **0.6.25.2**). Sklejanie wierszy
 akapitu (`_join`) przeszukiwało przy każdym wierszu cały dotychczasowy tekst akapitu; akt ze spłaszczonym spisem
