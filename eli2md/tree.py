@@ -19,6 +19,7 @@ act the closing formula ("Sporządzono w …", "Na dowód czego …", "Po zaznaj
 
 Unit node: {"type": "art"|"par"|"ust"|"pkt"|"lit"|"tir", "num": "41¹", "path": "art_41¹/ust_2",
             "text": "text after the number", "children": [...]}
+            + "label": "Artykuł 5" on articles of international agreements (others: "Art. 5.", "§ 5.", …)
 Other nodes: {"type": "text", "text": ..., "quoted": true?}   paragraph that is not a unit start
              {"type": "heading", "label": "Rozdział 2", "text": "title"}   dział/rozdział/oddział/...
              {"type": "signature", "text": ...}   {"type": "note", "text": ...}  (content missing in PDF text)
@@ -410,7 +411,7 @@ def md_to_tree(md: str) -> dict:
         if kind in ("signature", "note", "ocr"):
             b.add_flat(kind, text)
             continue
-        notes, body = "", text
+        notes, body, label = "", text, None
         if kind == "p" and (m := LEAD_NOTES.match(text)):
             notes, body = m.group(1).strip(), m.group(2)
         u = parse_unit(body) if d == 0 or kind == "head" else None
@@ -423,6 +424,7 @@ def md_to_tree(md: str) -> dict:
             b.close()
         if treaty and not u and d == 0 and kind == "p" and (t := TREATY_ART.match(body)):
             u = ("art", t.group(1), t.group(2) or "")  # a title in its own paragraph becomes the text (fresh)
+            label = f"Artykuł {t.group(1)}"
         if u and kind == "p" and u[0] == "par" and not u[2] and n + 1 < len(blocks) \
                 and blocks[n + 1][1].startswith(("„", "“")):
             u, d = None, 1  # "§ 5." + "„1. …": the same split for a quoted §
@@ -436,6 +438,8 @@ def md_to_tree(md: str) -> dict:
             elif notes:
                 u = (u[0], u[1], (notes + " " + u[2]).strip())
             b.add_unit(*u)
+            if label:
+                b.stack[-1][1]["label"] = label
         elif d == 0 and (h := HEADING.match(text)) and len(text) < 300:
             b.add_heading(h.group(1), (h.group(2) or "").strip())
         elif d == 0 and kind == "p" and parts[-1][0] == "annex" and (h := ROMAN_HEAD.match(text)) \

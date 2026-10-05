@@ -182,7 +182,7 @@ def _linear(nodes: list[dict], part: dict, parent: tuple = ()) -> None:
         if t in RANK:
             own = json_path(n["path"])
             part["units"].append((len(toks), own, t))
-            new = tokens(LABEL[t].format(n["num"]) + " " + n["text"])
+            new = tokens((n.get("label") or LABEL[t].format(n["num"])) + " " + n["text"])  # "Artykuł 5"
         else:
             if t == "text" and n["text"].strip():
                 part["texts"].append((len(toks), parent))
