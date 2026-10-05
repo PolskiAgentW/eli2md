@@ -7,6 +7,10 @@ paragraph per unit start, top-level units as `##### ` headings, annexes as `## `
 (pdf.quote_depths) plus two rules for quotes the source does not open or close cleanly
 (see tree_depths). Art. nodes come only from `##### Art.` headings: a bare "Art. N." paragraph at
 depth 0 is always the number of a quoted article that the converter split off ("Art. 25." + "„1. …").
+The other source of Art. nodes: international agreements number their articles "Artykuł 5" / "Artykuł IV" in a
+paragraph of their own, maybe followed by the title (TREATY_ART). Such a paragraph at depth 0 is an article if the
+act has at least two of them ("Artykuł 5 ustęp 2" over a reservation, or one stray line, stays text). In such an
+act the closing formula ("Sporządzono w …", "Na dowód czego …", "Po zaznajomieniu się …") ends the open units.
 
     {"eli": ..., "title": ..., "converter": ...,         # from the front matter, if present
      "body": [node, ...],                                  # main text
@@ -64,6 +68,10 @@ UNIT_RES = [  # (type, regex); groups: number, footnote markers, rest
     ("lit", re.compile(rf"^([a-z]{{1,3}}[{SUP}]*)\)({NOTE})\s+(\S.*)$", re.S)),
 ]
 TIRET = re.compile(r"^((?:–\s*)+)\s(\S.*)$", re.S)  # "– tekst", "– – tekst"
+# article of an international agreement, with its title in the same paragraph or not: "Artykuł 7 Transfer środków"
+TREATY_ART = re.compile(rf"^Artykuł\s+(\d+[a-z]?|[IVXLC]+)\.?(?:\s+([{UPPER}][^\n]{{0,99}}[^\s.,:;]))?$")
+# closing formula of an agreement and the ratification after it: outside the last article (as in the official HTML)
+TREATY_END = re.compile(r"^(?:Sporządzono\b|Na dowód\b|W dowód\b|Po zaznajomieniu się\b)")
 RANK = {"art": 0, "par": 1, "ust": 2, "pkt": 3, "lit": 4, "tir": 5}
 HEADING = re.compile(
     r"^((?:DZIAŁ|Dział|ROZDZIAŁ|Rozdział|ODDZIAŁ|Oddział|TYTUŁ|Tytuł|KSIĘGA|Księga|CZĘŚĆ|Część)"
@@ -390,6 +398,8 @@ def md_to_tree(md: str) -> dict:
         else:
             blocks.append(("p", UNESCAPE.sub(r"\1", p)))
     depths = tree_depths(blocks)
+    treaty = sum(1 for (kind, text), d in zip(blocks, depths)
+                 if kind == "p" and d == 0 and TREATY_ART.match(text)) >= 2  # see the module docstring
 
     parts = [("main", None, _Builder())]
     for n, ((kind, text), d) in enumerate(zip(blocks, depths)):
@@ -409,6 +419,10 @@ def md_to_tree(md: str) -> dict:
             # "Art. 25." + "„1. …" (a quoted article) or kept "Art. 30. „1. …" whole
             u = None
             d = 1
+        if treaty and not u and d == 0 and kind == "p" and TREATY_END.match(body):
+            b.close()
+        if treaty and not u and d == 0 and kind == "p" and (t := TREATY_ART.match(body)):
+            u = ("art", t.group(1), t.group(2) or "")  # a title in its own paragraph becomes the text (fresh)
         if u and kind == "p" and u[0] == "par" and not u[2] and n + 1 < len(blocks) \
                 and blocks[n + 1][1].startswith(("„", "“")):
             u, d = None, 1  # "§ 5." + "„1. …": the same split for a quoted §

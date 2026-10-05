@@ -270,6 +270,26 @@ class Tree(unittest.TestCase):
                           "2) do dnia 5 lutego – rozliczenie roczne.", "2. Jeżeli termin przypada na sobotę, upływa w poniedziałek."))
         self.assertEqual(paths(t["body"]), ["par_7", "par_7/pkt_1", "par_7/pkt_2", "par_7/ust_2"])
 
+    def test_treaty_articles(self):
+        # international agreements: "Artykuł N" in a paragraph of its own (title next, or in the same paragraph)
+        t = md_to_tree(md("UMOWA", "Umawiające się Strony uzgodniły, co następuje:", "Artykuł 1", "Definicje",
+                          "1. Określenie „inwestycja” oznacza:", "a) mienie ruchome,", "Artykuł 2 Zakres stosowania umowy",
+                          "Niniejsza umowa ma zastosowanie do inwestycji.", "Artykuł IV", "Treść."))
+        self.assertEqual(paths(t["body"]), ["art_1", "art_1/ust_1", "art_1/ust_1/lit_a", "art_2", "art_IV"])
+        self.assertEqual([n["text"] for n in t["body"] if n["type"] == "art"], ["Definicje", "Zakres stosowania umowy", "Treść."])
+        # the closing formula and the ratification after it are outside the last article
+        t = md_to_tree(md("Artykuł 1", "Treść.", "Artykuł 2", "1. Umowa wchodzi w życie.", "Sporządzono w Warszawie dnia 1 maja 1995 r.",
+                          "Po zaznajomieniu się z powyższą umową oświadczam, że:", "– jest przyjęta,"))
+        self.assertEqual(paths(t["body"][:2]), ["art_1", "art_2", "art_2/ust_1"])
+        self.assertEqual([n["type"] for n in t["body"][2:4]], ["text", "text"])
+        # one such paragraph, a reference to an article ("ustęp" in lower case) or a sentence stays text
+        for paras in (("Artykuł 1", "Treść."), ("Artykuł 15 ustęp 1", "Zastrzeżenie.", "Artykuł 17 ustęp 2"),
+                      ("Artykuł 309 Konstytucji ma następujące brzmienie:", "Artykuł 3 Konstytucji stanowi, że.")):
+            self.assertEqual(paths(md_to_tree(md(*paras))["body"]), [])
+        # quoted in an amendment: depth > 0
+        t = md_to_tree(md("Artykuł 5 otrzymuje brzmienie:", "„Artykuł 5", "Treść.", "Artykuł 6", "Treść”."))
+        self.assertEqual(paths(t["body"]), [])
+
 
 class TreeMeasure(unittest.TestCase):
     """eval/tree_eval.py on a tiny HTML reference: a correct tree scores 1, broken ones do not."""
