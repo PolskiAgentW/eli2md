@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.36**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.37**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -210,6 +210,16 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.37** (2026-10-05). Poprawka do (2) z 0.6.36. Nagłówek załącznika z numerem pozycji samego aktu („Załącznik do
+rozporządzenia … (poz. 753)”) zostaje załącznikiem także wtedy, gdy OCR odczytał podpis aktu dopiero po nim (DU/1994/753:
+podpis w drugiej kolumnie; DU/1994/153: podpis wklejony w akapit § 2). W 0.6.36 taki nagłówek stawał się akapitem.
+Znalezione przeglądem zmian 0.6.34 → 0.6.36 w DU 1990–1999 (lata 1990–1994: 12 nagłówków załącznika zamienionych
+w akapit, z tego te 2 własne; pozostałe 10 bez zmian: załącznik cytowany w akcie zmieniającym, załączniki umów
+międzynarodowych ogłaszanych w akcie, załączniki innego aktu z tych samych stron i załącznik, który OCR postawił przed
+§ 17 aktu, DU/1990/448, gdzie w 0.6.34 § 17–18 i podpis trafiały do załącznika). Próby z HTML (s5401, s5402, s5403;
+160 aktów) i 54 skany DU 2000: wynik każdego aktu taki sam jak w 0.6.36 (`eval/scans_1990_1999/*_v0.6.37.txt`,
+`eval/scans_2000/all54_v0.6.37.txt`).
 
 **0.6.36** (2026-10-05). Skany zeszytów sprzed 2012 r., dwie poprawki.
 (1) Kolofon pod kolumnami. Na ostatniej stronie zeszytu pierwszy wiersz kolofonu bywa krótki i stoi w obrębie lewej

@@ -354,6 +354,13 @@ class Scan(unittest.TestCase):
         announced = [Block("scan", "§ 1. Ogłasza się jednolity tekst ustawy …", 1), Block("annex", "Załącznik do obwieszczenia …", 2),
                      Block("scan", "USTAWA", 2), Block("scan", "Art. 1. Ustawa określa …", 2)]
         self.assertEqual(_quoted_scan_annexes([replace(b) for b in announced])[1].kind, "annex")
+        # DU/1994/753: the act's own annex ("(poz. 753)") with the signature read after it stays an annex
+        own = [Block("scan", "§ 1. Ustanawia się zakaz wywozu towarów wymienionych w załączniku.", 1),
+               Block("annex", "Załącznik do rozporządzenia Rady Ministrów z dnia 28 grudnia 1994 r. (poz. 753)", 1),
+               Block("scan", "WYKAZ TOWARÓW OBJĘTYCH ZAKAZEM WYWOZU", 1), Block("signature", "Prezes Rady Ministrów: W. Pawlak", 1)]
+        self.assertEqual(_quoted_scan_annexes([replace(b) for b in own], "753")[1].kind, "annex")
+        self.assertEqual(_quoted_scan_annexes([replace(b) for b in own], "75")[1].kind, "scan")
+        self.assertEqual(_quoted_scan_annexes([replace(b) for b in own])[1].kind, "scan")
 
     def test_markdown(self):
         doc = Document(blocks=[Block("scan", "§ 1. Tekst.", 1), Block("scan", "Dalej.", 1), Block("scan", "§ 2. Koniec.", 2)],
