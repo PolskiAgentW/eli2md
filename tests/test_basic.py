@@ -921,6 +921,27 @@ class Basic(unittest.TestCase):
         self.assertEqual(_act_end(again, 0, 2, rm), 12)
         twin = again[:10] + [sc("w sprawie zasad organizacji szkół."), sc("§ 1. Tekst.")]  # same issuer and date
         self.assertEqual(_act_end(twin, 0, 2, rm), 8)
+        # read between the act's number and its header: a page number of the contents on an issue's first page
+        # (DU/1997/6: "6", "25") or the signature of the act before it (DU/1995/44); up to 0.6.37 they ended the act
+        def num(n):
+            return Line(1, 0.0, 0.0, 0.0, 1.0, str(n), 595, 842, mark="scan", act=n)
+        rm6 = "Rozporządzenie Rady Ministrów z dnia 23 grudnia 1996 r. w sprawie wytycznych realizacji budżetu."
+        cover = [sc("16 Ministra Transportu z dnia 20 grudnia 1996 r. w sprawie przepisów"), num(6), num(25),
+                 sc("ROZPORZĄDZENIE RADY MINISTRÓW"), sc("z dnia 23 grudnia 1996 r."), sc("w sprawie wytycznych."),
+                 sc("§ 1. Tekst aktu 6."), sc("Prezes Rady Ministrów: W. Cimoszewicz")]
+        own, *_ = _own_act(cover, [], 6, rm6)
+        self.assertEqual([l.text[:12] for l in own], ["ROZPORZĄDZEN", "z dnia 23 gr", "w sprawie wy", "§ 1. Tekst a",
+                                                      "Prezes Rady "])
+        self.assertEqual(_act_end([num(6), num(7)] + cover[3:], 0, 6, rm6), 1)  # the next position: the next act
+        mf = "Rozporządzenie Ministra Finansów z dnia 30 stycznia 1995 r. zmieniające rozporządzenie w sprawie księgi."
+        page = [sc("§ 2. Rozporządzenie wchodzi w życie z dniem ogłoszenia."), num(44),
+                sc("Minister Finansów: wz. K. Kalicki"), sc("ROZPORZĄDZENIE MINISTRA FINANSÓW"),
+                sc("z dnia 30 stycznia 1995 r."), sc("zmieniające rozporządzenie w sprawie księgi."), sc("§ 1. Tekst aktu 44."),
+                sc("Minister Finansów: wz. K. Kalicki"), num(45), sc("ROZPORZĄDZENIE MINISTRA ROLNICTWA"),
+                sc("z dnia 30 grudnia 1994 r.")]
+        own, *_ = _own_act(page, [], 44, mf)
+        self.assertEqual([l.text[:12] for l in own], ["ROZPORZĄDZEN", "z dnia 30 st", "zmieniające ", "§ 1. Tekst a",
+                                                      "Minister Fin"])
         from eli2md.pdf import SIGNATURE_OCR
         self.assertTrue(SIGNATURE_OCR.match("Minister — Szef Urzędu Rady Ministrów: M. Strąk"))
         self.assertTrue(SIGNATURE_OCR.match("Prezes Rady Ministrów: W, Cimoszewicz"))

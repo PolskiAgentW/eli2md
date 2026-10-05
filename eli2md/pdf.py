@@ -1009,19 +1009,29 @@ def _own_act(body: list[Line], notes: list[Line], position: int, title: str | No
         return l.page, l.band, l.col, l.top
     notes = [l for l in notes if at(first) < at(l) and (last is None or at(l) < at(last))]
     own = body[start + 1: end]
+    if first.mark == "scan" and own and (own[0].act or SIGNATURE_OCR.match(own[0].text)):
+        # read between the act's number and its header: a page number of the issue's contents (DU/1997/6) or the
+        # signature of the act before it (DU/1995/44); see _act_end
+        own = own[1:]
     return own, notes, first.page, last.page if last else max((l.page for l in own + notes), default=first.page)
 
 
 def _act_end(body: list[Line], start: int, position: int, title: str | None = None) -> int:
     """Index of the first line after the act that starts at body[start]: the next act's number (ACT_NUMBER), or len."""
-    end = next((i for i in range(start + 1, len(body)) if position < body[i].act <= position + ACT_NUMBER_NEXT),
-               len(body))
-    if body[start].mark == "scan":
+    scan = body[start].mark == "scan"
+    # on a scan the line right after the act's number is the next act's number only if it is the very next position:
+    # on an issue's first page OCR may read a page number of its contents there ("6", "25": DU/1997/6, whose text
+    # was cut to nothing up to 0.6.37)
+    end = next((i for i in range(start + 1, len(body)) if position < body[i].act <= position + ACT_NUMBER_NEXT
+                and not (scan and i == start + 1 and body[i].act != position + 1)), len(body))
+    if scan:
         # the next act's number not read (or a later one only): on a scan the next act still starts with its type in
         # capitals right after this act's signature, maybe after a bare number ("Prezes Rady Ministrów: T. Mazowiecki",
         # "ROZPORZĄDZENIE RADY MINISTRÓW"; DU/1990/4, 271). Not after an annex header: the annex of an announcement
         # may be an act ("Załącznik do obwieszczenia …", "ROZPORZĄDZENIE RADY MINISTRÓW"), or have a title in capitals
-        for i in range(start + 1, end - 1):
+        # (not a signature right after the act's number: that is the act before it, read after this act's number;
+        # "44", "Minister Finansów: wz. K. Kalicki", "ROZPORZĄDZENIE MINISTRA FINANSÓW": DU/1995/44 up to 0.6.37)
+        for i in range(start + 2, end - 1):
             if body[i].mark == "scan" and SIGNATURE_OCR.match(body[i].text):
                 nxt = [l for l in body[i + 1: i + 3] if l.mark == "scan"]
                 if nxt and (OCR_NEW_ACT_TITLE.fullmatch(nxt[0].text) or len(nxt) > 1 and re.fullmatch(r"\W*\d{0,4}\W*", nxt[0].text)
