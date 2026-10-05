@@ -87,7 +87,8 @@ SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+
 # "Minister Finansów: w z. H. Wasilewska-Trenkner"); also at the end of the last paragraph ("… z dniem ogłoszenia.
 # Prezydent Rzeczypospolitej Polskiej: W. Jaruzelski", DU/1990/390)
 SIGNER_OCR = r"(?:Prezydent|Prezes|Wiceprezes|Minister|Marszałek|Przewodnicząc[ya]|Sekretarz|Pierwszy|Szef|Kierownik)"
-SIGNER_NAME_OCR = r":\s*(?:w\s?z\.\s*)?(?:[A-ZŁŚŻĆ]\w{0,2}\.\s*)+[A-ZŁŚŻĆ][\w/'’-]+(?:[- ][A-ZŁŚŻĆ][\w-]+)?\s*$"
+# (an initial may be read as a digit: "Prezes Rady Ministrów: 7. Mazowiecki", DU/1990/100)
+SIGNER_NAME_OCR = r":\s*(?:w\s?z\.\s*)?(?:[A-ZŁŚŻĆ0-9]\w{0,2}\.\s*)+[A-ZŁŚŻĆ][\w/'’-]+(?:[- ][A-ZŁŚŻĆ][\w-]+)?\s*$"
 SIGNATURE_OCR = re.compile(rf"^{SIGNER_OCR}[\w ,-]{{2,90}}{SIGNER_NAME_OCR}")
 SIGNATURE_AFTER_OCR = re.compile(rf"(?<=[.;])\s+({SIGNER_OCR}[\w ,-]{{2,90}}{SIGNER_NAME_OCR})")
 IMAGE_TEXT_CHARS = 30  # more text-layer chars than this over an image: the image is a background, not read by OCR
@@ -980,7 +981,16 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
     page with an image (DU/2003/2317 p. 10)."""
     start = next((i for i, l in enumerate(body) if l.act == position), None)
     if start is None:
-        return None
+        # the act's number is lost, but the next act's is there and no earlier one: the act starts the pages and ends
+        # at the next number (a scan where the act opens the page, its number read in the header band and dropped
+        # with the header: DU/1990/100)
+        nxt = next((i for i, l in enumerate(body) if l.act), None)
+        if nxt is None or not position < body[nxt].act <= position + ACT_NUMBER_NEXT or body[nxt].mark != "scan":
+            return None
+        own = body[:nxt]
+        return own, [n for n in notes if (n.page, n.band, n.col, n.top) < (body[nxt].page, body[nxt].band,
+                                                                           body[nxt].col, body[nxt].top)], \
+            min((l.page for l in own), default=body[nxt].page), body[nxt].page
     end = next((i for i in range(start + 1, len(body)) if position < body[i].act <= position + ACT_NUMBER_NEXT),
                len(body))
     first, last = body[start], body[end] if end < len(body) else None
