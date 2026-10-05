@@ -14,6 +14,7 @@ import math
 import re
 import unicodedata
 from collections import Counter
+from difflib import SequenceMatcher
 from dataclasses import dataclass, field, replace
 
 import pdfplumber
@@ -88,9 +89,14 @@ SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+
 # Prezydent Rzeczypospolitej Polskiej: W. Jaruzelski", DU/1990/390)
 SIGNER_OCR = r"(?:Prezydent|Prezes|Wiceprezes|Minister|Marszałek|Przewodnicząc[ya]|Sekretarz|Pierwszy|Szef|Kierownik)"
 # (an initial may be read as a digit: "Prezes Rady Ministrów: 7. Mazowiecki", DU/1990/100)
-SIGNER_NAME_OCR = r":\s*(?:w\s?z\.\s*)?(?:[A-ZŁŚŻĆ0-9]\w{0,2}\.\s*)+[A-ZŁŚŻĆ][\w/'’-]+(?:[- ][A-ZŁŚŻĆ][\w-]+)?\s*$"
-SIGNATURE_OCR = re.compile(rf"^{SIGNER_OCR}[\w ,-]{{2,90}}{SIGNER_NAME_OCR}")
-SIGNATURE_AFTER_OCR = re.compile(rf"(?<=[.;])\s+({SIGNER_OCR}[\w ,-]{{2,90}}{SIGNER_NAME_OCR})")
+# (a dash in the office: "Minister — Szef Urzędu Rady Ministrów: M. Strąk", DU/1994/7; an initial with a comma:
+# "Prezes Rady Ministrów: W, Cimoszewicz", DU/1997/7)
+SIGNER_NAME = r":\s*(?:w\s?z\.\s*)?(?:[A-ZŁŚŻĆ0-9]\w{0,2}[.,]\s*)+[A-ZŁŚŻĆ][\w/'’-]+(?:[- ][A-ZŁŚŻĆ][\w-]+)?"
+SIGNER_NAME_OCR = SIGNER_NAME + r"\s*$"
+SIGNATURE_OCR = re.compile(rf"^{SIGNER_OCR}[\w ,—–-]{{2,90}}{SIGNER_NAME_OCR}")
+SIGNATURE_AFTER_OCR = re.compile(rf"(?<=[.;])\s+({SIGNER_OCR}[\w ,—–-]{{2,90}}{SIGNER_NAME_OCR})")
+# the next act's number read at the end of the signature ("Prezes Rady Ministrów: J. K. Bielecki 157", DU/1991/156)
+SIGNATURE_NUMBER_OCR = re.compile(rf"({SIGNER_OCR}[\w ,—–-]{{2,90}}{SIGNER_NAME})\s+(\d{{1,4}})")
 IMAGE_TEXT_CHARS = 30  # more text-layer chars than this over an image: the image is a background, not read by OCR
 # Dz.U. (and M.P.) up to 2011 came out in numbered issues: the page header names the issue ("Dziennik Ustaw Nr 150
 # — 9307 — Poz. 1255, 1256 i 1257", DU/2005/1255), the first page of an issue has "Nr 115" under the masthead
@@ -991,6 +997,18 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
         return own, [n for n in notes if (n.page, n.band, n.col, n.top) < (body[nxt].page, body[nxt].band,
                                                                            body[nxt].col, body[nxt].top)], \
             min((l.page for l in own), default=body[nxt].page), body[nxt].page
+    end = _act_end(body, start, position)
+    first, last = body[start], body[end] if end < len(body) else None
+
+    def at(l: Line) -> tuple:
+        return l.page, l.band, l.col, l.top
+    notes = [l for l in notes if at(first) < at(l) and (last is None or at(l) < at(last))]
+    own = body[start + 1: end]
+    return own, notes, first.page, last.page if last else max((l.page for l in own + notes), default=first.page)
+
+
+def _act_end(body: list[Line], start: int, position: int) -> int:
+    """Index of the first line after the act that starts at body[start]: the next act's number (ACT_NUMBER), or len."""
     end = next((i for i in range(start + 1, len(body)) if position < body[i].act <= position + ACT_NUMBER_NEXT),
                len(body))
     if body[start].mark == "scan":
@@ -1003,14 +1021,61 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
                 nxt = [l for l in body[i + 1: i + 3] if l.mark == "scan"]
                 if nxt and (OCR_NEW_ACT_TITLE.fullmatch(nxt[0].text) or len(nxt) > 1 and re.fullmatch(r"\W*\d{0,4}\W*", nxt[0].text)
                                                                        and OCR_NEW_ACT_TITLE.fullmatch(nxt[1].text)):
-                    end = i + 1
-                    break
+                    return i + 1
+    return end
+
+
+def _plain(s: str) -> str:
+    """Capitals without diacritics and punctuation, single spaces: OCR of a title in capitals loses both."""
+    s = unicodedata.normalize("NFKD", s.upper().replace("Ł", "L"))
+    return " ".join(re.sub(r"[\W_]", " ", "".join(c for c in s if not unicodedata.combining(c))).split())
+
+
+ELI_TITLE = re.compile(r"(?P<head>.+?)\s+z\s+dnia\s+(?P<date>\d{1,2}\s+\w+\s+\d{4})\s*r\.?\s*(?P<rest>.*)", re.S)
+
+
+def _own_act_by_title(body: list[Line], notes: list[Line], position: int, title: str
+                      ) -> tuple[list[Line], list[Line], int, int] | None:
+    """The act out of pages of a scanned issue when OCR lost its number (no line with act=position), found by its
+    title in ELI: its type and issuer in capitals and the date under them ("ROZPORZĄDZENIE MINISTRA FINANSÓW",
+    "z dnia 9 stycznia 1992 r." for "Rozporządzenie Ministra Finansów z dnia 9 stycznia 1992 r. zmieniające …").
+    Up to 0.6.32 such an act got all its pages: the end of the act before it and the acts after it (DU/1992/6 held
+    the end of 5 and all of 7 and 8). The header must match closely (difflib ratio ≥ 0.8, date ≥ 0.85); of several
+    candidates the one whose next words are closest to the rest of the title wins (acts 5 and 6 of 1992 differ only
+    after 60 letters of it), a near tie gives None (no cut).
+    The header line is kept: it is text of the act. The act ends as in _own_act (_act_end)."""
+    m = ELI_TITLE.fullmatch(title.strip())
+    if not m:
+        return None
+    head, date, rest = _plain(m["head"]), _plain("z dnia " + m["date"]), _plain(m["rest"])[:300]
+    kind = head.split()[0]
+    scored = []
+    for i, l in enumerate(body):
+        if l.mark != "scan" or not OCR_NEW_ACT_TITLE.match(l.text) or not _plain(l.text).startswith(kind[:5]):
+            continue
+        window = _plain(" ".join([l.text] + [x.text for x in body[i + 1: i + 5] if x.mark == "scan"]))
+        k = window.find(" Z DNIA ")
+        if k < 0:
+            continue
+        h = SequenceMatcher(None, head, window[:k], autojunk=False).ratio()
+        d = SequenceMatcher(None, date, window[k + 1: k + 1 + len(date)], autojunk=False).ratio()
+        if h >= 0.8 and d >= 0.85:
+            after = window[k + 1 + len(date):].strip()
+            after = re.sub(r"^R\b\s*", "", after)[:len(rest)]
+            scored.append((h + d + SequenceMatcher(None, rest, after, autojunk=False).ratio(), i))
+    if not scored:
+        return None
+    scored.sort(reverse=True)
+    if len(scored) > 1 and scored[0][0] - scored[1][0] < 0.1:
+        return None
+    start = scored[0][1]
+    end = _act_end(body, start, position)
     first, last = body[start], body[end] if end < len(body) else None
 
     def at(l: Line) -> tuple:
         return l.page, l.band, l.col, l.top
     notes = [l for l in notes if at(first) < at(l) and (last is None or at(l) < at(last))]
-    own = body[start + 1: end]
+    own = body[start:end]
     return own, notes, first.page, last.page if last else max((l.page for l in own + notes), default=first.page)
 
 
@@ -1029,9 +1094,10 @@ OCR_REJ = r"Rej\.?\s*\d+/\d{2,4}(?:\s+MPM)?"
 OCR_ACT_START = re.compile(rf"^(\d{{1,4}})(?:\s+(?=(?:{OCR_REJ}\s+)?{OCR_ACT_TYPE})|\s+(?={OCR_REJ}$)|$)")
 OCR_TYPE_NEXT = re.compile(rf"(?:{OCR_REJ}\s*)?{OCR_ACT_TYPE}")
 # the title of an act on its own (not of an annex: no ZAŁĄCZNIK, STATUT, REGULAMIN), in capitals: "ROZPORZĄDZENIE MINISTRA
-# FINANSÓW", "USTAWA", "OŚWIADCZENIE RZĄDOWE"
+# FINANSÓW", "USTAWA", "OŚWIADCZENIE RZĄDOWE", "ROZPORZĄDZENIE MINISTRA— SZEFA URZĘDU RADY MINISTRÓW" (DU/1994/7); a speck of the scan
+# after it ("… GOSPODARKI MORSKIEJ |", DU/1998/428)
 OCR_NEW_ACT_TITLE = re.compile(r"(?:ROZPORZĄDZENIE|USTAWA|OBWIESZCZENIE|UCHWAŁA|POSTANOWIENIE|ZARZĄDZENIE|OŚWIADCZENIE"
-                               r"|UMOWA|KONWENCJA|PROTOKÓŁ|ORZECZENIE|DEKRET|TRAKTAT|POROZUMIENIE)\b[A-ZĄĆĘŁŃÓŚŹŻ ,.-]*")
+                               r"|UMOWA|KONWENCJA|PROTOKÓŁ|ORZECZENIE|DEKRET|TRAKTAT|POROZUMIENIE)\b[A-ZĄĆĘŁŃÓŚŹŻ ,.—–|-]*")
 
 
 # "§" read by tesseract as "8", "$" or "S" at a paragraph's start ("8 2. Traci moc", DU/2000/53) and as "$" in the
@@ -1067,6 +1133,12 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
         paragraphs = ([rest] if re.search(r"[^\W\d_]", rest) or number else []) + paragraphs[1:]
     if mark == "scan":  # the previous act's signature read after the next act's number goes back before it (DU/1990/380)
         paragraphs = list(paragraphs)
+        if position is not None:  # and the next act's number read at the end of the signature becomes a paragraph
+            for k in range(len(paragraphs) - 2, -1, -1):
+                if (sn := SIGNATURE_NUMBER_OCR.fullmatch(paragraphs[k].strip())) \
+                        and position < int(sn.group(2)) <= position + ACT_NUMBER_NEXT \
+                        and OCR_TYPE_NEXT.match(paragraphs[k + 1]):
+                    paragraphs[k: k + 1] = [sn.group(1), sn.group(2)]
         for k in range(len(paragraphs) - 1):
             if OCR_ACT_START.fullmatch(paragraphs[k].strip()) and SIGNATURE_OCR.match(paragraphs[k + 1]):
                 paragraphs[k], paragraphs[k + 1] = paragraphs[k + 1], paragraphs[k]
@@ -1098,12 +1170,13 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
     return out
 
 
-def convert(path: str, ocr: str | None = None, position: int | None = None,
+def convert(path: str, ocr: str | None = None, position: int | None = None, title: str | None = None,
             _doc_gutter: tuple[float, float] | None = None) -> Document:
     """ocr: "auto" or tesseract language(s), e.g. "pol+eng", to read pages without a text layer
     (see ocr.py); None (default) = no OCR, such pages only get a note.
     position: the act's position in the gazette (ELI "DU/2005/1255" -> 1255). On pages of issues of 2011 and
     earlier it cuts the act out of the pages it shares with other acts (see _own_act); None = no cut.
+    title: the act's title in ELI; on a scan whose OCR lost the act's number the act is found by it (_own_act_by_title).
     Two-column pages of those issues: a page with too few full lines to find its gutter (the first page of an act
     over a page of footnotes) takes the gutter of the act's other pages; as it may come first, the PDF is then read
     again (_doc_gutter)."""
@@ -1175,9 +1248,12 @@ def convert(path: str, ocr: str | None = None, position: int | None = None,
         common = Counter((round(a), round(b)) for a, b in gut["found"]).most_common(1)[0][0]
         g = next(g for g in gut["found"] if (round(g[0]), round(g[1])) == common)
         if any(abs(a - g[0]) <= 1 and abs(b - g[1]) <= 1 for a, b in gut["cands"]):
-            return convert(path, ocr, position, _doc_gutter=g)
+            return convert(path, ocr, position, title, _doc_gutter=g)
     body, notes = _drop_colophon(body, notes)
-    if position is not None and (own := _own_act(body, notes, int(position))):
+    own = None
+    if position is not None and title and not any(l.act == int(position) for l in body):
+        own = _own_act_by_title(body, notes, int(position), title)
+    if position is not None and (own := own or _own_act(body, notes, int(position))):
         body, notes, lo, hi = own
         for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
             setattr(doc, f, [p for p in getattr(doc, f) if lo <= p <= hi])  # pages of the other acts only
