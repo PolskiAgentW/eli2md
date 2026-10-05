@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.32**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.33**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -210,6 +210,24 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.33** (2026-10-05). Skany zeszytów (Dz.U. 1990–1999): wycinanie aktu, gdy OCR zgubił jego numer pozycji albo
+koniec aktu. (1) Bez numeru akt dostawał wszystkie strony swojego PDF, czyli też koniec poprzedniego aktu i całe
+następne (DU/1992/6: koniec 5 oraz całe 7 i 8). Teraz `convert()` dostaje tytuł aktu z ELI (`title`; `eli2md.dataset`
+i `python -m eli2md` podają go z `meta.json`) i szuka na skanie nagłówka rodzaju i organu wersalikami z datą pod nim:
+nagłówek podobny do tytułu (difflib ≥ 0,8), dzień i rok daty dokładnie, słowa po dacie podobne do reszty tytułu
+(≥ 0,5; akty 5 i 6 z 1992 r. różnią się dopiero po 60 literach), nie za numerem następnego aktu (DU/1993/599:
+„USTAWA z dnia 10 grudnia 1993 r.” pod numerem 600 to następny akt); przy remisie kandydatów nic nie jest cięte.
+(2) Koniec aktu: numer następnego aktu doklejony do podpisu („Prezes Rady Ministrów: J. K. Bielecki 157”,
+DU/1991/156) jest osobnym numerem; podpis z pauzą („Minister — Szef Urzędu Rady Ministrów: M. Strąk”, DU/1994/7)
+i z przecinkiem po inicjale („W, Cimoszewicz”, DU/1997/7), nagłówek z pauzą albo plamką skanu („… MORSKIEJ |”,
+DU/1998/428) kończą akt jak inne.
+Pomiar: na próbach z HTML 1990–1999 (test s5403, 60 aktów; dev s5401, 40; s5402, 60) wynik każdego aktu taki sam jak
+w 0.6.31 (`eval/scans_1990_1999/*_v0.6.33.txt`); żaden z tych aktów nie ma tej usterki. Na zbiorze 0.6.31 (akty bez
+HTML z lat 1990–1998, rocznik 1998 w trakcie konwersji: 5 377 plików) 60 aktów ma ≥ 2 nagłówki rodzaju aktu wersalikami (`eval/scans_1990_1999/heads.py`,
+lista `heads_candidates_0.6.31.txt`); w 0.6.33 28 z nich ma już jeden. Pozostałe 32 to m.in. teksty jednolite
+i akty w załącznikach (poprawne) oraz następny akt po tabeli załącznika bez podpisu (DU/1993/2, DU/1990/4) — tego
+0.6.33 nie rozpoznaje.
 
 **0.6.32** (2026-10-05). Tylko `eli2md.dataset`, konwersja bez zmian (ta sama zmiana jest w **0.6.25.1**: 0.6.25 z tylko tą poprawką, dla workflow zbiorów). Akt, który zabija proces roboczy bez `MemoryError`
 (przeliczenie MP 2012–2026 przy `--mem-limit-gb 1.6`: MP/2019/230, 304 strony, 270 z OCR), psuł pulę procesów,

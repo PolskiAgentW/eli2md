@@ -873,6 +873,43 @@ class Basic(unittest.TestCase):
         page += r("———————", 38, 110, 612) + r("1) Przypis aktu 1370 na dole strony, pod tekstem.", 38, 292, 623, 8)
         return page
 
+    def test_act_by_title_when_ocr_lost_its_number(self):
+        # DU/1992/6: OCR lost the numbers 5, 6 and 7; the page holds the end of 4, then 5 and 6 with the same type,
+        # issuer and date, then 7. The act is found by its ELI title and ends at the next act's header after its
+        # signature
+        from eli2md.pdf import _own_act_by_title
+        def sc(t):
+            return Line(1, 0.0, 0.0, 0.0, 1.0, t, 595, 842, mark="scan")
+        head = "ROZPORZĄDZENIE MINISTRA FINANSÓW"
+        date = "z dnia 9 stycznia 1992 r."
+        body = [sc(t) for t in [
+            "§ 4. Rozporządzenie wchodzi w życie z dniem ogłoszenia.", "Prezes Rady Ministrów: J. O/szewski",
+            head, date, "zmieniające rozporządzenie w sprawie stawek podatku obrotowego od osób fizycznych.",
+            "§ 1. Tekst aktu 5.", "Minister Finansów: K. Lutkowski",
+            head, date, "zmieniające rozporządzenie w sprawie stawek podatku obrotowego od towarów sprowadzanych.",
+            "§ 1. Tekst aktu 6.", "Minister Finansów: K. Lutkowski",
+            "ROZPORZĄDZENIE MINISTRA PRZEMYSŁU I HANDLU |", "z dnia 4 grudnia 1991 r.", "§ 1. Tekst aktu 7."]]
+        title = ("Rozporządzenie Ministra Finansów z dnia 9 stycznia 1992 r. zmieniające rozporządzenie w sprawie stawek "
+                 "podatku obrotowego od towarów sprowadzanych.")
+        own, _, lo, hi = _own_act_by_title(body, [], 6, title)
+        self.assertEqual([l.text[:18] for l in own], [head[:18], date[:18], "zmieniające rozpor", "§ 1. Tekst aktu 6.",
+                                                      "Minister Finansów:"])
+        own, *_ = _own_act_by_title(body, [], 5, title.replace("od towarów sprowadzanych", "od osób fizycznych"))
+        self.assertEqual(own[3].text, "§ 1. Tekst aktu 5.")
+        self.assertEqual(len(own), 5)
+        self.assertIsNone(_own_act_by_title(body, [], 6, title.replace("9 stycznia", "19 marca")))  # no such date
+        twins = body[:7] + body[2:7]  # the same act twice: a tie, no cut
+        self.assertIsNone(_own_act_by_title(twins, [], 5, title.replace("od towarów sprowadzanych", "od osób fizycznych")))
+        # the next act's number read at the end of the signature; a dash in the office; an initial with a comma
+        lines = _ocr_lines(["Rozporządzenie wchodzi w życie z dniem ogłoszenia.", "Prezes Rady Ministrów: J. K. Bielecki 157",
+                            "ROZPORZĄDZENIE RADY MINISTRÓW", "z dnia 22 kwietnia 1991 r."], 1, 595, 842, 156, "scan")
+        self.assertEqual([(l.act, l.text) for l in lines[1:3]], [(0, "Prezes Rady Ministrów: J. K. Bielecki"), (157, "157")])
+        self.assertEqual([l.text for l in _ocr_lines(["Prezes Rady Ministrów: J. K. Bielecki 157", "Tekst."], 1, 595, 842, 156,
+                                                     "scan")][0], "Prezes Rady Ministrów: J. K. Bielecki 157")  # no type after it
+        from eli2md.pdf import SIGNATURE_OCR
+        self.assertTrue(SIGNATURE_OCR.match("Minister — Szef Urzędu Rady Ministrów: M. Strąk"))
+        self.assertTrue(SIGNATURE_OCR.match("Prezes Rady Ministrów: W, Cimoszewicz"))
+
     def test_act_numbers_cut(self):
         body, notes = _frame_lines(self._shared_page("Dziennik Ustaw Nr 165 — 10063 — Poz. 1369 i 1370"),
                                    595, 842, [], 2)

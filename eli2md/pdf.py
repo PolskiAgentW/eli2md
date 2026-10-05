@@ -1040,29 +1040,34 @@ def _own_act_by_title(body: list[Line], notes: list[Line], position: int, title:
     title in ELI: its type and issuer in capitals and the date under them ("ROZPORZĄDZENIE MINISTRA FINANSÓW",
     "z dnia 9 stycznia 1992 r." for "Rozporządzenie Ministra Finansów z dnia 9 stycznia 1992 r. zmieniające …").
     Up to 0.6.32 such an act got all its pages: the end of the act before it and the acts after it (DU/1992/6 held
-    the end of 5 and all of 7 and 8). The header must match closely (difflib ratio ≥ 0.8, date ≥ 0.85); of several
+    the end of 5 and all of 7 and 8). The header must match closely (difflib ratio ≥ 0.8; the day and year of the date
+    exactly, the month ≥ 0.8; the words after the date ≥ 0.5 to the rest of the title); of several
     candidates the one whose next words are closest to the rest of the title wins (acts 5 and 6 of 1992 differ only
     after 60 letters of it), a near tie gives None (no cut).
     The header line is kept: it is text of the act. The act ends as in _own_act (_act_end)."""
     m = ELI_TITLE.fullmatch(title.strip())
     if not m:
         return None
-    head, date, rest = _plain(m["head"]), _plain("z dnia " + m["date"]), _plain(m["rest"])[:300]
+    head, rest = _plain(m["head"]), _plain(m["rest"])[:300]
+    day, month, year = _plain(m["date"]).split()
     kind = head.split()[0]
+    # not after the next act's number: that header is the next act's (DU/1993/599 starts its pages, its header unread,
+    # and "USTAWA z dnia 10 grudnia 1993 r." under the number 600 is the only candidate)
+    stop = next((i for i, l in enumerate(body) if position < l.act <= position + ACT_NUMBER_NEXT), len(body))
     scored = []
-    for i, l in enumerate(body):
+    for i, l in enumerate(body[:stop]):
         if l.mark != "scan" or not OCR_NEW_ACT_TITLE.match(l.text) or not _plain(l.text).startswith(kind[:5]):
             continue
         window = _plain(" ".join([l.text] + [x.text for x in body[i + 1: i + 5] if x.mark == "scan"]))
-        k = window.find(" Z DNIA ")
-        if k < 0:
+        d = re.search(r" Z DNIA (\d{1,2}) (\w+) (\d{4})\b", window)
+        if not d or (d[1], d[3]) != (day, year):  # the day and year exactly: "9" and "10 grudnia" differ by a letter
             continue
-        h = SequenceMatcher(None, head, window[:k], autojunk=False).ratio()
-        d = SequenceMatcher(None, date, window[k + 1: k + 1 + len(date)], autojunk=False).ratio()
-        if h >= 0.8 and d >= 0.85:
-            after = window[k + 1 + len(date):].strip()
-            after = re.sub(r"^R\b\s*", "", after)[:len(rest)]
-            scored.append((h + d + SequenceMatcher(None, rest, after, autojunk=False).ratio(), i))
+        h = SequenceMatcher(None, head, window[:d.start()], autojunk=False).ratio()
+        mo = SequenceMatcher(None, month, d[2], autojunk=False).ratio()
+        after = re.sub(r"^R\b\s*", "", window[d.end():].strip())[:len(rest)]
+        r = SequenceMatcher(None, rest, after, autojunk=False).ratio() if rest else 1.0
+        if h >= 0.8 and mo >= 0.8 and r >= 0.5:
+            scored.append((h + r, i))
     if not scored:
         return None
     scored.sort(reverse=True)
