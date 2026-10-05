@@ -1,0 +1,11 @@
+A/B eli2md 0.6.37 vs 0.6.38 (2026-10-05)
+Acts: every scanned act of the published DU 1990-1999 dataset (7 117) + 300 scans DU 2000-2011 = 7 417.
+Per year: 1990 433, 1991 421, 1992 461, 1993 572, 1994 701, 1995 687, 1996 674, 1997 915, 1998 1126, 1999 1127,
+2000 297, 2005 2, 2008 1.
+Method: convert(text.pdf, ocr="auto", position, title) + to_markdown, same PDFs and the same OCR cache for both
+versions; Markdown compared byte for byte. Conversion errors: 0 / 0. Missing outputs: 0.
+Result: 2 acts differ, both gain text (0.6.37 kept only the title and the signature).
+act          words_0.6.37  words_0.6.38
+DU/1995/44   119           868
+DU/1997/6    127           1696
+Every other act: identical output.

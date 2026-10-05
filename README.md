@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.37**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.38**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -210,6 +210,16 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.38** (2026-10-05). Skany: koniec aktu, gdy między numerem pozycji a nagłówkiem aktu OCR odczytał coś obcego.
+(1) Na pierwszej stronie zeszytu numer strony ze spisu treści odczytany tuż po numerze aktu był brany za numer
+następnej pozycji (DU/1997/6: „6”, „25”), więc akt kończył się, zanim się zaczął. Teraz wiersz tuż po numerze aktu
+kończy akt tylko wtedy, gdy jest numerem następnej pozycji. (2) Podpis poprzedniego aktu odczytany po numerze aktu
+(DU/1995/44: „44”, „Minister Finansów: wz. K. Kalicki”, „ROZPORZĄDZENIE MINISTRA FINANSÓW”) był brany za podpis
+kończący ten akt. W obu aktach od 0.6.31 zostawały tylko tytuł i podpis. Znalezione kontrolą spójności opublikowanego
+zbioru DU 1990–1999. Porównanie 0.6.37 i 0.6.38 na 7 417 aktach-skanach (wszystkie 7 117 skanów zbioru DU 1990–1999
+i 300 skanów DU 2000–2011): różnią się tylko te 2 akty, 119 → 868 i 127 → 1 696 słów
+(`eval/scans_1990_1999/ab_v0.6.37_v0.6.38.txt`).
 
 **0.6.37** (2026-10-05). Poprawka do (2) z 0.6.36. Nagłówek załącznika z numerem pozycji samego aktu („Załącznik do
 rozporządzenia … (poz. 753)”) zostaje załącznikiem także wtedy, gdy OCR odczytał podpis aktu dopiero po nim (DU/1994/753:
