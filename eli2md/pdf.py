@@ -993,6 +993,18 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
             min((l.page for l in own), default=body[nxt].page), body[nxt].page
     end = next((i for i in range(start + 1, len(body)) if position < body[i].act <= position + ACT_NUMBER_NEXT),
                len(body))
+    if body[start].mark == "scan":
+        # the next act's number not read (or a later one only): on a scan the next act still starts with its type in
+        # capitals right after this act's signature, maybe after a bare number ("Prezes Rady Ministrów: T. Mazowiecki",
+        # "ROZPORZĄDZENIE RADY MINISTRÓW"; DU/1990/4, 271). Not after an annex header: the annex of an announcement
+        # may be an act ("Załącznik do obwieszczenia …", "ROZPORZĄDZENIE RADY MINISTRÓW"), or have a title in capitals
+        for i in range(start + 1, end - 1):
+            if body[i].mark == "scan" and SIGNATURE_OCR.match(body[i].text):
+                nxt = [l for l in body[i + 1: i + 3] if l.mark == "scan"]
+                if nxt and (OCR_NEW_ACT_TITLE.fullmatch(nxt[0].text) or len(nxt) > 1 and re.fullmatch(r"\W*\d{0,4}\W*", nxt[0].text)
+                                                                       and OCR_NEW_ACT_TITLE.fullmatch(nxt[1].text)):
+                    end = i + 1
+                    break
     first, last = body[start], body[end] if end < len(body) else None
 
     def at(l: Line) -> tuple:
@@ -1016,6 +1028,10 @@ OCR_ACT_TYPE = "".join({"Ą": "[ĄA]", "Ę": "[ĘE]", "Ł": "[ŁL]", "Ó": "[ÓO
 OCR_REJ = r"Rej\.?\s*\d+/\d{2,4}(?:\s+MPM)?"
 OCR_ACT_START = re.compile(rf"^(\d{{1,4}})(?:\s+(?=(?:{OCR_REJ}\s+)?{OCR_ACT_TYPE})|\s+(?={OCR_REJ}$)|$)")
 OCR_TYPE_NEXT = re.compile(rf"(?:{OCR_REJ}\s*)?{OCR_ACT_TYPE}")
+# the title of an act on its own (not of an annex: no ZAŁĄCZNIK, STATUT, REGULAMIN), in capitals: "ROZPORZĄDZENIE MINISTRA
+# FINANSÓW", "USTAWA", "OŚWIADCZENIE RZĄDOWE"
+OCR_NEW_ACT_TITLE = re.compile(r"(?:ROZPORZĄDZENIE|USTAWA|OBWIESZCZENIE|UCHWAŁA|POSTANOWIENIE|ZARZĄDZENIE|OŚWIADCZENIE"
+                               r"|UMOWA|KONWENCJA|PROTOKÓŁ|ORZECZENIE|DEKRET|TRAKTAT|POROZUMIENIE)\b[A-ZĄĆĘŁŃÓŚŹŻ ,.-]*")
 
 
 # "§" read by tesseract as "8", "$" or "S" at a paragraph's start ("8 2. Traci moc", DU/2000/53) and as "$" in the
@@ -1056,6 +1072,8 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
                 paragraphs[k], paragraphs[k + 1] = paragraphs[k + 1], paragraphs[k]
     out = []
     for k, t in enumerate(paragraphs):
+        if mark == "scan" and re.fullmatch(r"\d{1,4}[\s|.,;:'’\"!_~-]+", t):
+            t = t.rstrip(" |.,;:'’\"!_~-")  # a number with a speck of the scan after it ("151 |", DU/1990/150)
         m = OCR_ACT_START.match(t) if position is not None else None
         # on a scan read in columns the previous act's signature or a page number of the table of contents may stand
         # between the number and the type ("369", "Prezydent Rzeczypospolitej Polskiej: L. Wałęsa", "USTAWA";
