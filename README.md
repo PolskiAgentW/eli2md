@@ -214,7 +214,8 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 **0.6.30** (2026-10-05). Skany: gdy numeru pozycji aktu nie ma w odczycie (akt zaczyna stronę, a numer w pasie
 nagłówka znika razem z nim: DU/1990/100), a jest numer następnego aktu i żaden wcześniejszy, akt kończy się na numerze
 następnego. Do 0.6.29 nie był wtedy wycinany i miał wszystkie następne akty z tych stron (w roczniku 1990: 63 z 433
-aktów miały w tekście więcej niż jeden nagłówek rodzaju aktu). Podpis z cyfrą zamiast inicjału („Prezes Rady
+aktów miały w tekście więcej niż jeden nagłówek rodzaju aktu, po 0.6.30: 8; w tych 8 numer następnego aktu też zginął,
+a jego tytuł stoi po podpisie, np. DU/1990/150). Podpis z cyfrą zamiast inicjału („Prezes Rady
 Ministrów: 7. Mazowiecki”) jest podpisem. Próby: dev s5401 P 0,9845 → 0,9862 (lepiej 1 akt), test s5403 P 0,9621 →
 0,9718 (lepiej 5, np. DU/1994/396 P 0,454 → 0,971), R bez zmian, żaden akt gorzej.
 
