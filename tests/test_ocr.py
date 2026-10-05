@@ -1,10 +1,12 @@
 import shutil
 import unittest
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest import mock
 
 from eli2md import ocr
-from eli2md.pdf import ANNEX_OCR, Block, Document, _fix_section_sign, _hidden_ocr_scan, _ocr_lines, _segment, to_markdown
+from eli2md.pdf import (ANNEX_OCR, Block, Document, _fix_section_sign, _hidden_ocr_scan, _ocr_lines, _quoted_scan_annexes,
+                        _segment, to_markdown)
 
 META = {"ELI": "DU/2025/1", "title": "Umowa", "type": "Umowa międzynarodowa", "pos": 1, "publisher": "DU"}
 HEAD = "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext"
@@ -329,6 +331,29 @@ class Scan(unittest.TestCase):
                          + ["Wydawca: tekst na całą szerokość strony"])
         one = {(0, 0, k): line(100 + 40 * k, "tekst w jednym łamie", 100, 900) for k in range(12)}
         self.assertIs(ocr._column_order(one, 1000), one)
+        # a short first line of the colophon under the columns, within the left one, comes after the right column
+        # (DU/2000/214: before, it stood between the columns and the colophon cut cut the right one off)
+        lines3 = {k: v for k, v in lines.items() if k != (4, 0, 0)}
+        lines3[(4, 0, 0)] = line(400, "Egzemplarze bieżące można nabywać:", 100, 450)
+        lines3[(5, 0, 0)] = line(440, "— w Wydziale Wydawnictw na całą szerokość", 100, 900)
+        out3 = [" ".join(w[2] for w in ws) for ws in ocr._column_order(lines3, 1000).values()]
+        self.assertEqual(out3, ["TYTUŁ AKTU"] + [f"lewy{k} tekst" for k in range(7)] + [f"prawy{k} tekst" for k in range(7)]
+                         + ["Egzemplarze bieżące można nabywać:", "— w Wydziale Wydawnictw na całą szerokość"])
+
+    def test_quoted_annex_on_scan(self):
+        # DU/2000/1315: Art. 2 gives the new annexes of the amended act; "Załącznik nr 3" is not this act's annex
+        blocks = [Block("scan", "Art. 1. W ustawie …", 1), Block("scan", "Art. 2. W ustawie … załączniki otrzymują brzmienie:", 1),
+                  Block("annex", "Załącznik nr 3", 2), Block("scan", "STAWKI MINIMALNE", 2),
+                  Block("scan", "Art. 3. Ustawa wchodzi w życie …", 3)]
+        self.assertEqual([b.kind for b in _quoted_scan_annexes([replace(b) for b in blocks])],
+                         ["scan", "scan", "scan", "scan", "scan"])
+        signed = blocks[:2] + [Block("scan", "Art. 3. Ustawa wchodzi w życie …", 1), Block("signature", "Prezes Rady Ministrów: J. Buzek", 1)] \
+            + [Block("annex", "Załącznik nr 3", 2), Block("scan", "STAWKI MINIMALNE", 2)]
+        self.assertEqual(_quoted_scan_annexes([replace(b) for b in signed])[4].kind, "annex")
+        # an act set in the annex of an announcement starts at Art. 1: the annex stays
+        announced = [Block("scan", "§ 1. Ogłasza się jednolity tekst ustawy …", 1), Block("annex", "Załącznik do obwieszczenia …", 2),
+                     Block("scan", "USTAWA", 2), Block("scan", "Art. 1. Ustawa określa …", 2)]
+        self.assertEqual(_quoted_scan_annexes([replace(b) for b in announced])[1].kind, "annex")
 
     def test_markdown(self):
         doc = Document(blocks=[Block("scan", "§ 1. Tekst.", 1), Block("scan", "Dalej.", 1), Block("scan", "§ 2. Koniec.", 2)],
