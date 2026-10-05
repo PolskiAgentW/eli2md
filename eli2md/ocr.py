@@ -30,7 +30,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-from .pdf import UNIT_START
+from .pdf import COLOPHON, UNIT_START
 
 DPI = 300
 OCR_UNIT = re.compile(r"^(Artykuł|ARTYKUŁ|Article|ARTICLE|Artigo|ARTIGO|Άρθρο|Ustęp|Section|Rozdział|ROZDZIAŁ|"
@@ -375,7 +375,11 @@ def _column_order(lines: dict, width: int, height: int = 0) -> dict:
         a, b = min(w[4] for w in ws), max(w[5] for w in ws)
         centred = len(ws) == 1 and re.fullmatch(r"\d{2,4}", ws[0][2]) is not None \
             and abs((a + b) / 2 - (x0 + x1) / 2) < 0.015 * (x1 - x0)
-        if left and right and not joined or len(left) + len(right) < len(ws) or centred:
+        # the first line of the publisher's colophon under the columns may be short, within the left column
+        # ("Egzemplarze bieżące i z lat ubiegłych oraz załączniki można nabywać:"): put after the right column,
+        # it would cut it off with the colophon (DU/2000/214)
+        colophon = COLOPHON.match(" ".join(w[2] for w in ws)) is not None
+        if left and right and not joined or len(left) + len(right) < len(ws) or centred or colophon:
             items.append((min(w[0] for w in ws), 0, ws))
             continue
         for side, part in ((1, left), (2, right)):

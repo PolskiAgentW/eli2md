@@ -1301,10 +1301,29 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
         for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
             setattr(doc, f, [p for p in getattr(doc, f) if lo <= p <= hi])  # pages of the other acts only
         doc.ocr_langs = {p: v for p, v in doc.ocr_langs.items() if lo <= p <= hi}
-    doc.blocks = _segment(body)
+    doc.blocks = _quoted_scan_annexes(_segment(body))
 
     doc.footnotes, doc.footnote_pages = _group_notes(notes)
     return doc
+
+
+def _quoted_scan_annexes(blocks: list[Block]) -> list[Block]:
+    """An annex header read from a scan before the act's signature is the new text of an annex of the act it amends,
+    quoted without the „ OCR lost (DU/2000/1315: Art. 2 gives annexes 1-3 of the amended act, then "Załącznik nr 3" is
+    followed by Art. 3-12 of this act and its signature). Such a header stays a paragraph of the act's text when no
+    signature stands before it and one stands after it, or the first article after it is the next one of this act
+    ("Art. 3." after "Art. 2."; an act set in an annex starts at "Art. 1.")."""
+    plain = [int(m.group(1)) if (m := re.match(r"^Art\.\s*(\d+)\.", b.text)) else None for b in blocks]
+    for i, b in enumerate(blocks):
+        if b.kind == "signature":
+            break
+        if b.kind != "annex" or i + 1 >= len(blocks) or blocks[i + 1].kind not in ("scan", "ocr"):
+            continue
+        signed_after = any(x.kind == "signature" for x in blocks[i + 1:])
+        nxt = next((n for n in plain[i + 1:] if n is not None), None)
+        if signed_after or nxt is not None and nxt - 1 in plain[:i]:
+            blocks[i] = replace(b, kind="scan")
+    return blocks
 
 
 def _next_label(s: str) -> str:
