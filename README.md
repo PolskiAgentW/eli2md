@@ -216,7 +216,8 @@ wersalikami (rodzaj aktu samodzielnego: rozporządzenie, ustawa, obwieszczenie�
 między nimi najwyżej sam numer), jeśli to wcześniej niż numer następnego aktu. Gdy numer następnego aktu nie został
 odczytany albo odczytany jest dopiero dalszy, akt zawierał do 0.6.30 następny akt (DU/1990/271, 150). Numer pozycji ze
 śmieciem ze skanu za nim („151 |”) jest numerem. Nie po nagłówku załącznika: załącznikiem obwieszczenia bywa akt.
-Próby: dev bez zmian; test s5403 P 0,9718 → 0,9739 (lepiej 1 akt, gorzej 0).
+Próby: dev bez zmian; test s5403 P 0,9718 → 0,9739 (lepiej 1 akt, gorzej 0). Rocznik 1990: aktów z więcej niż
+jednym nagłówkiem rodzaju aktu 8 → 4.
 
 **0.6.30** (2026-10-05). Skany: gdy numeru pozycji aktu nie ma w odczycie (akt zaczyna stronę, a numer w pasie
 nagłówka znika razem z nim: DU/1990/100), a jest numer następnego aktu i żaden wcześniejszy, akt kończy się na numerze
