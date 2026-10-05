@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.25**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.25.1**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -207,6 +207,14 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.25.1** (2026-10-05). Tylko `eli2md.dataset`, konwersja bez zmian (ta sama zmiana jest w 0.6.32). Akt, który zabija proces roboczy bez `MemoryError`
+(przeliczenie MP 2012–2026 przy `--mem-limit-gb 1.6`: MP/2019/230, 304 strony, 270 z OCR), psuł pulę procesów,
+a w nowej puli był znowu pierwszy: po 5 przebiegach 9 566 kolejnych aktów dostało `status=error` („MemoryError in an
+earlier act”), a następny przebieg bez `--all` zaczynał od tego samego aktu. Teraz w toku jest najwyżej `--jobs`
+aktów, wyniki są zapisywane w kolejności ukończenia, a po awarii puli akty, które były w toku, idą pojedynczo, każdy
+w nowej puli: błąd („worker died”) dostaje tylko akt, który zabija proces. Test: `test_dataset_worker_over_memory_limit`
+(6 aktów, `--jobs` 1 i 3) i ręcznie na prawdziwej puli (20 aktów, jeden kończy proces przez `os._exit`: 19 ok, 1 błąd).
 
 **0.6.25** (2026-10-04). Teksty jednolite: cztery klasy usterek z pomiaru `eval/tj_survey_2026-10-04.md`.
 - Linia „Art. 266–280.” albo „Art. 22–28. (pominięte)” (artykuły pominięte w tekście jednolitym) jest nagłówkiem
