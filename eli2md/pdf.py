@@ -974,7 +974,8 @@ def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], lis
     return body, [l for l in notes if keep(l)]
 
 
-def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[Line], list[Line], int, int] | None:
+def _own_act(body: list[Line], notes: list[Line], position: int, title: str | None = None
+             ) -> tuple[list[Line], list[Line], int, int] | None:
     """The act numbered `position` out of pages it shares with other acts of its issue (DU 2000-2011): the PDF of
     a position holds whole pages, so also the end of the acts before it and the start of the ones after it
     (DU/2005/1255 p. 1 holds 1255, 1256 and 1257; DU/2005/1369 p. 2 ends 1369 and starts 1370 at top 447). Keeps
@@ -997,7 +998,7 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
         return own, [n for n in notes if (n.page, n.band, n.col, n.top) < (body[nxt].page, body[nxt].band,
                                                                            body[nxt].col, body[nxt].top)], \
             min((l.page for l in own), default=body[nxt].page), body[nxt].page
-    end = _act_end(body, start, position)
+    end = _act_end(body, start, position, title)
     first, last = body[start], body[end] if end < len(body) else None
 
     def at(l: Line) -> tuple:
@@ -1007,7 +1008,7 @@ def _own_act(body: list[Line], notes: list[Line], position: int) -> tuple[list[L
     return own, notes, first.page, last.page if last else max((l.page for l in own + notes), default=first.page)
 
 
-def _act_end(body: list[Line], start: int, position: int) -> int:
+def _act_end(body: list[Line], start: int, position: int, title: str | None = None) -> int:
     """Index of the first line after the act that starts at body[start]: the next act's number (ACT_NUMBER), or len."""
     end = next((i for i in range(start + 1, len(body)) if position < body[i].act <= position + ACT_NUMBER_NEXT),
                len(body))
@@ -1022,7 +1023,40 @@ def _act_end(body: list[Line], start: int, position: int) -> int:
                 if nxt and (OCR_NEW_ACT_TITLE.fullmatch(nxt[0].text) or len(nxt) > 1 and re.fullmatch(r"\W*\d{0,4}\W*", nxt[0].text)
                                                                        and OCR_NEW_ACT_TITLE.fullmatch(nxt[1].text)):
                     return i + 1
+        # nor after its signature: after an annex (a table, a form) the next act starts with its type in capitals and
+        # its date ("ROZPORZĄDZENIE MINISTRA FINANSÓW", "z dnia 21 grudnia 1992 r."; DU/1993/2, 1990/4). Not in an
+        # announcement (ELI title "Obwieszczenie …"): its annex is often the act it announces, with such a header
+        if title and not title.startswith("Obwieszczenie"):
+            heads = [i for i in range(start, end) if body[i].mark == "scan" and OCR_NEW_ACT_TITLE.fullmatch(body[i].text)
+                     and any(OCR_DATE_LINE.match(l.text) for l in body[i + 1: i + 3] if l.mark == "scan")
+                     and not _same_header(body, i, title)]  # the act's own header again (DU/1993/397)
+            if heads and heads[0] <= start + 3:  # the act's own header
+                heads = heads[1:]
+            if heads:
+                i = heads[0]
+                return i - 1 if i - 1 > start and re.fullmatch(r"\W*\d{1,4}\W*", body[i - 1].text) else i
     return end
+
+
+def _same_header(body: list[Line], i: int, title: str) -> bool:
+    """body[i] (a header in capitals) and the lines under it are the type, issuer, date and subject of the ELI title
+    (the next act may have the same issuer and date: DU/1993/451 and 452)."""
+    m = ELI_TITLE.fullmatch(title.strip())
+    if not m:
+        return False
+    k = next((k for k in range(i + 1, min(i + 3, len(body))) if OCR_DATE_LINE.match(body[k].text)), None)
+    if k is None:
+        return False
+    day, _, year = _plain(m["date"]).split()
+    dm = re.search(r"(\d{1,2}) \S+ (\d{4})", _plain(body[k].text))
+    rest = _plain(m["rest"])[:120]
+    after = _plain(" ".join(l.text for l in body[k + 1: k + 3]))[:len(rest)]
+    return bool(dm) and (dm[1], dm[2]) == (day, year) \
+        and SequenceMatcher(None, _plain(m["head"]), _plain(body[i].text), autojunk=False).ratio() >= 0.8 \
+        and (not rest or SequenceMatcher(None, rest, after, autojunk=False).ratio() >= 0.75)
+
+
+OCR_DATE_LINE = re.compile(r"z\s?dnia\s+\d{1,2}\s+[^\W\d_]+\s+\d{4}\s?r?\.?$")
 
 
 def _plain(s: str) -> str:
@@ -1074,7 +1108,7 @@ def _own_act_by_title(body: list[Line], notes: list[Line], position: int, title:
     if len(scored) > 1 and scored[0][0] - scored[1][0] < 0.1:
         return None
     start = scored[0][1]
-    end = _act_end(body, start, position)
+    end = _act_end(body, start, position, title)
     first, last = body[start], body[end] if end < len(body) else None
 
     def at(l: Line) -> tuple:
@@ -1258,7 +1292,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
     own = None
     if position is not None and title and not any(l.act == int(position) for l in body):
         own = _own_act_by_title(body, notes, int(position), title)
-    if position is not None and (own := own or _own_act(body, notes, int(position))):
+    if position is not None and (own := own or _own_act(body, notes, int(position), title)):
         body, notes, lo, hi = own
         for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
             setattr(doc, f, [p for p in getattr(doc, f) if lo <= p <= hi])  # pages of the other acts only

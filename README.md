@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.33**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.34**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -210,6 +210,17 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.34** (2026-10-05). Skany zeszytów: koniec aktu także bez podpisu tuż przed następnym aktem. Po załączniku
+(tabela, wzór) następny akt zaczyna się od rodzaju i organu wersalikami i linii „z dnia D miesiąc RRRR r.” (DU/1993/2,
+DU/1990/4); taki nagłówek kończy akt (przed gołym numerem pozycji nad nim, jeśli jest). Nie w obwieszczeniu (tytuł
+ELI „Obwieszczenie …”: jego załącznikiem bywa ogłaszany akt) i nie przy nagłówku samego aktu powtórzonym w PDF
+(ten sam rodzaj i organ, dzień i rok daty, temat podobny ≥ 0,75; DU/1993/397 ma akt dwa razy, ze spisem treści
+zeszytu między nimi). Kandydaci z `heads.py` (60 aktów zbioru 0.6.31 z ≥ 2 nagłówkami): z jednym nagłówkiem 28 w 0.6.33,
+50 w 0.6.34 (`eval/scans_1990_1999/heads_candidates_v0.6.34.txt`). Pozostałe 10 to m.in. akty bliźniacze tego samego
+organu z tego samego dnia o temacie różnym dopiero w ostatnich słowach (DU/1993/299: „… z Republiki Finlandii” i „…
+z Republiki Czeskiej”), których 0.6.34 nie rozdziela. Próby z HTML (s5403, s5401, s5402; 160 aktów): wynik każdego
+aktu taki sam jak w 0.6.31 (`*_v0.6.34.txt`).
 
 **0.6.33** (2026-10-05). Skany zeszytów (Dz.U. 1990–1999): wycinanie aktu, gdy OCR zgubił jego numer pozycji albo
 koniec aktu. (1) Bez numeru akt dostawał wszystkie strony swojego PDF, czyli też koniec poprzedniego aktu i całe

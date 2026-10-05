@@ -906,6 +906,21 @@ class Basic(unittest.TestCase):
         self.assertEqual([(l.act, l.text) for l in lines[1:3]], [(0, "Prezes Rady Ministrów: J. K. Bielecki"), (157, "157")])
         self.assertEqual([l.text for l in _ocr_lines(["Prezes Rady Ministrów: J. K. Bielecki 157", "Tekst."], 1, 595, 842, 156,
                                                      "scan")][0], "Prezes Rady Ministrów: J. K. Bielecki 157")  # no type after it
+        # after an annex (no signature right before it) the next act starts with its type and date (DU/1993/2); not
+        # the act's own header again (DU/1993/397), nor in an announcement, whose annex may be an act
+        from eli2md.pdf import _act_end
+        rm = "Rozporządzenie Rady Ministrów z dnia 5 stycznia 1993 r. w sprawie czasowego ograniczenia wywozu."
+        doc = [sc(t) for t in ["2", "ROZPORZĄDZENIE RADY MINISTRÓW", "z dnia 5 stycznia 1993 r.", "w sprawie wywozu.",
+                               "§ 1. Tekst.", "Załącznik do rozporządzenia Rady Ministrów", "WYKAZ TOWARÓW",
+                               "Węgiel, antracyt", "3", "ROZPORZĄDZENIE MINISTRA FINANSÓW", "z dnia 21 grudnia 1992 r."]]
+        self.assertEqual(_act_end(doc, 0, 2, rm), 8)  # before the bare number 3
+        self.assertEqual(_act_end(doc, 0, 2, "Obwieszczenie Ministra z dnia 5 stycznia 1993 r. w sprawie tekstu."), 11)
+        self.assertEqual(_act_end(doc, 0, 2, None), 11)
+        again = doc[:8] + [sc("ROZPORZĄDZENIE RADY MINISTRÓW"), sc("z dnia 5 stycznia 1993 r."),
+                           sc("w sprawie czasowego ograniczenia wywozu."), sc("§ 1. Tekst.")]
+        self.assertEqual(_act_end(again, 0, 2, rm), 12)
+        twin = again[:10] + [sc("w sprawie zasad organizacji szkół."), sc("§ 1. Tekst.")]  # same issuer and date
+        self.assertEqual(_act_end(twin, 0, 2, rm), 8)
         from eli2md.pdf import SIGNATURE_OCR
         self.assertTrue(SIGNATURE_OCR.match("Minister — Szef Urzędu Rady Ministrów: M. Strąk"))
         self.assertTrue(SIGNATURE_OCR.match("Prezes Rady Ministrów: W, Cimoszewicz"))
