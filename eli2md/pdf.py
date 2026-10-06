@@ -1167,8 +1167,37 @@ SECTION_GLUED_OCR = re.compile(r"\b(w|we|z|ze|do|od|na|po|i|oraz|lub|albo|przez)
                                r"|pkt|lit\.|otrzymuje|dodaje|skreśla|uchyla|po\s+wyrazach|wyrazy))")
 
 
-def _fix_section_sign(t: str) -> str:
-    t = SECTION_GLUED_OCR.sub(r"\1 § \2", SECTION_START_OCR.sub(r"§ \1", t))
+# but a glued "8"/"5" may be the first digit of a list item: "79. Malediwy,", "80. Malezja," became "§ 0." (DU/1995/495;
+# 241 lines in 25 acts of DU 1990–1999 in 0.6.38). It is a list item when the page numbers paragraphs in a chain from
+# it to a number that cannot be a glued "§" (79, 49, 90…); without such a chain "81. 1. Ustala się" stays "§ 1."
+# (glued starts like that are common: 724 of ~1600 in the OCR cache had a "§" next to them on the page)
+NUMBERED_OCR = re.compile(r"(\d{1,4})\.\s")
+GLUED_NUMBER_OCR = re.compile(r"([85]\d{1,3})\.(?=\s+\S)")
+
+
+def _numbered(paragraphs: list[str]) -> set[int]:
+    """Numbers starting paragraphs of a page ("80. Malezja," -> 80)."""
+    return {int(m.group(1)) for p in paragraphs if (m := NUMBERED_OCR.match(p.strip()))}
+
+
+def _list_item(t: str, numbered: set[int]) -> bool:
+    """`t` starts with a glued "8N." or "5N." that continues a numbered list of its page, not with "§ N."."""
+    if not (m := GLUED_NUMBER_OCR.match(t)):
+        return False
+    n = int(m.group(1))
+    for step in (-1, 1):
+        k = n + step
+        while k in numbered:
+            if k < 10 or str(k)[0] not in "85":
+                return True
+            k += step
+    return False
+
+
+def _fix_section_sign(t: str, numbered: set[int] = frozenset()) -> str:
+    if not _list_item(t, numbered):
+        t = SECTION_START_OCR.sub(r"§ \1", t)
+    t = SECTION_GLUED_OCR.sub(r"\1 § \2", t)
     return SECTION_AFTER_WORD_OCR.sub(r"\1 § ", SECTION_IN_TEXT_OCR.sub("§", t))
 
 
@@ -1195,7 +1224,7 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
         for k in range(len(paragraphs) - 1):
             if OCR_ACT_START.fullmatch(paragraphs[k].strip()) and SIGNATURE_OCR.match(paragraphs[k + 1]):
                 paragraphs[k], paragraphs[k + 1] = paragraphs[k + 1], paragraphs[k]
-    out = []
+    out, numbered = [], _numbered(paragraphs) if mark == "scan" else set()
     for k, t in enumerate(paragraphs):
         if mark == "scan" and re.fullmatch(r"\d{1,4}[\s|.,;:'’\"!_~-]+", t):
             t = t.rstrip(" |.,;:'’\"!_~-")  # a number with a speck of the scan after it ("151 |", DU/1990/150)
@@ -1215,7 +1244,7 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
                 continue
         if mark == "scan":
             from .ocr import fix_words
-            t = fix_words(_fix_section_sign(t))
+            t = fix_words(_fix_section_sign(t, numbered))
             if (sig := SIGNATURE_AFTER_OCR.search(t)) and len(sig.group(1).split()) <= 14:
                 out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, t[:sig.start()], pw, ph, mark=mark))
                 t = sig.group(1)

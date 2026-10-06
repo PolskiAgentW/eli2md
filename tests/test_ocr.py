@@ -283,6 +283,15 @@ class Scan(unittest.TestCase):
         self.assertEqual(_fix_section_sign("2) w82:"), "2) w § 2:")
         for t in ("8. Zadania gminy", "w 8 dni od dnia", "8 osób", "w 81 przypadkach"):
             self.assertEqual(_fix_section_sign(t), t)
+        # a glued "8"/"5" continuing a numbered list of the page is the list's number (DU/1995/495), not "§ 0."
+        countries = {77, 78, 79, 80, 81, 82}
+        self.assertEqual(_fix_section_sign("80. Malezja,", countries), "80. Malezja,")
+        self.assertEqual(_fix_section_sign("82. Malta,", countries), "82. Malta,")
+        self.assertEqual(_fix_section_sign("50. PN-T-83020:1996 Ochronnik", {49, 50, 51}), "50. PN-T-83020:1996 Ochronnik")
+        # without a chain to a number that cannot be a glued "§" it stays a paragraph, also in a run of them
+        self.assertEqual(_fix_section_sign("81. 1. Ustala się kategorie", {81, 82, 83}), "§ 1. 1. Ustala się kategorie")
+        self.assertEqual(_fix_section_sign("85. 1. Kuchnie", {84, 85, 86}), "§ 5. 1. Kuchnie")
+        self.assertEqual(_fix_section_sign("82. Organy prowadzące", {1, 2, 82}), "§ 2. Organy prowadzące")
 
     def test_signature(self):
         lines = _ocr_lines(["Art. 3. Ustawa wchodzi w życie z dniem ogłoszenia. Prezydent Rzeczypospolitej Polskiej: "
