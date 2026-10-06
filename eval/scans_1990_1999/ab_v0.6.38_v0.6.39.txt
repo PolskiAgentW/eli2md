@@ -1,0 +1,43 @@
+# A/B eli2md 0.6.38 vs 0.6.39 (kod c4fa38b, przed podbiciem numeru wersji), 2026-10-06
+A/B 0.6.39: 7417 aktów, brak wyniku 0; .md zmienione 31 (słowa literowe: −0 / +0; § 621 → 340); JSON zmienione 324/7417 (z .md zmienionym 31; art 0 → 6452)
+
+## Wszystkie opublikowane zbiory (drzewa z opublikowanych .md)
+drzewa JSON 0.6.38 vs 0.6.39 dev z opublikowanych .md (5 zbiorów, 60 160 plików): zmienione 770
+słowa literowe (bez type/path): zgubione 0 nowe 617
+nowe top [('II', 51), ('III', 45), ('V', 42), ('I', 42), ('IV', 40), ('VI', 38), ('VII', 37), ('VIII', 32)]
+pliki ze zgubionymi 0
+art>0 przed: [('dziennik-ustaw-2000-2011-md/DU/2003/DU-2003-1149.md', 1, 118)]
+MP 2012+: [('monitor-polski-md/MP/2019/MP-2019-1190.md', 0, 0)]
+
+## .md zmienione (31)
+DU/1990/342 linie 281 -> 279 słowa -0/+0 § 8 -> 7
+DU/1991/4 linie 254 -> 242 słowa -0/+0 § 12 -> 6
+DU/1991/288 linie 1650 -> 1598 słowa -0/+0 § 41 -> 15
+DU/1991/412 linie 180 -> 170 słowa -0/+0 § 8 -> 3
+DU/1993/362 linie 151 -> 135 słowa -0/+0 § 10 -> 2
+DU/1994/138 linie 1037 -> 1037 słowa -0/+0 § 7 -> 6
+DU/1994/151 linie 527 -> 499 słowa -0/+0 § 22 -> 8
+DU/1994/152 linie 1005 -> 965 słowa -0/+0 § 24 -> 4
+DU/1994/153 linie 1043 -> 1003 słowa -0/+0 § 26 -> 6
+DU/1994/175 linie 553 -> 543 słowa -0/+0 § 10 -> 5
+DU/1994/242 linie 725 -> 705 słowa -0/+0 § 20 -> 10
+DU/1995/89 linie 291 -> 271 słowa -0/+0 § 10 -> 0
+DU/1995/495 linie 259 -> 239 słowa -0/+0 § 12 -> 2
+DU/1995/630 linie 650 -> 646 słowa -0/+0 § 11 -> 9
+DU/1996/100 linie 211 -> 209 słowa -0/+0 § 6 -> 5
+DU/1996/207 linie 589 -> 561 słowa -0/+0 § 14 -> 0
+DU/1996/288 linie 127 -> 125 słowa -0/+0 § 5 -> 4
+DU/1996/322 linie 149 -> 149 słowa -0/+0 § 4 -> 2
+DU/1996/592 linie 355 -> 335 słowa -0/+0 § 12 -> 2
+DU/1996/694 linie 891 -> 871 słowa -0/+0 § 17 -> 7
+DU/1996/792 linie 287 -> 267 słowa -0/+0 § 14 -> 4
+DU/1997/158 linie 229 -> 209 słowa -0/+0 § 13 -> 3
+DU/1997/535 linie 537 -> 503 słowa -0/+0 § 22 -> 5
+DU/1997/536 linie 559 -> 539 słowa -0/+0 § 10 -> 0
+DU/1998/915 linie 9319 -> 9319 słowa -0/+0 § 20 -> 6
+DU/1998/955 linie 161 -> 161 słowa -0/+0 § 8 -> 2
+DU/1998/1158 linie 1751 -> 1727 słowa -0/+0 § 140 -> 128
+DU/1999/880 linie 275 -> 265 słowa -0/+0 § 18 -> 13
+DU/1999/973 linie 235 -> 233 słowa -0/+0 § 6 -> 5
+DU/1999/1270 linie 535 -> 535 słowa -0/+0 § 65 -> 46
+DU/2000/612 linie 949 -> 947 słowa -0/+0 § 26 -> 25

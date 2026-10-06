@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.38**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
+> Status: **wersja 0.6.39**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
 > w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -155,7 +155,8 @@ z opublikowanych plików `.md`):
 ```
 
 Typy: `art`, `par` (§), `ust`, `pkt`, `lit`, `tir` oraz `text`, `heading` (rozdział, dział…), `signature`, `note`,
-`ocr` (akapit odczytany przez OCR, od 0.6.0; od 0.6.4 także z obrazu tekstu na stronie z warstwą tekstową). Jednostki cytowane w nowelizacjach nie są węzłami, tylko tekstem
+`ocr` (akapit odczytany przez OCR, od 0.6.0; od 0.6.4 także z obrazu tekstu na stronie z warstwą tekstową). Artykuł umowy
+międzynarodowej („Artykuł N” w osobnym akapicie) jest węzłem `art` z polem `"label": "Artykuł N"` (od 0.6.39). Jednostki cytowane w nowelizacjach nie są węzłami, tylko tekstem
 (`"quoted": true`) jednostki, która je zawiera. Akapit bez numeru trafia do najgłębszej otwartej jednostki.
 Wyjątek (od 0.6.0): tekst tuż po ostatnim punkcie wyliczenia, zaczynający się małą literą albo od „– ”
 („część wspólna”: „oraz zmian wynikających…”, „– w wysokości…”), trafia do jednostki nad wyliczeniem. Jeśli
@@ -210,6 +211,27 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.39** (2026-10-07). Dwie zmiany.
+(1) Umowy międzynarodowe w JSON. Akapit „Artykuł N” (także „Artykuł IV”, z tytułem wielkimi literami) jest węzłem
+`art` z polem `label`, jeśli w akcie są co najmniej dwa takie akapity. Formuła końcowa („Sporządzono…”, „Na dowód…”,
+„W dowód…”, „Po zaznajomieniu się…”) nie należy do ostatniego artykułu. Wcześniej treść umowy była w JSON tekstem bez
+jednostek. `.md` się nie zmienia. W opublikowanych zbiorach (60 160 plików `.md`) zmienia się 770 drzew: 765 aktów
+z typem umowy w ELI (umowa międzynarodowa, konwencja, protokół, porozumienie, traktat, oświadczenie rządowe, układ,
+statut) i 5 innych z artykułami umowy (DU/2003/694, DU/1998/152, MP/2002/335, MP/2019/1190, DU/2006/647). Słowa we
+wszystkich wartościach drzewa: zgubione 0. Ograniczenia: wersje obcojęzyczne („Article N”, „Artikel N”) trafiają pod
+ostatni polski artykuł; „Artykuł N” zniekształcony przez OCR („Artykuf 23”) nie jest artykułem, więc numeracja ma luki
+(DU 1990–1999: 69 aktów); tytuł przed „Artykuł N” (DU/1999/284) nie należy do tego artykułu. Na 17 próbach z HTML
+z 2024 r. (930 aktów) wynik `tree_eval` jest taki sam jak w 0.6.38. Dla umów ze skanów nie ma wzorca HTML, więc
+poprawy ta miara nie pokazuje.
+(2) Skany: pozycję listy 50–59 albo 80–89 („80. Malezja,”) eli2md brał za „§” sklejony z numerem (OCR czyta „§” jako
+„8” albo „5”) i robił z niej „§ 0.” (w 0.6.38: 241 wierszy w 25 aktach DU 1990–1999). Teraz zostaje pozycją listy, gdy
+strona numeruje akapity ciągiem od niej do numeru, który nie może być sklejonym „§” (79, 49, 90…): „80. Malezja”
+(DU/1995/495), „50. Komenda Główna Policji KG” (DU/1990/342). Bez takiego ciągu „81. 1. Ustala się” jest nadal „§ 1.”. Porównanie 0.6.38 i 0.6.39 na 7 417 aktach-skanach
+(DU 1990–1999 i 300 skanów DU 2000–2011): `.md` zmienia się w 31 aktach, w każdym tylko „§ N.” ↔ numer listy
+(po sprowadzeniu obu do jednej postaci 31/31 identyczne), słowa: zgubione 0, nowe 0; wiersze „§” w tych aktach 621 → 340.
+Że każdy usunięty „§” był w PDF numerem listy, sprawdziłem tylko na przykładach (treść listy), nie na obrazie każdej
+strony (`eval/scans_1990_1999/ab_v0.6.38_v0.6.39.txt`).
 
 **0.6.38** (2026-10-05). Skany: koniec aktu, gdy między numerem pozycji a nagłówkiem aktu OCR odczytał coś obcego.
 (1) Na pierwszej stronie zeszytu numer strony ze spisu treści odczytany tuż po numerze aktu był brany za numer
