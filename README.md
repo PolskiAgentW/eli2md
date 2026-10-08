@@ -4,8 +4,8 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.39**. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany
-> w Dzienniku Ustaw albo w Monitorze Polskim.
+> Status: **wersja 0.6.40, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
 

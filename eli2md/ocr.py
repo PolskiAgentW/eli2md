@@ -341,6 +341,10 @@ def _column_order(lines: dict, width: int, height: int = 0, year: int | None = N
     left, right). A page with fewer than 5 ends or starts on either side is kept as it is."""
     if width <= 0 or len(lines) < 10:
         return lines
+    old = year is not None and year < 1990  # the rules marked "(< 1990)" only for issues of 1918-1989
+    if old:  # (< 1990) the rule between the columns read as "|" hides the gutter's gap in a line joined over it
+        # ("ustawy (Dz. U. R. P. Nr 1, poz 1) — | stepuje:", DU/1947/41)
+        lines = {k: kept for k, ws in lines.items() if (kept := [w for w in ws if not re.fullmatch(r"[|¦!]{1,2}", w[2])])}
     original = lines
     lines = _deskew(lines)
     spans = sorted((min(w[4] for w in ws), max(w[5] for w in ws)) for ws in lines.values())
@@ -371,7 +375,6 @@ def _column_order(lines: dict, width: int, height: int = 0, year: int | None = N
     if sum(e <= g for e in ends) < 5 or sum(t >= g for t in starts) < 5:
         return original
     items = []  # (top, side, words); side 0 = spans, 1 = left, 2 = right
-    old = year is not None and year < 1990  # the rules below marked "(< 1990)" only for issues of 1918-1989
     tol = gap // 2 if old else 0  # (< 1990) the gutter is found to a few px: a column's edge may stand just past it (the right column at
     # 1322 for g 1324, DU/1974/239 p. 1: each of its lines went as one over the page, between the left column's lines)
     for ws in lines.values():
@@ -388,8 +391,10 @@ def _column_order(lines: dict, width: int, height: int = 0, year: int | None = N
         # an act's number centred on the page over its title across both columns ("21" over "USTAWA", DU/1993/20 p. 2)
         # starts a band too, though it does not reach over the gutter; only a bare number of 2-4 digits: short ends of
         # paragraphs at the start of the right column stand near the middle as well ("ną.", DU/1994/415)
-        a, b = min(w[4] for w in ws), max(w[5] for w in ws)
-        centred = len(ws) == 1 and re.fullmatch(r"\d{2,4}", ws[0][2]) is not None \
+        # (< 1990: with specks of the scan next to it, "i 25", DU/1966/24)
+        num = [w for w in ws if not (old and re.fullmatch(r"[^\d]{1,2}", w[2]))]
+        a, b = min(w[4] for w in num or ws), max(w[5] for w in num or ws)
+        centred = len(num) == 1 and re.fullmatch(r"\d{2,4}", num[0][2]) is not None \
             and abs((a + b) / 2 - (x0 + x1) / 2) < 0.015 * (x1 - x0)
         # the first line of the publisher's colophon under the columns may be short, within the left column
         # ("Egzemplarze bieżące i z lat ubiegłych oraz załączniki można nabywać:"): put after the right column,
@@ -453,8 +458,13 @@ def _join_rows(items: list) -> list:
     def join(i, j):
         out[i] = (min(out[i][0], out[j][0]), 0, sorted(out[i][2] + out[j][2], key=lambda w: w[4]))
         gone.add(j)
+    def under_span(ws):  # the row right under a line over the page (a title goes on): a speck at the end of a column's
+        # line brings it as close to the next column (DU/1979/146 p. 1: "konwencji *" 11 px from the right column)
+        h = statistics.median(w[1] - w[0] for w in ws)
+        return any(it[1] == 0 and 0 < mid(ws) - mid(it[2]) <= 3 * h for it in out)
     for i, j in pairs:
-        if i not in gone and j not in gone and out[i][1] == 1 and apart(out[i][2], out[j][2]) < 0.6 * gutter:
+        if i not in gone and j not in gone and out[i][1] == 1 and apart(out[i][2], out[j][2]) < 0.6 * gutter \
+                and under_span(out[i][2] + out[j][2]):
             join(i, j)
     for j, (_, side, ws) in enumerate(out):
         if side == 0 or j in gone:

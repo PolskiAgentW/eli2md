@@ -154,6 +154,21 @@ PREWAR_TYPE_ANY = re.compile(rf"^\W{{0,3}}(?i:{PREWAR_TYPE})\b")
 SPECK_BEFORE_CAPS = re.compile(r"^\W*(?:[^\W\d_]{1,3}\W+)?(?=(?:\d{1,4}\s+)?[A-ZĄĆĘŁŃÓŚŹŻ]{6})")
 # the end of the previous act's signature read between the next act's number and its type ("305.", "Ministerstwa:
 # I, kberhavat", "ROZPORZĄDZENIE Ministra Kolei", DU/1919/305)
+# the number and the type with a speck between ("146 - OŚWIADCZENIE RZĄDOWE", DU/1979/146)
+NUMBER_SPECK_TYPE = re.compile(r"^(\d{1,4})\s*[-—–|:;,.'’]{1,3}\s*(?=[A-ZĄĆĘŁŃÓŚŹŻ]{6})")
+# a bare number in specks ("; 87", "88 Ę": DU/1984/87)
+SPECKED_NUMBER = re.compile(r"[\W_]{0,3}\s*(\d{1,4})(?:\s+[^\W\d]{1,2})?[\W_]{0,3}")
+# the next act's number and type read into the last paragraph of the act before it ("… Prezes Rady Ministrów: w z.
+# J. Obodowski 45 c | ROZPORZĄDZENIE RADY MINISTRÓW | z dnia …", DU/1983/45; "… Minister Sprawiedliwości: Michałowski
+# 13. ROZPORZADZENIE MINISTRA PRACY …", DU/1931/12): after a sentence or a signature (a pre-war one without initials)
+GLUED_NEXT_START = re.compile(r"(?<=\S)\s+(\d{1,4})[.,]?\s+(?:[^\w\s]{1,2}\s+|[^\W\d]{1,2}\s+)?\|?\s*(?=[A-ZĄĆĘŁŃÓŚŹŻ]{6})")
+# the act's number read at the end of the paragraph before its type (the issue's contents: "… ogłoszonej w stanie
+# wyjątkowym . . . 36 —_ z —— — m za maa 2 101.", "DEKRET", DU/1919/101); not a reference ("poz. 101.")
+TRAILING_NUMBER = re.compile(r"(?<=\s)(\d{1,4})[.,]?\s*$")
+REFERENCE_BEFORE = re.compile(r"(?:poz|Nr|art|ust|pkt|str|§|r|z)\.?\s*$", re.I)
+# an erratum to another act printed after the last act of an issue ("Sprostowanie. W Dz. U. R. P. № 76, poz. 600 …",
+# DU/1923/635): the act ends before it
+ERRATUM_OCR = re.compile(r"^\W{0,3}Sprostowani[ea]\b\.?")
 SIGNATURE_TAIL_OCR = re.compile(r"^[^\W\d_][\w .,]{0,60}:\s*\S.{0,40}$")
 OLD_MASTHEAD = re.compile(r"^(?:DZIENNIK\s*USTAW|MONITOR\s*POLSKI)")
 OLD_ISSUE = re.compile(r"^Nr\s*\d+$")
@@ -1273,7 +1288,7 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
         paragraphs = ([rest] if re.search(r"[^\W\d_]", rest) or number else []) + paragraphs[1:]
     on_page: set[int] = set()  # positions in a pre-war running header (or in the contents on an issue's first page)
     from_header = False
-    if mark == "scan":
+    if mark == "scan" and old:  # (< 1990; in later issues "Poz. 1. Powiat …" of an annex is no header, DU/1998/688)
         for k in range(min(4, len(paragraphs))):
             if h := old and (PREWAR_HEADER_LOOSE_OCR.match(paragraphs[k].strip())
                              or PAGE_POS_HEADER_OCR.match(paragraphs[k].strip())) or PREWAR_HEADER_OCR.match(paragraphs[k].strip()):
@@ -1301,6 +1316,19 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
         for k in range(len(paragraphs) - 1):
             if OCR_ACT_START.fullmatch(paragraphs[k].strip()) and SIGNATURE_OCR.match(paragraphs[k + 1]):
                 paragraphs[k], paragraphs[k + 1] = paragraphs[k + 1], paragraphs[k]
+        if old and position is not None:  # (< 1990)
+            for k in range(len(paragraphs) - 1, -1, -1):
+                for g in GLUED_NEXT_START.finditer(paragraphs[k]):
+                    rest = paragraphs[k][g.end():]
+                    if position <= int(g.group(1)) <= position + ACT_NUMBER_NEXT and _act_type_next(rest) \
+                            and re.search(r"[.:;]\s*$|:\s*(?:[\w.,'’-]+\s*){1,4}$", paragraphs[k][:g.start()]):
+                        paragraphs[k: k + 1] = [paragraphs[k][:g.start()], g.group(1), rest]
+                        break
+            for k in range(len(paragraphs) - 2, -1, -1):
+                if (tn := TRAILING_NUMBER.search(paragraphs[k])) and position <= int(tn.group(1)) <= position + ACT_NUMBER_NEXT \
+                        and not REFERENCE_BEFORE.search(paragraphs[k][:tn.start()]) and _act_type_next(paragraphs[k + 1]) \
+                        and paragraphs[k][:tn.start()].strip():
+                    paragraphs[k: k + 1] = [paragraphs[k][:tn.start()].rstrip(), tn.group(1)]
         for k in range(len(paragraphs) - 2 if old else 0):  # (< 1990)
             if PREWAR_ACT_NUMBER.fullmatch(paragraphs[k].strip()) and SIGNATURE_TAIL_OCR.match(paragraphs[k + 1]) \
                     and _act_type_next(paragraphs[k + 2]):
@@ -1311,8 +1339,10 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
             t = t.rstrip(" |.,;:'’\"!_~-")  # a number with a speck of the scan after it ("151 |", DU/1990/150)
         # a number of the header's list starting a paragraph ("218. | „+, 4Na mocy art. 44 …", DU/1934/218); with the
         # list taken from the contents only a bare number (the contents' own lines start with the numbers too)
-        if old and mark == "scan" and out and out[-1].act and not re.search(r"[^\W_]", t):  # (< 1990)
-            continue  # a speck of the scan under the act's number (";", DU/1984/126)
+        if old and mark == "scan" and position is not None and ERRATUM_OCR.match(t):  # (< 1990)
+            out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, "", pw, ph, mark=mark, act=position + ACT_NUMBER_NEXT))
+        if old and mark == "scan" and out and out[-1].act and not re.search(r"[^\W\d_]{3}", t):  # (< 1990)
+            continue  # specks of the scan under the act's number (";", DU/1984/126; ". , 5 s ‘ . : . , | z 228", DU/1984/87)
         if old and mark == "scan" and out and out[-1].act and (sp := SPECK_BEFORE_CAPS.match(t)) \
                 and _act_type_next(t[sp.end():]):
             t = t[sp.end():]  # "i ROZPORZĄDZENIE RADY MINISTRÓW." under the number 126 (DU/1984/126)
@@ -1320,7 +1350,14 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
                 and (m0 := OCR_ACT_START.match(t[sp.end():])) and position <= int(m0.group(1)) <= position + ACT_NUMBER_NEXT \
                 and OCR_TYPE_NEXT.match(t[sp.end() + m0.end():]):
             t = t[sp.end():]  # "ZM 248 OŚWIADCZENIE RZĄDOWE" (DU/1984/248)
-        pm = PREWAR_ACT_NUMBER.fullmatch(t) or (PREWAR_HEAD_NUMBER.match(t) if from_header else None)
+        if old and mark == "scan" and position is not None:  # (< 1990)
+            if (ns := NUMBER_SPECK_TYPE.match(t)) and position <= int(ns.group(1)) <= position + ACT_NUMBER_NEXT \
+                    and _act_type_next(t[ns.end():]):
+                t = f"{ns.group(1)} {t[ns.end():]}"
+            elif (sn := SPECKED_NUMBER.fullmatch(t)) and sn.group(1) != t and position <= int(sn.group(1)) <= position + ACT_NUMBER_NEXT \
+                    and any(_act_type_next(p) for p in [p for p in paragraphs[k + 1: k + 3] if re.search(r"[^\W\d_]{3}", p)][:1]):
+                t = sn.group(1)
+        pm = old and (PREWAR_ACT_NUMBER.fullmatch(t) or (PREWAR_HEAD_NUMBER.match(t) if from_header else None))
         if position is not None and pm and position <= int(pm.group(1)) <= position + ACT_NUMBER_NEXT \
                 and (int(pm.group(1)) in on_page or mark == "scan" and k + 1 < len(paragraphs)
                      and (PREWAR_START_NEXT.match(paragraphs[k + 1]) or old and (_act_type_next(paragraphs[k + 1])
@@ -1334,7 +1371,7 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
                 and (from_header and int(tm.group(1)) in on_page or PREWAR_TYPE_CAPS.match(t[tm.end():])):
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, tm.group(1), pw, ph, mark=mark, act=int(tm.group(1))))
             t = t[tm.end():].strip()
-        if mark == "scan" and position is not None and (pm := PREWAR_GLUED_START.match(t)) \
+        if old and mark == "scan" and position is not None and (pm := PREWAR_GLUED_START.match(t)) \
                 and position <= int(pm.group(1)) <= position + ACT_NUMBER_NEXT:
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, pm.group(1), pw, ph, mark=mark, act=int(pm.group(1))))
             t = t[pm.end():]

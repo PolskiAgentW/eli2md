@@ -334,6 +334,19 @@ class Scan(unittest.TestCase):
         lines = _ocr_lines(["305.", "Ministerstwa: I, kberhavat", "ROZPORZĄDZENIE Ministra Kolei"], 1, 600, 840, 305, "scan",
                            old=True)
         self.assertEqual([l.text for l in lines], ["Ministerstwa: I, kberhavat", "305", "ROZPORZĄDZENIE Ministra Kolei"])
+        # the next act's number and type read into the last paragraph of the act before it (DU/1983/45, DU/1931/12)
+        self.assertEqual(acts(["§ 6. Rozporządzenie wchodzi w życie. Prezes Rady Ministrów: w z. J. Obodowski 45 c | "
+                               "ROZPORZĄDZENIE RADY MINISTRÓW | z dnia 7 lutego 1983 r."], 45), [(45, "45")])
+        self.assertEqual(acts(["W sprawie tej obowiązuje rozporządzenie z dnia 3 maja (Dz. U. Nr 5, poz. 45) "
+                               "ROZPORZĄDZENIE RADY MINISTRÓW"], 45), [])  # a reference, not after a sentence or signature
+        # the number at the end of the issue's contents (DU/1919/101), a dash between number and type (DU/1979/146)
+        self.assertEqual(acts(["103. Dekret w przedmiocie kar . . . 36 —_ z —— m za maa 2 101.", "DEKRET"], 101), [(101, "101")])
+        self.assertEqual(acts(["(Dz. U. Nr 5, poz. 101.", "DEKRET"], 101), [])
+        self.assertEqual(acts(["146 - OŚWIADCZENIE RZĄDOWE ] 2"], 146), [(146, "146")])
+        # an erratum after the act ends it (DU/1923/635)
+        lines = _ocr_lines(["635.", "Rozporządzenie Ministrów Skarbu", "Minister Skarbu: H. Linde", "Sprostowanie. W Dz. U. R. P."],
+                           1, 600, 840, 635, "scan", old=True)
+        self.assertEqual([l.act for l in lines], [635, 0, 0, 655, 0])
         # a speck under the number and before the type (DU/1984/126)
         lines = _ocr_lines(["126", ";", "i ROZPORZĄDZENIE RADY MINISTRÓW."], 1, 600, 840, 126, "scan", old=True)
         self.assertEqual([(l.act, l.text) for l in lines], [(126, "126"), (0, "ROZPORZĄDZENIE RADY MINISTRÓW.")])
