@@ -422,6 +422,35 @@ class Scan(unittest.TestCase):
         out = [" ".join(w[2] for w in ws) for ws in ocr._column_order(lines, 1000).values()]
         self.assertEqual(out[:2], ["w sprawie szczepienia psów", "lewy0 tekst"])
 
+    def test_column_order_gutter_specks_1923_1989(self):
+        # 1923-1989: a speck of the scan in the gutter hid the gap of a line tesseract joined over it ("Prezy- ~ 1929",
+        # DU/1935/396), or stood before the first word of a right column's line, past the ends of the left column's
+        # lines but farther left than tol ("—w” Zarządzie" at 1303, g 1324, DU/1930/217); either line went over the
+        # page and cut it into bands, so the header of the act in the right column came before the left column's text
+        def line(top, text, left, right):
+            ws = text.split()
+            w = (right - left) // len(ws)
+            return [(top, top + 30, t, 95.0, left + k * w, left + (k + 1) * w - 10) for k, t in enumerate(ws)]
+        def page(left_end, right_start, odd):
+            lines = {}
+            for k in range(8):
+                lines[(1, 0, k)] = line(100 + 40 * k, f"lewy{k} tekst", 290, left_end + 10)
+                lines[(2, 0, k)] = line(100 + 40 * k, f"prawy{k} tekst", right_start, 2470)
+            lines.update(odd)
+            return lines
+        joined = page(1359, 1409, {(1, 0, 3): line(220, "lewy3 Prezy-", 290, 1369) + [(220, 250, "~", 90.0, 1389, 1393)]
+                                   + line(220, "prawy3 1929", 1409, 2470)})
+        del joined[(2, 0, 3)]
+        out = [" ".join(w[2] for w in ws) for ws in ocr._column_order(joined, 2607, year=1935).values()]
+        self.assertEqual(out, [f"lewy{k} tekst" if k != 3 else "lewy3 Prezy-" for k in range(8)]
+                         + [f"prawy{k} tekst" if k != 3 else "prawy3 1929" for k in range(8)])
+        out = [" ".join(w[2] for w in ws) for ws in ocr._column_order(joined, 2607).values()]  # later issues as before
+        self.assertIn("lewy3 Prezy- ~ prawy3 1929", out)
+        speck = page(1297, 1345, {(2, 0, 5): [(300, 330, "—w”", 90.0, 1303, 1340)] + line(300, "prawy5 tekst", 1345, 2470)})
+        out = [" ".join(w[2] for w in ws) for ws in ocr._column_order(speck, 2544, year=1930).values()]
+        self.assertEqual(out, [f"lewy{k} tekst" for k in range(8)]
+                         + [f"prawy{k} tekst" if k != 5 else "—w” prawy5 tekst" for k in range(8)])
+
     def test_quoted_annex_on_scan(self):
         # DU/2000/1315: Art. 2 gives the new annexes of the amended act; "Załącznik nr 3" is not this act's annex
         blocks = [Block("scan", "Art. 1. W ustawie …", 1), Block("scan", "Art. 2. W ustawie … załączniki otrzymują brzmienie:", 1),

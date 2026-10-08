@@ -377,10 +377,25 @@ def _column_order(lines: dict, width: int, height: int = 0, year: int | None = N
     items = []  # (top, side, words); side 0 = spans, 1 = left, 2 = right
     tol = gap // 2 if old else 0  # (< 1990) the gutter is found to a few px: a column's edge may stand just past it (the right column at
     # 1322 for g 1324, DU/1974/239 p. 1: each of its lines went as one over the page, between the left column's lines)
+    # (< 1990) and a line that starts past the ends of all left-column lines is of the right column, though a speck of
+    # the scan before its first word reaches farther left than tol ("—w” Zarządzie" at 1303, left lines end by 1297,
+    # g about 1320, DU/1930/217 p. 1: the line went over the page with the left one in its row and cut the page into
+    # bands, so the headers of acts 217 and 219 came before their texts); the same for a left-column line
+    edge = max((e for e in ends if e <= g), default=g) if old else g
+    edge_r = min((t for t in starts if t >= g), default=g) if old else g
+    margin_r = statistics.median(t for t in starts if t >= g) if old else g
     for ws in lines.values():
-        if min(w[4] for w in ws) >= g - tol:
+        if old and year > ONE_COLUMN_LAST:
+            # (1923-1989) specks of the scan in the empty gutter, between the ends of the left column's lines and
+            # the margin of the right column ("Prezy- ~ 1929 r.": "~" at 1389-1393, left lines end by 1359, right ones
+            # start at 1409, DU/1935/396 p. 1) are dropped: they hid the gap of a line joined over it. Not "§" or "$"
+            # (its OCR: "3) $ 5 otrzymuje", DU/1986/185), brackets, quotes or dashes ("*)" and "—" of a table,
+            # DU/1957/93; "§ 5." starting a line of the right column, DU/1961/134)
+            ws = [w for w in ws if not (re.fullmatch(r"[^\w§$()\[\]„”\"—–]{1,3}", w[2]) and edge - step <= w[4]
+                                        and w[5] <= margin_r - step)] or ws
+        if min(w[4] for w in ws) >= g - tol or old and min(w[4] for w in ws) > edge:
             left, right = [], list(ws)
-        elif max(w[5] for w in ws) <= g + tol:
+        elif max(w[5] for w in ws) <= g + tol or old and max(w[5] for w in ws) < edge_r:
             left, right = list(ws), []
         else:
             left, right = [w for w in ws if w[5] <= g], [w for w in ws if w[4] >= g]
