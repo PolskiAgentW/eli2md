@@ -1199,6 +1199,54 @@ def _own_act_by_title(body: list[Line], notes: list[Line], position: int, title:
     return own, notes, first.page, last.page if last else max((l.page for l in own + notes), default=first.page)
 
 
+def _title_at(lines: list[Line], k: int, title: str) -> bool:
+    """lines[k] starts the header of the act with ELI `title`, in any case: its type and issuer, the date (day and
+    year exactly) and the words after it ("Rozporządzenie Ministra Rolnictwa" / "z dnia 26 lutego 1923 r." / "w sprawie
+    …"), or the whole title when it has no date (1918-1919: "Dekret w przedmiocie …"). The line must begin with the
+    type, after at most 3 specks, not with a number or a "§": a title quoted in a sentence or in the issue's contents
+    ("102. Dekret …", "48 — z dnia …") is no header."""
+    first = lines[k].text
+    tm = re.search(rf"(?i:{PREWAR_TYPE})\b", first[:25])
+    if not tm or re.search(r"[^\W\d_]{3}", first[:tm.start()]) or re.search(r"(?:^|\s)§|^\s*\d{1,4}[.,]\s", first[:tm.start()]):
+        return False  # specks of the scan before the type are allowed ("i „s oi, 88 DEKRET", DU/1946/32), words are not
+    if any(re.search(r"(?:^|Poz\.?\s?:?\s*)\d{1,4}\s*[—–-]+\s", x.text[:30]) for x in lines[k: k + 3]):
+        return False  # an item of the issue's contents ("10 — z dnia …"; "Poz.: 49 — z dnia …", DU/1947/49)
+    window = _plain(" ".join([first[tm.start():]] + [x.text for x in lines[k + 1: k + 5] if x.mark in ("scan", "ocr")]))[:500]
+    m = ELI_TITLE.fullmatch(title.strip())
+    if not m:
+        t = _plain(title)[:150]
+        return SequenceMatcher(None, t, window[:len(t)], autojunk=False).ratio() >= 0.85
+    head, rest = _plain(m["head"]), _plain(m["rest"])[:120]
+    day, _, year = _plain(m["date"]).split()
+    if SequenceMatcher(None, head, window[:len(head)], autojunk=False).ratio() < 0.8:
+        return False
+    d = re.search(r"(?:^| )(?:Z )?DNIA (\d{1,2}) (\w+) (\d{4})\b", window[max(0, len(head) - 10): len(head) + 40])
+    if not d or (d[1], d[3]) != (day, year):
+        return False
+    after = re.sub(r"^R\b\s*", "", window[max(0, len(head) - 10) + d.end():].strip())[:len(rest)]
+    return not rest or SequenceMatcher(None, rest, after, autojunk=False).ratio() >= 0.6
+
+
+def _by_neighbors(own: tuple, position: int, neighbors: dict[int, str]) -> tuple:
+    """The act cut out by _own_act ends at the header of the next position (or one of the next ones) when OCR lost
+    that position's number: the whole next act was in the text (DU/1928/427 + 428, DU/1946/32 + 33 whose numbers OCR
+    read as "88" and not at all). Searched from the act's third line, so its own header is not taken."""
+    body, notes, lo, hi = own
+    nxt = [neighbors[p] for p in range(position + 1, position + 4) if p in neighbors]
+    end = next((k for k in range(2, len(body)) if any(_title_at(body, k, t) for t in nxt)), None)
+    if end is None:
+        return own
+    last = body[end]
+
+    def at(l: Line) -> tuple:
+        return l.page, l.band, l.col, l.top
+    kept = body[:end]
+    while kept and not re.search(r"[^\W\d_]{2}", kept[-1].text):
+        kept = kept[:-1]  # the next act's number OCR misread ("450" for 459, DU/1919/458) or a speck
+    notes = [n for n in notes if at(n) < at(last)]
+    return kept, notes, lo, max((l.page for l in kept), default=lo)
+
+
 # an act starting on a page of an old issue read by OCR: its number and type in one paragraph ("56 ROZPORZĄDZENIE
 # PREZESA RADY MINISTRÓW z dnia …", DU/2000/56) or the number alone before the type ("57" + "ROZPORZĄDZENIE MINISTRA
 # FINANSÓW"); the number is not a line of its own as in the text layer (ACT_NUMBER)
@@ -1401,7 +1449,8 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
 
 
 def convert(path: str, ocr: str | None = None, position: int | None = None, title: str | None = None,
-            _doc_gutter: tuple[float, float] | None = None, year: int | None = None) -> Document:
+            _doc_gutter: tuple[float, float] | None = None, year: int | None = None,
+            neighbors: dict[int, str] | None = None) -> Document:
     """ocr: "auto" or tesseract language(s), e.g. "pol+eng", to read pages without a text layer
     (see ocr.py); None (default) = no OCR, such pages only get a note.
     position: the act's position in the gazette (ELI "DU/2005/1255" -> 1255). On pages of issues of 2011 and
@@ -1409,6 +1458,8 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
     title: the act's title in ELI; on a scan whose OCR lost the act's number the act is found by it (_own_act_by_title).
     year: the act's year (ELI "DU/1921/259" -> 1921); scans of issues of 1918-1989 get rules of their own in cutting
     the act out and in the order of columns (_ocr_lines, ocr._column_order). None = as for later issues.
+    neighbors: ELI titles of other positions of the year ({position: title}); on scans of 1918-1989 the act ends
+    where the next position's title starts, when OCR lost that position's number (_by_neighbors).
     Two-column pages of those issues: a page with too few full lines to find its gutter (the first page of an act
     over a page of footnotes) takes the gutter of the act's other pages; as it may come first, the PDF is then read
     again (_doc_gutter)."""
@@ -1481,12 +1532,23 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
         common = Counter((round(a), round(b)) for a, b in gut["found"]).most_common(1)[0][0]
         g = next(g for g in gut["found"] if (round(g[0]), round(g[1])) == common)
         if any(abs(a - g[0]) <= 1 and abs(b - g[1]) <= 1 for a, b in gut["cands"]):
-            return convert(path, ocr, position, title, _doc_gutter=g, year=year)
+            return convert(path, ocr, position, title, _doc_gutter=g, year=year, neighbors=neighbors)
     body, notes = _drop_colophon(body, notes)
     own = None
     if position is not None and title and not any(l.act == int(position) for l in body):
         own = _own_act_by_title(body, notes, int(position), title, old=year is not None and year < 1990)
+    old = year is not None and year < 1990
+    if old and position is not None and title and not own and not _own_act(body, notes, int(position), title):
+        # (< 1990) neither the act's number nor its header in capitals found: its header in any case, as in the ELI
+        # title (DU/1946/32: "32" read as "88" in "i „s oi, 88 DEKRET", "% dnia 22 stycznia 1946 r.")
+        k = next((k for k in range(len(body)) if _title_at(body, k, title)), None)
+        if k is not None:
+            first = body[k]
+            own = body[k:], [n for n in notes if (n.page, n.band, n.col, n.top) > (first.page, first.band, first.col, first.top)], \
+                first.page, max(l.page for l in body[k:])
     if position is not None and (own := own or _own_act(body, notes, int(position), title)):
+        if old and neighbors:  # (< 1990)
+            own = _by_neighbors(own, int(position), neighbors)
         body, notes, lo, hi = own
         for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
             setattr(doc, f, [p for p in getattr(doc, f) if lo <= p <= hi])  # pages of the other acts only
