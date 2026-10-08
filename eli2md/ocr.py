@@ -284,7 +284,7 @@ GLUED_ABBR = re.compile(r"\b([wW])(art|ust|pkt|lit)\.")
 def fix_words(text: str) -> str:
     """Words of a scan read by tesseract that the Polish dictionary does not know, corrected where one fix makes them
     known: one or two letters read without their diacritic, "ł" also as "t" or "l" ("ogtoszenia" -> "ogłoszenia",
-    "dziata" -> "działa", "Rozporzadzenie" -> "Rozporządzenie", DIACRITIC) and a
+    "dziata" -> "działa", "Rozporzadzenie" -> "Rozporządzenie", DIACRITIC), "ą" read for "a" ("dnią" -> "dnia") and a
     one-letter preposition glued to the next word ("Wrozporządzeniu" -> "W rozporządzeniu"; also "wart." -> "w art.",
     "zdnia" -> "z dnia"). Several possible fixes: the word stays. Words the English dictionary knows and paragraphs
     whose function words are of another language stay. Without the Polish dictionary the text is kept.
@@ -310,6 +310,13 @@ def fix_words(text: str) -> str:
                         v = "".join(v)
                         if sp.ok(v) or sp.ok(v.lower()):
                             cands.add(v)
+        if not cands and "ą" in w:  # the "a" of the pre-war typeface read as "ą" ("dnią", "sprąw"; DU/1926/146), tried
+            ats = [i for i, c in enumerate(w) if c == "ą"]  # alone so as not to compete with the fixes above
+            for n in (1, 2):           # ("tączną": "łączną", not also "łączna")
+                for some in itertools.combinations(ats, n):
+                    v = "".join("a" if i in some else c for i, c in enumerate(w))
+                    if sp.ok(v) or sp.ok(v.lower()):
+                        cands.add(v)
         if len(cands) == 1:
             return cands.pop()
         if not cands and w[0].lower() in GLUED and len(w) >= 5 and (sp.ok(w[1:]) or sp.ok(w[1:].lower())):
@@ -363,8 +370,15 @@ def _column_order(lines: dict, width: int, height: int = 0) -> dict:
     if sum(e <= g for e in ends) < 5 or sum(t >= g for t in starts) < 5:
         return original
     items = []  # (top, side, words); side 0 = spans, 1 = left, 2 = right
+    tol = gap // 2  # the gutter is found to a few px: a column's edge may stand just past it (the right column at
+    # 1322 for g 1324, DU/1974/239 p. 1: each of its lines went as one over the page, between the left column's lines)
     for ws in lines.values():
-        left, right = [w for w in ws if w[5] <= g], [w for w in ws if w[4] >= g]
+        if min(w[4] for w in ws) >= g - tol:
+            left, right = [], list(ws)
+        elif max(w[5] for w in ws) <= g + tol:
+            left, right = list(ws), []
+        else:
+            left, right = [w for w in ws if w[5] <= g], [w for w in ws if w[4] >= g]
         # the gazette header over both columns stays one line ("Dziennik Ustaw Nr 66 — 926 —" … "Poz. 380 i 381",
         # DU/1990/380 p. 2), so parse_tsv drops it whole
         joined = left and right and len(left) + len(right) == len(ws) and \
@@ -385,6 +399,15 @@ def _column_order(lines: dict, width: int, height: int = 0) -> dict:
         for side, part in ((1, left), (2, right)):
             if part:
                 items.append((min(w[0] for w in part), side, part))
+    items = _join_rows(items)
+    # a page of one column (Dz.U. 1918-1921) read with wide gaps between justified words: many lines go over the page,
+    # and tesseract splits others into blocks at such gaps; its lines go then row by row (DU/1919/242 p. 1: the right
+    # halves of lines 3-4 came after the paragraph). Pages of 1918-1921: 8-35 lines over the page against 11-31 parts
+    # of lines; of two columns: 0-18 against 50-132 (18 against 76: the contents on an issue's first page, DU/1986/185)
+    wide = sum(1 for _, side, ws in items if side == 0 and max(w[5] for w in ws) - min(w[4] for w in ws) > 0.6 * (x1 - x0))
+    parts = sum(1 for _, side, _ in items if side)
+    if wide >= ONE_COLUMN_WIDE * parts and parts < ONE_COLUMN_PARTS:
+        return _rows(lines)
     items.sort(key=lambda i: i[0])
     out: list = []
     band: list = []
@@ -397,6 +420,64 @@ def _column_order(lines: dict, width: int, height: int = 0) -> dict:
         else:
             band.append(it)
     return {(k, 0, 0): [w[6] for w in ws] for k, (_, _, ws) in enumerate(out)}
+
+
+def _join_rows(items: list) -> list:
+    """A line over the page that tesseract split at a wide gap between two words, joined back: the end of a centred
+    title went after the left column under it ("w sprawie … zwierząt" + "przeciw wściekliźnie.", DU/1961/309 p. 1;
+    "… dla funkcjonariuszów" + "i trybu postępowania" + "przed tymi sądami.", DU/1961/134 p. 1). A line of the left
+    column and one of the right column in one row stand the gutter apart; pieces of one line split near the gutter
+    stand closer (26-32 px against 56-60 px of the gutter at 300 dpi), and a piece of a line over the page stands next
+    to it. items: (top, side, words) of _column_order; side 0 = over the page, 1 = left column, 2 = right column."""
+    def mid(ws):
+        return sum(w[0] + w[1] for w in ws) / (2 * len(ws))
+
+    def row(a, b):
+        return abs(mid(a) - mid(b)) < 0.5 * min(statistics.median(w[1] - w[0] for w in a),
+                                                  statistics.median(w[1] - w[0] for w in b))
+
+    def apart(a, b):  # horizontal gap between two lines (negative if they overlap)
+        return max(min(w[4] for w in b) - max(w[5] for w in a), min(w[4] for w in a) - max(w[5] for w in b))
+    out = list(items)
+    pairs = [(i, j) for i, a in enumerate(items) if a[1] == 1 for j, b in enumerate(items) if b[1] == 2 and row(a[2], b[2])]
+    gaps = [apart(items[i][2], items[j][2]) for i, j in pairs]
+    if len(gaps) < 5:
+        return out
+    # the gutter: the lower quartile, as a short last line of a paragraph or an indented first one stand farther
+    gutter = sorted(gaps)[len(gaps) // 4]
+    gone: set[int] = set()
+
+    def join(i, j):
+        out[i] = (min(out[i][0], out[j][0]), 0, sorted(out[i][2] + out[j][2], key=lambda w: w[4]))
+        gone.add(j)
+    for i, j in pairs:
+        if i not in gone and j not in gone and out[i][1] == 1 and apart(out[i][2], out[j][2]) < 0.6 * gutter:
+            join(i, j)
+    for j, (_, side, ws) in enumerate(out):
+        if side == 0 or j in gone:
+            continue
+        for i, span in enumerate(out):
+            if span[1] == 0 and i not in gone and row(ws, span[2]) and 0 <= apart(ws, span[2]) <= gutter:
+                join(i, j)
+                break
+    return [it for i, it in enumerate(out) if i not in gone]
+
+
+ONE_COLUMN_WIDE, ONE_COLUMN_PARTS = 0.35, 45  # see _column_order
+
+
+def _rows(lines: dict) -> dict:
+    """Deskewed lines (see _deskew) in rows from the top, each row's lines from the left, as original lines."""
+    items = sorted(((sum(w[0] + w[1] for w in ws) / (2 * len(ws)), min(w[4] for w in ws), max(w[1] - w[0] for w in ws), ws)
+                    for ws in lines.values()), key=lambda i: i[:2])
+    rows: list[list] = []
+    for c, x, h, ws in items:
+        if rows and abs(c - rows[-1][0][0]) < 0.5 * h:
+            rows[-1].append((c, x, h, ws))
+        else:
+            rows.append([(c, x, h, ws)])
+    out = [ws for row in rows for _, _, _, ws in sorted(row, key=lambda r: r[1])]
+    return {(k, 0, 0): [w[6] for w in ws] for k, ws in enumerate(out)}
 
 
 def _deskew(lines: dict) -> dict:
