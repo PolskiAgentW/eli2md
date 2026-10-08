@@ -281,10 +281,11 @@ GLUED = ("w", "z", "o", "i", "a", "u")
 GLUED_ABBR = re.compile(r"\b([wW])(art|ust|pkt|lit)\.")
 
 
-def fix_words(text: str) -> str:
+def fix_words(text: str, old: bool = False) -> str:
     """Words of a scan read by tesseract that the Polish dictionary does not know, corrected where one fix makes them
     known: one or two letters read without their diacritic, "ł" also as "t" or "l" ("ogtoszenia" -> "ogłoszenia",
-    "dziata" -> "działa", "Rozporzadzenie" -> "Rozporządzenie", DIACRITIC), "ą" read for "a" ("dnią" -> "dnia") and a
+    "dziata" -> "działa", "Rozporzadzenie" -> "Rozporządzenie", DIACRITIC), with old (issues of 1918-1989) "ą" read for
+    "a" ("dnią" -> "dnia"; in later scans it made "ma-jątek" "jatek", DU/1998/304) and a
     one-letter preposition glued to the next word ("Wrozporządzeniu" -> "W rozporządzeniu"; also "wart." -> "w art.",
     "zdnia" -> "z dnia"). Several possible fixes: the word stays. Words the English dictionary knows and paragraphs
     whose function words are of another language stay. Without the Polish dictionary the text is kept.
@@ -310,7 +311,7 @@ def fix_words(text: str) -> str:
                         v = "".join(v)
                         if sp.ok(v) or sp.ok(v.lower()):
                             cands.add(v)
-        if not cands and "ą" in w:  # the "a" of the pre-war typeface read as "ą" ("dnią", "sprąw"; DU/1926/146), tried
+        if old and not cands and "ą" in w:  # (issues of 1918-1989 only) the "a" of the pre-war typeface read as "ą" ("dnią", "sprąw"; DU/1926/146), tried
             ats = [i for i, c in enumerate(w) if c == "ą"]  # alone so as not to compete with the fixes above
             for n in (1, 2):           # ("tączną": "łączną", not also "łączna")
                 for some in itertools.combinations(ats, n):

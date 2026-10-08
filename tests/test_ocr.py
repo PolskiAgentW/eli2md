@@ -311,6 +311,33 @@ class Scan(unittest.TestCase):
         for t in ("Bielsko", "lata", "tak", "Ustawa wchodzi w życie", "final", "Material"):
             self.assertEqual(ocr.fix_words(t), t)
 
+    @unittest.skipUnless(ocr.speller(), "libhunspell or hunspell-pl not installed")
+    def test_fix_words_old(self):
+        # "ą" read for the "a" of the pre-war typeface: only for issues of 1918-1989 (later "jątek" of "ma-jątek" would
+        # become "jatek", DU/1998/304)
+        self.assertEqual(ocr.fix_words("z dnią 5 maja", old=True), "z dnia 5 maja")
+        self.assertEqual(ocr.fix_words("z dnią 5 maja"), "z dnią 5 maja")
+
+    def test_act_start_1918_1989(self):
+        def acts(paras, position, old=True):
+            return [(l.act, l.text) for l in _ocr_lines(paras, 1, 600, 840, position, "scan", old=old) if l.act]
+        # the number glued to the title in ordinary case, the header read with the page's positions (DU/1921/259)
+        page = ['"Ne 41. Dziennik Wstaw. Poz. 258 i 259. 603', "§ 11. Niniejsze rozporządzenie wchodzi w życie.",
+                "259. Rozporządzenie Ministra Kolei Żelaznych z dnia 6 maja 1921 r. w sprawie przedłużenia terminu"]
+        self.assertEqual(acts(page, 259), [(259, "259")])
+        self.assertEqual(acts(page, 259, old=False), [])  # later issues as before
+        # the type in capitals is enough without the header (DU/1930/111); a list item in ordinary case is not
+        self.assertEqual(acts(["§ 3. Rozporządzenie wchodzi w życie.", "111. ROZPORZADZENIE RADY MINISTRÓW | z dnia 7 lutego"], 111),
+                         [(111, "111")])
+        self.assertEqual(acts(["Tracą moc:", "112. rozporządzenie Ministra Skarbu z dnia 1 maja 1930 r."], 111), [])
+        # the end of the previous act's signature between the number and the type goes before the number (DU/1919/305)
+        lines = _ocr_lines(["305.", "Ministerstwa: I, kberhavat", "ROZPORZĄDZENIE Ministra Kolei"], 1, 600, 840, 305, "scan",
+                           old=True)
+        self.assertEqual([l.text for l in lines], ["Ministerstwa: I, kberhavat", "305", "ROZPORZĄDZENIE Ministra Kolei"])
+        # a speck under the number and before the type (DU/1984/126)
+        lines = _ocr_lines(["126", ";", "i ROZPORZĄDZENIE RADY MINISTRÓW."], 1, 600, 840, 126, "scan", old=True)
+        self.assertEqual([(l.act, l.text) for l in lines], [(126, "126"), (0, "ROZPORZĄDZENIE RADY MINISTRÓW.")])
+
     def test_annex_header(self):
         self.assertTrue(ANNEX_OCR.match("Załącznik do obwieszczenia Ministra z dnia 27 marca 1997 r. (poz. 224)"))
         self.assertTrue(ANNEX_OCR.match("ZAŁĄCZNIK Nr 2"))
@@ -348,6 +375,23 @@ class Scan(unittest.TestCase):
         out3 = [" ".join(w[2] for w in ws) for ws in ocr._column_order(lines3, 1000).values()]
         self.assertEqual(out3, ["TYTUŁ AKTU"] + [f"lewy{k} tekst" for k in range(7)] + [f"prawy{k} tekst" for k in range(7)]
                          + ["Egzemplarze bieżące można nabywać:", "— w Wydziale Wydawnictw na całą szerokość"])
+
+    def test_column_order_1918_1989(self):
+        def line(top, text, left, right):
+            ws = text.split()
+            w = (right - left) // len(ws)
+            return [(top, top + 30, t, 95.0, left + k * w, left + (k + 1) * w - 10) for k, t in enumerate(ws)]
+        # the end of a centred title split off by tesseract goes with the title, not to the top of the right column
+        # (DU/1961/309); in later issues as before
+        lines = {(0, 0, 0): line(40, "w sprawie szczepienia psów", 150, 700), (0, 0, 1): line(42, "przeciw wściekliźnie.", 720, 850)}
+        for k in range(8):
+            lines[(1, 0, k)] = line(100 + 40 * k, f"lewy{k} tekst", 100, 480)
+            lines[(2, 0, k)] = line(100 + 40 * k, f"prawy{k} tekst", 540, 900)
+        out = [" ".join(w[2] for w in ws) for ws in ocr._column_order(lines, 1000, year=1961).values()]
+        self.assertEqual(out, ["w sprawie szczepienia psów przeciw wściekliźnie."] + [f"lewy{k} tekst" for k in range(8)]
+                         + [f"prawy{k} tekst" for k in range(8)])
+        out = [" ".join(w[2] for w in ws) for ws in ocr._column_order(lines, 1000).values()]
+        self.assertEqual(out[:2], ["w sprawie szczepienia psów", "lewy0 tekst"])
 
     def test_quoted_annex_on_scan(self):
         # DU/2000/1315: Art. 2 gives the new annexes of the amended act; "Załącznik nr 3" is not this act's annex
