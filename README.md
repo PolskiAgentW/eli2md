@@ -212,6 +212,24 @@ i zużytych testach):
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
 
+**0.6.40** (2026-10-08). Skany Dziennika Ustaw 1918–1989. `convert()` ma nowy argument `year` (rok aktu; CLI
+i `eli2md.dataset` podają go z ELI). Reguły poniżej działają tylko dla aktów sprzed 1990 r., więc dla lat od 1990
+wynik jest taki sam jak w 0.6.39: 627 z 627 aktów-skanów (DU 1990–1999, DU i M.P. 2000–2011) daje identyczny `.md`.
+(1) Wycinanie aktu ze stron numeru. Nagłówek strony przedwojennej z listą pozycji (też zniekształcony przez OCR
+i „Dziennik Praw” z lat 1918–1919). Numer sklejony z tytułem („259. Rozporządzenie…”, „182. DEKRET”). Numer na końcu
+spisu treści. Numer i nagłówek następnego aktu wczytane do ostatniego akapitu poprzedniego („… J. Obodowski 45 c |
+ROZPORZĄDZENIE RADY MINISTRÓW”). Plamki skanu przy numerze („; 87”, „146 - OŚWIADCZENIE”). Pozycja spisu treści
+numeru z lat PRL („10 — z dnia …”) nie jest nagłówkiem aktu. Sprostowanie wydrukowane po akcie kończy akt.
+(2) Kolejność łamów. Położenie rynny z tolerancją (prawy łam tuż przed nią dawał linie „przez stronę” między liniami
+lewego łamu: DU/1974/239). Kreska między łamami czytana jako „|” jest pomijana. Koniec wyśrodkowanego tytułu, który
+tesseract odciął, zostaje przy tytule. Strony jednołamowe z lat 1918–1922 są czytane wierszami.
+(3) „ą” odczytane zamiast „a” w kroju przedwojennym („dnią” → „dnia”), gdy tylko to daje słowo ze słownika.
+Pomiar na losowych próbkach 32 aktów DU 1918–1989 (100 pierwszych słów i 1. strona porównane z obrazem):
+0.6.39 — mediana 95,5%, 24/32 aktów ≥ 90%, 17/32 z tekstem innego aktu albo złą kolejnością łamów; 0.6.40 na nowej
+próbce — 97,5%, 25/32, 12/32 ([pomiar](eval/scans_1918_1989/)). To nadal za dużo, by publikować z tego korpus:
+zostają akty, których numer OCR zgubił albo zniekształcił (wtedy w tekście jest następny akt albo winieta i spis
+treści numeru), tabele i przeplatane łamy na zaszumionych skanach z lat 1945–1989.
+
 **0.6.39** (2026-10-07). Dwie zmiany.
 (1) Umowy międzynarodowe w JSON. Akapit „Artykuł N” (także „Artykuł IV”, z tytułem wielkimi literami) jest węzłem
 `art` z polem `label`, jeśli w akcie są co najmniej dwa takie akapity. Formuła końcowa („Sporządzono…”, „Na dowód…”,
