@@ -967,6 +967,26 @@ class Basic(unittest.TestCase):
         conv = [sc("> KONWENCJĄ (Nr 123) dotycząca najniższego wieku dopuszczenia do pracy pod ziemią w kopalniach,"),
                 sc("W imieniu Polskiej Rzeczypospolitej Ludowej")]
         self.assertTrue(_title_at(conv, 0, t62))
+        # but the act's number and header both misread ("175 RAEPORZĄDZENIE", DU/1955/175): the header of the next
+        # position, alike in issuer, date and the first 100 letters of the title, is not taken for the act's (it reads
+        # better as the neighbour's title), and the act ends at the very next number after its text
+        from eli2md.pdf import _neighbor_header
+        t175 = ("Rozporządzenie Przewodniczącego Państwowej Komisji Planowania Gospodarczego z dnia 12 lipca 1955 r. "
+                "w sprawie zatwierdzenia norm państwowych ustalonych przez Polski Komitet Normalizacyjny, dotyczących budownictwa.")
+        t176 = t175.replace("budownictwa", "przemysłu lekkiego")
+        head176 = [sc("ROZPORZĄDZENIE PRZEWODNICZĄCEGO PAŃSTWOWEJ KOMISJI PLANOWANIA GOSPODARCZEGO"), sc("z dnia 12 lipca 1955 r."),
+                   sc("w sprawie zatwierdzenia norm państwowych ustalonych przez Polski Komitet Normalizacyjny, "
+                      "dotyczących przemysłu lekkiego.")]
+        self.assertTrue(_title_at(head176, 0, t175))
+        self.assertTrue(_neighbor_header(head176, 0, t175, {176: t176}))
+        self.assertFalse(_neighbor_header(head176, 0, t176, {175: t175}))
+        text = [sc("175 RAEPORZĄDZENIE PRZEWODNICZĄCEGO PAŃSTWOWEJ KOMISJI PLANOWANIA GOSPODARCZEGO z dnia 12 lipca 1955 r."),
+                sc("Na podstawie art. 13 ust. 2 dekretu z dnia 4 marca 1953 r. o normach i o Polskim Komitecie "
+                   "Normalizacyjnym zarządza się, co następuje: § 1. Zatwierdza się jako normy państwowe następujące normy."),
+                sc("Przewodniczący Państwowej Komisji Planowania Gospodarczego: w z. M. Lesz")]
+        own, *_ = _own_act(text + [num(176)] + head176, [], 175, t175, old=True)
+        self.assertEqual(own, text)
+        self.assertIsNone(_own_act(text[:1] + [num(176)] + head176, [], 175, t175, old=True))  # too few words
 
     def test_act_numbers_cut(self):
         body, notes = _frame_lines(self._shared_page("Dziennik Ustaw Nr 165 — 10063 — Poz. 1369 i 1370"),

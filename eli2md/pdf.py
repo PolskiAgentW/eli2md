@@ -1066,15 +1066,18 @@ def _own_act(body: list[Line], notes: list[Line], position: int, title: str | No
     if start is None:
         # the act's number is lost, but the next act's is there and no earlier one: the act starts the pages and ends
         # at the next number (a scan where the act opens the page, its number read in the header band and dropped
-        # with the header: DU/1990/100). Not on scans of 1918-1989: there the first number on the page is often the
-        # act's own misread ("140" for 138 under "Poż, 138, 139 i", DU/1967/138; "215" for 214, DU/1949/214) or one
-        # of the issue's contents ("233" on the first page of DU/1952/232, a constitution of 30 pages), and the act
-        # was cut to the running header above it or to nothing (52 acts in 0.6.40-0.6.41); convert finds it by its
-        # header instead
-        if old:
-            return None
+        # with the header: DU/1990/100). On scans of 1918-1989 (convert tries the act's header first) only the very
+        # next number, after at least 30 words and no issue's contents: there the first number on the page is often
+        # the act's own misread ("140" for 138 under "Poż, 138, 139 i", DU/1967/138; "215" for 214 under the running
+        # header, DU/1949/214) or one of the issue's contents ("233" on the first page of DU/1952/232, a constitution
+        # of 30 pages), and the act was cut to the running header or to nothing (52 acts in 0.6.40-0.6.41); the rule
+        # is needed where the act's number and header are both misread ("175 RAEPORZĄDZENIE …", DU/1955/175)
         nxt = next((i for i, l in enumerate(body) if l.act), None)
         if nxt is None or not position < body[nxt].act <= position + ACT_NUMBER_NEXT or body[nxt].mark != "scan":
+            return None
+        if old and (body[nxt].act != position + 1
+                    or sum(len(re.findall(r"[^\W\d_]{2,}", l.text)) for l in body[:nxt]) < 30
+                    or any(re.search(r"\bTRE[ŚS][ĆC]\b", l.text, re.I) for l in body[:nxt])):
             return None
         own = body[:nxt]
         return own, [n for n in notes if (n.page, n.band, n.col, n.top) < (body[nxt].page, body[nxt].band,
@@ -1218,26 +1221,44 @@ def _title_at(lines: list[Line], k: int, title: str) -> bool:
     …"), or the whole title when it has no date (1918-1919: "Dekret w przedmiocie …"). The line must begin with the
     type, after at most 3 specks, not with a number or a "§": a title quoted in a sentence or in the issue's contents
     ("102. Dekret …", "48 — z dnia …") is no header."""
+    m = ELI_TITLE.fullmatch(title.strip())
+    score = _title_score(lines, k, title)
+    return score is not None and score >= (0.6 if m else 0.85)
+
+
+def _title_score(lines: list[Line], k: int, title: str, n: int = 120) -> float | None:
+    """How well the header starting at lines[k] reads as `title` (see _title_at): None if its type, issuer or date
+    differ, else the likeness of the words after the date to the first `n` letters of the title's rest (of the whole
+    title when it has no date)."""
     first = lines[k].text
     tm = PREWAR_TYPE_LOOSE.search(first[:25])
     if not tm or re.search(r"[^\W\d_]{3}", first[:tm.start()]) or re.search(r"(?:^|\s)§|^\s*\d{1,4}[.,]\s", first[:tm.start()]):
-        return False  # specks of the scan before the type are allowed ("i „s oi, 88 DEKRET", DU/1946/32), words are not
+        return None  # specks of the scan before the type are allowed ("i „s oi, 88 DEKRET", DU/1946/32), words are not
     if any(re.search(r"(?:^|Poz\.?\s?:?\s*)\d{1,4}\s*[—–-]+\s", x.text[:30]) for x in lines[k: k + 3]):
-        return False  # an item of the issue's contents ("10 — z dnia …"; "Poz.: 49 — z dnia …", DU/1947/49)
+        return None  # an item of the issue's contents ("10 — z dnia …"; "Poz.: 49 — z dnia …", DU/1947/49)
     window = _plain(" ".join([first[tm.start():]] + [x.text for x in lines[k + 1: k + 5] if x.mark in ("scan", "ocr")]))[:500]
     m = ELI_TITLE.fullmatch(title.strip())
     if not m:
         t = _plain(title)[:150]
-        return SequenceMatcher(None, t, window[:len(t)], autojunk=False).ratio() >= 0.85
-    head, rest = _plain(m["head"]), _plain(m["rest"])[:120]
+        return SequenceMatcher(None, t, window[:len(t)], autojunk=False).ratio()
+    head, rest = _plain(m["head"]), _plain(m["rest"])[:n]
     day, _, year = _plain(m["date"]).split()
     if SequenceMatcher(None, head, window[:len(head)], autojunk=False).ratio() < 0.8:
-        return False
+        return None
     d = re.search(r"(?:^| )(?:Z )?DNIA (\d{1,2}) (\w+) (\d{4})\b", window[max(0, len(head) - 10): len(head) + 40])
     if not d or (d[1], d[3]) != (day, year):
-        return False
+        return None
     after = re.sub(r"^R\b\s*", "", window[max(0, len(head) - 10) + d.end():].strip())[:len(rest)]
-    return not rest or SequenceMatcher(None, rest, after, autojunk=False).ratio() >= 0.6
+    return SequenceMatcher(None, rest, after, autojunk=False).ratio() if rest else 1.0
+
+
+def _neighbor_header(lines: list[Line], k: int, title: str, neighbors: dict[int, str] | None) -> bool:
+    """The header at lines[k] reads better as the title of another position near the act than as the act's own
+    (DU/1955/175 and 176: the same issuer and date, titles alike for 100 letters, "… dotyczących budownictwa" and
+    "… dotyczących przemysłu lekkiego"; with its own header misread, "175 RAEPORZĄDZENIE", the act was taken from the
+    header of 176)."""
+    own = _title_score(lines, k, title, 300) or 0.0
+    return any((s := _title_score(lines, k, t, 300)) is not None and s > own for t in (neighbors or {}).values() if t)
 
 
 def _by_neighbors(own: tuple, position: int, neighbors: dict[int, str]) -> tuple:
@@ -1551,11 +1572,13 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
     if position is not None and title and not any(l.act == int(position) for l in body):
         own = _own_act_by_title(body, notes, int(position), title, old=year is not None and year < 1990)
     old = year is not None and year < 1990
-    if old and position is not None and title and not own and not _own_act(body, notes, int(position), title, old):
+    if old and position is not None and title and not own and not any(l.act == int(position) for l in body):
         # (< 1990) neither the act's number nor its header in capitals found: its header in any case, as in the ELI
-        # title (DU/1946/32: "32" read as "88" in "i „s oi, 88 DEKRET", "% dnia 22 stycznia 1946 r."); it ends as
-        # an act found by its number (_act_end: at the next act's number)
-        k = next((k for k in range(len(body)) if _title_at(body, k, title)), None)
+        # title (DU/1946/32: "32" read as "88" in "i „s oi, 88 DEKRET", "% dnia 22 stycznia 1946 r."), not one that
+        # reads better as a neighbour's title (DU/1955/175); it ends as an act found by its number (_act_end: at the
+        # next act's number). Without such a header, the act may still end at the next number (_own_act)
+        k = next((k for k in range(len(body)) if _title_at(body, k, title)
+                  and not _neighbor_header(body, k, title, neighbors)), None)
         if k is not None:
             end = _act_end(body, k, int(position), title)
             first, last = body[k], body[end] if end < len(body) else None

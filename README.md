@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.43, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.44, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -211,6 +211,18 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.44** (2026-10-08). Skany Dziennika Ustaw 1918–1989: poprawka regresji z 0.6.42. Gdy OCR zniekształcił i numer,
+i nagłówek aktu („175 RAEPORZĄDZENIE …”, DU/1955/175), akt był brany od nagłówka następnej pozycji. Ma ona tego samego
+wydawcę, tę samą datę i tytuł zgodny przez pierwsze ok. 100 liter („… dotyczących budownictwa” i „… dotyczących
+przemysłu lekkiego”). Plik zawierał więc tylko początek aktu 176. Teraz nagłówek, który lepiej pasuje do tytułu
+sąsiedniej pozycji (±3, `neighbors`), nie jest brany za nagłówek aktu. Gdy nagłówka nie ma, akt kończy się na numerze
+następnej pozycji, jak do 0.6.41, ale tylko gdy jest to numer pozycji +1, przed nim stoi co najmniej 30 słów i nie ma
+spisu treści numeru. Te warunki odrzucają wszystkie 45 przypadków z 0.6.40–0.6.41, w których ta reguła zostawiała
+tylko paginę albo nic. Usterkę znalazł pomiar 4
+(próbka 1012, wynik w `eval/scans_1918_1989/`). Na 96 aktach z próbek 1008–1010 i na 52 aktach z listy 0.6.42 bez zmian,
+na 32 aktach próbki 1012 zmienia się tylko DU/1955/175. Lata od 1990: bez zmian (300 z 300 aktów-skanów 1990–2011
+identycznych poza numerem wersji).
 
 **0.6.43** (2026-10-08). Skany Dziennika Ustaw 1923–1989, kolejność łamów. Jedna linia uznana za biegnącą przez
 całą stronę dzieliła ją na pasy, więc nagłówek aktu z prawego łamu trafiał przed tekst lewego (DU/1930/217:

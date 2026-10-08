@@ -16,6 +16,7 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 CACHE = Path.home() / "cache/eli"
+LISTS = Path.home() / "ext/eli_lists_20261008"  # ELI year lists (tools/eli_lists_fetch.py)
 
 
 def tokens(md: str) -> list[str]:
@@ -33,8 +34,15 @@ def one(job):
     d = CACHE / pub / year / pos
     meta = json.loads((d / "meta.json").read_text())
     try:
+        params = inspect.signature(convert).parameters
+        extra = {"year": meta.get("year")} if "year" in params else {}
+        if "neighbors" in params:  # ELI titles of the positions near the act, from the year's list (as eli2md.dataset)
+            lst = LISTS / f"{pub}-{year}.json"
+            items = json.loads(lst.read_text())["items"] if lst.exists() else []
+            p0 = int(pos)
+            extra["neighbors"] = {i["pos"]: i.get("title", "") for i in items if p0 - 3 <= i["pos"] <= p0 + 3 and i["pos"] != p0}
         md = to_markdown(convert(str(d / "text.pdf"), ocr="auto", position=meta.get("pos"), title=meta.get("title"),
-                                 **({"year": meta.get("year")} if "year" in inspect.signature(convert).parameters else {})), meta)
+                                 **extra), meta)
     except Exception as e:  # noqa: BLE001
         return eli, f"ERROR {type(e).__name__}: {e}", []
     f = Path(out) / f"{pub}-{year}-{pos}.md"
