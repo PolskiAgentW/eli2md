@@ -137,9 +137,15 @@ PREWAR_GLUED_START = re.compile(r"^(\d{1,4})[.,]?\s+(?:\S{1,4}\s+){0,2}(?=Na\s+m
 PREWAR_CONTENTS = re.compile(r"^Tre[śs][ćc]\s*[:.;]?")
 PREWAR_CONTENTS_ITEM = re.compile(r"(?:^|\s)(\d{1,4})[.,]\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])")
 # an act's type in any case, as OCR reads it (diacritics may go: "Rozporzadzenie", DU/1922/475)
-PREWAR_TYPE = "".join({"ą": "[ąa]", "ę": "[ęe]", "ł": "[łl]", "ó": "[óo]", "ś": "[śs]", "ż": "[żz]"}.get(c, c) for c in (
-    r"(?:ustawa|rozporządzenie|dekret|obwieszczenie|uchwała|postanowienie|zarządzenie|umowa|konwencja|traktat"
-    r"|protokół|oświadczenie|układ|porozumienie|orzeczenie)"))
+PREWAR_TYPES = (r"(?:ustawa|rozporządzenie|dekret|obwieszczenie|uchwała|postanowienie|zarządzenie|umowa|konwencja|traktat"
+                r"|protokół|oświadczenie|układ|porozumienie|orzeczenie)")
+PREWAR_TYPE = "".join({"ą": "[ąa]", "ę": "[ęe]", "ł": "[łl]", "ó": "[óo]", "ś": "[śs]", "ż": "[żz]"}.get(c, c)
+                      for c in PREWAR_TYPES)
+# OCR of a header in capitals also adds diacritics to plain letters ("KONWENCJĄ (Nr 123) dotycząca …", DU/1970/62):
+# any letter of the type with or without them (for _title_at, which compares the rest without diacritics)
+_LOOSE = ("aą", "cć", "eę", "lł", "nń", "oó", "sś", "zżź")
+PREWAR_TYPE_LOOSE = re.compile("(?i:" + "".join(next((f"[{g}]" for g in _LOOSE if c in g), c) for c in PREWAR_TYPES)
+                               + r")\b")
 # a pre-war act's number glued to its title in one paragraph: "259. Rozporządzenie Ministra Kolei Żelaznych z dnia …"
 # (DU/1921/259), "182. DEKRET o organizacji archiwów" (DU/1919/182), "111. ROZPORZADZENIE RADY MINISTRÓW" (DU/1930/111).
 # The type in capitals is enough; in ordinary case (a list of acts in a text starts its items that way too: "6.
@@ -1043,7 +1049,7 @@ def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], lis
     return body, [l for l in notes if keep(l)]
 
 
-def _own_act(body: list[Line], notes: list[Line], position: int, title: str | None = None
+def _own_act(body: list[Line], notes: list[Line], position: int, title: str | None = None, old: bool = False
              ) -> tuple[list[Line], list[Line], int, int] | None:
     """The act numbered `position` out of pages it shares with other acts of its issue (DU 2000-2011): the PDF of
     a position holds whole pages, so also the end of the acts before it and the start of the ones after it
@@ -1054,12 +1060,19 @@ def _own_act(body: list[Line], notes: list[Line], position: int, title: str | No
     2012 on, which is not text of the act either. Returns (body, notes, first page, last page), or None if the
     act's number is not found (then nothing is cut). The last act of an issue ends on the page of its last line
     (marks of images and scans are lines too), so a publisher's page dropped by _drop_colophon does not count as a
-    page with an image (DU/2003/2317 p. 10)."""
+    page with an image (DU/2003/2317 p. 10).
+    old: a scan of an issue of 1918-1989 (see convert)."""
     start = next((i for i, l in enumerate(body) if l.act == position), None)
     if start is None:
         # the act's number is lost, but the next act's is there and no earlier one: the act starts the pages and ends
         # at the next number (a scan where the act opens the page, its number read in the header band and dropped
-        # with the header: DU/1990/100)
+        # with the header: DU/1990/100). Not on scans of 1918-1989: there the first number on the page is often the
+        # act's own misread ("140" for 138 under "Poż, 138, 139 i", DU/1967/138; "215" for 214, DU/1949/214) or one
+        # of the issue's contents ("233" on the first page of DU/1952/232, a constitution of 30 pages), and the act
+        # was cut to the running header above it or to nothing (52 acts in 0.6.40-0.6.41); convert finds it by its
+        # header instead
+        if old:
+            return None
         nxt = next((i for i, l in enumerate(body) if l.act), None)
         if nxt is None or not position < body[nxt].act <= position + ACT_NUMBER_NEXT or body[nxt].mark != "scan":
             return None
@@ -1206,7 +1219,7 @@ def _title_at(lines: list[Line], k: int, title: str) -> bool:
     type, after at most 3 specks, not with a number or a "§": a title quoted in a sentence or in the issue's contents
     ("102. Dekret …", "48 — z dnia …") is no header."""
     first = lines[k].text
-    tm = re.search(rf"(?i:{PREWAR_TYPE})\b", first[:25])
+    tm = PREWAR_TYPE_LOOSE.search(first[:25])
     if not tm or re.search(r"[^\W\d_]{3}", first[:tm.start()]) or re.search(r"(?:^|\s)§|^\s*\d{1,4}[.,]\s", first[:tm.start()]):
         return False  # specks of the scan before the type are allowed ("i „s oi, 88 DEKRET", DU/1946/32), words are not
     if any(re.search(r"(?:^|Poz\.?\s?:?\s*)\d{1,4}\s*[—–-]+\s", x.text[:30]) for x in lines[k: k + 3]):
@@ -1538,15 +1551,20 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
     if position is not None and title and not any(l.act == int(position) for l in body):
         own = _own_act_by_title(body, notes, int(position), title, old=year is not None and year < 1990)
     old = year is not None and year < 1990
-    if old and position is not None and title and not own and not _own_act(body, notes, int(position), title):
+    if old and position is not None and title and not own and not _own_act(body, notes, int(position), title, old):
         # (< 1990) neither the act's number nor its header in capitals found: its header in any case, as in the ELI
-        # title (DU/1946/32: "32" read as "88" in "i „s oi, 88 DEKRET", "% dnia 22 stycznia 1946 r.")
+        # title (DU/1946/32: "32" read as "88" in "i „s oi, 88 DEKRET", "% dnia 22 stycznia 1946 r."); it ends as
+        # an act found by its number (_act_end: at the next act's number)
         k = next((k for k in range(len(body)) if _title_at(body, k, title)), None)
         if k is not None:
-            first = body[k]
-            own = body[k:], [n for n in notes if (n.page, n.band, n.col, n.top) > (first.page, first.band, first.col, first.top)], \
-                first.page, max(l.page for l in body[k:])
-    if position is not None and (own := own or _own_act(body, notes, int(position), title)):
+            end = _act_end(body, k, int(position), title)
+            first, last = body[k], body[end] if end < len(body) else None
+
+            def at(l: Line) -> tuple:
+                return l.page, l.band, l.col, l.top
+            own = body[k:end], [n for n in notes if at(first) < at(n) and (last is None or at(n) < at(last))], \
+                first.page, last.page if last else max(l.page for l in body[k:])
+    if position is not None and (own := own or _own_act(body, notes, int(position), title, old)):
         if old and neighbors:  # (< 1990)
             own = _by_neighbors(own, int(position), neighbors)
         body, notes, lo, hi = own

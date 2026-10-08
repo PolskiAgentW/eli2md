@@ -946,6 +946,28 @@ class Basic(unittest.TestCase):
         self.assertTrue(SIGNATURE_OCR.match("Minister — Szef Urzędu Rady Ministrów: M. Strąk"))
         self.assertTrue(SIGNATURE_OCR.match("Prezes Rady Ministrów: W, Cimoszewicz"))
 
+    def test_old_issue_act_number_lost(self):
+        # 1918-1989: the first number on the page is often the act's own misread ("140" for 138, DU/1967/138), so the
+        # act does not end there (0.6.40-0.6.41 cut 52 acts to the running header or to nothing); convert finds it
+        # by its header (_title_at), also with diacritics OCR added to the type ("KONWENCJĄ", DU/1970/62)
+        from eli2md.pdf import _title_at
+        def sc(t):
+            return Line(1, 0.0, 0.0, 0.0, 1.0, t, 595, 842, mark="scan")
+        def num(n):
+            return Line(1, 0.0, 0.0, 0.0, 1.0, str(n), 595, 842, mark="scan", act=n)
+        t138 = "Oświadczenie rządowe z dnia 4 lipca 1967 r. w sprawie ratyfikacji przez Francję Konwencji europejskiej."
+        page = [sc("Poż, 138, 139 i"), num(140), sc("OŚWIADCZENIE RZĄDOWE"),
+                sc("z dnia 4 lipca 1967 r. w sprawie ratyfikacji przez Francję Konwencji europejskiej."),
+                sc("Podaje się niniejszym do wiadomości."), sc("Minister Spraw Zagranicznych: w z. J. Winiewicz")]
+        own, *_ = _own_act(page, [], 138, t138)
+        self.assertEqual([l.text for l in own], ["Poż, 138, 139 i"])  # later issues: the act ends at the next number
+        self.assertIsNone(_own_act(page, [], 138, t138, old=True))
+        self.assertEqual([k for k in range(len(page)) if _title_at(page, k, t138)], [2])
+        t62 = "Konwencja (nr 123) dotycząca najniższego wieku dopuszczenia do pracy pod ziemią w kopalniach."
+        conv = [sc("> KONWENCJĄ (Nr 123) dotycząca najniższego wieku dopuszczenia do pracy pod ziemią w kopalniach,"),
+                sc("W imieniu Polskiej Rzeczypospolitej Ludowej")]
+        self.assertTrue(_title_at(conv, 0, t62))
+
     def test_act_numbers_cut(self):
         body, notes = _frame_lines(self._shared_page("Dziennik Ustaw Nr 165 — 10063 — Poz. 1369 i 1370"),
                                    595, 842, [], 2)

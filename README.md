@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.41, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.42, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -211,6 +211,21 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.42** (2026-10-08). Skany Dziennika Ustaw 1918–1989: poprawka błędu z 0.6.40–0.6.41. Gdy OCR nie odczytał
+numeru aktu, akt kończył się na pierwszym numerze innej pozycji na jego stronach. Na tych skanach to często
+zniekształcony numer samego aktu („140” zamiast 138 pod paginą „Poż, 138, 139 i”, DU/1967/138) albo numer ze spisu
+treści numeru, więc z aktu zostawała żywa pagina albo nic. Po przeliczeniu całego DU 1918–1989 wersją 0.6.40
+i porównaniu liczby słów z 0.6.39 takich aktów było 52 (mniej niż 30 słów zamiast co najmniej 60), m.in. Konstytucja
+PRL (DU/1952/232: 30 stron, 28 słów). Teraz akt bez numeru jest szukany po nagłówku z tytułu w ELI i kończy się jak
+akt znaleziony po numerze (na numerze następnej pozycji, potem na nagłówku następnej pozycji wg `neighbors`). Bez
+nagłówka akt nie jest wycinany: dostaje cały tekst swoich stron PDF, także fragmenty sąsiednich aktów. Typ aktu
+w nagłówku jest rozpoznawany także ze znakami diakrytycznymi dodanymi przez OCR („KONWENCJĄ”, DU/1970/62). Z 52 aktów
+45 ma znów swój tekst. 7 nadal ma tylko kilka linii. W 6 z nich OCR ułożył łamy albo numer aktu w złej kolejności
+(nagłówki przed treścią): DU/1926/730, 1930/217, 1931/377, 1934/4, 1935/396, 1979/116. W DU/1954/9 OCR odczytał
+„§ 9.” aktu jako jego numer. Na 96 aktach z próbek
+1008–1010 zmieniają się 2: DU/1970/62 nie zaczyna się już od aktu 61, a DU/1949/476 od winiety i spisu treści numeru.
+Lata od 1990: bez zmian (300 z 300 losowych aktów-skanów 1990–2011 identycznych poza numerem wersji).
 
 **0.6.41** (2026-10-08). Skany Dziennika Ustaw 1918–1989: koniec aktu tam, gdzie zaczyna się nagłówek następnej
 pozycji wg jej tytułu w ELI, gdy OCR zgubił albo zniekształcił jej numer. Nowy argument `convert(neighbors=)`:
