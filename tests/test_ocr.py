@@ -351,6 +351,22 @@ class Scan(unittest.TestCase):
         lines = _ocr_lines(["126", ";", "i ROZPORZĄDZENIE RADY MINISTRÓW."], 1, 600, 840, 126, "scan", old=True)
         self.assertEqual([(l.act, l.text) for l in lines], [(126, "126"), (0, "ROZPORZĄDZENIE RADY MINISTRÓW.")])
 
+    def test_end_by_next_title(self):
+        from eli2md.pdf import _by_neighbors, _title_at
+        def L(t):
+            return _ocr_lines([t], 1, 600, 840, None, "scan", old=True)[0]
+        t428 = 'Rozporządzenie Rady Ministrów z dnia 19 marca 1928 r. o wydzieleniu z administracji państwowej przedsiębiorstwa'
+        body = [L("Rozporządzenie Rady Ministrów"), L("z dnia 19 marca 1928 r."), L("§ 1. Gminę wiejską Mokrany znosi się."),
+                L("Prezes Rady Ministrów: J. Piłsudski"), L("Rozporządzenie Rady Ministrów"),
+                L("z dnia 19 marca 1928 r. o wydzieleniu z administracji państwowej przedsiębiorstwa „Państwowa Wytwórnia”")]
+        self.assertTrue(_title_at(body, 4, t428))
+        self.assertFalse(_title_at(body, 0, t428))  # same type, issuer and date, other words after it
+        kept = _by_neighbors((body, [], 1, 1), 427, {428: t428})[0]
+        self.assertEqual([l.text for l in kept][-1], "Prezes Rady Ministrów: J. Piłsudski")
+        # an item of the issue's contents is no header (DU/1947/49)
+        toc = [L("DEKRET"), L("Poz.: 49 — z dnia 28 stycznia 1947 r. o utworzeniu etatów")]
+        self.assertFalse(_title_at(toc, 0, "Dekret z dnia 28 stycznia 1947 r. o utworzeniu etatów"))
+
     def test_annex_header(self):
         self.assertTrue(ANNEX_OCR.match("Załącznik do obwieszczenia Ministra z dnia 27 marca 1997 r. (poz. 224)"))
         self.assertTrue(ANNEX_OCR.match("ZAŁĄCZNIK Nr 2"))

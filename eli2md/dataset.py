@@ -94,20 +94,22 @@ def _out_of_memory(e: BaseException) -> bool:
     return False
 
 
-def _convert_one(job: tuple[str, str, str, bool, str | None]) -> dict:
+def _convert_one(job: tuple) -> dict:
     """Worker: convert one downloaded act. Returns the index row fields it determines.
     After a MemoryError the worker's heap stays near the address-space limit: its next acts failed as
     "PdfminerException" and one outside the try stopped the whole run (MP/2020/1070, 2026-09-30). So such a worker
     exits at its next act; the pool breaks and main() converts the acts not yet recorded in a fresh one. (Handing the
     acts back drained the queue into that worker; a pool per batch of acts waited for the slowest act of each batch.)"""
     global _POISONED
-    eli, pdf_path, out_path, with_json, ocr = job
+    eli, pdf_path, out_path, with_json, ocr, *more = job
+    neighbors = more[0] if more else None  # ELI titles of the positions near the act (see pdf.convert)
     if _POISONED:
         os._exit(3)  # the pool breaks (BrokenProcessPool) and main() goes on with a fresh one
     t0 = time.time()
     try:
         meta = json.loads((Path(pdf_path).parent / "meta.json").read_text())
-        doc = convert(pdf_path, ocr=ocr, position=meta.get("pos"), title=meta.get("title"), year=meta.get("year"))
+        doc = convert(pdf_path, ocr=ocr, position=meta.get("pos"), title=meta.get("title"), year=meta.get("year"),
+                      neighbors=neighbors)
         md = to_markdown(doc, meta)
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
         Path(out_path).write_text(md, encoding="utf-8")
@@ -160,8 +162,10 @@ def main(argv: list[str] | None = None) -> int:
     index = load_index(a.root)
 
     todo = []
+    titles: dict[int, dict[int, str]] = {}  # year -> {position: ELI title}, for convert(neighbors=)
     for year in a.years:
         items = json.loads(get(f"{API}/{a.publisher}/{year}"))["items"]
+        titles[year] = {i["pos"]: i.get("title", "") for i in items}
         for it in sorted(items, key=lambda i: i["pos"]):
             if not it.get("textPDF") or it.get("textHTML"):
                 continue
@@ -194,7 +198,8 @@ def main(argv: list[str] | None = None) -> int:
             continue
         sha = hashlib.sha256(pdf.read_bytes()).hexdigest()
         index[eli] = {**_base_row(it), "pdf_sha256": sha}
-        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos, a.publisher)), a.json, a.ocr))
+        near = {p: t for p, t in titles.get(year, {}).items() if pos - 3 <= p <= pos + 3 and p != pos}
+        jobs.append((eli, str(pdf), str(md_path(a.root, year, pos, a.publisher)), a.json, a.ocr, near))
 
     done = 0
 
