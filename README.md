@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.44, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.45, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -211,6 +211,20 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.45** (2026-10-08). Skany Dziennika Ustaw 1923–1989, kolejność łamów. Wiersz lewego i prawego łamu, który stoi
+tuż pod tytułem, był sklejany jako dalszy ciąg tytułu, gdy przerwa między nimi była mniejsza niż 0,6 szerokości rynny.
+Szerokość rynny brana była jako dolny kwartyl przerw w wierszach, a tabele i krótkie linie mocno ją zawyżają
+(DU/1965/60: 472 px przy rynnie ok. 60 px). Wtedy pierwszy wiersz tekstu pod tytułem szedł jako jedna linia przez stronę
+(„Podaje się … z art. 23 Brytyjskiemu dokument przystąpienia …”). W DU/1946/228 sklejony wiersz robił z następnego
+znowu „wiersz pod tytułem” i tak przez cztery wiersze. Teraz rynna to mniejsza z tamtej wartości i odstępu między
+marginesem prawego łamu a typowym końcem linii lewego. Na 96 + 32 + 52 oglądanych aktach zmienia się 5. DU/1965/60
+i 1946/228 nie mają już przeplecionych wierszy, w DU/1958/312 i 1977/100 słowa wracają na miejsce. Gorzej jest w
+Konstytucji PRL (DU/1952/232): jeden akapit na jednej z 30 stron. Tę stronę z jednym wąskim łamem program bierze za
+dwułamową, a wcześniej ratowało ją przypadkowe sklejanie wierszy. Nadal źle: w DU/1946/228 druga połowa tytułu trafia
+na początek prawego łamu, w DU/1976/247 pierwszy wiersz tekstu jest sklejony (nad nim akt 246 ma inną rynnę). Nie
+mierzone na nowej próbce. Lata od 1990: bez zmian (300 z 300 aktów-skanów 1990–2011 identycznych poza numerem
+wersji).
 
 **0.6.44** (2026-10-08). Skany Dziennika Ustaw 1918–1989: poprawka regresji z 0.6.42. Gdy OCR zniekształcił i numer,
 i nagłówek aktu („175 RAEPORZĄDZENIE …”, DU/1955/175), akt był brany od nagłówka następnej pozycji. Ma ona tego samego

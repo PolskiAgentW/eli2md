@@ -451,6 +451,24 @@ class Scan(unittest.TestCase):
         self.assertEqual(out, [f"lewy{k} tekst" for k in range(8)]
                          + [f"prawy{k} tekst" if k != 5 else "—w” prawy5 tekst" for k in range(8)])
 
+    def test_join_rows_gutter_hint(self):
+        # the lower quartile of the gaps in rows is far too wide when the right column holds a table or short lines
+        # (DU/1965/60 p. 1: 472 px for a gutter of 52-63 px): the first row of text under a title, 60 px apart, was
+        # joined as the title's end; with the gutter as _column_order sees it, it stays two lines
+        def ws(top, text, left, right):
+            t = text.split()
+            w = (right - left) // len(t)
+            return [(top, top + 30, x, 95.0, left + k * w, left + (k + 1) * w - 10, None) for k, x in enumerate(t)]
+        items = [(100, 0, ws(100, "dnia 5 lipca 1930 r.", 700, 1600))]
+        items += [(160, 1, ws(160, "Podaje się niniejszym do wiadomości, że", 250, 1400)),
+                  (160, 2, ws(160, "Brytyjskiemu dokument przystąpienia do", 1460, 2400))]
+        for k in range(8):  # rows of a table in the right column, far from the left column's short lines
+            items += [(220 + 50 * k, 1, ws(220 + 50 * k, f"wiersz{k}", 250, 700)), (220 + 50 * k, 2, ws(220 + 50 * k, f"1{k}.00", 2200, 2400))]
+        joined = [it for it in ocr._join_rows(list(items)) if it[1] == 0 and it[0] == 100 or it[0] == 160]
+        self.assertEqual(len(joined), 2)  # the title and one row: the row went with the title
+        kept = [it for it in ocr._join_rows(list(items), 63) if it[0] in (100, 160)]
+        self.assertEqual(sorted(it[1] for it in kept), [0, 1, 2])
+
     def test_quoted_annex_on_scan(self):
         # DU/2000/1315: Art. 2 gives the new annexes of the amended act; "Załącznik nr 3" is not this act's annex
         blocks = [Block("scan", "Art. 1. W ustawie …", 1), Block("scan", "Art. 2. W ustawie … załączniki otrzymują brzmienie:", 1),

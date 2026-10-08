@@ -422,7 +422,7 @@ def _column_order(lines: dict, width: int, height: int = 0, year: int | None = N
             if part:
                 items.append((min(w[0] for w in part), side, part))
     if old:  # (< 1990)
-        items = _join_rows(items)
+        items = _join_rows(items, margin_r - statistics.median(e for e in ends if e <= g))
     # a page of one column (Dz.U. 1918-1921) read with wide gaps between justified words: many lines go over the page,
     # and tesseract splits others into blocks at such gaps; its lines go then row by row (DU/1919/242 p. 1: the right
     # halves of lines 3-4 came after the paragraph). Pages of 1918-1921: 8-35 lines over the page against 11-31 parts
@@ -445,13 +445,19 @@ def _column_order(lines: dict, width: int, height: int = 0, year: int | None = N
     return {(k, 0, 0): [w[6] for w in ws] for k, (_, _, ws) in enumerate(out)}
 
 
-def _join_rows(items: list) -> list:
+def _join_rows(items: list, gutter_hint: float | None = None) -> list:
     """A line over the page that tesseract split at a wide gap between two words, joined back: the end of a centred
     title went after the left column under it ("w sprawie … zwierząt" + "przeciw wściekliźnie.", DU/1961/309 p. 1;
     "… dla funkcjonariuszów" + "i trybu postępowania" + "przed tymi sądami.", DU/1961/134 p. 1). A line of the left
     column and one of the right column in one row stand the gutter apart; pieces of one line split near the gutter
-    stand closer (26-32 px against 56-60 px of the gutter at 300 dpi), and a piece of a line over the page stands next
-    to it. items: (top, side, words) of _column_order; side 0 = over the page, 1 = left column, 2 = right column."""
+    stand closer (26-32 px against 52-63 px of the gutter at 300 dpi; joined below 0.6 of it), and a piece of a line
+    over the page stands next to it. items: (top, side, words) of _column_order; side 0 = over the page, 1 = left
+    column, 2 = right column. gutter_hint: the gutter as _column_order sees it (the right column's margin less the
+    usual end of the left column's lines); the gutter taken is the smaller of it and the lower quartile of the gaps in
+    rows, which
+    tables and short lines make far too wide (DU/1965/60 p. 1: 472 px for a gutter of 52 px; the first row of text
+    under a title was joined, "Podaje się … z art. 23" with "Brytyjskiemu dokument przystąpienia"; DU/1946/228 p. 1:
+    129 px for 55 px, and the joined row made the next one "under a title" too, four rows down)."""
     def mid(ws):
         return sum(w[0] + w[1] for w in ws) / (2 * len(ws))
 
@@ -468,6 +474,8 @@ def _join_rows(items: list) -> list:
         return out
     # the gutter: the lower quartile, as a short last line of a paragraph or an indented first one stand farther
     gutter = sorted(gaps)[len(gaps) // 4]
+    if gutter_hint:
+        gutter = min(gutter, gutter_hint)
     gone: set[int] = set()
 
     def join(i, j):
