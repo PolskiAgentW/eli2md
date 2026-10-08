@@ -182,7 +182,7 @@ def ocr_image(img, lang: str = BASE_LANG) -> str:
 
 
 def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float = HEADER_BAND,
-              columns: bool = False) -> OcrPage:
+              columns: bool = False, year: int | None = None) -> OcrPage:
     """Tesseract TSV -> paragraphs. Lines are joined (hyphenated words glued back), the gazette
     header at the top of the page is dropped (also when read in another script: a short line in the
     header band with the page number). band: share of the image height searched for the header
@@ -199,7 +199,7 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
         lines.setdefault(key, []).append((int(f[7]), int(f[7]) + int(f[9]), f[11].strip(), float(f[10]),
                                           int(f[6]), int(f[6]) + int(f[8])))
     if columns:
-        lines = _column_order(lines, page.width, height)
+        lines = _column_order(lines, page.width, height, year)
     confs: list[float] = []
     kept = []  # (block, top, bottom, text) without the header
     for (blk, _, _), words in lines.items():
@@ -326,7 +326,7 @@ def fix_words(text: str) -> str:
     return SPELL_WORD.sub(fix, text)
 
 
-def _column_order(lines: dict, width: int, height: int = 0) -> dict:
+def _column_order(lines: dict, width: int, height: int = 0, year: int | None = None) -> dict:
     """Tesseract's lines of a two-column page in reading order. Near the middle of the text the lines of the left
     column end and those of the right column start; the gutter is the x that best keeps the ends left of it and the
     starts right of it (the middle of the best stretch: a right column with a hanging indent starts its items left of
@@ -370,7 +370,8 @@ def _column_order(lines: dict, width: int, height: int = 0) -> dict:
     if sum(e <= g for e in ends) < 5 or sum(t >= g for t in starts) < 5:
         return original
     items = []  # (top, side, words); side 0 = spans, 1 = left, 2 = right
-    tol = gap // 2  # the gutter is found to a few px: a column's edge may stand just past it (the right column at
+    old = year is not None and year < 1990  # the rules below marked "(< 1990)" only for issues of 1918-1989
+    tol = gap // 2 if old else 0  # (< 1990) the gutter is found to a few px: a column's edge may stand just past it (the right column at
     # 1322 for g 1324, DU/1974/239 p. 1: each of its lines went as one over the page, between the left column's lines)
     for ws in lines.values():
         if min(w[4] for w in ws) >= g - tol:
@@ -399,14 +400,15 @@ def _column_order(lines: dict, width: int, height: int = 0) -> dict:
         for side, part in ((1, left), (2, right)):
             if part:
                 items.append((min(w[0] for w in part), side, part))
-    items = _join_rows(items)
+    if old:  # (< 1990)
+        items = _join_rows(items)
     # a page of one column (Dz.U. 1918-1921) read with wide gaps between justified words: many lines go over the page,
     # and tesseract splits others into blocks at such gaps; its lines go then row by row (DU/1919/242 p. 1: the right
     # halves of lines 3-4 came after the paragraph). Pages of 1918-1921: 8-35 lines over the page against 11-31 parts
     # of lines; of two columns: 0-18 against 50-132 (18 against 76: the contents on an issue's first page, DU/1986/185)
     wide = sum(1 for _, side, ws in items if side == 0 and max(w[5] for w in ws) - min(w[4] for w in ws) > 0.6 * (x1 - x0))
     parts = sum(1 for _, side, _ in items if side)
-    if wide >= ONE_COLUMN_WIDE * parts and parts < ONE_COLUMN_PARTS:
+    if year is not None and year <= ONE_COLUMN_LAST and wide >= ONE_COLUMN_WIDE * parts and parts < ONE_COLUMN_PARTS:
         return _rows(lines)
     items.sort(key=lambda i: i[0])
     out: list = []
@@ -457,13 +459,15 @@ def _join_rows(items: list) -> list:
         if side == 0 or j in gone:
             continue
         for i, span in enumerate(out):
-            if span[1] == 0 and i not in gone and row(ws, span[2]) and 0 <= apart(ws, span[2]) <= gutter:
+            # (not an act's number centred over the columns: it starts a band, DU/1993/20)
+            if span[1] == 0 and i not in gone and any(re.search(r"[^\W\d_]", w[2]) for w in span[2]) \
+                    and row(ws, span[2]) and 0 <= apart(ws, span[2]) <= gutter:
                 join(i, j)
                 break
     return [it for i, it in enumerate(out) if i not in gone]
 
 
-ONE_COLUMN_WIDE, ONE_COLUMN_PARTS = 0.35, 45  # see _column_order
+ONE_COLUMN_WIDE, ONE_COLUMN_PARTS, ONE_COLUMN_LAST = 0.35, 45, 1922  # see _column_order
 
 
 def _rows(lines: dict) -> dict:
@@ -539,7 +543,8 @@ def _read(img, lang: str, pno: int | None, rotated: int = 0, band: float = HEADE
     return page
 
 
-def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None, columns: bool = False) -> OcrPage:
+def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None, columns: bool = False,
+             year: int | None = None) -> OcrPage:
     """OCR of a pdfplumber page: paragraphs, word count, median word confidence, language used.
 
     lang: tesseract language(s), or "auto" (see the module docstring). A page whose text is unusable
@@ -547,7 +552,8 @@ def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None, 
     confidence 47 -> 96) and, with "auto", in the detected script's language (Greek).
     bbox: (x0, top, x1, bottom) in points: read only this part of the page (an image), without
     looking for the gazette header in it.
-    columns: put the lines in the order of the page's two columns (_column_order), for scans of gazette pages."""
+    columns: put the lines in the order of the page's two columns (_column_order), for scans of gazette pages.
+    year: the act's year; issues of 1918-1989 get rules of their own in _column_order."""
     have = tesseract()[2]
     img = render(page.crop(bbox) if bbox else page, dpi)
     info = getattr(img, "info", {})
@@ -564,7 +570,7 @@ def ocr_page(page, lang: str = LANG, dpi: int = DPI, bbox: tuple | None = None, 
         again = _ocr(img, lang, pno, band, have)
         if again is not None and usable(again):
             read = again
-    return in_columns(read, pno, band) if columns else read
+    return in_columns(read, pno, band, year) if columns else read
 
 
 # the header of a gazette issue of 2011 or earlier, as OCR reads it (from 2012 there are no numbered issues)
@@ -579,11 +585,11 @@ def old_gazette(read: OcrPage) -> bool:
     return bool(OLD_GAZETTE.search(" ".join(words[:80])))
 
 
-def in_columns(read: OcrPage, pno: int | None = None, band: float = HEADER_BAND) -> OcrPage:
+def in_columns(read: OcrPage, pno: int | None = None, band: float = HEADER_BAND, year: int | None = None) -> OcrPage:
     """The reading again, its lines in the order of the page's two columns (parse_tsv columns=True)."""
     if not read.tsv:
         return read
-    again = parse_tsv(read.tsv, read.height, pno, band, columns=True)
+    again = parse_tsv(read.tsv, read.height, pno, band, columns=True, year=year)
     again.lang, again.rotated, again.tsv, again.height = read.lang, read.rotated, read.tsv, read.height
     return again
 

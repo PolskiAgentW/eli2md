@@ -32,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         meta, pdf = fetch(a.act)
     md = to_markdown(convert(str(pdf), ocr=a.ocr, position=meta.get("pos") if meta else None,
-                             title=meta.get("title") if meta else None), meta)
+                             title=meta.get("title") if meta else None, year=meta.get("year") if meta else None), meta)
     if a.format == "json":
         md = json.dumps(md_to_tree(md), ensure_ascii=False, indent=1) + "\n"
     if a.output:

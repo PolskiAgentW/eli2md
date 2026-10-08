@@ -117,6 +117,8 @@ PREWAR_HEADER_OCR = re.compile(r"^(?:N[rReo]\.?\s*\d{1,3}[.,]?\s*)?(?:D\w{5,9}\s
 # DU/1923/151; "506 Dziennik Praw. Poz. 304i 305. Ne 42.", DU/1919/305: "Dziennik Praw" up to 1919), the name read
 # wrong ("Ne 41. Dziennik Wstaw. Poz. 258 i 259.", DU/1921/259), "|" for "i" ("Poz. 474 | 475,", DU/1922/475), and of
 # the 1950s-1980s with the page number between ("Dziennik Ustaw Nr 25 | ps — 314 = Poz. 125 i 126", DU/1984/126)
+# and the page number with the positions only, the rest of the header read apart ("= 452° == Poz. 123 i", DU/1947/123)
+PAGE_POS_HEADER_OCR = re.compile(r"^[\W\d°]{0,15}P[oó0]z[.,]?\s*(\d{1,4}(?:\s*(?:i|,|\.|1|\|)?\s*\d{1,4})*)(?:\s*[i,.])?\W*$")
 PREWAR_HEADER_LOOSE_OCR = re.compile(r"^.{0,25}?D[\wć]{5,9}[.,]?\s*\W?\w{3,5}[.,]?.{0,24}?P[oó0]z[.,]?\s*"
                                      r"(\d{1,4}(?:\s*(?:i|,|\.|1|\|)?\s*\d{1,4})*)[.,]?")
 PREWAR_HEADER_BIT = re.compile(r"N[rReo°]\.?\s*\d{1,3}[.,]?|\d{1,4}|Str\.?\s*\d{1,4}|D\w{5,9}\s*U\w{3,4}[.,]?\s*N[rReo]\.?\s*\d{1,3}[.,]?")
@@ -1130,7 +1132,7 @@ def _plain(s: str) -> str:
 ELI_TITLE = re.compile(r"(?P<head>.+?)\s+z\s+dnia\s+(?P<date>\d{1,2}\s+\w+\s+\d{4})\s*r\.?\s*(?P<rest>.*)", re.S)
 
 
-def _own_act_by_title(body: list[Line], notes: list[Line], position: int, title: str
+def _own_act_by_title(body: list[Line], notes: list[Line], position: int, title: str, old: bool = False
                       ) -> tuple[list[Line], list[Line], int, int] | None:
     """The act out of pages of a scanned issue when OCR lost its number (no line with act=position), found by its
     title in ELI: its type and issuer in capitals and the date under them ("ROZPORZĄDZENIE MINISTRA FINANSÓW",
@@ -1154,7 +1156,7 @@ def _own_act_by_title(body: list[Line], notes: list[Line], position: int, title:
     for i, l in enumerate(body[:stop]):
         if l.mark != "scan" or not OCR_NEW_ACT_TITLE.match(l.text) or not _plain(l.text).startswith(kind[:5]):
             continue
-        if any(re.match(r"\d{1,4}\s*[—–-]\s", x.text) for x in body[i + 1: i + 3]):
+        if old and any(re.match(r"\d{1,4}\s*[—–-]\s", x.text) for x in body[i + 1: i + 3]):  # (< 1990)
             continue  # an item of the issue's contents ("ROZPORZĄDZENIE RADY MINISTRÓW", "10 — z dnia …", DU/1975/10)
         window = _plain(" ".join([l.text] + [x.text for x in body[i + 1: i + 5] if x.mark == "scan"]))
         d = re.search(r" Z DNIA (\d{1,2}) (\w+) (\d{4})\b", window)
@@ -1257,13 +1259,14 @@ def _act_type_next(p: str) -> bool:
 
 
 def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: int | None,
-               mark: str = "ocr") -> list[Line]:
+               mark: str = "ocr", old: bool = False) -> list[Line]:
     """Lines of a page read by OCR. On a page of an old issue the running header ("Dziennik Ustaw Nr 5 Poz. 55 i 56")
     is dropped, and the number of this act or of one after it becomes a line of its own (act=N), so that _own_act
     cuts the act out as on pages with a text layer (DU/2000/56: the page held all of act 55 before it).
     Only the header goes: tesseract may join it with the text under it into one paragraph (MP/2008/470: the whole
     act; DU/2000/393 p. 126: "Objaśnienia do wzoru nr 3 …"), which went with it up to 0.6.22. A rest without
-    letters ("Poz. 392 1") goes too, unless it is the act's number."""
+    letters ("Poz. 392 1") goes too, unless it is the act's number. old: a page of an issue of 1918-1989, with rules
+    of its own (marked "(< 1990)")."""
     if paragraphs and (h := OLD_HEADER_OCR.match(paragraphs[0])):
         rest = paragraphs[0][h.end():].strip()
         number = rest.isdigit() and position is not None and position <= int(rest) <= position + ACT_NUMBER_NEXT
@@ -1272,7 +1275,8 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
     from_header = False
     if mark == "scan":
         for k in range(min(4, len(paragraphs))):
-            if h := PREWAR_HEADER_LOOSE_OCR.match(paragraphs[k].strip()) or PREWAR_HEADER_OCR.match(paragraphs[k].strip()):
+            if h := old and (PREWAR_HEADER_LOOSE_OCR.match(paragraphs[k].strip())
+                             or PAGE_POS_HEADER_OCR.match(paragraphs[k].strip())) or PREWAR_HEADER_OCR.match(paragraphs[k].strip()):
                 on_page, from_header = {int(x) for x in re.findall(r"\d+", h.group(1))}, True
                 rest = paragraphs[k][h.end():].strip()
                 near = [p for p in paragraphs[:k] + paragraphs[k + 1: k + 3]
@@ -1297,7 +1301,7 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
         for k in range(len(paragraphs) - 1):
             if OCR_ACT_START.fullmatch(paragraphs[k].strip()) and SIGNATURE_OCR.match(paragraphs[k + 1]):
                 paragraphs[k], paragraphs[k + 1] = paragraphs[k + 1], paragraphs[k]
-        for k in range(len(paragraphs) - 2):
+        for k in range(len(paragraphs) - 2 if old else 0):  # (< 1990)
             if PREWAR_ACT_NUMBER.fullmatch(paragraphs[k].strip()) and SIGNATURE_TAIL_OCR.match(paragraphs[k + 1]) \
                     and _act_type_next(paragraphs[k + 2]):
                 paragraphs[k], paragraphs[k + 1] = paragraphs[k + 1], paragraphs[k]
@@ -1307,25 +1311,25 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
             t = t.rstrip(" |.,;:'’\"!_~-")  # a number with a speck of the scan after it ("151 |", DU/1990/150)
         # a number of the header's list starting a paragraph ("218. | „+, 4Na mocy art. 44 …", DU/1934/218); with the
         # list taken from the contents only a bare number (the contents' own lines start with the numbers too)
-        if mark == "scan" and out and out[-1].act and not re.search(r"[^\W_]", t):
+        if old and mark == "scan" and out and out[-1].act and not re.search(r"[^\W_]", t):  # (< 1990)
             continue  # a speck of the scan under the act's number (";", DU/1984/126)
-        if mark == "scan" and out and out[-1].act and (sp := SPECK_BEFORE_CAPS.match(t)) \
+        if old and mark == "scan" and out and out[-1].act and (sp := SPECK_BEFORE_CAPS.match(t)) \
                 and _act_type_next(t[sp.end():]):
             t = t[sp.end():]  # "i ROZPORZĄDZENIE RADY MINISTRÓW." under the number 126 (DU/1984/126)
-        if mark == "scan" and position is not None and (sp := SPECK_BEFORE_CAPS.match(t)) and sp.end() \
+        if old and mark == "scan" and position is not None and (sp := SPECK_BEFORE_CAPS.match(t)) and sp.end() \
                 and (m0 := OCR_ACT_START.match(t[sp.end():])) and position <= int(m0.group(1)) <= position + ACT_NUMBER_NEXT \
                 and OCR_TYPE_NEXT.match(t[sp.end() + m0.end():]):
             t = t[sp.end():]  # "ZM 248 OŚWIADCZENIE RZĄDOWE" (DU/1984/248)
         pm = PREWAR_ACT_NUMBER.fullmatch(t) or (PREWAR_HEAD_NUMBER.match(t) if from_header else None)
         if position is not None and pm and position <= int(pm.group(1)) <= position + ACT_NUMBER_NEXT \
                 and (int(pm.group(1)) in on_page or mark == "scan" and k + 1 < len(paragraphs)
-                     and (PREWAR_START_NEXT.match(paragraphs[k + 1]) or _act_type_next(paragraphs[k + 1])
-                          or PREWAR_TYPE_ANY.match(paragraphs[k + 1]))):
+                     and (PREWAR_START_NEXT.match(paragraphs[k + 1]) or old and (_act_type_next(paragraphs[k + 1])
+                                                                                 or PREWAR_TYPE_ANY.match(paragraphs[k + 1])))):
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, pm.group(1), pw, ph, mark=mark, act=int(pm.group(1))))
             t = t[pm.end():].strip()
             if not t:
                 continue
-        if mark == "scan" and position is not None and (tm := PREWAR_TYPED_START.match(t)) \
+        if old and mark == "scan" and position is not None and (tm := PREWAR_TYPED_START.match(t)) \
                 and position <= int(tm.group(1)) <= position + ACT_NUMBER_NEXT \
                 and (from_header and int(tm.group(1)) in on_page or PREWAR_TYPE_CAPS.match(t[tm.end():])):
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, tm.group(1), pw, ph, mark=mark, act=int(tm.group(1))))
@@ -1341,7 +1345,8 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
         after = [p for p in paragraphs[k + 1: k + 3]
                  if not (mark == "scan" and (SIGNATURE_OCR.match(p) or not re.search(r"[^\W\d_]{3}", p)))][:1]
         if m and not OCR_TYPE_NEXT.match(t[m.end():]) and not (after and OCR_TYPE_NEXT.match(
-                SPECK_BEFORE_CAPS.sub("", after[0]) if not t[m.end():] else f"{t[m.end():]} {after[0]}")):
+                SPECK_BEFORE_CAPS.sub("", after[0]) if old and not t[m.end():] else after[0] if not t[m.end():]
+                else f"{t[m.end():]} {after[0]}")):
             m = None  # a bare number (or one with a register number) not followed by an act type
         if m and position <= int(m.group(1)) <= position + ACT_NUMBER_NEXT:
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, m.group(1), pw, ph, mark=mark, act=int(m.group(1))))
@@ -1359,12 +1364,14 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
 
 
 def convert(path: str, ocr: str | None = None, position: int | None = None, title: str | None = None,
-            _doc_gutter: tuple[float, float] | None = None) -> Document:
+            _doc_gutter: tuple[float, float] | None = None, year: int | None = None) -> Document:
     """ocr: "auto" or tesseract language(s), e.g. "pol+eng", to read pages without a text layer
     (see ocr.py); None (default) = no OCR, such pages only get a note.
     position: the act's position in the gazette (ELI "DU/2005/1255" -> 1255). On pages of issues of 2011 and
     earlier it cuts the act out of the pages it shares with other acts (see _own_act); None = no cut.
     title: the act's title in ELI; on a scan whose OCR lost the act's number the act is found by it (_own_act_by_title).
+    year: the act's year (ELI "DU/1921/259" -> 1921); scans of issues of 1918-1989 get rules of their own in cutting
+    the act out and in the order of columns (_ocr_lines, ocr._column_order). None = as for later issues.
     Two-column pages of those issues: a page with too few full lines to find its gutter (the first page of an act
     over a page of footnotes) takes the gutter of the act's other pages; as it may come first, the PDF is then read
     again (_doc_gutter)."""
@@ -1400,14 +1407,15 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
             elif b and (RUNNING_HEADER.match(b[0].text) or OLD_HEADER.match(b[0].text)):
                 b = b[1:]
             if not b and not n:
-                read = ocr_mod.ocr_page(page, ocr, columns=scan) if ocr else None
+                read = ocr_mod.ocr_page(page, ocr, columns=scan, year=year) if ocr else None
                 if read and not scan and ocr_mod.old_gazette(read):  # a scan of a gazette page without any text layer
-                    scan, read = True, ocr_mod.in_columns(read, pno)  # (DU/1993/181, DU 2000)
+                    scan, read = True, ocr_mod.in_columns(read, pno, year=year)  # (DU/1993/181, DU 2000)
                 if read and ocr_mod.usable(read):
                     doc.no_text_pages.append(pno)
                     doc.ocr_pages.append(pno)
                     doc.ocr_langs[pno] = read.lang
-                    b = _ocr_lines(read.paragraphs, pno, page.width, page.height, position, "scan" if scan else "ocr")
+                    b = _ocr_lines(read.paragraphs, pno, page.width, page.height, position, "scan" if scan else "ocr",
+                                   old=year is not None and year < 1990)
                 elif layer and (layer[0] or layer[1]):
                     # no OCR or an unreadable one: the text layer without the unmapped glyphs beats a bare note
                     doc.unmapped_pages.append(pno)
@@ -1436,11 +1444,11 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
         common = Counter((round(a), round(b)) for a, b in gut["found"]).most_common(1)[0][0]
         g = next(g for g in gut["found"] if (round(g[0]), round(g[1])) == common)
         if any(abs(a - g[0]) <= 1 and abs(b - g[1]) <= 1 for a, b in gut["cands"]):
-            return convert(path, ocr, position, title, _doc_gutter=g)
+            return convert(path, ocr, position, title, _doc_gutter=g, year=year)
     body, notes = _drop_colophon(body, notes)
     own = None
     if position is not None and title and not any(l.act == int(position) for l in body):
-        own = _own_act_by_title(body, notes, int(position), title)
+        own = _own_act_by_title(body, notes, int(position), title, old=year is not None and year < 1990)
     if position is not None and (own := own or _own_act(body, notes, int(position), title)):
         body, notes, lo, hi = own
         for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
