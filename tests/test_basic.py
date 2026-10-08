@@ -987,6 +987,24 @@ class Basic(unittest.TestCase):
         own, *_ = _own_act(text + [num(176)] + head176, [], 175, t175, old=True)
         self.assertEqual(own, text)
         self.assertIsNone(_own_act(text[:1] + [num(176)] + head176, [], 175, t175, old=True))  # too few words
+        # the act's number read twice, once for the act before it (DU/1988/228: "228" over act 227): the one followed
+        # by the act's header
+        t228 = "Rozporządzenie Rady Ministrów z dnia 8 sierpnia 1988 r. zmieniające rozporządzenie w sprawie wynagradzania."
+        page = [num(228), sc("UCHWAŁA RADY PAŃSTWA"), sc("z dnia 25 sierpnia 1988 r. w sprawie zarządzenia wyborów ponownych."),
+                sc("§ 1. Tekst aktu 227."), num(228), sc("ROZPORZĄDZENIE RADY MINISTRÓW"), sc("z dnia 8 sierpnia 1988 r."),
+                sc("zmieniające rozporządzenie w sprawie wynagradzania."), sc("§ 1. Tekst aktu 228.")]
+        own, *_ = _own_act(page, [], 228, t228, old=True)
+        self.assertEqual(own[0].text, "ROZPORZĄDZENIE RADY MINISTRÓW")
+        own, *_ = _own_act(page, [], 228, t228)  # later issues as before
+        self.assertEqual(own[0].text, "UCHWAŁA RADY PAŃSTWA")
+        # the next position's number with a dot before its title, after "Przekład", right after the act's one
+        # paragraph (DU/1926/734 and 735)
+        from eli2md.pdf import _by_neighbors
+        body = [sc("Oświadczenie rządowe z dnia 30 listopada 1926 roku w sprawie przystąpienia do Konwencji."),
+                sc("735. Przekład Konwencja, dotycząca Procedury Cywilnej, podpisana w Hadze dn. 17 lipca 1905 r. Jego Cesarska Mość"),
+                sc("Convention relative à la procédure civile")]
+        cut, *_ = _by_neighbors((body, [], 1, 1), 734, {735: "Konwencja, dotycząca Procedury Cywilnej, podpisana w Hadze dnia 17 lipca 1905 r."})
+        self.assertEqual(cut, body[:1])
 
     def test_act_numbers_cut(self):
         body, notes = _frame_lines(self._shared_page("Dziennik Ustaw Nr 165 — 10063 — Poz. 1369 i 1370"),

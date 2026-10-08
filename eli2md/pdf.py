@@ -1063,6 +1063,14 @@ def _own_act(body: list[Line], notes: list[Line], position: int, title: str | No
     page with an image (DU/2003/2317 p. 10).
     old: a scan of an issue of 1918-1989 (see convert)."""
     start = next((i for i, l in enumerate(body) if l.act == position), None)
+    if old and title and start is not None:
+        # (< 1990) the act's number read twice, once for the number of the act before it ("228" for 227 over "UCHWAŁA
+        # RADY PAŃSTWA", then "228" over "ROZPORZĄDZENIE RADY MINISTRÓW", DU/1988/228: the text was act 227's): the one
+        # followed by the act's header
+        cands = [i for i, l in enumerate(body) if l.act == position]
+        good = [i for i in cands if any(_title_at(body, k, title) for k in range(i + 1, min(i + 3, len(body))))]
+        if len(cands) > 1 and good:
+            start = good[0]
     if start is None:
         # the act's number is lost, but the next act's is there and no earlier one: the act starts the pages and ends
         # at the next number (a scan where the act opens the page, its number read in the header band and dropped
@@ -1264,10 +1272,23 @@ def _neighbor_header(lines: list[Line], k: int, title: str, neighbors: dict[int,
 def _by_neighbors(own: tuple, position: int, neighbors: dict[int, str]) -> tuple:
     """The act cut out by _own_act ends at the header of the next position (or one of the next ones) when OCR lost
     that position's number: the whole next act was in the text (DU/1928/427 + 428, DU/1946/32 + 33 whose numbers OCR
-    read as "88" and not at all). Searched from the act's third line, so its own header is not taken."""
+    read as "88" and not at all). Searched from the act's third line, so its own header is not taken; a header
+    under the next position's number ("735. Przekład Konwencja …") from the second."""
     body, notes, lo, hi = own
-    nxt = [neighbors[p] for p in range(position + 1, position + 4) if p in neighbors]
-    end = next((k for k in range(2, len(body)) if any(_title_at(body, k, t) for t in nxt)), None)
+    nxt = {p: neighbors[p] for p in range(position + 1, position + 4) if p in neighbors}
+
+    def starts(k: int) -> bool:
+        if k >= 2 and any(_title_at(body, k, t) for t in nxt.values()):
+            return True
+        # or its number with a dot before its title, maybe with "Przekład" (a translation) between them, from the act's
+        # second line ("735. Przekład Konwencja, dotycząca Procedury Cywilnej …" right after the one paragraph of 734,
+        # DU/1926/734: the start of 735 was in the text)
+        for p, t in nxt.items():
+            m = re.match(rf"\W{{0,3}}{p}\s?[.,]\s*(?:Przek[łl]ad\s+)?", body[k].text)
+            if m and _title_at([replace(body[k], text=body[k].text[m.end():])] + body[k + 1: k + 5], 0, t):
+                return True
+        return False
+    end = next((k for k in range(1, len(body)) if starts(k)), None)
     if end is None:
         return own
     last = body[end]

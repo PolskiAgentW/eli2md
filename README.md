@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.45, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.46, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -211,6 +211,16 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.46** (2026-10-08). Skany Dziennika Ustaw 1918–1989, granice aktu, dwie usterki z pomiaru 4 (próbka 1012).
+(1) Numer aktu odczytany dwa razy, raz w miejscu numeru poprzedniej pozycji („228” nad uchwałą 227, potem „228” nad
+rozporządzeniem 228, DU/1988/228). Plik zawierał akt 227. Teraz akt zaczyna się od tego wystąpienia numeru, po którym
+stoi nagłówek zgodny z jego tytułem. (2) Następna pozycja z numerem i kropką przed tytułem, ze słowem „Przekład”
+pomiędzy („735. Przekład Konwencja, dotycząca Procedury Cywilnej …”, DU/1926/734), nie kończyła aktu, więc w pliku był
+początek konwencji 735. Teraz kończy, także gdy stoi tuż po jedynym akapicie aktu. Na 96 + 32 + 52 oglądanych aktach
+zmieniają się tylko te dwa. Sam DU/1926/735 nadal zaczyna się od winiety numeru, bo „735. Przekład” nie jest
+rozpoznawany jako początek aktu. Nie mierzone na nowej próbce. Lata od 1990: bez zmian (300 z 300 aktów-skanów
+1990–2011 identycznych poza numerem wersji).
 
 **0.6.45** (2026-10-08). Skany Dziennika Ustaw 1923–1989, kolejność łamów. Wiersz lewego i prawego łamu, który stoi
 tuż pod tytułem, był sklejany jako dalszy ciąg tytułu, gdy przerwa między nimi była mniejsza niż 0,6 szerokości rynny.
