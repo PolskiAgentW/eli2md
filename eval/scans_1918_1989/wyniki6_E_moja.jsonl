@@ -1,0 +1,8 @@
+{"eli": "DU/1918/65", "tokens": 100, "errors": 4, "accuracy": 0.96, "this_act": true, "other_act_text": false, "columns_ok": true, "note": "\"=\", \"_\" (symbol tokens, garbage), waruńków (speck), 2° (speck)"}
+{"eli": "DU/1919/173", "tokens": 100, "errors": 1, "accuracy": 0.99, "this_act": true, "other_act_text": false, "columns_ok": true, "note": "c for d)"}
+{"eli": "DU/1919/309", "tokens": 100, "errors": 5, "accuracy": 0.95, "this_act": true, "other_act_text": false, "columns_ok": true, "note": "przadmiocie, Ne (Na), missing \"i\" before aresztami, obrebie, znajdu jącemi (split)"}
+{"eli": "DU/1919/346", "tokens": 100, "errors": 3, "accuracy": 0.97, "this_act": true, "other_act_text": false, "columns_ok": true, "note": "io (glued), Frt., (rząd; \"No\" for № not counted"}
+{"eli": "DU/1927/922", "tokens": 100, "errors": 2, "accuracy": 0.98, "this_act": true, "other_act_text": false, "columns_ok": true, "note": "O. (U.), Ne (№); tokens 96-100 on page 2 not checked by me"}
+{"eli": "DU/1925/485", "tokens": 100, "errors": 8, "accuracy": 0.92, "this_act": true, "other_act_text": false, "columns_ok": true, "note": "see kontrola6_moja.jsonl"}
+{"eli": "DU/1928/479", "tokens": 100, "errors": 6, "accuracy": 0.94, "this_act": true, "other_act_text": false, "columns_ok": true, "note": "— (garbage), rozciąśnięcia, Sekretariatu (Sekretarjatu), do.Archipelagu, m (r.), 1927 skipped"}
+{"eli": "DU/1926/60", "tokens": 100, "errors": 7, "accuracy": 0.93, "this_act": true, "other_act_text": false, "columns_ok": true, "note": "pękoju, Ne x3, 8 (§), <Chełmnie, Urzed."}

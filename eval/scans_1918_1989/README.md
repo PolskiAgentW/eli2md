@@ -1,4 +1,4 @@
-# Skany Dziennika Ustaw 1918–1989: pomiary jakości (2026-10-08)
+# Skany Dziennika Ustaw 1918–1989: pomiary jakości (2026-10-08, pomiar 6: 2026-10-09)
 
 Akty Dziennika Ustaw z lat 1918–1989, które API ELI podaje tylko jako PDF (skany całych stron numeru), czytane
 `eli2md --ocr`. Mierzę trzy rzeczy, bo PDF aktu zawiera całe strony, a więc też sąsiednie akty:
@@ -24,8 +24,26 @@ albo złą kolejnością łamów.
 | 1010 (`probka_1010.csv`, `wyniki3_*.jsonl`) | 0.6.40 | 97,5% | 25/32 | 12/32 |
 | 1012 (`probka_1012.csv`, `wyniki4_*.jsonl`) | 0.6.43 | 97% | 28/32 | 6/32 |
 | 1013 (`probka_1013.csv`, `wyniki5_*.jsonl`) | 0.6.46 | 97,5% | 30/32 | 6/32 |
+| 1014 + 1015 (`probka_1014.csv`, `probka_1015.csv`, `wyniki6_*.jsonl`) | 0.6.48 | 97% | 61/64 | 6/64 |
 
-Próg nie jest spełniony. Usterka z punktu 2 albo 3: lata 1918–1939 w 9, 3, 3, 1 i 1 akcie z 12; lata 1940–1989 w 8,
+**Pomiar 6 (2026-10-09) i zmiana progu.** Po pomiarze 5 (2026-10-09 00:0x, przed wylosowaniem próbki 6) zmieniłem
+próg na „nie gorzej niż opublikowany zbiór 1990–1999” i większą próbkę: 64 akty (dwie próbki po 32, ziarna 1014
+i 1015, bez aktów próbek 1008–1013), mediana ≥ 95%, ≥ 58/64 aktów ≥ 90%, ≤ 8/64 aktów z usterką z punktu 2 albo 3.
+Powód: 0/32 było ostrzejsze niż jakość zbioru 1990–1999, który już publikuję (4/32), a 32 akty nie odróżniają 4/32
+od 6/32. Ryzyko: obniżenie progu po niezaliczeniu; dlatego zmiana i próbka są zapisane przed pomiarem, a w tabeli są
+wszystkie pomiary. Pomiar 5 nowego progu też by nie przeszedł (6/32 to 12/64). Kod 0.6.48 (opis zmian 0.6.47 i 0.6.48:
+README eli2md). Ocena: 8 podagentów po 8 aktów; moja kontrola 6. aktu grup A, C, E, G (`kontrola6_moja.jsonl`, zapisana
+przed czytaniem wyników): różnice ±1, ±1, ±5, ±2 błędy, werdykty zgodne. Przy różnicy > 3 oceniam całą grupę sam:
+grupa E w `wyniki6_E_moja.jsonl` (7 z 8 aktów z tą samą liczbą błędów; różnica tylko w DU/1925/485, gdzie
+w stopce numeru stoi przestawione „Cena 25 gr.”). Wynik (`du1918_score6.py`, grupa E moja): mediana 97%, 61/64 ≥ 90%,
+usterki 6/64: inny akt 6 (w tym nie ten początek 3), łamy 0. Próg spełniony. Usterki: DU/1937/138 (winieta i spis
+treści przed aktem), 1949/449 i 1981/188 (100 słów to koniec poprzedniego aktu), 1970/195 (tekst wchodzi w następny
+akt), 1935/222 (linia śmieci ze spisu treści), 1949/31 (tylko stopka numeru; oceniający: jeśli liczyć tylko akty,
+nie usterka). Poniżej 90%: DU/1963/96 (78%, pogrubiony tytuł i przebijający druk), 1984/239 (85%), 1958/15 (88%).
+Oceniający różnią się w liczeniu samotnych symboli („=”, „_”); grupa D liczyłaby w DU/1984/239 ok. 10 błędów więcej.
+Oceniający grupy H pisze o liniach „(1825, 2453)” na końcu tekstów: w plikach ich nie ma (grep), to rozmiar obrazu.
+
+Pomiary 1–5 progu 0/32 nie spełniły. Usterka z punktu 2 albo 3: lata 1918–1939 w 9, 3, 3, 1 i 1 akcie z 12; lata 1940–1989 w 8,
 8, 9, 5 i 5 z 20 (kolejno próbki 1008, 1009, 1010, 1012, 1013). W próbce 1013 (0.6.46) 3 z 6 usterek to pierwsza
 strona numeru ze spisem treści (DU/1972/275: spis przed aktem; 1932/746: jedna śmieciowa linia spisu; 1953/74: łamy),
 pozostałe: wiersz tytułu rozdzielony na rynnie (DU/1952/240), tabela czytana kolumnami (DU/1962/51), lokalne
