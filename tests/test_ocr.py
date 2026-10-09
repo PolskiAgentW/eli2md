@@ -359,6 +359,21 @@ class Scan(unittest.TestCase):
         self.assertEqual(acts(page, 422), [(422, "422")])
         self.assertEqual(acts(page[3:], 422), [])  # without the contents: a bare number before no type
         self.assertEqual(acts(["405. - ROZPORZĄDZENIE RADY MINISTRÓW z dnia 21 sierpnia 1935 r."], 405), [(405, "405")])
+        # a bare number of the contents before a paragraph of text is no act's number: the next act's, read by OCR in
+        # the middle of this one (DU/1922/116: "117" before "§ 2. Wykonanie …")
+        page = ["RZECZYPOSPOLITEJ POLSKIEJ.", "# Treść: 116. Rozporządzenie Rady Ministrów z dnia 26 stycznia 1922 r. o włączeniu",
+                "117. Oświadczenie rządowe w przedmiocie konwencji polsko-gdańskiej", "116. i . \"\" .",
+                "Rozporządzenie Rady Ministrów z dnia 26 stycznia 1922 r.", "§ 1. Gminę Miastków wyłącza się z powiatu.",
+                "117", "§ 2. Wykonanie niniejszego rozporządzenia powierza się Ministrowi Spraw Wewnętrznych."]
+        self.assertNotIn(117, [a for a, _ in acts(page, 116)])
+        # the number and "Przekład." before the type in ordinary case, the position in contents with dashes (DU/1926/301)
+        page = ["RZECZYPOSPOLITEJ POLSKIEJ.", "TREŚĆ: OŚWIADCZENIE RZĄDOWE: Poz.: 300—z dnia 20 marca 1926r. w sprawie",
+                "UMOWA:", "Poz.: 301—miedzy Rzadem Rzeczypospolitej Polskiej a Rządem Rzeszy Niemieckiej",
+                "300. Oświadczenie rządowe z dnia 20 marca 1926 r. w sprawie ratyfikacji Umowy",
+                "301. Przekład. Umowa między Rządem Rzeczypospolitej Polskiej a Rządem Rzeszy Niemieckiej"]
+        lines = _ocr_lines(page, 1, 600, 840, 301, "scan", old=True)
+        self.assertEqual([(l.act, l.text[:18]) for l in lines if l.act or l.text.startswith("Przekład")],
+                         [(301, "301"), (0, "Przekład. Umowa mi")])
 
     def test_end_by_next_title(self):
         from eli2md.pdf import _by_neighbors, _title_at

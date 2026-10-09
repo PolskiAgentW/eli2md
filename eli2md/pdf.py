@@ -139,7 +139,11 @@ PREWAR_GLUED_START = re.compile(r"^(\d{1,4})[.,]?\s+(?:\S{1,4}\s+){0,2}(?=Na\s+m
 # when OCR misread the type under it ("422", "RO7PORZĄDZENIE …"; "436", "UMOWY ŚWIATOWEGO ZWIĄZKU POCZTOWEGO:",
 # DU/1951/436), and the act started at the issue's masthead
 PREWAR_CONTENTS = re.compile(r"^\W{0,3}(?:Tre[śs][ćc]|TRE[ŚS]{1,2}\s?[ĆC])\s*[:.;]?")
-PREWAR_CONTENTS_ITEM = re.compile(r"(?:^|[\s:])(\d{1,4})(?:[.,]\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])|\s*[—–]|\s+-+\s)")
+PREWAR_CONTENTS_ITEM = re.compile(r"(?:^|\s)(\d{1,4})[.,]\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])")
+CONTENTS_DASH_ITEM = re.compile(r"(?:^|[\s:])(\d{1,4})(?:\s*[—–]|\s+-+\s)")
+# under such a bare number the act's header in capitals, maybe misread; not a paragraph of text: OCR may read the next
+# act's number in the middle of this act ("117" before "§ 2. Wykonanie …" of 116, DU/1922/116)
+CAPS_WORD_START = re.compile(r"^\W{0,3}[A-ZĄĆĘŁŃÓŚŹŻ][A-ZĄĆĘŁŃÓŚŹŻ0-9]{3,}")
 # an act's type in any case, as OCR reads it (diacritics may go: "Rozporzadzenie", DU/1922/475)
 PREWAR_TYPES = (r"(?:ustawa|rozporządzenie|dekret|obwieszczenie|uchwała|postanowienie|zarządzenie|umowa|konwencja|traktat"
                 r"|protokół|oświadczenie|układ|porozumienie|orzeczenie)")
@@ -154,8 +158,10 @@ PREWAR_TYPE_LOOSE = re.compile("(?i:" + "".join(next((f"[{g}]" for g in _LOOSE i
 # (DU/1921/259), "182. DEKRET o organizacji archiwów" (DU/1919/182), "111. ROZPORZADZENIE RADY MINISTRÓW" (DU/1930/111).
 # The type in capitals is enough; in ordinary case (a list of acts in a text starts its items that way too: "6.
 # Rozporządzenie Ministra … z dnia …") only for a number of the page's header. A dash may stand between them
-# ("405. - ROZPORZĄDZENIE RADY MINISTRÓW", DU/1935/405)
-PREWAR_TYPED_START = re.compile(rf"^\W{{0,3}}(\d{{1,4}})[.,]?\s*[|;:*'\"„—–-]?\s+(?=(?i:{PREWAR_TYPE})\b)")
+# ("405. - ROZPORZĄDZENIE RADY MINISTRÓW", DU/1935/405), and "Przekład." (a translation) before the type ("301. Przekład.
+# Umowa między Rządem …", DU/1926/301: in ordinary case, a position of the contents with dashes, whose own lines do not
+# start with the numbers)
+PREWAR_TYPED_START = re.compile(rf"^\W{{0,3}}(\d{{1,4}})[.,]?\s*[|;:*'\"„—–-]?\s+(?=(?:Przek[łl]ad[.,]?\s+)?(?i:{PREWAR_TYPE})\b)")
 PREWAR_TYPE_CAPS = re.compile(rf"{PREWAR_TYPE.upper()}\b")
 # (under a bare number the type in ordinary case starts the act too: "475.", "Rozporzadzenie Ministra Skarbu …",
 # "z dnia 22 czerwca 1922 r.", DU/1922/475)
@@ -1426,6 +1432,7 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
         number = rest.isdigit() and position is not None and position <= int(rest) <= position + ACT_NUMBER_NEXT
         paragraphs = ([rest] if re.search(r"[^\W\d_]", rest) or number else []) + paragraphs[1:]
     on_page: set[int] = set()  # positions in a pre-war running header (or in the contents on an issue's first page)
+    dashed: set[int] = set()  # positions in contents with dashes ("Poz.: 301—…")
     from_header = False
     if mark == "scan" and old:  # (< 1990; in later issues "Poz. 1. Powiat …" of an annex is no header, DU/1998/688)
         for k in range(min(4, len(paragraphs))):
@@ -1442,7 +1449,8 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
         else:  # an issue's first page: the positions listed in its contents (only a bare number counts below)
             for k, p in enumerate(paragraphs[:12]):
                 if PREWAR_CONTENTS.match(p.strip()):
-                    on_page = {int(x) for q in paragraphs[k: k + 12] for x in PREWAR_CONTENTS_ITEM.findall(q)}
+                    dashed = {int(x) for q in paragraphs[k: k + 12] for x in CONTENTS_DASH_ITEM.findall(q)}
+                    on_page = {int(x) for q in paragraphs[k: k + 12] for x in PREWAR_CONTENTS_ITEM.findall(q)} | dashed
                     break
     if mark == "scan":  # the previous act's signature read after the next act's number goes back before it (DU/1990/380)
         paragraphs = list(paragraphs)
@@ -1498,7 +1506,9 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
                 t = sn.group(1)
         pm = old and (PREWAR_ACT_NUMBER.fullmatch(t) or (PREWAR_HEAD_NUMBER.match(t) if from_header else None))
         if position is not None and pm and position <= int(pm.group(1)) <= position + ACT_NUMBER_NEXT \
-                and (int(pm.group(1)) in on_page or mark == "scan" and k + 1 < len(paragraphs)
+                and (int(pm.group(1)) in on_page and (from_header or k + 1 < len(paragraphs)
+                                                      and CAPS_WORD_START.match(paragraphs[k + 1]))
+                     or mark == "scan" and k + 1 < len(paragraphs)
                      and (PREWAR_START_NEXT.match(paragraphs[k + 1]) or old and (_act_type_next(paragraphs[k + 1])
                                                                                  or PREWAR_TYPE_ANY.match(paragraphs[k + 1])))):
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, pm.group(1), pw, ph, mark=mark, act=int(pm.group(1))))
@@ -1507,7 +1517,8 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
                 continue
         if old and mark == "scan" and position is not None and (tm := PREWAR_TYPED_START.match(t)) \
                 and position <= int(tm.group(1)) <= position + ACT_NUMBER_NEXT \
-                and (from_header and int(tm.group(1)) in on_page or PREWAR_TYPE_CAPS.match(t[tm.end():])):
+                and ((from_header or int(tm.group(1)) in dashed) and int(tm.group(1)) in on_page
+                     or PREWAR_TYPE_CAPS.match(t[tm.end():])):
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, tm.group(1), pw, ph, mark=mark, act=int(tm.group(1))))
             t = t[tm.end():].strip()
         if old and mark == "scan" and position is not None and (pm := PREWAR_GLUED_START.match(t)) \
