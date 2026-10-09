@@ -350,6 +350,15 @@ class Scan(unittest.TestCase):
         # a speck under the number and before the type (DU/1984/126)
         lines = _ocr_lines(["126", ";", "i ROZPORZĄDZENIE RADY MINISTRÓW."], 1, 600, 840, 126, "scan", old=True)
         self.assertEqual([(l.act, l.text) for l in lines], [(126, "126"), (0, "ROZPORZĄDZENIE RADY MINISTRÓW.")])
+        # the contents of an issue after the war, in capitals and with dashes: the act's bare number under it is the
+        # act's though OCR misread the type under it (DU/1947/422); a number and a dash before the type (DU/1935/405)
+        page = ["RZECZYPOSPOLITEJ POLSKIEJ", "Warszawa, dnia 6 listopada 1947 r.",
+                "TREŚĆ: ROZPORZĄDZENIE PREZESA RADY MINISTRÓW Poz.: 422 — z dnia 28 października 1947 r. o statystyce",
+                "RGZPGRZĄDZENIA: 423 — Ministra Administracji Publicznej z dnia 14 października 1947 r.", "422",
+                "RO7PORZĄDZENIE PREZESA RADY MINISTRÓW", "z dnia 28 października 1947 r."]
+        self.assertEqual(acts(page, 422), [(422, "422")])
+        self.assertEqual(acts(page[3:], 422), [])  # without the contents: a bare number before no type
+        self.assertEqual(acts(["405. - ROZPORZĄDZENIE RADY MINISTRÓW z dnia 21 sierpnia 1935 r."], 405), [(405, "405")])
 
     def test_end_by_next_title(self):
         from eli2md.pdf import _by_neighbors, _title_at

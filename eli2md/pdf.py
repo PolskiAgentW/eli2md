@@ -133,9 +133,13 @@ PREWAR_START_NEXT = re.compile(r"^\W{0,3}(?:\w\s)?(?:Na\s+mocy\s+art|(?:Ustawa|R
 # the number and the promulgation formula read as one paragraph, maybe with a speck between ("14, ore Na mocy art. 44 …",
 # DU/1925/14)
 PREWAR_GLUED_START = re.compile(r"^(\d{1,4})[.,]?\s+(?:\S{1,4}\s+){0,2}(?=Na\s+mocy\s+art)")
-# the contents of an issue on its first page: "Treść: 84. Ustawa z dnia …  85. Oświadczenie rządowe …" (DU/1922/84)
-PREWAR_CONTENTS = re.compile(r"^Tre[śs][ćc]\s*[:.;]?")
-PREWAR_CONTENTS_ITEM = re.compile(r"(?:^|\s)(\d{1,4})[.,]\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])")
+# the contents of an issue on its first page: "Treść: 84. Ustawa z dnia …  85. Oświadczenie rządowe …" (DU/1922/84);
+# after the war in capitals, its items numbered with a dash ("TREŚĆ: ROZPORZĄDZENIE PREZESA RADY MINISTRÓW Poz.: 422 —
+# z dnia …", "423 — Ministra …", DU/1947/422; "TRESS C:", DU/1952/276). The act's number under it was no act's number
+# when OCR misread the type under it ("422", "RO7PORZĄDZENIE …"; "436", "UMOWY ŚWIATOWEGO ZWIĄZKU POCZTOWEGO:",
+# DU/1951/436), and the act started at the issue's masthead
+PREWAR_CONTENTS = re.compile(r"^\W{0,3}(?:Tre[śs][ćc]|TRE[ŚS]{1,2}\s?[ĆC])\s*[:.;]?")
+PREWAR_CONTENTS_ITEM = re.compile(r"(?:^|[\s:])(\d{1,4})(?:[.,]\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])|\s*[—–]|\s+-+\s)")
 # an act's type in any case, as OCR reads it (diacritics may go: "Rozporzadzenie", DU/1922/475)
 PREWAR_TYPES = (r"(?:ustawa|rozporządzenie|dekret|obwieszczenie|uchwała|postanowienie|zarządzenie|umowa|konwencja|traktat"
                 r"|protokół|oświadczenie|układ|porozumienie|orzeczenie)")
@@ -149,8 +153,9 @@ PREWAR_TYPE_LOOSE = re.compile("(?i:" + "".join(next((f"[{g}]" for g in _LOOSE i
 # a pre-war act's number glued to its title in one paragraph: "259. Rozporządzenie Ministra Kolei Żelaznych z dnia …"
 # (DU/1921/259), "182. DEKRET o organizacji archiwów" (DU/1919/182), "111. ROZPORZADZENIE RADY MINISTRÓW" (DU/1930/111).
 # The type in capitals is enough; in ordinary case (a list of acts in a text starts its items that way too: "6.
-# Rozporządzenie Ministra … z dnia …") only for a number of the page's header
-PREWAR_TYPED_START = re.compile(rf"^\W{{0,3}}(\d{{1,4}})[.,]?\s*[|;:*'\"„]?\s+(?=(?i:{PREWAR_TYPE})\b)")
+# Rozporządzenie Ministra … z dnia …") only for a number of the page's header. A dash may stand between them
+# ("405. - ROZPORZĄDZENIE RADY MINISTRÓW", DU/1935/405)
+PREWAR_TYPED_START = re.compile(rf"^\W{{0,3}}(\d{{1,4}})[.,]?\s*[|;:*'\"„—–-]?\s+(?=(?i:{PREWAR_TYPE})\b)")
 PREWAR_TYPE_CAPS = re.compile(rf"{PREWAR_TYPE.upper()}\b")
 # (under a bare number the type in ordinary case starts the act too: "475.", "Rozporzadzenie Ministra Skarbu …",
 # "z dnia 22 czerwca 1922 r.", DU/1922/475)
