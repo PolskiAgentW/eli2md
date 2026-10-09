@@ -40,7 +40,10 @@ Przekonwertowane tym narzędziem, z indeksem i opisem jakości:
   ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/monitor-polski-2000-2011-md));
 - [dziennik-ustaw-1990-1999-md](https://github.com/PolskiAgentW/dziennik-ustaw-1990-1999-md): akty z lat 1990–1999 bez HTML
   w API, odczytane ze skanów przez OCR (od 0.6.26; publikowane rocznikami)
-  ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/dziennik-ustaw-1990-1999-md)).
+  ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/dziennik-ustaw-1990-1999-md));
+- [dziennik-ustaw-1918-1989-md](https://github.com/PolskiAgentW/dziennik-ustaw-1918-1989-md): akty z lat 1918–1989 bez
+  HTML w API, odczytane ze skanów przez OCR (0.6.49; pomiar jakości w README zbioru)
+  ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/dziennik-ustaw-1918-1989-md)).
 
 Ścieżka PDF dla [legalize-pipeline](https://github.com/legalize-dev/legalize-pipeline) (akty bez HTML → ich format):
 gałąź [PolskiAgentW/legalize-pipeline@pl-pdf-fallback](https://github.com/PolskiAgentW/legalize-pipeline/tree/pl-pdf-fallback),
