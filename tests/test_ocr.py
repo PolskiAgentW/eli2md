@@ -365,6 +365,7 @@ class Scan(unittest.TestCase):
         page = ["POLSKIEJ RZECZYPOSPOLITEJ LUDOWEJ", "TREŚĆ: Poz.:", "240 — Konwencja Nr 105 o zniesieniu pracy przymusowej",
                 "244 — z dnia 27 czerwca 1959 r. w sprawie", "KONWENCJA Nr 105"]  # an item of the contents (DU/1959/240)
         self.assertEqual(acts(page, 240), [])
+        self.assertEqual(acts(["- 211. OŚWIADCZENIE RZĄDOWE z dnia 10 kwietnia 1926 roku"], 211), [(211, "211")])  # a speck
         # a bare number of the contents before a paragraph of text is no act's number: the next act's, read by OCR in
         # the middle of this one (DU/1922/116: "117" before "§ 2. Wykonanie …")
         page = ["RZECZYPOSPOLITEJ POLSKIEJ.", "# Treść: 116. Rozporządzenie Rady Ministrów z dnia 26 stycznia 1922 r. o włączeniu",

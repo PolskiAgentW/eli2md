@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.48, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.49, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -211,6 +211,19 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.49** (2026-10-09). Skany Dziennika Ustaw 1918–1989: regresja 0.6.48 w latach przedwojennych, znaleziona
+w porównaniu pierwszych roczników przeliczanego korpusu (1918–1919: 2 z 396 aktów). 0.6.48 wymagało nagłówka aktu pod
+gołym numerem pozycji ze spisu treści także przy spisie przedwojennym („Treść: 23. Orędzie …”). Akt DU/1918/23 nie ma
+pod numerem typu („23”, „Rada Regencyjna do Narodu Polskiego.”), więc zaczynał się od winiety numeru. Teraz przy spisie
+przedwojennym numer liczy się jak do 0.6.47, a warunek dotyczy tylko spisu z pauzami („Poz.: 422 —”). Zwykłe „Treść”
+jest rozpoznawane tylko na początku linii, jak do 0.6.47. Pauza przed numerem („- 211. Oświadczenie …”, DU/1926/211)
+znów nie przeszkadza. Porównanie z 0.6.47 na 4647 aktach (te same co przy 0.6.48 i 64 akty próbki pomiaru 6):
+zmienia się 90 aktów, wszystkie obejrzane, żaden gorzej. To wszystkie 87 zmian 0.6.48 i 3 nowe:
+DU/1934/4 i 1954/9 mają pełny tekst (od 0.6.40 miały tylko ostatnie zdanie i podpis), w DU/1933/3 „§ 3.” jest
+nagłówkiem, a nie gołym numerem. 64 akty próbki pomiaru 6 są identyczne jak w 0.6.48, więc pomiar 6 dotyczy też
+0.6.49. Lata od 1990: bez zmian (zmienione reguły działają tylko dla skanów 1918–1989; 300 aktów-skanów
+1990–2011 sprawdzone przy 0.6.48).
 
 **0.6.48** (2026-10-09). Skany Dziennika Ustaw 1918–1989, akt na pierwszej stronie numeru. Po wojnie (i od połowy
 lat 20.) spis treści numeru ma postać „TREŚĆ: … Poz.: 422 — z dnia …”, a eli2md rozpoznawało tylko przedwojenną

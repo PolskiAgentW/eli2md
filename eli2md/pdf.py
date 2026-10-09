@@ -1525,12 +1525,12 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
             t = t[pm.end():].strip()
             if not t:
                 continue
-        # a dash only after the number's dot ("405. - ROZPORZĄDZENIE"): "240 — Konwencja Nr 105 …" is an item of the
-        # contents (DU/1959/240)
+        # a dash after the number only after its dot ("405. - ROZPORZĄDZENIE"): "240 — Konwencja Nr 105 …" is an item of
+        # the contents (DU/1959/240); a speck before the number is no matter ("- 211. Oświadczenie …", DU/1926/211)
         if old and mark == "scan" and position is not None and (tm := PREWAR_TYPED_START.match(t)) \
                 and position <= int(tm.group(1)) <= position + ACT_NUMBER_NEXT \
-                and (not re.search(r"[—–-]", tm.group(0)) or re.search(r"\d[.,]\s*[—–-]", tm.group(0))) \
-                and ((from_header or int(tm.group(1)) in dashed and not re.search(r"[—–-]", tm.group(0))
+                and (not re.search(r"[—–-]", t[tm.end(1):tm.end()]) or re.match(r"[.,]\s*[—–-]", t[tm.end(1):])) \
+                and ((from_header or int(tm.group(1)) in dashed and not re.search(r"[—–-]", t[tm.end(1):tm.end()])
                       and not FINAL_PROVISION.match(t[tm.end():]))
                      and int(tm.group(1)) in on_page or PREWAR_TYPE_CAPS.match(t[tm.end():])):
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, tm.group(1), pw, ph, mark=mark, act=int(tm.group(1))))
