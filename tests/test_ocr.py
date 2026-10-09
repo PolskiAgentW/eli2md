@@ -347,6 +347,9 @@ class Scan(unittest.TestCase):
         lines = _ocr_lines(["635.", "Rozporządzenie Ministrów Skarbu", "Minister Skarbu: H. Linde", "Sprostowanie. W Dz. U. R. P."],
                            1, 600, 840, 635, "scan", old=True)
         self.assertEqual([l.act for l in lines], [635, 0, 0, 655, 0])
+        lines = _ocr_lines(["1", "Rozporządzenie Ministra Sprawiedliwości", "Art. 33.",
+                            "Sprostowanie powinno być wydrukowane w języku polskim."], 1, 600, 840, 1, "scan", old=True)
+        self.assertEqual([l.act for l in lines], [1, 0, 0, 0])  # a sentence of the press law (DU/1928/1)
         # a speck under the number and before the type (DU/1984/126)
         lines = _ocr_lines(["126", ";", "i ROZPORZĄDZENIE RADY MINISTRÓW."], 1, 600, 840, 126, "scan", old=True)
         self.assertEqual([(l.act, l.text) for l in lines], [(126, "126"), (0, "ROZPORZĄDZENIE RADY MINISTRÓW.")])
@@ -359,6 +362,9 @@ class Scan(unittest.TestCase):
         self.assertEqual(acts(page, 422), [(422, "422")])
         self.assertEqual(acts(page[3:], 422), [])  # without the contents: a bare number before no type
         self.assertEqual(acts(["405. - ROZPORZĄDZENIE RADY MINISTRÓW z dnia 21 sierpnia 1935 r."], 405), [(405, "405")])
+        page = ["POLSKIEJ RZECZYPOSPOLITEJ LUDOWEJ", "TREŚĆ: Poz.:", "240 — Konwencja Nr 105 o zniesieniu pracy przymusowej",
+                "244 — z dnia 27 czerwca 1959 r. w sprawie", "KONWENCJA Nr 105"]  # an item of the contents (DU/1959/240)
+        self.assertEqual(acts(page, 240), [])
         # a bare number of the contents before a paragraph of text is no act's number: the next act's, read by OCR in
         # the middle of this one (DU/1922/116: "117" before "§ 2. Wykonanie …")
         page = ["RZECZYPOSPOLITEJ POLSKIEJ.", "# Treść: 116. Rozporządzenie Rady Ministrów z dnia 26 stycznia 1922 r. o włączeniu",
@@ -370,6 +376,11 @@ class Scan(unittest.TestCase):
                 "953. Rozporządzenie Prezydenta Rzeczypospolitej z dnia 3 grudnia 1924 r.", "952",
                 "asa Zarządzenie Prezydenta kzeczypospolitej z dnia 20 listopada 1924 roku"]  # DU/1924/952: specks, type
         self.assertEqual(acts(page, 952), [(952, "952")])
+        page = ["POLSKIEJ RZECZYPOSPOLITEJ LUDOWEJ", "TREŚĆ: Poz.:", "2 — z dnia 15 stycznia 1985 r. zmieniające rozporządzenie",
+                "pracownik zachowuje prawo do wynagrodzenia.”", "§ 2. Rozporządzenie wchodzi w życie z dniem ogłoszenia."]
+        self.assertEqual(acts(page, 2), [])  # "§ 2." is no act's number (DU/1985/2)
+        page[-1] = "2. Rozporządzenie wchodzi w życie z dniem ogłoszenia."  # nor "2." when OCR lost the "§" (DU/1967/5)
+        self.assertEqual(acts(page, 2), [])
         # the number and "Przekład." before the type in ordinary case, the position in contents with dashes (DU/1926/301)
         page = ["RZECZYPOSPOLITEJ POLSKIEJ.", "TREŚĆ: OŚWIADCZENIE RZĄDOWE: Poz.: 300—z dnia 20 marca 1926r. w sprawie",
                 "UMOWA:", "Poz.: 301—miedzy Rzadem Rzeczypospolitej Polskiej a Rządem Rzeszy Niemieckiej",

@@ -157,14 +157,17 @@ NUMBER_HEADER_NEXT = re.compile(rf"^\W{{0,3}}(?:[A-ZĄĆĘŁŃÓŚŹŻ][A-ZĄĆ�
 _LOOSE = ("aą", "cć", "eę", "lł", "nń", "oó", "sś", "zżź")
 PREWAR_TYPE_LOOSE = re.compile("(?i:" + "".join(next((f"[{g}]" for g in _LOOSE if c in g), c) for c in PREWAR_TYPES)
                                + r")\b")
+# the final provision of an act after its "§ N." lost by OCR ("6. Rozporządzenie wchodzi w życie …", DU/1967/5, "6 —" in
+# the contents): no act's header
+FINAL_PROVISION = re.compile(rf"\W{{0,3}}(?i:{PREWAR_TYPE})\s+(?:niniejsz\w*\s+)?(?:wchodzi|traci|obowiązuje|uzyskuje)\b")
 # a pre-war act's number glued to its title in one paragraph: "259. Rozporządzenie Ministra Kolei Żelaznych z dnia …"
 # (DU/1921/259), "182. DEKRET o organizacji archiwów" (DU/1919/182), "111. ROZPORZADZENIE RADY MINISTRÓW" (DU/1930/111).
 # The type in capitals is enough; in ordinary case (a list of acts in a text starts its items that way too: "6.
 # Rozporządzenie Ministra … z dnia …") only for a number of the page's header. A dash may stand between them
 # ("405. - ROZPORZĄDZENIE RADY MINISTRÓW", DU/1935/405), and "Przekład." (a translation) before the type ("301. Przekład.
 # Umowa między Rządem …", DU/1926/301: in ordinary case, a position of the contents with dashes, whose own lines do not
-# start with the numbers)
-PREWAR_TYPED_START = re.compile(rf"^\W{{0,3}}(\d{{1,4}})[.,]?\s*[|;:*'\"„—–-]?\s+(?=(?:Przek[łl]ad[.,]?\s+)?(?i:{PREWAR_TYPE})\b)")
+# start with the numbers). Not after "§": "§ 2. Rozporządzenie wchodzi w życie …" (DU/1985/2, "2 —" in the contents)
+PREWAR_TYPED_START = re.compile(rf"^[^\w§]{{0,3}}(\d{{1,4}})[.,]?\s*[|;:*'\"„—–-]?\s+(?=(?:Przek[łl]ad[.,]?\s+)?(?i:{PREWAR_TYPE})\b)")
 PREWAR_TYPE_CAPS = re.compile(rf"{PREWAR_TYPE.upper()}\b")
 # (under a bare number the type in ordinary case starts the act too: "475.", "Rozporzadzenie Ministra Skarbu …",
 # "z dnia 22 czerwca 1922 r.", DU/1922/475)
@@ -187,8 +190,9 @@ GLUED_NEXT_START = re.compile(r"(?<=\S)\s+(\d{1,4})[.,]?\s+(?:[^\w\s]{1,2}\s+|[^
 TRAILING_NUMBER = re.compile(r"(?<=\s)(\d{1,4})[.,]?\s*$")
 REFERENCE_BEFORE = re.compile(r"(?:poz|Nr|art|ust|pkt|str|§|r|z)\.?\s*$", re.I)
 # an erratum to another act printed after the last act of an issue ("Sprostowanie. W Dz. U. R. P. № 76, poz. 600 …",
-# DU/1923/635): the act ends before it
-ERRATUM_OCR = re.compile(r"^\W{0,3}Sprostowani[ea]\b\.?")
+# DU/1923/635): the act ends before it. Not a sentence of an act on errata ("Sprostowanie powinno być wydrukowane …",
+# the press law in DU/1928/1, cut there once its number was found under the issue's contents)
+ERRATUM_OCR = re.compile(r"^\W{0,3}Sprostowani[ea]\b\.?(?!\s+(?:powinn|winn|nale[żz]|mo[żz]e|jest|by[ćc]\b|ma\b|nie\b))")
 SIGNATURE_TAIL_OCR = re.compile(r"^[^\W\d_][\w .,]{0,60}:\s*\S.{0,40}$")
 OLD_MASTHEAD = re.compile(r"^(?:DZIENNIK\s*USTAW|MONITOR\s*POLSKI)")
 OLD_ISSUE = re.compile(r"^Nr\s*\d+$")
@@ -1518,10 +1522,14 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
             t = t[pm.end():].strip()
             if not t:
                 continue
+        # a dash only after the number's dot ("405. - ROZPORZĄDZENIE"): "240 — Konwencja Nr 105 …" is an item of the
+        # contents (DU/1959/240)
         if old and mark == "scan" and position is not None and (tm := PREWAR_TYPED_START.match(t)) \
                 and position <= int(tm.group(1)) <= position + ACT_NUMBER_NEXT \
-                and ((from_header or int(tm.group(1)) in dashed) and int(tm.group(1)) in on_page
-                     or PREWAR_TYPE_CAPS.match(t[tm.end():])):
+                and (not re.search(r"[—–-]", tm.group(0)) or re.search(r"\d[.,]\s*[—–-]", tm.group(0))) \
+                and ((from_header or int(tm.group(1)) in dashed and not re.search(r"[—–-]", tm.group(0))
+                      and not FINAL_PROVISION.match(t[tm.end():]))
+                     and int(tm.group(1)) in on_page or PREWAR_TYPE_CAPS.match(t[tm.end():])):
             out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, tm.group(1), pw, ph, mark=mark, act=int(tm.group(1))))
             t = t[tm.end():].strip()
         if old and mark == "scan" and position is not None and (pm := PREWAR_GLUED_START.match(t)) \
