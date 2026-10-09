@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.46, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.47, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -211,6 +211,24 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.47** (2026-10-09). Skany Dziennika Ustaw 1918–1989, granice aktu: regresja z 0.6.41–0.6.46 znaleziona
+w porównaniu całego korpusu 0.6.40 i 0.6.46. Reguła z 0.6.41 („akt kończy się tam, gdzie zaczyna się nagłówek następnej
+pozycji”) brała za taki nagłówek pozycję spisu treści na pierwszej stronie numeru, gdy numer stał po typie aktu albo
+po „Poz.:” bez spacji („OŚWIADCZENIE RZĄDOWE 277 — z dnia …”, DU/1952/276; „ROZPORZĄDZENIE 31 — Ministra …”,
+DU/1981/29; „Poz.: 864—z dnia …”, DU/1927/863). Akt był wtedy ucięty do winiety numeru. Teraz takie linie są
+rozpoznawane jako spis treści. Druga zmiana: nagłówek, który odpowiada tytułowi aktu co najmniej tak dobrze jak tytułowi
+sąsiedniej pozycji, nie kończy aktu (DU/1926/314 i 315, DU/1988/144 i 145: ten sam organ, ta sama data i podobny
+tytuł). Tytuły porównywane są na długości obu, bo krótki tytuł własny pasował do początku dłuższego nagłówka sąsiada
+(DU/1983/221). Porównanie z 0.6.46 na 2185 aktach (wszystkie, w których liczba słów zmieniła się o co najmniej 20%
+między 0.6.40 a 0.6.46, oraz akty wcześniejszych próbek): zmienia się 15 aktów, wszystkie obejrzane. We wszystkich
+15 w pliku jest teraz tekst aktu, a wcześniej była sama winieta albo spis treści. W 11 z nich plik nadal zaczyna się
+od czegoś innego niż akt: od winiety i spisu treści numeru (9, np. DU/1981/29) albo od końca poprzedniego aktu (2:
+DU/1926/314, 1988/144). Odrzucone w trakcie: „nagłówek pod gołym
+numerem tej lub wcześniejszej pozycji nie kończy aktu”, bo OCR często odczytuje numer następnego aktu jako niższy
+(„29” zamiast 79, „603” zamiast 605). Nie naprawione: DU/1971/88 (nagłówek następnego aktu przed tekstem, kolejność
+łamów), DU/1924/411, DU/1935/294. Lata od 1990: bez zmian (300 z 300 aktów-skanów 1990–2011 identycznych poza numerem
+wersji).
 
 **0.6.46** (2026-10-08). Skany Dziennika Ustaw 1918–1989, granice aktu, dwie usterki z pomiaru 4 (próbka 1012).
 (1) Numer aktu odczytany dwa razy, raz w miejscu numeru poprzedniej pozycji („228” nad uchwałą 227, potem „228” nad

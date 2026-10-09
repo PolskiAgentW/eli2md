@@ -398,6 +398,16 @@ class Scan(unittest.TestCase):
                 L("ROZPORZĄDZENIE MINISTRA HANDLU WEWNĘTRZNEGO I USŁUG z dnia 9 sierpnia 1983 r. w sprawie rejestracji "
                   "statutów izb a"), L("Na podstawie art. 34 ust. 5 ustawy zarządza się, co następuje:")]
         self.assertEqual(len(_by_neighbors((body, [], 1, 1), 221, {222: t222}, t221)[0]), 2)
+        # nor a long own title on letters of the header that match by chance (DU/1928/19 and 20)
+        t19 = "Rozporządzenie Prezydenta Rzeczypospolitej z dnia 23 grudnia 1927 r. o zmianie dekretu o rejestrze handlowym."
+        t20 = "Rozporządzenie Prezydenta Rzeczypospolitej z dnia 23 grudnia 1927 r. o zapobieganiu upadłości."
+        body = [L("Art. 3. Rozporządzenie niniejsze wchodzi w życie z dniem ogłoszenia."),
+                L("Minister Poczt i Telegrafów: Bogusław Miedziński"), L("Rozporządzenie Prezydenta Rzeczypospolitej"),
+                L("z dnia 23 grudnia 1927 r."), L("o zapobieganiu upadłości."),
+                L("Na podstawie art. 44 ust. 6 Konstytucji i ustawy z dnia 2 sierpnia 1926 r. o upoważnieniu Prezydenta "
+                  "Rzeczypospolitej do wydawania rozporządzeń z mocą ustawy (Dz. U. R. P. Ne 78, poz. 443) postanawiam "
+                  "co następuje:"), L("Rozdział I.")]
+        self.assertEqual(len(_by_neighbors((body, [], 1, 1), 19, {20: t20}, t19)[0]), 2)
 
     def test_annex_header(self):
         self.assertTrue(ANNEX_OCR.match("Załącznik do obwieszczenia Ministra z dnia 27 marca 1997 r. (poz. 224)"))

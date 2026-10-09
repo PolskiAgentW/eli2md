@@ -1247,10 +1247,8 @@ CONTENTS_TYPED_ITEM = re.compile(r"\W*[A-ZĄĆĘŁŃÓŚŹŻ]{3,}[^\da-ząćęł
 def _title_score(lines: list[Line], k: int, title: str, n: int = 120, width: int | None = None) -> float | None:
     """How well the header starting at lines[k] reads as `title` (see _title_at): None if its type, issuer or date
     differ, else the likeness of the words after the date to the first `n` letters of the title's rest (of the whole
-    title when it has no date). width: compare with that many letters of the header, not as many as the title has:
-    scores of titles of different length are then comparable (a short title matched on its length alone beat
-    a longer one that the header reads as: "… w sprawie rejestracji cechów." over "… w sprawie rejestracji statutów
-    izb rzemieślniczych." under the header of the latter, DU/1983/221)."""
+    title when it has no date). width: compare with that many letters of the header, not as many as the title has
+    (see _by_neighbors)."""
     first = lines[k].text
     tm = PREWAR_TYPE_LOOSE.search(first[:25])
     if not tm or re.search(r"[^\W\d_]{3}", first[:tm.start()]) or re.search(r"(?:^|\s)§|^\s*\d{1,4}[.,]\s", first[:tm.start()]):
@@ -1273,6 +1271,12 @@ def _title_score(lines: list[Line], k: int, title: str, n: int = 120, width: int
     return SequenceMatcher(None, rest, after, autojunk=False).ratio() if rest else 1.0
 
 
+def _rest_len(title: str, n: int) -> int:
+    """How many letters of `title` _title_score compares with a header: of its rest after the date, else of all of it."""
+    m = ELI_TITLE.fullmatch(title.strip())
+    return len(_plain(m["rest"])[:n]) if m else len(_plain(title)[:150])
+
+
 def _neighbor_header(lines: list[Line], k: int, title: str, neighbors: dict[int, str] | None) -> bool:
     """The header at lines[k] reads better as the title of another position near the act than as the act's own
     (DU/1955/175 and 176: the same issuer and date, titles alike for 100 letters, "… dotyczących budownictwa" and
@@ -1288,15 +1292,21 @@ def _by_neighbors(own: tuple, position: int, neighbors: dict[int, str], title: s
     read as "88" and not at all). Searched from the act's third line, so its own header is not taken; a header
     under the next position's number ("735. Przekład Konwencja …") from the second.
     Not a header that reads at least as well as the act's own `title` (DU/1926/314 and 315: the same issuer and date,
-    "zmieniające niektóre przepisy rozporządzenia …" in both), both compared with the same 300 letters of it."""
+    "zmieniające niektóre przepisy rozporządzenia …" in both). The own title must read so on its own length and on
+    that of the neighbour's: a short one ("… w sprawie rejestracji cechów.") reads well as the start of a longer
+    header ("… w sprawie rejestracji statutów izb …", DU/1983/221 and 222). Compared on one length for all, a long
+    own title won on letters that match by chance (DU/1928/19 and 20: "… o zapobieganiu upadłości.")."""
     body, notes, lo, hi = own
     nxt = {p: neighbors[p] for p in range(position + 1, position + 4) if p in neighbors}
 
     def neighbor_header(k: int) -> bool:
         hits = [t for t in nxt.values() if _title_at(body, k, t)]
-        if not hits or not title or (own_score := _title_score(body, k, title, 300, 300)) is None:
+        if not hits or not title:
             return bool(hits)
-        return own_score < max(_title_score(body, k, t, 300, 300) or 0.0 for t in hits)
+        own_scores = [_title_score(body, k, title, 300, w) for w in [None] + [_rest_len(t, 300) for t in hits]]
+        if any(s is None for s in own_scores):
+            return True
+        return min(own_scores) < max(_title_score(body, k, t, 300) or 0.0 for t in hits)
 
     def starts(k: int) -> bool:
         if k >= 2 and neighbor_header(k):
