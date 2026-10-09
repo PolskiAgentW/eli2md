@@ -366,6 +366,37 @@ class Scan(unittest.TestCase):
         # an item of the issue's contents is no header (DU/1947/49)
         toc = [L("DEKRET"), L("Poz.: 49 — z dnia 28 stycznia 1947 r. o utworzeniu etatów")]
         self.assertFalse(_title_at(toc, 0, "Dekret z dnia 28 stycznia 1947 r. o utworzeniu etatów"))
+        # nor one with the position after the type, or after "Poz.:" with no space after the dash: the next item of
+        # the contents on an issue's first page ended the act at the masthead (DU/1952/276, DU/1927/863 in 0.6.46)
+        t277 = "Oświadczenie rządowe z dnia 9 września 1952 r. o wejściu w życie umowy między Rządem Rzeczypospolitej Polskiej"
+        first = [L("POLSKIEJ RZECZYPOSPOLITEJ LUDOWEJ"), L("Warszawa, dnia 30 września 1952 r."),
+                 L("UMOWA MIEDZYNARODOWA. 276 — Umowa miedzy Rządem Rzeczypospolitej Polskiej a Rządem Niemieckiej Republiki"),
+                 L("OŚWIADCZENIE RZĄDOWE 277 — z dnia 9 września 1952 r. o wejściu w życie umowy między Rządem "
+                   "Rzeczypospolitej Polskiej a Rządem Niemieckiej Republiki"), L("276"), L("UMOWA"), L("Tekst umowy.")]
+        self.assertFalse(_title_at(first, 3, t277))
+        self.assertEqual(_by_neighbors((first, [], 1, 1), 276, {277: t277})[0], first)
+        t864 = "Zarządzenie Prezydenta Rzeczypospolitej z dnia 4 listopada 1927 r. o wywłaszczeniu nieruchomości w Będzinie"
+        toc = [L("ZARZĄDZENIE PREZYDENTA RZECZYPOSPOLITEJ"), L("Poz.: 864—z dnia 4 listopada 1927 r. o wywłaszczeniu "
+                                                              "nieruchomości w Będzinie")]
+        self.assertFalse(_title_at(toc, 0, t864))
+        from eli2md.pdf import CONTENTS_TYPED_ITEM
+        self.assertIsNone(CONTENTS_TYPED_ITEM.match("146 - OŚWIADCZENIE RZĄDOWE"))  # the act's own number before its type
+        # a header under a bare number of this position or an earlier one is that act's, though it reads as the next
+        # one's (DU/1924/411: "410", the header of 410 like that of 412); a header that reads as well as the act's own
+        # title is the act's (DU/1926/314 and 315, alike in issuer, date and the words after it)
+        t412 = ("Oświadczenie rządowe z dnia 15 kwietnia 1924 r. w przedmiocie wymiany dokumentów ratyfikacyjnych "
+                "konwencji osiedleńczej")
+        body = [L("Tekst aktu 409."), L("Tekst"), L("410"),
+                L("Oświadczenie Rządowe z dnia 15 kwietnia 1924 r. w przedmiocie wymiany dokumentów ratyfikacyjnych "
+                  "umowy handlowej"), L("411. Konwencja Osiedleńcza między Polską a Turcją")]
+        self.assertTrue(_title_at(body, 3, t412))
+        self.assertEqual(_by_neighbors((body, [], 1, 1), 411, {412: t412})[0], body)
+        t314 = ("Rozporządzenie Ministra Pracy i Opieki Społecznej z dnia 21 maja 1926 r. zmieniające niektóre przepisy "
+                "rozporządzenia o ubezpieczeniu")
+        body = [L("§ 2. Tekst."), L("Tekst"), L("Rozporządzenie Ministra Pracy i Opieki Społecznej"), L("z dnia 21 maja 1926 r."),
+                L("zmieniające niektóre przepisy rozporządzenia o ubezpieczeniu")]
+        self.assertEqual(_by_neighbors((body, [], 1, 1), 314, {315: t314 + " pracowników"}, t314)[0], body)
+        self.assertEqual(len(_by_neighbors((body, [], 1, 1), 314, {315: t314 + " pracowników"})[0]), 2)  # no title
 
     def test_annex_header(self):
         self.assertTrue(ANNEX_OCR.match("Załącznik do obwieszczenia Ministra z dnia 27 marca 1997 r. (poz. 224)"))

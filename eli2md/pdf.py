@@ -1234,6 +1234,15 @@ def _title_at(lines: list[Line], k: int, title: str) -> bool:
     return score is not None and score >= (0.6 if m else 0.85)
 
 
+# an item of an issue's contents on its first page: the position and a dash, at the line's start or after "Poz.:"
+# ("10 — z dnia …"; "Poz.: 49 — z dnia …", DU/1947/49; "Poz.: 864—z dnia …", DU/1927/863; "Poz,: 167 — między …",
+# DU/1947/167), or after the type in capitals ("ROZPORZĄDZENIE 31 — Ministra Sprawiedliwości z dnia …", DU/1981/29;
+# "OŚWIADCZENIE RZĄDOWE 277 — z dnia …", DU/1952/276). Up to 0.6.46 such an item of the next position ended the act
+# at the issue's masthead (_by_neighbors). Not a number before the type: that is the act's own ("146 - OŚWIADCZENIE")
+CONTENTS_ITEM = re.compile(r"^\d{1,4}\s*[—–-]+\s|Poz[.,]?\s?[:;,]?\s*\d{1,4}\s*[—–-]")
+CONTENTS_TYPED_ITEM = re.compile(r"\W*[A-ZĄĆĘŁŃÓŚŹŻ]{3,}[^\da-ząćęłńóśźż]{0,30}?(?<!\d)\d{1,4}\s*[—–-]")
+
+
 def _title_score(lines: list[Line], k: int, title: str, n: int = 120) -> float | None:
     """How well the header starting at lines[k] reads as `title` (see _title_at): None if its type, issuer or date
     differ, else the likeness of the words after the date to the first `n` letters of the title's rest (of the whole
@@ -1242,7 +1251,7 @@ def _title_score(lines: list[Line], k: int, title: str, n: int = 120) -> float |
     tm = PREWAR_TYPE_LOOSE.search(first[:25])
     if not tm or re.search(r"[^\W\d_]{3}", first[:tm.start()]) or re.search(r"(?:^|\s)§|^\s*\d{1,4}[.,]\s", first[:tm.start()]):
         return None  # specks of the scan before the type are allowed ("i „s oi, 88 DEKRET", DU/1946/32), words are not
-    if any(re.search(r"(?:^|Poz\.?\s?:?\s*)\d{1,4}\s*[—–-]+\s", x.text[:30]) for x in lines[k: k + 3]):
+    if any(CONTENTS_ITEM.search(x.text[:30]) for x in lines[k: k + 3]) or CONTENTS_TYPED_ITEM.match(first):
         return None  # an item of the issue's contents ("10 — z dnia …"; "Poz.: 49 — z dnia …", DU/1947/49)
     window = _plain(" ".join([first[tm.start():]] + [x.text for x in lines[k + 1: k + 5] if x.mark in ("scan", "ocr")]))[:500]
     m = ELI_TITLE.fullmatch(title.strip())
@@ -1269,16 +1278,29 @@ def _neighbor_header(lines: list[Line], k: int, title: str, neighbors: dict[int,
     return any((s := _title_score(lines, k, t, 300)) is not None and s > own for t in (neighbors or {}).values() if t)
 
 
-def _by_neighbors(own: tuple, position: int, neighbors: dict[int, str]) -> tuple:
+def _by_neighbors(own: tuple, position: int, neighbors: dict[int, str], title: str | None = None) -> tuple:
     """The act cut out by _own_act ends at the header of the next position (or one of the next ones) when OCR lost
     that position's number: the whole next act was in the text (DU/1928/427 + 428, DU/1946/32 + 33 whose numbers OCR
     read as "88" and not at all). Searched from the act's third line, so its own header is not taken; a header
-    under the next position's number ("735. Przekład Konwencja …") from the second."""
+    under the next position's number ("735. Przekład Konwencja …") from the second.
+    Not a header right under a bare number of this position or an earlier one: that is the header of the act before
+    it, of a title alike ("410", "Oświadczenie Rządowe z dnia 15 kwietnia 1924 r. w przedmiocie wymiany dokumentów
+    ratyfikacyjnych umowy handlowej …" read as the header of 412, "… konwencji osiedleńczej", in DU/1924/411); nor
+    one that reads at least as well as the act's own `title` (DU/1926/314 and 315: the same issuer and date,
+    "zmieniające niektóre przepisy rozporządzenia …" in both)."""
     body, notes, lo, hi = own
     nxt = {p: neighbors[p] for p in range(position + 1, position + 4) if p in neighbors}
 
+    def neighbor_header(k: int) -> bool:
+        if (m := re.fullmatch(r"\W*(\d{1,4})\W*", body[k - 1].text)) and int(m.group(1)) <= position:
+            return False
+        hits = [t for t in nxt.values() if _title_at(body, k, t)]
+        if not hits or not title or (own_score := _title_score(body, k, title, 300)) is None:
+            return bool(hits)
+        return own_score < max(_title_score(body, k, t, 300) or 0.0 for t in hits)
+
     def starts(k: int) -> bool:
-        if k >= 2 and any(_title_at(body, k, t) for t in nxt.values()):
+        if k >= 2 and neighbor_header(k):
             return True
         # or its number with a dot before its title, maybe with "Przekład" (a translation) between them, from the act's
         # second line ("735. Przekład Konwencja, dotycząca Procedury Cywilnej …" right after the one paragraph of 734,
@@ -1610,7 +1632,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
                 first.page, last.page if last else max(l.page for l in body[k:])
     if position is not None and (own := own or _own_act(body, notes, int(position), title, old)):
         if old and neighbors:  # (< 1990)
-            own = _by_neighbors(own, int(position), neighbors)
+            own = _by_neighbors(own, int(position), neighbors, title)
         body, notes, lo, hi = own
         for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
             setattr(doc, f, [p for p in getattr(doc, f) if lo <= p <= hi])  # pages of the other acts only
