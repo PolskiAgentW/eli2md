@@ -366,6 +366,10 @@ class Scan(unittest.TestCase):
                 "Rozporządzenie Rady Ministrów z dnia 26 stycznia 1922 r.", "§ 1. Gminę Miastków wyłącza się z powiatu.",
                 "117", "§ 2. Wykonanie niniejszego rozporządzenia powierza się Ministrowi Spraw Wewnętrznych."]
         self.assertNotIn(117, [a for a, _ in acts(page, 116)])
+        page = ["RZECZYPOSPOLITEJ POLSKIEJ,", "Treść: 952. Zarządzenie Prezydenta Rzeczypospolitej z dnia 20 listopada 1924 r.",
+                "953. Rozporządzenie Prezydenta Rzeczypospolitej z dnia 3 grudnia 1924 r.", "952",
+                "asa Zarządzenie Prezydenta kzeczypospolitej z dnia 20 listopada 1924 roku"]  # DU/1924/952: specks, type
+        self.assertEqual(acts(page, 952), [(952, "952")])
         # the number and "Przekład." before the type in ordinary case, the position in contents with dashes (DU/1926/301)
         page = ["RZECZYPOSPOLITEJ POLSKIEJ.", "TREŚĆ: OŚWIADCZENIE RZĄDOWE: Poz.: 300—z dnia 20 marca 1926r. w sprawie",
                 "UMOWA:", "Poz.: 301—miedzy Rzadem Rzeczypospolitej Polskiej a Rządem Rzeszy Niemieckiej",
