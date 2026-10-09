@@ -376,6 +376,10 @@ class Scan(unittest.TestCase):
                 "953. Rozporządzenie Prezydenta Rzeczypospolitej z dnia 3 grudnia 1924 r.", "952",
                 "asa Zarządzenie Prezydenta kzeczypospolitej z dnia 20 listopada 1924 roku"]  # DU/1924/952: specks, type
         self.assertEqual(acts(page, 952), [(952, "952")])
+        page = ["Przedruk. KR. 1918.", "Treść: 23. Orędzie Rady Regencyjnej do Narodu Polskiego. . . 61",
+                "24. Dekret w przedmiocie tymczasowego wykonywania władzy ustawodawczej. . . 62", "23",
+                "Rada Regencyjna do Narodu Polskiego."]  # the pre-war contents: no header needed (DU/1918/23)
+        self.assertEqual(acts(page, 23), [(23, "23")])
         page = ["POLSKIEJ RZECZYPOSPOLITEJ LUDOWEJ", "TREŚĆ: Poz.:", "2 — z dnia 15 stycznia 1985 r. zmieniające rozporządzenie",
                 "pracownik zachowuje prawo do wynagrodzenia.”", "§ 2. Rozporządzenie wchodzi w życie z dniem ogłoszenia."]
         self.assertEqual(acts(page, 2), [])  # "§ 2." is no act's number (DU/1985/2)

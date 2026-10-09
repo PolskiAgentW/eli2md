@@ -138,7 +138,7 @@ PREWAR_GLUED_START = re.compile(r"^(\d{1,4})[.,]?\s+(?:\S{1,4}\s+){0,2}(?=Na\s+m
 # z dnia …", "423 — Ministra …", DU/1947/422; "TRESS C:", DU/1952/276). The act's number under it was no act's number
 # when OCR misread the type under it ("422", "RO7PORZĄDZENIE …"; "436", "UMOWY ŚWIATOWEGO ZWIĄZKU POCZTOWEGO:",
 # DU/1951/436), and the act started at the issue's masthead
-PREWAR_CONTENTS = re.compile(r"^\W{0,3}(?:Tre[śs][ćc]|TRE[ŚS]{1,2}\s?[ĆC])\s*[:.;]?")
+PREWAR_CONTENTS = re.compile(r"^(?:Tre[śs][ćc]|\W{0,3}TRE[ŚS]{1,2}\s?[ĆC])\s*[:.;]?")
 PREWAR_CONTENTS_ITEM = re.compile(r"(?:^|\s)(\d{1,4})[.,]\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])")
 CONTENTS_DASH_ITEM = re.compile(r"(?:^|[\s:])(\d{1,4})(?:\s*[—–]|\s+-+\s)")
 # an act's type in any case, as OCR reads it (diacritics may go: "Rozporzadzenie", DU/1922/475)
@@ -146,10 +146,12 @@ PREWAR_TYPES = (r"(?:ustawa|rozporządzenie|dekret|obwieszczenie|uchwała|postan
                 r"|protokół|oświadczenie|układ|porozumienie|orzeczenie)")
 PREWAR_TYPE = "".join({"ą": "[ąa]", "ę": "[ęe]", "ł": "[łl]", "ó": "[óo]", "ś": "[śs]", "ż": "[żz]"}.get(c, c)
                       for c in PREWAR_TYPES)
-# under such a bare number the act's header: a word in capitals, maybe misread ("RO7PORZĄDZENIE"), or the type with
-# a capital, maybe after specks of the scan ("asa Zarządzenie Prezydenta …", DU/1924/952; "CEE , "A Rozporządzenie …",
-# DU/1923/100); not a paragraph of text: OCR may read the next act's number in the middle of this act ("117" before
-# "§ 2. Wykonanie …" of 116, DU/1922/116)
+# under such a bare number of contents with dashes the act's header: a word in capitals, maybe misread
+# ("RO7PORZĄDZENIE"), or the type with a capital, maybe after specks of the scan ("asa Zarządzenie …"); not a paragraph
+# of text: OCR may read the next act's number in the middle of this act ("117" before "§ 2. Wykonanie …" of 116,
+# DU/1922/116, under "# Treść:"). Under the pre-war contents ("Treść: 23. Orędzie …") any bare number of it, as up to
+# 0.6.47: its acts may start without a type ("23", "Rada Regencyjna do Narodu Polskiego.", DU/1918/23, which 0.6.48
+# started at the masthead)
 NUMBER_HEADER_NEXT = re.compile(rf"^\W{{0,3}}(?:[A-ZĄĆĘŁŃÓŚŹŻ][A-ZĄĆĘŁŃÓŚŹŻ0-9]{{3,}}"
                                 rf"|(?:\S{{1,4}}\s+){{0,3}}(?=[A-ZĄĆĘŁŃÓŚŹŻ])(?i:{PREWAR_TYPE})\b)")
 # OCR of a header in capitals also adds diacritics to plain letters ("KONWENCJĄ (Nr 123) dotycząca …", DU/1970/62):
@@ -1513,7 +1515,8 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
                 t = sn.group(1)
         pm = old and (PREWAR_ACT_NUMBER.fullmatch(t) or (PREWAR_HEAD_NUMBER.match(t) if from_header else None))
         if position is not None and pm and position <= int(pm.group(1)) <= position + ACT_NUMBER_NEXT \
-                and (int(pm.group(1)) in on_page and (from_header or k + 1 < len(paragraphs)
+                and (int(pm.group(1)) in on_page and (from_header or int(pm.group(1)) not in dashed
+                                                      or k + 1 < len(paragraphs)
                                                       and NUMBER_HEADER_NEXT.match(paragraphs[k + 1]))
                      or mark == "scan" and k + 1 < len(paragraphs)
                      and (PREWAR_START_NEXT.match(paragraphs[k + 1]) or old and (_act_type_next(paragraphs[k + 1])
