@@ -1238,15 +1238,19 @@ def _title_at(lines: list[Line], k: int, title: str) -> bool:
 # ("10 — z dnia …"; "Poz.: 49 — z dnia …", DU/1947/49; "Poz.: 864—z dnia …", DU/1927/863; "Poz,: 167 — między …",
 # DU/1947/167), or after the type in capitals ("ROZPORZĄDZENIE 31 — Ministra Sprawiedliwości z dnia …", DU/1981/29;
 # "OŚWIADCZENIE RZĄDOWE 277 — z dnia …", DU/1952/276). Up to 0.6.46 such an item of the next position ended the act
-# at the issue's masthead (_by_neighbors). Not a number before the type: that is the act's own ("146 - OŚWIADCZENIE")
+# at the issue's masthead (_by_neighbors). Not a number before the type: that is the act's own ("146 - OŚWIADCZENIE");
+# nor a number and a dash with no words after them: specks of the scan ("ROZPORZĄDZENIE RADY MINISTRÓW: 3 —", DU/1986/27)
 CONTENTS_ITEM = re.compile(r"^\d{1,4}\s*[—–-]+\s|Poz[.,]?\s?[:;,]?\s*\d{1,4}\s*[—–-]")
-CONTENTS_TYPED_ITEM = re.compile(r"\W*[A-ZĄĆĘŁŃÓŚŹŻ]{3,}[^\da-ząćęłńóśźż]{0,30}?(?<!\d)\d{1,4}\s*[—–-]")
+CONTENTS_TYPED_ITEM = re.compile(r"\W*[A-ZĄĆĘŁŃÓŚŹŻ]{3,}[^\da-ząćęłńóśźż]{0,30}?(?<!\d)\d{1,4}\s*[—–-]+\s*[^\W\d_]")
 
 
-def _title_score(lines: list[Line], k: int, title: str, n: int = 120) -> float | None:
+def _title_score(lines: list[Line], k: int, title: str, n: int = 120, width: int | None = None) -> float | None:
     """How well the header starting at lines[k] reads as `title` (see _title_at): None if its type, issuer or date
     differ, else the likeness of the words after the date to the first `n` letters of the title's rest (of the whole
-    title when it has no date)."""
+    title when it has no date). width: compare with that many letters of the header, not as many as the title has:
+    scores of titles of different length are then comparable (a short title matched on its length alone beat
+    a longer one that the header reads as: "… w sprawie rejestracji cechów." over "… w sprawie rejestracji statutów
+    izb rzemieślniczych." under the header of the latter, DU/1983/221)."""
     first = lines[k].text
     tm = PREWAR_TYPE_LOOSE.search(first[:25])
     if not tm or re.search(r"[^\W\d_]{3}", first[:tm.start()]) or re.search(r"(?:^|\s)§|^\s*\d{1,4}[.,]\s", first[:tm.start()]):
@@ -1257,7 +1261,7 @@ def _title_score(lines: list[Line], k: int, title: str, n: int = 120) -> float |
     m = ELI_TITLE.fullmatch(title.strip())
     if not m:
         t = _plain(title)[:150]
-        return SequenceMatcher(None, t, window[:len(t)], autojunk=False).ratio()
+        return SequenceMatcher(None, t, window[:width or len(t)], autojunk=False).ratio()
     head, rest = _plain(m["head"]), _plain(m["rest"])[:n]
     day, _, year = _plain(m["date"]).split()
     if SequenceMatcher(None, head, window[:len(head)], autojunk=False).ratio() < 0.8:
@@ -1265,7 +1269,7 @@ def _title_score(lines: list[Line], k: int, title: str, n: int = 120) -> float |
     d = re.search(r"(?:^| )(?:Z )?DNIA (\d{1,2}) (\w+) (\d{4})\b", window[max(0, len(head) - 10): len(head) + 40])
     if not d or (d[1], d[3]) != (day, year):
         return None
-    after = re.sub(r"^R\b\s*", "", window[max(0, len(head) - 10) + d.end():].strip())[:len(rest)]
+    after = re.sub(r"^R\b\s*", "", window[max(0, len(head) - 10) + d.end():].strip())[:width or len(rest)]
     return SequenceMatcher(None, rest, after, autojunk=False).ratio() if rest else 1.0
 
 
@@ -1284,15 +1288,15 @@ def _by_neighbors(own: tuple, position: int, neighbors: dict[int, str], title: s
     read as "88" and not at all). Searched from the act's third line, so its own header is not taken; a header
     under the next position's number ("735. Przekład Konwencja …") from the second.
     Not a header that reads at least as well as the act's own `title` (DU/1926/314 and 315: the same issuer and date,
-    "zmieniające niektóre przepisy rozporządzenia …" in both)."""
+    "zmieniające niektóre przepisy rozporządzenia …" in both), both compared with the same 300 letters of it."""
     body, notes, lo, hi = own
     nxt = {p: neighbors[p] for p in range(position + 1, position + 4) if p in neighbors}
 
     def neighbor_header(k: int) -> bool:
         hits = [t for t in nxt.values() if _title_at(body, k, t)]
-        if not hits or not title or (own_score := _title_score(body, k, title, 300)) is None:
+        if not hits or not title or (own_score := _title_score(body, k, title, 300, 300)) is None:
             return bool(hits)
-        return own_score < max(_title_score(body, k, t, 300) or 0.0 for t in hits)
+        return own_score < max(_title_score(body, k, t, 300, 300) or 0.0 for t in hits)
 
     def starts(k: int) -> bool:
         if k >= 2 and neighbor_header(k):

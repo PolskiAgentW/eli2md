@@ -381,6 +381,7 @@ class Scan(unittest.TestCase):
         self.assertFalse(_title_at(toc, 0, t864))
         from eli2md.pdf import CONTENTS_TYPED_ITEM
         self.assertIsNone(CONTENTS_TYPED_ITEM.match("146 - OŚWIADCZENIE RZĄDOWE"))  # the act's own number before its type
+        self.assertIsNone(CONTENTS_TYPED_ITEM.match("ROZPORZĄDZENIE RADY MINISTRÓW: 3 —"))  # specks (DU/1986/27)
         # a header that reads as well as the act's own title is the act's (DU/1926/314 and 315, alike in issuer, date
         # and the words after it). A header under a bare number of the act or the one before it may still be the next
         # act's: OCR misreads its number ("603" for 605, DU/1924/604; "325" for 326, DU/1927/325)
@@ -390,6 +391,13 @@ class Scan(unittest.TestCase):
                 L("zmieniające niektóre przepisy rozporządzenia o ubezpieczeniu")]
         self.assertEqual(_by_neighbors((body, [], 1, 1), 314, {315: t314 + " pracowników"}, t314)[0], body)
         self.assertEqual(len(_by_neighbors((body, [], 1, 1), 314, {315: t314 + " pracowników"})[0]), 2)  # no title
+        # a short own title does not win on its length alone (DU/1983/221 and 222)
+        t221 = "Rozporządzenie Ministra Handlu Wewnętrznego i Usług z dnia 9 sierpnia 1983 r. w sprawie rejestracji cechów."
+        t222 = t221.replace("cechów.", "statutów izb rzemieślniczych.")
+        body = [L("§ 5. Rozporządzenie wchodzi w życie z dniem ogłoszenia."), L("Minister Handlu: E. Szymański"),
+                L("ROZPORZĄDZENIE MINISTRA HANDLU WEWNĘTRZNEGO I USŁUG z dnia 9 sierpnia 1983 r. w sprawie rejestracji "
+                  "statutów izb a"), L("Na podstawie art. 34 ust. 5 ustawy zarządza się, co następuje:")]
+        self.assertEqual(len(_by_neighbors((body, [], 1, 1), 221, {222: t222}, t221)[0]), 2)
 
     def test_annex_header(self):
         self.assertTrue(ANNEX_OCR.match("Załącznik do obwieszczenia Ministra z dnia 27 marca 1997 r. (poz. 224)"))
