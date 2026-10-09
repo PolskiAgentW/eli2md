@@ -381,16 +381,9 @@ class Scan(unittest.TestCase):
         self.assertFalse(_title_at(toc, 0, t864))
         from eli2md.pdf import CONTENTS_TYPED_ITEM
         self.assertIsNone(CONTENTS_TYPED_ITEM.match("146 - OŚWIADCZENIE RZĄDOWE"))  # the act's own number before its type
-        # a header under a bare number of this position or an earlier one is that act's, though it reads as the next
-        # one's (DU/1924/411: "410", the header of 410 like that of 412); a header that reads as well as the act's own
-        # title is the act's (DU/1926/314 and 315, alike in issuer, date and the words after it)
-        t412 = ("Oświadczenie rządowe z dnia 15 kwietnia 1924 r. w przedmiocie wymiany dokumentów ratyfikacyjnych "
-                "konwencji osiedleńczej")
-        body = [L("Tekst aktu 409."), L("Tekst"), L("410"),
-                L("Oświadczenie Rządowe z dnia 15 kwietnia 1924 r. w przedmiocie wymiany dokumentów ratyfikacyjnych "
-                  "umowy handlowej"), L("411. Konwencja Osiedleńcza między Polską a Turcją")]
-        self.assertTrue(_title_at(body, 3, t412))
-        self.assertEqual(_by_neighbors((body, [], 1, 1), 411, {412: t412})[0], body)
+        # a header that reads as well as the act's own title is the act's (DU/1926/314 and 315, alike in issuer, date
+        # and the words after it). A header under a bare number of the act or the one before it may still be the next
+        # act's: OCR misreads its number ("603" for 605, DU/1924/604; "325" for 326, DU/1927/325)
         t314 = ("Rozporządzenie Ministra Pracy i Opieki Społecznej z dnia 21 maja 1926 r. zmieniające niektóre przepisy "
                 "rozporządzenia o ubezpieczeniu")
         body = [L("§ 2. Tekst."), L("Tekst"), L("Rozporządzenie Ministra Pracy i Opieki Społecznej"), L("z dnia 21 maja 1926 r."),

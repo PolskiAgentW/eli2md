@@ -1283,17 +1283,12 @@ def _by_neighbors(own: tuple, position: int, neighbors: dict[int, str], title: s
     that position's number: the whole next act was in the text (DU/1928/427 + 428, DU/1946/32 + 33 whose numbers OCR
     read as "88" and not at all). Searched from the act's third line, so its own header is not taken; a header
     under the next position's number ("735. Przekład Konwencja …") from the second.
-    Not a header right under a bare number of this position or an earlier one: that is the header of the act before
-    it, of a title alike ("410", "Oświadczenie Rządowe z dnia 15 kwietnia 1924 r. w przedmiocie wymiany dokumentów
-    ratyfikacyjnych umowy handlowej …" read as the header of 412, "… konwencji osiedleńczej", in DU/1924/411); nor
-    one that reads at least as well as the act's own `title` (DU/1926/314 and 315: the same issuer and date,
+    Not a header that reads at least as well as the act's own `title` (DU/1926/314 and 315: the same issuer and date,
     "zmieniające niektóre przepisy rozporządzenia …" in both)."""
     body, notes, lo, hi = own
     nxt = {p: neighbors[p] for p in range(position + 1, position + 4) if p in neighbors}
 
     def neighbor_header(k: int) -> bool:
-        if (m := re.fullmatch(r"\W*(\d{1,4})\W*", body[k - 1].text)) and int(m.group(1)) <= position:
-            return False
         hits = [t for t in nxt.values() if _title_at(body, k, t)]
         if not hits or not title or (own_score := _title_score(body, k, title, 300)) is None:
             return bool(hits)
