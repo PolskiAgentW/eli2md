@@ -42,6 +42,8 @@ akt), 1935/222 (linia śmieci ze spisu treści), 1949/31 (tylko stopka numeru; o
 nie usterka). Poniżej 90%: DU/1963/96 (78%, pogrubiony tytuł i przebijający druk), 1984/239 (85%), 1958/15 (88%).
 Oceniający różnią się w liczeniu samotnych symboli („=”, „_”); grupa D liczyłaby w DU/1984/239 ok. 10 błędów więcej.
 Oceniający grupy H pisze o liniach „(1825, 2453)” na końcu tekstów: w plikach ich nie ma (grep), to rozmiar obrazu.
+eli2md 0.6.49 (poprawka regresji 0.6.48 w latach przedwojennych) daje na wszystkich 64 aktach tej próbki ten sam tekst
+co 0.6.48, więc wynik pomiaru 6 dotyczy też 0.6.49.
 
 Pomiary 1–5 progu 0/32 nie spełniły. Usterka z punktu 2 albo 3: lata 1918–1939 w 9, 3, 3, 1 i 1 akcie z 12; lata 1940–1989 w 8,
 8, 9, 5 i 5 z 20 (kolejno próbki 1008, 1009, 1010, 1012, 1013). W próbce 1013 (0.6.46) 3 z 6 usterek to pierwsza
