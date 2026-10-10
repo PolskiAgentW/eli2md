@@ -40,7 +40,8 @@ Rules:
   sentence after a list of pkt ("część wspólna") ends up under the last pkt: the Markdown has no
   indentation to tell them apart.
 - Headings of systematising units (DZIAŁ, Rozdział, Oddział, ...) are flat `heading` nodes between
-  the articles (articles are not nested in chapters); the next non-unit paragraph is their title.
+  the articles (articles are not nested in chapters); the next non-unit paragraph is their title. Numbers: "2a", "IV",
+  "IVA", or an ordinal in capitals ("DZIAŁ PIĄTY", "CZĘŚĆ PIERWSZA"); see HEADING.
   In annexes, sections numbered "I." … "XXXIX." are `heading` nodes too (label "III.").
 - Numbered rows of tables and forms are `text`, not units (_Builder.table_row): points of lists of coordinates,
   the rows and cell lists of a form card ("5. FUNKCJA PODSTAWOWA" … up to the next §, DU/2024/1337) and rows of
@@ -74,9 +75,16 @@ TREATY_ART = re.compile(rf"^Artykuł\s+(\d+[a-z]?|[IVXLC]+)\.?(?:\s+([{UPPER}][^
 # closing formula of an agreement and the ratification after it: outside the last article (as in the official HTML)
 TREATY_END = re.compile(r"^(?:Sporządzono\b|Na dowód\b|W dowód\b|Po zaznajomieniu się\b)")
 RANK = {"art": 0, "par": 1, "ust": 2, "pkt": 3, "lit": 4, "tir": 5}
+# ordinal numbers in words, upper case only (codes: "DZIAŁ PIĄTY", "CZĘŚĆ PIERWSZA", "KSIĘGA TRZECIA")
+ORDINAL = ("(?:DWUDZIEST[YA]\\s+)?(?:PIERWSZ[YA]|DRUG[IA]|TRZECIA?|CZWART[YA]|PIĄT[YA]|SZÓST[YA]|SIÓDM[YA]|ÓSM[YA]"
+           "|DZIEWIĄT[YA]|DZIESIĄT[YA]|JEDENAST[YA]|DWUNAST[YA]|TRZYNAST[YA]|CZTERNAST[YA]|PIĘTNAST[YA]|SZESNAST[YA]"
+           "|SIEDEMNAST[YA]|OSIEMNAST[YA]|DZIEWIĘTNAST[YA]|DWUDZIEST[YA])")
+# groups: label, footnote markers, title. "Rozdział 2. Tytuł", "DZIAŁ IVA" / "TYTUŁ IIIA" (letters added by amendments,
+# upper case after a Roman number), "DZIAŁ CZTERNASTY A", "KSIĘGA PIERWSZA a IMMUNITET …", "Oddział 6[^20]" (DU/2025/24)
 HEADING = re.compile(
-    r"^((?:DZIAŁ|Dział|ROZDZIAŁ|Rozdział|ODDZIAŁ|Oddział|TYTUŁ|Tytuł|KSIĘGA|Księga|CZĘŚĆ|Część)"
-    rf"\s+(?:[0-9]+[a-z]*[{SUP}]*|[IVXLC]+[a-z]*[{SUP}]*))\.?(?:\s+(.*))?$", re.S)  # "Rozdział 2. Tytuł" too
+    r"^((?:DZIAŁ|Dział|ROZDZIAŁ|Rozdział|ODDZIAŁ|Oddział|TYTUŁ|Tytuł|KSIĘGA|Księga|CZĘŚĆ|Część)\s+"
+    rf"(?:[0-9]+[a-z]*[{SUP}]*|[IVXLC]+(?:[a-z]*|[A-Z]{{1,2}})[{SUP}]*|{ORDINAL}(?:\s+[A-Za-z](?=\s|$))?))"
+    rf"\.?({NOTE})(?:\s+(.*))?$", re.S)
 # "III. Stanowiska pracy …": a section of an annex numbered I–XXXIX. It ends the units of the section before
 # (DU/2024/629: the "1)" list of section III is not under "6." of section II). Only in annexes: in the main text
 # such lines are mostly rows of tables replaced by an amendment without quotes (DU/2025/330: "część I otrzymuje
@@ -306,8 +314,8 @@ class _Builder:
             self.fresh["text"] = text
             self.fresh = None
             return
-        if self.heading is not None and not quoted and not self.heading["text"]:
-            self.heading["text"] = text
+        if self.heading is not None and not quoted:  # "[^20]" from "Oddział 6[^20]" stays before the title
+            self.heading["text"] = f'{self.heading["text"]} {text}'.strip()
             self.heading = None
             return
         self.fresh = self.heading = None
@@ -328,9 +336,9 @@ class _Builder:
             self.undo[1].append(node)
         self._parent_list().append(node)
 
-    def add_heading(self, label: str, text: str) -> None:
+    def add_heading(self, label: str, text: str, notes: str = "") -> None:
         self.close()
-        node = {"type": "heading", "label": " ".join(label.split()), "text": text}
+        node = {"type": "heading", "label": " ".join(label.split()), "text": f"{notes} {text}".strip()}
         self.body.append(node)
         self.heading = node if not text else None
 
@@ -441,7 +449,7 @@ def md_to_tree(md: str) -> dict:
             if label:
                 b.stack[-1][1]["label"] = label
         elif d == 0 and (h := HEADING.match(text)) and len(text) < 300:
-            b.add_heading(h.group(1), (h.group(2) or "").strip())
+            b.add_heading(h.group(1), (h.group(3) or "").strip(), h.group(2))
         elif d == 0 and kind == "p" and parts[-1][0] == "annex" and (h := ROMAN_HEAD.match(text)) \
                 and b.roman_section(h.group(1)):
             b.add_heading(h.group(1), h.group(2).strip())

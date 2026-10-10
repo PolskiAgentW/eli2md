@@ -54,6 +54,27 @@ class Tree(unittest.TestCase):
         self.assertEqual(paths(t["body"]), ["ust_1", "ust_1/pkt_1", "ust_2", "pkt_1"])
         self.assertEqual([n.get("label") for n in t["body"] if n["type"] == "heading"], ["Rozdział 1", "Rozdział 2"])
 
+    def test_code_headings_in_words_and_with_letters_end_units(self):
+        # DU/2026/1245 (k.p.), DU/2026/468 (k.p.c.), DU/2025/24: "DZIAŁ PIĄTY", "CZĘŚĆ PIERWSZA …", "TYTUŁ IIIA …",
+        # "Oddział 6[^20]" were text of the article before them
+        t = md_to_tree(md("##### Art. 113¹.", "(uchylony)", "DZIAŁ PIĄTY", "Odpowiedzialność materialna pracowników",
+                          "##### Art. 14.", "(uchylony)", "CZĘŚĆ PIERWSZA POSTĘPOWANIE ROZPOZNAWCZE", "KSIĘGA PIERWSZA PROCES",
+                          "##### Art. 63.", "§ 1. Treść.", "TYTUŁ IIIA Państwowa Inspekcja Pracy",
+                          "##### Art. 295.", "§ 2. Treść.", "DZIAŁ CZTERNASTY A", "Odpowiedzialność za szkody",
+                          "##### Art. 35⁹.", "Treść.", "Oddział 6[^20]", "Postanowienia wspólne",
+                          "##### Art. 1110⁴.", "§ 3. Treść.", "KSIĘGA PIERWSZA a IMMUNITET SĄDOWY",
+                          "##### Art. 36.", "Część pierwsza wniosku zawiera dane."))
+        self.assertEqual([(n["label"], n["text"]) for n in t["body"] if n["type"] == "heading"],
+                         [("DZIAŁ PIĄTY", "Odpowiedzialność materialna pracowników"),
+                          ("CZĘŚĆ PIERWSZA", "POSTĘPOWANIE ROZPOZNAWCZE"), ("KSIĘGA PIERWSZA", "PROCES"),
+                          ("TYTUŁ IIIA", "Państwowa Inspekcja Pracy"), ("DZIAŁ CZTERNASTY A", "Odpowiedzialność za szkody"),
+                          ("Oddział 6", "[^20] Postanowienia wspólne"), ("KSIĘGA PIERWSZA a", "IMMUNITET SĄDOWY")])
+        self.assertEqual([n.get("text") for n in t["body"] if n["type"] == "art"],
+                         ["(uchylony)", "(uchylony)", "", "", "Treść.", "", "Część pierwsza wniosku zawiera dane."])
+        self.assertEqual(paths(t["body"]), ["art_113¹", "art_14", "art_63", "art_63/par_1", "art_295", "art_295/par_2",
+                                            "art_35⁹", "art_1110⁴", "art_1110⁴/par_3", "art_36"])
+        self.assertFalse(any(c["type"] == "text" for n in t["body"] for c in n.get("children", [])))
+
     def test_roman_sections_in_annex_end_units(self):
         # DU/2024/629: section III starts with a "1)" list, which is not under "6." of section II
         annex = ("## Załącznik nr 1", "WYKAZ STANOWISK", "I. Stanowiska w obszarze wytwarzania:", "1. realizacji procesu:",

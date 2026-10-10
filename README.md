@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.49, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.50, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -214,6 +214,19 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.50** (2026-10-10). Drzewo JSON (`eli2md.tree`), Markdown bez zmian. Nagłówki działów, części, ksiąg itd.,
+których drzewo nie rozpoznawało, były tekstem jednostki stojącej przed nimi (zgłoszenie z legal-cite-pl: k.p. art. 113¹,
+k.p.c. art. 14, pr. aut. art. 35⁹). Teraz węzłami `heading` są też nagłówki z liczebnikiem słownym wielkimi literami
+(„DZIAŁ PIĄTY”, „CZĘŚĆ PIERWSZA POSTĘPOWANIE ROZPOZNAWCZE”, „DZIAŁ CZTERNASTY A”, „KSIĘGA PIERWSZA a …”), z wielką
+literą po numerze rzymskim („DZIAŁ IVA”, „TYTUŁ IIIA”) i z odnośnikiem po numerze („Oddział 6[^20]”, DU/2025/24;
+odnośnik idzie na początek tytułu: „[^20] Postanowienia …”). W k.p. (DU/2026/1245) i k.p.c. (DU/2026/468) było
+14 i 38 takich nagłówków w treści artykułów, teraz 0. Markdown opublikowanych zbiorów (88 924 akty: DU 1918–2026,
+M.P. 2000–2026) przez drzewo 0.6.49 i 0.6.50: przybywa 486 nagłówków w 195 aktach, żaden nie znika, liczba jednostek
+ta sama. Przejrzane: wszystkie z numerem arabskim i rzymskim bez litery, po jednym na akt z pozostałych i 46
+z nietypowym tytułem (pusty, od małej litery, długi). Fałszywych nie znalazłem; w skanach 1918–1989 numer bywa przekręcony przez OCR („Rozdział VW”).
+Ścieżki jednostek zmieniają się w 18 aktach, wszystkie to skany 1918–1945: po nagłówku jednostki artykułu z numerem
+przekręconym przez OCR („Art, 76.”) nie wiszą już pod poprzednim artykułem, tylko na najwyższym poziomie.
 
 **0.6.49** (2026-10-09). Skany Dziennika Ustaw 1918–1989: regresja 0.6.48 w latach przedwojennych, znaleziona
 w porównaniu pierwszych roczników przeliczanego korpusu (1918–1919: 2 z 396 aktów). 0.6.48 wymagało nagłówka aktu pod
