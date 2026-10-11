@@ -1,0 +1,2103 @@
+"""Convert a born-digital Dziennik Ustaw PDF into paragraphs + footnotes.
+
+Layout facts this relies on (checked on 2024 acts, see eval/):
+- page 1 starts with the gazette masthead ending with a line "Poz. N";
+- later pages start with a running header "Dziennik Ustaw – N – Poz. N";
+- footnotes sit below a thin horizontal rule (a ~144pt wide rect) in 9pt type;
+- footnote markers are superscripts in ~6pt type;
+- paragraphs are separated by a larger vertical gap than lines within a paragraph.
+"""
+from __future__ import annotations
+
+import json
+import math
+import re
+import unicodedata
+from collections import Counter
+from difflib import SequenceMatcher
+from dataclasses import dataclass, field, replace
+
+import pdfplumber
+import pdfplumber.page
+from pdfplumber.utils import extract_words
+from pdfplumber.utils.text import WordExtractor
+
+
+class _PlacedTags(pdfplumber.page.PDFPageAggregatorWithMarkedContent):
+    """pdfplumber keeps no stack of marked content: an EMC resets the tag to None. Word formulas in a placed
+    PDF nest "/Span <</ActualText …>> BDC … EMC" inside "/PlacedPDF BDC", so after the first formula the rest
+    of the placed page lost its tag and skipped the ink test: its hidden copy went into the output, mixed
+    with the visible text (DU/2026/40 p. 2-5: 7860 of 22175 placed chars; 10 of 118 acts with Cambria Math in
+    2025-2026, none in a random 300). Here everything inside /PlacedPDF is tagged PlacedPDF; other tags are
+    as in pdfplumber."""
+
+    def begin_tag(self, tag, props=None):
+        super().begin_tag(tag, props)
+        self._stack = getattr(self, "_stack", []) + [self.cur_tag]
+        if "PlacedPDF" in self._stack:
+            self.cur_tag = "PlacedPDF"
+
+    def end_tag(self):
+        self._stack = getattr(self, "_stack", [])[:-1]
+        super().end_tag()
+        if "PlacedPDF" in self._stack:
+            self.cur_tag = "PlacedPDF"
+
+
+pdfplumber.page.PDFPageAggregatorWithMarkedContent = _PlacedTags  # looked up by Page when it parses a page
+
+RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
+# "Pozycja 19": MP 2012 up to poz. 130; ") Poz. 1024*": the last act of a year has a note "*) Ostatnia pozycja"
+MASTHEAD_END = re.compile(r"^[*)\s]*Poz(?:\.|ycja)\s*\d+[*)\s]*$")
+SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 41¹., 5²)
+# Letters of an index ("Art. 22¹ᵃ."): Unicode modifier letters a-z; there is none for q.
+SUP_LETTERS = "ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻ"
+SUP_CHARS = SUP_DIGITS + SUP_LETTERS
+# Lines that start a new unit even without a vertical gap (used at page breaks).
+UNIT_START = re.compile(
+    rf"^(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_CHARS}]*\.\s|\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s|–\s|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
+)
+UNIT_START_Q = re.compile("^„?" + UNIT_START.pattern[1:])  # also a quoted unit of an amendment: „1. Treść
+ITEM_START = re.compile(rf"^„?(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s)")  # not "1." / "–"
+POINT_START = re.compile(rf"^„?(\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s)")  # "1)", "a)" only
+LOWER = "a-ząćęłńóśźż"
+ANNEX = re.compile(r"^Załącznik")
+ANNEX_UNDER_SIGNATURE = re.compile(r"^„?(?:Załącznik|ZAŁĄCZNIK)")
+# the header of an annex in a paragraph read by OCR, which has no position on the page: "Załącznik do obwieszczenia
+# Ministra … z dnia 27 marca 1997 r. (poz. 224)" (DU/1997/224 p. 2), "ZAŁĄCZNIK Nr 2"; not "Załącznik do ustawy określa …"
+ANNEX_OCR = re.compile(r"^(?:Załącznik|ZAŁĄCZNIK)(?:i|I)?(?:\s+(?:nr|Nr|NR)\s*\S+)?(?:\s+do\s+(?:ustawy|rozporządzenia"
+                       r"|obwieszczenia|uchwały|zarządzenia|postanowienia|dekretu|umowy|konwencji|protokołu)\b"
+                       r"(?!.*\b(?:stanowi|określa|zawiera)\b)|\s*$|\s+[A-ZĄĆĘŁŃÓŚŹŻ]{3,}\b)")
+# "Załączniki do ustawy z dnia 9 grudnia 1993 r. (poz. 599)", "Załącznik nr 1 WYKAZ TOWARÓW …" (DU/1993/599)
+INK_DPI, INK_LEVEL = 100, 180  # render resolution; gray level above which a box has no ink
+DUP_TOL = 0.3  # pt; a char drawn twice repeats within this distance (<= 0.1pt in DU/2025/1095; see _dedupe)
+MATH = re.compile("[\U0001D400-\U0001D7FF]")
+CID = re.compile(r"\(cid:\d+\)")  # a glyph the PDF font does not map to Unicode (pdfminer's placeholder)
+FOOTNOTE_MARK = re.compile(r"^(?:\d{1,3}\)?|[a-z]{1,2}\))[,.;:]?$")  # "3)", letters too: "b)", "za)" (_letter_refs)
+FOOTNOTE_TYPE = 9.5  # pt; footnotes are set in 9pt, body text in 10pt
+# Small digits without ")" are not footnote markers but unit numbers (Art. 41¹), units (m²)
+# or chemical subscripts (P₂O₅). Kept as Unicode super/subscript digits.
+SUPER = str.maketrans("0123456789abcdefghijklmnoprstuvwxyz", SUP_CHARS)
+SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+# Index of a unit number in small raised type right after the number: "22" + "1a" (2025 prints: Art. 22¹ᵃ.),
+# "479" + "[30f]" (2026 prints use brackets, also for digits: "§ 4[1]", DU/2026/468). Written as superscripts
+# without the brackets, so both prints give "Art. 479³⁰ᶠ." ("1" alone is a script digit, see FOOTNOTE_MARK).
+INDEX = re.compile(r"^(?:\[(\d{1,3}[a-z]{0,3})\]|(\d{1,3}[a-z]{1,3}))$")
+SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+$")
+# a signature read by OCR, which has no position on the page to tell it ("Prezes Trybunału Konstytucyjnego: A. Zo//",
+# "Minister Finansów: w z. H. Wasilewska-Trenkner"); also at the end of the last paragraph ("… z dniem ogłoszenia.
+# Prezydent Rzeczypospolitej Polskiej: W. Jaruzelski", DU/1990/390)
+SIGNER_OCR = r"(?:Prezydent|Prezes|Wiceprezes|Minister|Marszałek|Przewodnicząc[ya]|Sekretarz|Pierwszy|Szef|Kierownik)"
+# (an initial may be read as a digit: "Prezes Rady Ministrów: 7. Mazowiecki", DU/1990/100)
+# (a dash in the office: "Minister — Szef Urzędu Rady Ministrów: M. Strąk", DU/1994/7; an initial with a comma:
+# "Prezes Rady Ministrów: W, Cimoszewicz", DU/1997/7)
+SIGNER_NAME = r":\s*(?:w\s?z\.\s*)?(?:[A-ZŁŚŻĆ0-9]\w{0,2}[.,]\s*)+[A-ZŁŚŻĆ][\w/'’-]+(?:[- ][A-ZŁŚŻĆ][\w-]+)?"
+SIGNER_NAME_OCR = SIGNER_NAME + r"\s*$"
+SIGNATURE_OCR = re.compile(rf"^{SIGNER_OCR}[\w ,—–-]{{2,90}}{SIGNER_NAME_OCR}")
+SIGNATURE_AFTER_OCR = re.compile(rf"(?<=[.;])\s+({SIGNER_OCR}[\w ,—–-]{{2,90}}{SIGNER_NAME_OCR})")
+# the next act's number read at the end of the signature ("Prezes Rady Ministrów: J. K. Bielecki 157", DU/1991/156)
+SIGNATURE_NUMBER_OCR = re.compile(rf"({SIGNER_OCR}[\w ,—–-]{{2,90}}{SIGNER_NAME})\s+(\d{{1,4}})")
+IMAGE_TEXT_CHARS = 30  # more text-layer chars than this over an image: the image is a background, not read by OCR
+# Dz.U. (and M.P.) up to 2011 came out in numbered issues: the page header names the issue ("Dziennik Ustaw Nr 150
+# — 9307 — Poz. 1255, 1256 i 1257", DU/2005/1255), the first page of an issue has "Nr 115" under the masthead
+# (DU/2002/994). Those years set acts in two columns; from 2012 there are no issues and one column.
+OLD_HEADER = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\s*\d+")
+# The whole header as OCR reads it, page number and positions optional ("Monitor Polski Nr 26 — 1149 —")
+OLD_HEADER_OCR = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\s*\d+(?:\s*[—–-]+\s*\d+)?(?:\s*[—–-]+)?"
+                            r"(?:\s*Poz[.,]?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?")
+# The running header of a pre-war page as OCR reads it: "Dziennik Ustaw. Poz. 144, 145, 146 i 147." (DU/1926/146), with the
+# issue number ("Nr 25.", OCR "Ne 25.") and the page number ("272") as paragraphs of their own next to it. It lists the
+# positions on the page, so a number of that list alone in a paragraph ("146.", "145,") is where that act starts.
+# OCR may garble the words ("Dzićnhik Ustów. Póz. 12, 13 1 14,", DU/1925/14). From the 1930s the header is three
+# paragraphs: "Str. 427", "Dziennik Ustaw Nr. 26", "Poz. 233 i 234" (DU/1938/233).
+PREWAR_HEADER_OCR = re.compile(r"^(?:N[rReo]\.?\s*\d{1,3}[.,]?\s*)?(?:D\w{5,9}\s*U\w{3,4}[.,]?\s*(?:N[rReo]\.?\s*\d{1,3}[.,]?\s*)?)?"
+                               r"P[oó]z[.,]?\s*"
+                               r"(\d{1,4}(?:\s*(?:i|,|\.|1)\s*\d{1,4})*)[.,]?")
+# the same header with specks of the scan or the page number before it ("Jh ||| CC Dzienhik Ustaw. Poz. 150, 151 i 152.",
+# DU/1923/151; "506 Dziennik Praw. Poz. 304i 305. Ne 42.", DU/1919/305: "Dziennik Praw" up to 1919), the name read
+# wrong ("Ne 41. Dziennik Wstaw. Poz. 258 i 259.", DU/1921/259), "|" for "i" ("Poz. 474 | 475,", DU/1922/475), and of
+# the 1950s-1980s with the page number between ("Dziennik Ustaw Nr 25 | ps — 314 = Poz. 125 i 126", DU/1984/126)
+# and the page number with the positions only, the rest of the header read apart ("= 452° == Poz. 123 i", DU/1947/123)
+PAGE_POS_HEADER_OCR = re.compile(r"^[\W\d°]{0,15}P[oó0]z[.,]?\s*(\d{1,4}(?:\s*(?:i|,|\.|1|\|)?\s*\d{1,4})*)(?:\s*[i,.])?\W*$")
+PREWAR_HEADER_LOOSE_OCR = re.compile(r"^.{0,25}?D[\wć]{5,9}[.,]?\s*\W?\w{3,5}[.,]?.{0,24}?P[oó0]z[.,]?\s*"
+                                     r"(\d{1,4}(?:\s*(?:i|,|\.|1|\|)?\s*\d{1,4})*)[.,]?")
+PREWAR_HEADER_BIT = re.compile(r"N[rReo°]\.?\s*\d{1,3}[.,]?|\d{1,4}|Str\.?\s*\d{1,4}|D\w{5,9}\s*U\w{3,4}[.,]?\s*N[rReo]\.?\s*\d{1,3}[.,]?")
+PREWAR_ACT_NUMBER = re.compile(r"(\d{1,4})[.,]?")
+PREWAR_HEAD_NUMBER = re.compile(r"(\d{1,4})[.,]\s")
+# what follows a pre-war act's number when the header with the page's positions is lost: the President's promulgation
+# formula or the act's type in ordinary case and its date ("13," + "Na mocy art. 44 Konstytucji ogłaszam ustawę …",
+# DU/1925/14; "Rozporządzenie Ministra Skarbu z dnia …")
+PREWAR_START_NEXT = re.compile(r"^\W{0,3}(?:\w\s)?(?:Na\s+mocy\s+art|(?:Ustawa|Rozporządzenie|Dekret|Obwieszczenie|Uchwała"
+                               r"|Postanowienie|Zarządzenie|Umowa|Konwencja|Traktat|Protokół|Oświadczenie|Układ"
+                               r"|Porozumienie)\s+(?:\S+\s+){0,12}?z\s+dnia\s+\d)")
+# the number and the promulgation formula read as one paragraph, maybe with a speck between ("14, ore Na mocy art. 44 …",
+# DU/1925/14)
+PREWAR_GLUED_START = re.compile(r"^(\d{1,4})[.,]?\s+(?:\S{1,4}\s+){0,2}(?=Na\s+mocy\s+art)")
+# the contents of an issue on its first page: "Treść: 84. Ustawa z dnia …  85. Oświadczenie rządowe …" (DU/1922/84);
+# after the war in capitals, its items numbered with a dash ("TREŚĆ: ROZPORZĄDZENIE PREZESA RADY MINISTRÓW Poz.: 422 —
+# z dnia …", "423 — Ministra …", DU/1947/422; "TRESS C:", DU/1952/276). The act's number under it was no act's number
+# when OCR misread the type under it ("422", "RO7PORZĄDZENIE …"; "436", "UMOWY ŚWIATOWEGO ZWIĄZKU POCZTOWEGO:",
+# DU/1951/436), and the act started at the issue's masthead
+PREWAR_CONTENTS = re.compile(r"^(?:Tre[śs][ćc]|\W{0,3}TRE[ŚS]{1,2}\s?[ĆC])\s*[:.;]?")
+PREWAR_CONTENTS_ITEM = re.compile(r"(?:^|\s)(\d{1,4})[.,]\s+(?=[A-ZĄĆĘŁŃÓŚŹŻ])")
+CONTENTS_DASH_ITEM = re.compile(r"(?:^|[\s:])(\d{1,4})(?:\s*[—–]|\s+-+\s)")
+# an act's type in any case, as OCR reads it (diacritics may go: "Rozporzadzenie", DU/1922/475)
+PREWAR_TYPES = (r"(?:ustawa|rozporządzenie|dekret|obwieszczenie|uchwała|postanowienie|zarządzenie|umowa|konwencja|traktat"
+                r"|protokół|oświadczenie|układ|porozumienie|orzeczenie)")
+PREWAR_TYPE = "".join({"ą": "[ąa]", "ę": "[ęe]", "ł": "[łl]", "ó": "[óo]", "ś": "[śs]", "ż": "[żz]"}.get(c, c)
+                      for c in PREWAR_TYPES)
+# under such a bare number of contents with dashes the act's header: a word in capitals, maybe misread
+# ("RO7PORZĄDZENIE"), or the type with a capital, maybe after specks of the scan ("asa Zarządzenie …"); not a paragraph
+# of text: OCR may read the next act's number in the middle of this act ("117" before "§ 2. Wykonanie …" of 116,
+# DU/1922/116, under "# Treść:"). Under the pre-war contents ("Treść: 23. Orędzie …") any bare number of it, as up to
+# 0.6.47: its acts may start without a type ("23", "Rada Regencyjna do Narodu Polskiego.", DU/1918/23, which 0.6.48
+# started at the masthead)
+NUMBER_HEADER_NEXT = re.compile(rf"^\W{{0,3}}(?:[A-ZĄĆĘŁŃÓŚŹŻ][A-ZĄĆĘŁŃÓŚŹŻ0-9]{{3,}}"
+                                rf"|(?:\S{{1,4}}\s+){{0,3}}(?=[A-ZĄĆĘŁŃÓŚŹŻ])(?i:{PREWAR_TYPE})\b)")
+# OCR of a header in capitals also adds diacritics to plain letters ("KONWENCJĄ (Nr 123) dotycząca …", DU/1970/62):
+# any letter of the type with or without them (for _title_at, which compares the rest without diacritics)
+_LOOSE = ("aą", "cć", "eę", "lł", "nń", "oó", "sś", "zżź")
+PREWAR_TYPE_LOOSE = re.compile("(?i:" + "".join(next((f"[{g}]" for g in _LOOSE if c in g), c) for c in PREWAR_TYPES)
+                               + r")\b")
+# the final provision of an act after its "§ N." lost by OCR ("6. Rozporządzenie wchodzi w życie …", DU/1967/5, "6 —" in
+# the contents): no act's header
+FINAL_PROVISION = re.compile(rf"\W{{0,3}}(?i:{PREWAR_TYPE})\s+(?:niniejsz\w*\s+)?(?:wchodzi|traci|obowiązuje|uzyskuje)\b")
+# a pre-war act's number glued to its title in one paragraph: "259. Rozporządzenie Ministra Kolei Żelaznych z dnia …"
+# (DU/1921/259), "182. DEKRET o organizacji archiwów" (DU/1919/182), "111. ROZPORZADZENIE RADY MINISTRÓW" (DU/1930/111).
+# The type in capitals is enough; in ordinary case (a list of acts in a text starts its items that way too: "6.
+# Rozporządzenie Ministra … z dnia …") only for a number of the page's header. A dash may stand between them
+# ("405. - ROZPORZĄDZENIE RADY MINISTRÓW", DU/1935/405), and "Przekład." (a translation) before the type ("301. Przekład.
+# Umowa między Rządem …", DU/1926/301: in ordinary case, a position of the contents with dashes, whose own lines do not
+# start with the numbers). Not after "§": "§ 2. Rozporządzenie wchodzi w życie …" (DU/1985/2, "2 —" in the contents)
+PREWAR_TYPED_START = re.compile(rf"^[^\w§]{{0,3}}(\d{{1,4}})[.,]?\s*[|;:*'\"„—–-]?\s+(?=(?:Przek[łl]ad[.,]?\s+)?(?i:{PREWAR_TYPE})\b)")
+PREWAR_TYPE_CAPS = re.compile(rf"{PREWAR_TYPE.upper()}\b")
+# (under a bare number the type in ordinary case starts the act too: "475.", "Rozporzadzenie Ministra Skarbu …",
+# "z dnia 22 czerwca 1922 r.", DU/1922/475)
+PREWAR_TYPE_ANY = re.compile(rf"^\W{{0,3}}(?i:{PREWAR_TYPE})\b")
+# a speck of the scan before an act's number or type ("ZM 248 OŚWIADCZENIE RZĄDOWE", DU/1984/248; "126", ";",
+# "i ROZPORZĄDZENIE RADY MINISTRÓW.", DU/1984/126)
+SPECK_BEFORE_CAPS = re.compile(r"^\W*(?:[^\W\d_]{1,3}\W+)?(?=(?:\d{1,4}\s+)?[A-ZĄĆĘŁŃÓŚŹŻ]{6})")
+# the end of the previous act's signature read between the next act's number and its type ("305.", "Ministerstwa:
+# I, kberhavat", "ROZPORZĄDZENIE Ministra Kolei", DU/1919/305)
+# the number and the type with a speck between ("146 - OŚWIADCZENIE RZĄDOWE", DU/1979/146)
+NUMBER_SPECK_TYPE = re.compile(r"^(\d{1,4})\s*[-—–|:;,.'’]{1,3}\s*(?=[A-ZĄĆĘŁŃÓŚŹŻ]{6})")
+# a bare number in specks ("; 87", "88 Ę": DU/1984/87)
+SPECKED_NUMBER = re.compile(r"[\W_]{0,3}\s*(\d{1,4})(?:\s+[^\W\d]{1,2})?[\W_]{0,3}")
+# the next act's number and type read into the last paragraph of the act before it ("… Prezes Rady Ministrów: w z.
+# J. Obodowski 45 c | ROZPORZĄDZENIE RADY MINISTRÓW | z dnia …", DU/1983/45; "… Minister Sprawiedliwości: Michałowski
+# 13. ROZPORZADZENIE MINISTRA PRACY …", DU/1931/12): after a sentence or a signature (a pre-war one without initials)
+GLUED_NEXT_START = re.compile(r"(?<=\S)\s+(\d{1,4})[.,]?\s+(?:[^\w\s]{1,2}\s+|[^\W\d]{1,2}\s+)?\|?\s*(?=[A-ZĄĆĘŁŃÓŚŹŻ]{6})")
+# the act's number read at the end of the paragraph before its type (the issue's contents: "… ogłoszonej w stanie
+# wyjątkowym . . . 36 —_ z —— — m za maa 2 101.", "DEKRET", DU/1919/101); not a reference ("poz. 101.")
+TRAILING_NUMBER = re.compile(r"(?<=\s)(\d{1,4})[.,]?\s*$")
+REFERENCE_BEFORE = re.compile(r"(?:poz|Nr|art|ust|pkt|str|§|r|z)\.?\s*$", re.I)
+# an erratum to another act printed after the last act of an issue ("Sprostowanie. W Dz. U. R. P. № 76, poz. 600 …",
+# DU/1923/635): the act ends before it. Not a sentence of an act on errata ("Sprostowanie powinno być wydrukowane …",
+# the press law in DU/1928/1, cut there once its number was found under the issue's contents)
+ERRATUM_OCR = re.compile(r"^\W{0,3}Sprostowani[ea]\b\.?(?!\s+(?:powinn|winn|nale[żz]|mo[żz]e|jest|by[ćc]\b|ma\b|nie\b))")
+SIGNATURE_TAIL_OCR = re.compile(r"^[^\W\d_][\w .,]{0,60}:\s*\S.{0,40}$")
+OLD_MASTHEAD = re.compile(r"^(?:DZIENNIK\s*USTAW|MONITOR\s*POLSKI)")
+OLD_ISSUE = re.compile(r"^Nr\s*\d+$")
+GUTTER = (6.0, 20.0)  # pt; the gap between the columns is 11.3-12 pt in DU 2000-2011 (DU/2005/1255, DU/2011/1134)
+DASH_RULE = re.compile(r"[—–-]{3,}")  # the rule over the footnotes of a QuarkXPress page (DU 2000-2009)
+# An act of an issue starts with its position number alone in a row, bold, centred on the page: 14 pt Univers-BoldPL
+# (DU 2000-2008: "1255" at x 282-313 above "USTAWA", DU/2005/1255 p. 1), 12 pt in 2009 (DU/2009/1323) and in the
+# InDesign issues of 2010-2011 (UniversPro-Bold, DU/2011/1134); body text is 10 pt or less.
+ACT_NUMBER = re.compile(r"^\d{1,4}$")
+ACT_NUMBER_SIZE = 11.5  # pt
+ACT_NUMBER_NEXT = 20  # the next act's number is at most this far above the act's own (an issue's positions run on)
+
+
+@dataclass
+class Line:
+    page: int
+    top: float
+    bottom: float
+    x0: float
+    size: float
+    text: str
+    pw: float = 595.0
+    ph: float = 842.0
+    mark: str = ""  # "notext" | "image": position marker for content that is not text; "ocr": text read by OCR;
+    # "scan": a paragraph read by OCR from a scan whose own text layer is unreliable (_hidden_ocr_scan): text, so units
+    x1: float = 0.0
+    right: float = 0.0  # right edge of justified text in this frame (0 = unknown)
+    lead: float = -1.0  # usual gap between lines in this frame (-1 = unknown)
+    band: int = 0  # two-column pages (see _bands): full-width rows are odd bands, the text in columns even ones
+    col: int = 0  # 1 = left, 2 = right column of a two-column band; 0 = read across the page
+    act: int = 0  # the line is the position number that starts an act on a page of an old issue (ACT_NUMBER)
+    old: bool = False  # the line is on a page of an issue of 2011 or earlier (_old_issue)
+
+
+@dataclass
+class Block:
+    kind: str  # "p" | "signature" | "annex" (annex header) | "notext" | "image" | "ocr" | "scan" (see Line.mark)
+    text: str
+    page: int
+
+
+@dataclass
+class Document:
+    masthead: list[str] = field(default_factory=list)
+    blocks: list[Block] = field(default_factory=list)
+    footnotes: list[str] = field(default_factory=list)
+    footnote_pages: list[int] = field(default_factory=list)  # page of each footnote (numbering may restart)
+    no_text_pages: list[int] = field(default_factory=list)  # e.g. scanned pages: their content is lost
+    image_pages: list[int] = field(default_factory=list)  # pages with text and large images (forms, drawings)
+    ocr_pages: list[int] = field(default_factory=list)  # pages without text whose OCR text is included
+    unmapped_pages: list[int] = field(default_factory=list)  # text layer mostly without Unicode, kept without it
+    # pages with text whose large image is a scan of text read by OCR (also in image_pages, not in ocr_pages)
+    image_ocr_pages: list[int] = field(default_factory=list)
+    ocr_engine: str = ""  # e.g. "tesseract 5.5.0"
+    ocr_langs: dict[int, str] = field(default_factory=dict)  # page -> tesseract language(s) used
+
+    @property
+    def paragraphs(self) -> list[str]:
+        return [b.text for b in self.blocks]
+
+    def main_blocks(self) -> list[Block]:
+        """Blocks before the first annex header."""
+        out = []
+        for b in self.blocks:
+            if b.kind == "annex":
+                break
+            out.append(b)
+        return out
+
+    def annex_blocks(self) -> list[Block]:
+        return self.blocks[len(self.main_blocks()):]
+
+
+def _char_angle(c: dict) -> int:
+    """Writing direction of a char in degrees (0, 90, 180, 270), from its text matrix."""
+    a, b = c["matrix"][0], c["matrix"][1]
+    return round(math.degrees(math.atan2(b, a)) / 90) % 4 * 90
+
+
+def _watermark(c: dict) -> bool:
+    """A char of the invisible diagonal stamp "www.rcl.gov.pl" over pages of MP 2012 (MP/2012/596, 988):
+    marked as an Artifact and written at ~55 degrees. Its letters landed inside words and paragraphs and
+    hid the running header ("l Monitor Polski – 2 – Poz. 596 p"). Text of the act is never diagonal."""
+    if c.get("tag") != "Artifact" or "matrix" not in c:
+        return False
+    deg = math.degrees(math.atan2(c["matrix"][1], c["matrix"][0])) % 90
+    return 10 < deg < 80
+
+
+def _drop_watermark(page):
+    if not any(_watermark(c) for c in page.chars):
+        return page
+    return page.filter(lambda o: not (o.get("object_type") == "char" and _watermark(o)))
+
+
+def _drop_soft_hyphens(page):
+    """Drop blank chars of no width in the text flow: a blank followed (in content order, on its line, both written
+    left to right) by a char that starts where the blank starts. pdfminer reads a soft hyphen inside a line as such
+    a blank ("przysługu­ją­cego" in DU/2013/666: ' ' at x 254.84, 'j' at 254.81); sorted by x it split the word:
+    "przysługuj ą cego". Text turned by 180 degrees is upright for pdfplumber but runs to smaller x (DU/2025/984).
+    A no-break space that the next letter overlaps by kerning is a word gap (DU/2026/994 p. 9: "wykonanych\xa0przez",
+    'p' 0.32 pt after the blank starts); in the soft hyphens seen the next char starts 0-0.03 pt before it.
+    Also drop blanks of a run (a blank next to it in content order) whose middle falls inside a letter on their line:
+    a table cell filled with blanks and written over spread its words ("d y s p o n e n c i ś r o d k ó w 1 0 d n i"
+    in DU/2025/133 p. 130). A lone blank under a letter (kerning) stays a word gap."""
+    chars = page.chars
+    drop = set()
+    for c, n in zip(chars, chars[1:]):
+        if not c["text"].strip() and n["text"].strip() and _char_angle(c) == 0 == _char_angle(n) \
+                and abs(n["top"] - c["top"]) < 1 and -0.5 <= n["x0"] - c["x0"] <= 0.05:
+            drop.add(id(c))
+    # a run of blanks drawn over letters (a filled table cell, DU/2025/133 p. 130)
+    lines = {}
+    for c in chars:
+        if c["text"].strip() and _char_angle(c) == 0:
+            lines.setdefault(round(c["top"]), []).append(c)
+    for i, c in enumerate(chars):
+        if c["text"].strip() or _char_angle(c) != 0 or id(c) in drop:
+            continue
+        if not any(0 <= j < len(chars) and not chars[j]["text"].strip() for j in (i - 1, i + 1)):
+            continue
+        mid = (c["x0"] + c["x1"]) / 2
+        if any(x["x0"] < mid < x["x1"] and abs(x["top"] - c["top"]) < 3  # pdfplumber's y_tolerance
+               for k in range(-3, 4) for x in lines.get(round(c["top"]) + k, ())):
+            drop.add(id(c))
+    return page.filter(lambda o: id(o) not in drop) if drop else page
+
+
+def _doubled(c: dict) -> bool:
+    """A glyph whose ToUnicode maps to its character twice: Word exports Cambria Math so, one 𝑘 reads "𝑘𝑘"
+    (DU/2026/1236 p. 10, "kk" in 0.6.3; poppler reads it doubled too). Only mathematical alphanumerics (also
+    math Greek 𝜂) in a font named *Math*: in DU+MP 2025-2026 all 16 991 doubled chars of Cambria Math are such
+    (19 acts), while doubled chars of text fonts are ligatures ("ff", "tt"; eval/math_glyphs_0.6.4.dev.md)."""
+    t = c["text"]
+    return len(t) == 2 and t[0] == t[1] and bool(MATH.match(t)) and "Math" in (c.get("fontname") or "")
+
+
+def _single_glyphs(page):
+    """Chars of `_doubled` glyphs get their one character. Changes the page's char dicts in place (pdfplumber
+    caches them, so filtered pages and extract_words see the change)."""
+    for c in page.chars:
+        if _doubled(c):
+            c["text"] = c["text"][0]
+    return page
+
+
+def _to_frame(o: dict, rot: int, w: float, h: float) -> dict:
+    """Map an object's bbox into a frame where text written at `rot` degrees runs left-to-right."""
+    x0, x1, t, b = o["x0"], o["x1"], o["top"], o["bottom"]
+    if rot == 90:  # text runs bottom-to-top; the landscape top is on the left
+        x0, x1, t, b = h - b, h - t, x0, x1
+    elif rot == 270:
+        x0, x1, t, b = t, b, w - x1, w - x0
+    elif rot == 180:
+        x0, x1, t, b = w - x1, w - x0, h - b, h - t
+    out = {**o, "x0": x0, "x1": x1, "top": t, "bottom": b, "doctop": t, "width": x1 - x0, "height": b - t}
+    if "matrix" in o:  # pdfminer's size of a rotated glyph is its advance, not the font size
+        out.update(upright=True, size=round(math.hypot(o["matrix"][0], o["matrix"][1]), 3))
+    return out
+
+
+def _glyph_box(c: dict, mb_x0: float = 0.0) -> tuple[float, float, float, float]:
+    """(x0, top, x1, bottom) of a char, with its box moved onto the glyph if the font's descent is implausible.
+
+    pdfminer's box reaches from the baseline down by the font's /Descent. Cambria declares -2464/1000 (the
+    FontBBox of its math glyphs), so the box of a 10.8 pt char lies 16-27 pt below the baseline, on the next
+    line (MP/2025/1128). A box with more than 3/4 of it below the baseline is moved up to 0.3 below it (usual
+    descents are 0.2-0.4; a lowered subscript adds its rise, which the matrix does not show).
+    """
+    x0, t, x1, b = c["x0"], c["top"], c["x1"], c["bottom"]
+    _, _, u, v, e, f = c["matrix"]  # (u, v): the glyph's up direction on the page
+    if not (u or v) or (abs(u) > 1e-3 * abs(v) and abs(v) > 1e-3 * abs(u)):
+        return x0, t, x1, b  # neither upright nor turned by a multiple of 90 degrees
+    if abs(v) > abs(u):
+        lo, hi, base, up = c["y0"], c["y1"], f, v > 0
+    else:
+        lo, hi, base, up = x0 - mb_x0, x1 - mb_x0, e, u > 0
+    size = hi - lo
+    below = (base - lo if up else hi - base) / size if size > 0 else 0.0
+    if below <= 0.75:
+        return x0, t, x1, b
+    d = (below - 0.3) * size  # shift towards the glyph's top
+    if abs(v) > abs(u):
+        return (x0, t - d, x1, b - d) if up else (x0, t + d, x1, b + d)
+    return (x0 + d, t, x1 + d, b) if up else (x0 - d, t, x1 - d, b)
+
+
+def _drop_hidden_placed(page):
+    """Drop text of a placed PDF (annex) that is not visible on the page.
+
+    Annexes are often placed PDFs; the gazette covers their original heading with its own and
+    hides the placed copy (clipping path or white box), which pdfminer ignores (DU/2024/144, 458).
+    A placed char is hidden if the rendered page has no ink in its box, or if it lies under
+    the gazette's own text (then the ink test cannot tell the two copies apart).
+    """
+    placed = [c for c in page.chars if c.get("tag") == "PlacedPDF"]
+    own = [c for c in page.chars if c.get("tag") != "PlacedPDF"]
+    if not placed or not own:
+        return page
+    own_words = extract_words(own)
+    boxes = [(w["x0"] - 3, w["top"] - 3, w["x1"] + 3, w["bottom"] + 3) for w in own_words]
+    # the gazette's running header band; a placed page reaching into it is clipped there (DU/2024/1337)
+    header_bottom = max((w["bottom"] for w in own_words if w["bottom"] < 0.1 * page.height), default=0)
+    scale = INK_DPI / 72
+    img = page.to_image(resolution=INK_DPI).original.convert("L")
+    mb_x0 = page.mediabox[0]
+
+    def hidden(c: dict) -> bool:
+        gx0, gt, gx1, gb = _glyph_box(c, mb_x0)
+        cx, cy = (gx0 + gx1) / 2, (gt + gb) / 2
+        if cy < header_bottom or any(x0 <= cx <= x1 and t <= cy <= b for x0, t, x1, b in boxes):
+            return True
+        if not c["text"].strip():
+            return False
+        crop = img.crop((int(gx0 * scale), int(gt * scale), int(gx1 * scale) + 1, int(gb * scale) + 1))
+        return crop.getextrema()[0] > INK_LEVEL
+
+    drop = {id(c) for c in placed if hidden(c)}
+    return page.filter(lambda o: id(o) not in drop) if drop else page
+
+
+def _dedupe(chars: list[dict], tol: float = DUP_TOL) -> list[dict]:
+    """Drop chars drawn twice (bold is sometimes drawn twice; seen on rotated table pages): the same
+    glyph (text, font, size) within `tol` of a kept one in both axes. pdfplumber's dedupe_chars chains
+    positions within 1pt across the page, which in small rotated print (3.9pt) merged distinct letters
+    and spaces of a line (MP/2025/541: "wyposażnie", "ratownicyi personelsą"). Overlapping text of
+    another size is not a copy (MP/2025/1142: "decyzję" over a 'd' of 10.9pt)."""
+    kept: dict[tuple, list[dict]] = {}
+    out = []
+    for c in chars:
+        key = (c["text"], c.get("fontname"), round(c["size"], 1), round(c["x0"]), round(c["top"]))
+        near = (o for dx in (-1, 0, 1) for dy in (-1, 0, 1) for o in kept.get((*key[:3], key[3] + dx, key[4] + dy), ()))
+        if not any(abs(o["x0"] - c["x0"]) <= tol and abs(o["top"] - c["top"]) <= tol for o in near):
+            kept.setdefault(key, []).append(c)
+            out.append(c)
+    return out
+
+
+QUARK_GAP = (1.0, 2.2)  # pt; a word ends at a wider gap in a Quark text font, in its bold (see _QuarkWords)
+
+
+def _quark_gap(c: dict) -> float | None:
+    """The word gap of a char of the fonts of the QuarkXPress issues (DU 2000-2009: "Univers-PL", "Univers-BoldPL";
+    MAC_PL_FONT), None for other chars."""
+    f = c.get("fontname") or ""
+    if not MAC_PL_FONT.search(f) or not c.get("upright", True):
+        return None
+    return QUARK_GAP[1] if "Bold" in f else QUARK_GAP[0]
+
+
+class _QuarkWords(WordExtractor):
+    """Words of a Quark page. The space after a one-letter word ("z dnia", "w art.", "i wywozem") is not a char
+    there but a gap of 1.5-3 pt (DU/2009/1323 p. 1), mostly under pdfplumber's x_tolerance of 3 pt: "zdnia",
+    "wart.". Measured on the first 6 pages of 11 Quark acts of 2000-2009, gaps between chars of a line without a
+    space char: in the text fonts letters of a word are at most 0.3 pt apart, words at least 1.47 pt; in the bold
+    letter-spaced titles ("U S T A W A", DU/2005/684) letters are up to 1.5 pt apart, words ("o Służbie", DU/2009/1323)
+    at least 2.78 pt."""
+
+    def char_begins_new_word(self, prev_char, curr_char, direction, x_tolerance, y_tolerance) -> bool:
+        a, b = _quark_gap(prev_char), _quark_gap(curr_char)
+        if a and b and curr_char["x0"] - prev_char["x1"] > max(a, b) \
+                and abs(curr_char["top"] - prev_char["top"]) <= y_tolerance:
+            return True
+        return super().char_begins_new_word(prev_char, curr_char, direction, x_tolerance, y_tolerance)
+
+
+def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
+    """(words, width, height, rects) per writing direction, dominant direction first.
+
+    Landscape tables are printed on portrait pages with text rotated by 90 degrees; such a
+    page is read in a rotated frame. Pages with mostly upright text are read as before.
+    Sizes are rounded to 0.001 pt: words break where the size changes, and the letters of one size may differ
+    by float noise between two fonts (DU/2016/2032: "si" 9.959996015999991 in Times-Roman, "ę" 9.959996016000048
+    in TimesNewRoman gave "si ę"; 602 of 3 862 consolidated texts of ustawy 2012–2024 had such words).
+    """
+    angles = Counter(_char_angle(c) for c in page.chars)
+    for c in page.chars:  # (in place, as _single_glyphs)
+        c["size"] = round(c["size"], 3)
+    # the footnote rule is usually a rect; some PDFs draw it as a line (DU/2024/1346, DU/2024/1018)
+    rects = page.rects + [{**x, "line": True} for x in page.lines]
+    if not angles or angles.most_common(1)[0][0] == 0:
+        words = page.extract_words(extra_attrs=["size"], keep_blank_chars=False)
+        if any(_quark_gap(c) for c in page.chars) and _old_issue(_rows(words), float(page.height)):
+            words = _QuarkWords(extra_attrs=["size"], keep_blank_chars=False).extract_words(page.chars)
+        return [(words, float(page.width), float(page.height), rects)]
+    frames = []
+    w, h = float(page.width), float(page.height)
+    for rot, _ in angles.most_common():
+        chars = _dedupe([_to_frame(c, rot, w, h) for c in page.chars if _char_angle(c) == rot])
+        fw, fh = (h, w) if rot in (90, 270) else (w, h)
+        words = extract_words(chars, extra_attrs=["size"], keep_blank_chars=False)
+        frames.append((words, fw, fh, [_to_frame(r, rot, w, h) for r in rects]))
+    return frames
+
+
+def _unmapped_share(page) -> float:
+    chars = page.chars
+    return sum(1 for c in chars if c["text"].startswith("(cid:")) / len(chars) if chars else 0.0
+
+
+def _large_image(page, min_share: float = 0.1) -> float | None:
+    """Top of the largest image if images cover at least min_share of the page, else None."""
+    area, best = 0.0, None
+    for im in page.images:
+        w = max(0.0, min(page.width, im["x1"]) - max(0.0, im["x0"]))
+        h = max(0.0, min(page.height, im["bottom"]) - max(0.0, im["top"]))
+        area += w * h
+        if best is None or w * h > best[0]:
+            best = (w * h, max(0.0, im["top"]))
+    return best[1] if best and area >= min_share * page.width * page.height else None
+
+
+HIDDEN_OCR_FONT = re.compile(r"Hidden(Horz|Vert)OCR")  # Adobe Acrobat "Paper Capture" text under a scan
+
+
+def _hidden_ocr_scan(page) -> bool:
+    """A scanned page whose text layer is Acrobat's invisible OCR (Dz.U. 1918-1999, DU/1997/78): an image over most of
+    the page and chars in a "HiddenHorzOCR" font. Acrobat sets the words it matched to a font in "Helvetica" or
+    "Times-Roman" and the rest in "HiddenHorzOCR" (DU/1997/78 p. 1: 2491, 663 and 836 chars; DU/1997/224 p. 3: 447 of
+    5540 in "HiddenHorzOCR"), all invisible; born-digital pages do not use that font. The layer
+    puts words in other lines ("zarządza się, następuje:" at the end of DU/1997/78) and has its own misreadings
+    ("pOdstawie", "Nr l"), so with OCR the page is read again."""
+    chars = page.chars
+    if not chars or _large_image(page, min_share=0.8) is None:
+        return False
+    return sum(bool(HIDDEN_OCR_FONT.search(c["fontname"])) for c in chars) >= 10
+
+
+def _largest_image_box(page) -> tuple[float, float, float, float] | None:
+    """(x0, top, x1, bottom) of the largest image, clipped to the page."""
+    best = None
+    for im in page.images:
+        x0, x1 = max(0.0, im["x0"]), min(float(page.width), im["x1"])
+        top, bottom = max(0.0, im["top"]), min(float(page.height), im["bottom"])
+        if x1 > x0 and bottom > top and (best is None or (x1 - x0) * (bottom - top) > best[0]):
+            best = ((x1 - x0) * (bottom - top), (x0, top, x1, bottom))
+    return best[1] if best else None
+
+
+def _image_text(page, ocr: str):
+    """OCR of the largest image of a page that has a text layer, if that image is a scan of text.
+
+    Page 1 of international agreements has the masthead and title as text and the preamble and first
+    articles as an image of text (MP/2026/869 s.1, MP/2012/646 s.1). Returns the OcrPage, or None when
+    the image is not text (forms, drawings, maps, ID cards: ocr.text_image) or text of the text layer lies
+    over it: the image is a background, e.g. a form under its fields (DU/2026/872 s.39)."""
+    from . import ocr as ocr_mod
+    box = _largest_image_box(page)
+    if box is None:
+        return None
+    x0, top, x1, bottom = box
+    inside = sum(1 for c in page.chars if c["text"].strip() and x0 <= (c["x0"] + c["x1"]) / 2 <= x1
+                 and top <= (c["top"] + c["bottom"]) / 2 <= bottom)
+    if inside > IMAGE_TEXT_CHARS:
+        return None
+    read = ocr_mod.ocr_page(page, ocr, bbox=box)
+    return read if ocr_mod.text_image(read) else None
+
+
+MAC_PL_FONT = re.compile(r"PL$")  # QuarkXPress fonts of Dz.U. 2000–2010: "Univers-PL", "Univers-BoldPL"
+PL_LETTERS = set("ąćęłńśźżĄĆĘŁŃŚŹŻ")
+
+
+def _mac_pl(page):
+    """Dz.U. 2000–2010 (QuarkXPress) set Polish letters in fonts "…PL" with MacCE codes, but the PDF reads the codes
+    as MacRoman: "og∏oszenia", "ROZPORZÑDZENIE". Chars of those fonts are decoded again, where that gives a Polish
+    letter (the other codes, e.g. "±", may be what the font prints)."""
+    for c in page.chars:
+        if not c["text"].isascii() and MAC_PL_FONT.search(c.get("fontname", "")):
+            try:
+                t = c["text"].encode("mac_roman").decode("mac_latin2")
+            except UnicodeError:
+                continue
+            if t in PL_LETTERS:
+                c["text"] = t
+    return page
+
+
+def _page_lines(page, pno: int, gut: dict | None = None) -> tuple[list[Line], list[Line]]:
+    """Return (body_lines, footnote_lines) for one page."""
+    body, notes = [], []
+    _mac_pl(page)
+    for k, (words, fw, fh, rects) in enumerate(_frames(_drop_soft_hyphens(_drop_hidden_placed(_drop_watermark(_single_glyphs(page)))))):
+        b, n = _frame_lines(words, fw, fh, rects, pno, gut)
+        if k > 0:
+            b = [l for l in b if not RUNNING_HEADER.match(l.text)]
+        body += b
+        notes += n
+    return body, notes
+
+
+def _rows(words: list[dict]) -> list[list[dict]]:
+    """Group words into lines: vertical overlap with the line's first word and similar size."""
+    rows: list[list[dict]] = []
+    for w in sorted(words, key=lambda w: (w["top"], w["x0"])):
+        mid = (w["top"] + w["bottom"]) / 2
+        for r in rows:
+            if r[0]["top"] - 1 <= mid <= r[0]["bottom"] + 1 and abs(r[0]["size"] - w["size"]) < 2:
+                r.append(w)
+                break
+        else:
+            rows.append([w])
+    return rows
+
+
+def _old_issue(rows: list[list[dict]], ph: float) -> bool:
+    """The page belongs to a gazette issue of 2011 or earlier: its header or masthead names the issue (OLD_HEADER).
+    Only such pages are looked at for columns, so the pages of 2012 on are read as before."""
+    texts = [" ".join(w["text"] for w in sorted(r, key=lambda w: w["x0"])) for r in rows if r[0]["top"] < 0.2 * ph]
+    return any(OLD_HEADER.match(t) for t in texts) or (
+        any(OLD_MASTHEAD.match(t) for t in texts) and any(OLD_ISSUE.match(t) for t in texts))
+
+
+def _gutter(rows: list[list[dict]], pw: float, words: list[dict] = (), gut: dict | None = None) -> tuple[float, float] | None:
+    """(gl, gr): the right edge of the left column and the left edge of the right column of a page set in two
+    columns, or None.
+
+    The columns are justified: full lines of the left column end at one x left of the middle (292.0 in DU/2005/1255
+    p. 1), and in a printed row the right column, if any, starts across the gutter. The margins are symmetric
+    (37.9 and 557.4 there), so the right column starts at left margin + right margin - gl (303.3) even where its
+    lines are all indented (points of a list, DU/2009/1323 p. 1). The page header spans the margins where both
+    columns are indented (amendments, DU/2011/1430 p. 3); otherwise the leftmost right part of a row is the edge
+    (DU/2011/1134 p. 2). It takes 3 rows whose left part is a line of text (from the left half's start, no gap
+    wider than the type: not cells of a table) ending at gl. A smaller word in a gap fills it: the footnote marker of
+    "a)²⁾ zarobkowego" (DU/2008/1342 p. 5, a short column over a page of footnotes).
+    gut (see convert): 2 rows do where the gutter is the one of the act's other pages, gut["doc"] (the first page of
+    DU/2004/959: 3 lines of columns over a page of footnotes); such a page is noted in gut["cands"] until it is known."""
+    rows = [sorted(r, key=lambda w: w["x0"]) for r in rows]
+
+    def filled(x: dict, y: dict) -> bool:
+        return any(x["x1"] - 1 <= w["x0"] and w["x1"] <= y["x0"] + 1 and w["x1"] - w["x0"] > 0.5 * (y["x0"] - x["x1"])
+                   and x["top"] - x["size"] < w["top"] < x["bottom"] and w["size"] < x["size"] - 0.5 for w in words)
+    starts, ends = Counter(round(r[0]["x0"]) for r in rows), Counter(round(r[-1]["x1"]) for r in rows)
+    head = [r for r in rows if OLD_HEADER.match(" ".join(w["text"] for w in r))]
+    lm = [x for x, n in starts.items() if n >= 3] + [round(r[0]["x0"]) for r in head]
+    rm = [x for x, n in ends.items() if n >= 3] + [round(r[-1]["x1"]) for r in head]
+    if not lm or not rm:
+        return None
+    left = min(r[0]["x0"] for r in rows if round(r[0]["x0"]) == min(lm))
+    right = max(r[-1]["x1"] for r in rows if round(r[-1]["x1"]) == max(rm))
+    # the middle of the text, not of the page: pages 576 pt wide keep the text where it is on 595 pt (DU/2000/839:
+    # margins 39.3 and 560.3, the left column ends at 293.8)
+    mid = max(0.5 * pw, (left + right) / 2)
+    edges: dict[float, list[tuple[float, float]]] = {}  # gl (0.5 pt) -> (x1 of a left part, x0 of the right part)
+    for r in rows:
+        for k, a in enumerate(r):
+            b = r[k + 1] if k + 1 < len(r) else None
+            if not (0.4 * pw < a["x1"] < mid) or (b is not None and b["x0"] - a["x1"] < GUTTER[0]):
+                continue
+            part = r[: k + 1]
+            if part[0]["x0"] > left + 0.5 * (a["x1"] - left) or len(part) < 3 \
+                    or any(y["x0"] - x["x1"] > a["size"] and not filled(x, y) for x, y in zip(part, part[1:])):
+                continue
+            edges.setdefault(round(a["x1"] * 2) / 2, []).append((a["x1"], b["x0"] if b else math.inf))
+    for c in sorted(edges, key=lambda c: -sum(len(v) for x, v in edges.items() if abs(x - c) <= 0.5)):
+        xs = [x for v in edges.values() for x in v if abs(x[0] - c) <= 0.8]
+        gl = max(x for x, _ in xs)
+        gr = min(left + right - gl, *(x for _, x in xs))
+        if not GUTTER[0] <= gr - gl <= GUTTER[1]:
+            continue
+        if len(xs) >= 3:
+            return gl, gr
+        if len(xs) == 2 and gut is not None:
+            if (doc := gut.get("doc")) and abs(gl - doc[0]) <= 1 and abs(gr - doc[1]) <= 1:
+                return gl, gr
+            gut["cands"].append((gl, gr))
+    return None
+
+
+def _bands(words: list[dict], gl: float, gr: float):
+    """Function word -> (band, column) on a two-column page.
+
+    Full-width rows (a word crosses the gutter: header, position number, title, footnotes of Quark pages) and the
+    runs of column text between them alternate down the page; several acts may share it (DU/2005/1255 p. 1).
+    Bands are numbered down the page, full-width rows odd; in an even band the left column (1) is read before the
+    right one (2). An even band with no word ending at the left column's edge (a table, short lines) is read row
+    by row (column 0). A word crosses the gutter if it reaches 2 pt into it from both sides: a hyphen or quote
+    may stick out of a justified column (optical margins)."""
+    spans: list[list[float]] = []
+    for t, b in sorted((w["top"], w["bottom"]) for w in words if w["x0"] < gr - 2 and w["x1"] > gl + 2):
+        if spans and t <= spans[-1][1]:
+            spans[-1][1] = max(spans[-1][1], b)
+        else:
+            spans.append([t, b])
+
+    def band(w: dict) -> int:
+        mid = (w["top"] + w["bottom"]) / 2
+        for k, (t, b) in enumerate(spans):
+            if mid < t:
+                return 2 * k
+            if mid <= b:
+                return 2 * k + 1
+        return 2 * len(spans)
+    split = {band(w) for w in words if abs(w["x1"] - gl) <= 1} - {2 * k + 1 for k in range(len(spans))}
+
+    def key(w: dict) -> tuple[int, int]:
+        k = band(w)
+        return (k, (1 if w["x0"] + w["x1"] < gl + gr else 2) if k in split else 0)
+    return key
+
+
+def _index_words(r: list[dict], big: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Split a row of small words into (other words, indices). An index matches INDEX, starts right after a
+    normal-size word ending with a letter or digit and sits above that word's middle: "479" + "[30f]".
+    Index text is returned without brackets ("30f")."""
+    words: list[dict] = []
+    for w in sorted(r, key=lambda w: w["x0"]):
+        prev = words[-1] if words else None
+        if prev and re.fullmatch(r"\[\d{1,3}[a-z]{0,3}", prev["text"]) and w["text"] == "]" \
+                and w["x0"] - prev["x1"] < 1.0:  # "[92" + "]" in another size (DU/2026/468 p. 103)
+            words[-1] = {**prev, "text": prev["text"] + "]", "x1": w["x1"]}
+        elif m := re.fullmatch(r"(\[\d{1,3}[a-z]{0,3}\])(\d{1,3}\)[,.;:]?)", w["text"]):
+            # index + footnote marker in one word: "ust. 1 i 1[1]10)" (DU/2026/913 p. 44)
+            cut = w["x0"] + (w["x1"] - w["x0"]) * len(m.group(1)) / len(w["text"])
+            words += [{**w, "text": m.group(1), "x1": cut}, {**w, "text": m.group(2), "x0": cut}]
+        else:
+            words.append(w)
+    rest, idx = [], []
+    for w in words:
+        m = INDEX.match(w["text"])
+        mid = (w["top"] + w["bottom"]) / 2
+        if m and any(-1.0 < w["x0"] - n["x1"] < 1.5 and n["top"] - 1 < mid < (n["top"] + n["bottom"]) / 2
+                     and n["text"][-1:].isalnum() for n in big):
+            idx.append({**w, "text": m.group(1) or m.group(2)})
+        else:
+            rest.append(w)
+    rest.sort(key=lambda w: (w["top"], w["x0"]))  # the order of _rows: attach order decides ties (DU/2024/1089)
+    return rest, idx
+
+
+def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno: int,
+                 gut: dict | None = None) -> tuple[list[Line], list[Line]]:
+    if not words:
+        return [], []
+    sizes = Counter()
+    for w in words:
+        sizes[round(w["size"], 1)] += len(w["text"])
+    body_size = sizes.most_common(1)[0][0]
+    # a page of an old issue mostly of footnotes (DU/2004/959 p. 1: 3 lines of text over them, and a table of
+    # contents in 9 pt higher up): the body type is the one just above the row of dashes over the footnotes, or the
+    # markers in 7.5 pt would be text beside 9 pt footnotes
+    for sep in [w for w in words if DASH_RULE.fullmatch(w["text"]) and w["x1"] - w["x0"] < 0.3 * pw]:
+        above = Counter()
+        for w in words:
+            if sep["top"] - 100 <= w["top"] and w["bottom"] <= sep["top"]:
+                above[round(w["size"], 1)] += len(w["text"])
+        if sum(above.values()) >= 60 and above.most_common(1)[0][0] > body_size and _old_issue(_rows(words), ph):
+            body_size = above.most_common(1)[0][0]
+            break
+    sup_limit = body_size * 0.75
+    # markers of 7.5 pt in 10 pt text of an old issue are small (DU/2004/959); figures of 7.5 pt in a table of 2025
+    # are not (DU/2025/1057)
+    if any(sup_limit <= w["size"] < sup_limit + 0.05 for w in words) and _old_issue(_rows(words), ph):
+        sup_limit += 0.05
+
+    # Cluster words into lines. Superscripts attach to the line they overlap vertically.
+    # Small words: footnote markers ("1)"), whole lines of small print, or sub/superscripts in
+    # formulas. Markers and formula scripts are attached to the nearest normal line.
+    normal = [w for w in words if w["size"] >= sup_limit]
+    big = list(normal)
+    attach: list[tuple[dict, dict]] = []  # (small word, flag) to attach to the nearest normal line
+    for r in _rows([w for w in words if w["size"] < sup_limit]):
+        # indices are scripts even when a line has several: "Art. 479[30f]. … art. 479[30a]–479[30e]"
+        r, idx = _index_words(r, big)
+        attach += [(w, {"script": True, "index": True}) for w in idx]
+        if not r:
+            continue
+        text = [w for w in r if not FOOTNOTE_MARK.match(w["text"])]
+        words_ = [w for w in text if not MATH.search(w["text"])]  # formula scripts are math italic
+        if (len(r) >= 3 and words_) or sum(len(w["text"]) for w in words_) >= 15:
+            normal += r
+            continue
+        for w in r:
+            if not FOOTNOTE_MARK.match(w["text"]):
+                continue
+            close = next((x for x in text if x["text"] == ")" and 0 <= x["x0"] - w["x1"] < 1.5), None)
+            if close is not None and ")" not in w["text"]:  # marker extracted as "1" + ")"
+                text.remove(close)
+                w = {**w, "text": w["text"] + ")", "x1": close["x1"]}
+            attach.append((w, {"sup": True} if ")" in w["text"] else {"script": True}))
+        attach += [(w, {}) for w in text]
+    rows = _rows(normal)
+    old = _old_issue(rows, ph)
+    key = None  # word -> (band, column) on a two-column page (DU 2000-2011)
+    if old and (gutter := _gutter(rows, pw, words, gut)):
+        if gut is not None:
+            gut["found"].append(gutter)
+        key = _bands(normal, *gutter)
+        groups: dict[tuple[int, int], list[dict]] = {}
+        for w in normal:
+            groups.setdefault(key(w), []).append(w)
+        rows = [r for k in sorted(groups) for r in _rows(groups[k])]  # the columns' baselines differ (DU/2011/1134)
+    # rows (by id, before small words are attached) that are the number of an act starting here: see ACT_NUMBER
+    # centred on the text between the columns (a page 576 pt wide has it at 299.8, DU/2000/839), else on the page
+    centre2 = gutter[0] + gutter[1] if key else pw
+    acts = {id(r): int(r[0]["text"]) for r in rows if old and len(r) == 1 and ACT_NUMBER.match(r[0]["text"])
+            and r[0]["size"] >= ACT_NUMBER_SIZE and abs(r[0]["x0"] + r[0]["x1"] - centre2) < 20}
+    # where they are in reading order (band, column, top): footnotes of an act lie above the next act's number
+    starts = sorted((*(key(r[0]) if key else (0, 0)), r[0]["top"]) for r in rows if id(r) in acts)
+
+    def dist(r: list[dict], s: dict) -> float:
+        return abs((r[0]["top"] + r[0]["bottom"]) / 2 - s["bottom"])
+    for s, flag in attach:
+        best = min(rows if key is None else [r for r in rows if key(r[0]) == key(s)],
+                   key=lambda r: dist(r, s), default=None)
+        if key is not None and (best is None or dist(best, s) >= 12):  # e.g. a marker in a band of its own
+            best = min(rows, key=lambda r: dist(r, s), default=None)
+        if best is not None and abs((best[0]["top"] + best[0]["bottom"]) / 2 - s["bottom"]) < 12:
+            best.append({**s, **flag})
+        else:
+            rows.append([{**s, **flag}])
+
+    rule_top = None
+    for r in rects:
+        if r["height"] < 1.5 and 130 < r["width"] < 160 and r["x0"] < pw * 0.2 and _free(r, rects):
+            # A rule drawn as a line, or one high on a page of footnotes only (DU/2024/1539 p. 2 at 25%
+            # of the page), counts only with nothing but footnote type below it (DU/2024/1346 p. 1).
+            below = [w for w in words if w["top"] > r["top"]]
+            small = bool(below) and all(w["size"] < FOOTNOTE_TYPE for w in below)
+            if (r["top"] > ph * 0.3 and not r.get("line")) or (r["top"] > ph * 0.1 and small):
+                rule_top = r["top"] if rule_top is None else min(rule_top, r["top"])
+    # Two-column page: footnote rules as ((band, column), top). Under a rule are the lines of its column below it and
+    # the bands further down; the other column of its band goes on beside the footnotes.
+    col_rules: list[tuple[tuple[int, int], float, bool]] = []  # (band, column), top, the bands further down too
+    seps = []  # the rows of dashes over the footnotes of a Quark page
+
+    def under(k: tuple[int, int], top: float, wk: tuple[int, int], wtop: float, down: bool = True) -> bool:
+        # not past the number of the next act: its footnotes sit under its text, above the next act's number
+        # (DU/2005/1369 p. 2: "———" at top 331 in the left column, notes, "1370" at 447, its own "———" at 612)
+        return wtop > top and (wk == k or down and wk[0] > k[0]) and not any((*k, top) < s <= (*wk, wtop) for s in starts)
+    if key is not None:
+        for r in rects:
+            # InDesign pages (DU 2010-2011): a ~70 pt line at a column's edge, footnotes under it in the column
+            # (DU/2011/1170 p. 2), also high on the page (DU/2010/626 p. 3), or across the page (ibid. p. 4)
+            # (only its column if the bands further down are text: an annex under it, DU/2010/277 p. 6)
+            if r["height"] < 1.5 and 50 < r["width"] < 160 and _free(r, rects):
+                for down in (True, False):
+                    below = [w for w in words if under(key(r), r["top"], key(w), w["top"], down)]
+                    if below and all(w["size"] < FOOTNOTE_TYPE for w in below):
+                        col_rules.append((key(r), r["top"], down))
+                        break
+        for r in rows:
+            # QuarkXPress pages (DU 2000-2009): footnotes across the page under a row "———————" in the left
+            # column (DU/2009/1323 p. 1)
+            if DASH_RULE.fullmatch("".join(w["text"] for w in r)) and r[0]["x1"] - r[0]["x0"] < 0.3 * pw:
+                # only its column if the bands further down are text: an annex under the footnotes of both columns
+                # (DU/2005/1468 p. 4)
+                for down in (True, False):
+                    below = [w for w in words if under(key(r[0]), r[0]["bottom"], key(w), w["top"], down)]
+                    # the dashes are set in body type or, in a column, in footnote type (DU/2005/1468 p. 4: 9 pt)
+                    if below and all(w["size"] < max(r[0]["size"], body_size) - 0.5 for w in below):
+                        seps.append(r)
+                        col_rules.append((key(r[0]), r[0]["top"], down))
+                        break
+
+    body, notes = [], []
+    head: Line | None = None  # the last line of a small annex header (see below)
+    for r in rows:
+        if any(r is s for s in seps):  # a rule, not text
+            continue
+        r.sort(key=lambda w: w["x0"])
+        parts: list[tuple[str, bool]] = []  # (text, glued to the previous word)
+        base = [w for w in r if not w.get("sup") and not w.get("script")]
+        mid = sum((w["top"] + w["bottom"]) / 2 for w in base) / len(base) if base else None
+        for k, w in enumerate(r):
+            if w.get("sup"):
+                m = re.match(r"^(\d+|[a-z]{1,2})\)?(.*)$", w["text"])
+                # a letter keeps the space it was printed after: without a footnote of that letter it is written
+                # back as printed (_letter_refs)
+                glued = m.group(1).isdigit() or k == 0 or w["x0"] - r[k - 1]["x1"] < 1.0
+                parts.append((f"[^{m.group(1)}]{m.group(2)}", glued))
+            elif w.get("index"):  # "30f" -> "³⁰ᶠ"; as printed if a char has no superscript form ("[1q]")
+                sup = w["text"].translate(SUPER)
+                parts.append((sup if all(c in SUP_CHARS for c in sup) else f"[{w['text']}]", True))
+            elif w.get("script"):
+                up = mid is None or (w["top"] + w["bottom"]) / 2 < mid
+                parts.append((w["text"].translate(SUPER if up else SUB), True))
+            else:  # "Art. 41¹.", "art. 63[^59]," : punctuation after a script or marker is a separate word
+                after_small = k > 0 and (r[k - 1].get("script") or r[k - 1].get("sup")) \
+                    and w["x0"] - r[k - 1]["x1"] < 1.0
+                parts.append((w["text"], bool(after_small)))
+        text = ""
+        for p, glued in parts:
+            text = p if not text else text + p if glued else text + " " + p
+        normal_words = [w for w in r if not w.get("sup") and not w.get("script")] or r
+        band, col = key(normal_words[0]) if key else (0, 0)
+        line = Line(
+            page=pno,
+            top=min(w["top"] for w in normal_words),
+            bottom=max(w["bottom"] for w in normal_words),
+            x0=min(w["x0"] for w in r),
+            size=Counter(round(w["size"], 1) for w in normal_words).most_common(1)[0][0],
+            text=" ".join(_plain_math(CID.sub(" ", text)).split()),
+            pw=pw,
+            ph=ph,
+            x1=max(w["x1"] for w in normal_words),
+            band=band,
+            col=col,
+            act=acts.get(id(r), 0),
+            old=old,
+        )
+        is_note = (rule_top is not None and line.top > rule_top) or (
+            rule_top is None and line.size < body_size - 0.5 and line.top > ph * 0.6
+        ) or any(under(k, t, (band, col), line.top, down) for k, t, down in col_rules)
+        # an annex header of an old issue set small in a column, with the line under it, is not a footnote
+        # (DU/2002/664 p. 4: "Załącznik do obwieszczenia Marszałka Sejmu Rzeczypospolitej" / "Polskiej z dnia … (poz. 664)"
+        # in 8 pt under the signature); nor one set on the right in a later issue (DU/2012/1228 p. 3, low on the page)
+        if (old or line.x0 > 0.4 * pw) and (
+                ANNEX.match(line.text) or head is not None and (band, col) == (head.band, head.col)
+                and abs(line.size - head.size) < 0.5 and 0 <= line.top - head.bottom < head.size):
+            is_note, head = False, line
+        else:
+            head = None
+        if line.text:  # a line of unmapped glyphs only is empty now
+            (notes if is_note else body).append(line)
+    body.sort(key=lambda l: (l.band, l.col, l.top))  # down the page; a band's left column before its right one
+    notes.sort(key=lambda l: (l.band, l.col, l.top))
+    for c in sorted({l.col for l in body}):  # each column has its own right edge (292 and 557 in DU/2005/1255)
+        lines = [l for l in body if l.col == c]
+        ends = Counter(round(l.x1) for l in lines if len(l.text) >= 40)
+        gaps = Counter(round(2 * (b.top - a.bottom)) / 2 for a, b in zip(lines, lines[1:])
+                       if abs(a.size - b.size) < 0.5 and 0 <= b.top - a.bottom < a.size)
+        for l in lines:
+            if ends and ends.most_common(1)[0][1] >= 3:
+                l.right = ends.most_common(1)[0][0]
+            if gaps and gaps.most_common(1)[0][1] >= 3:
+                l.lead = gaps.most_common(1)[0][0]
+    return body, notes
+
+
+def _free(r: dict, rects: list[dict]) -> bool:
+    """The footnote rule stands alone. A table border of the same size meets other borders at its ends."""
+    for x in rects:
+        if x is r or not x["top"] - 2 <= r["top"] <= x["bottom"] + 2:
+            continue
+        if min(abs(x["x0"] - r["x1"]), abs(x["x1"] - r["x0"]), abs(x["x0"] - r["x0"]), abs(x["x1"] - r["x1"])) < 2:
+            return False
+    return True
+
+
+def _plain_math(text: str) -> str:
+    """Map Unicode mathematical alphanumerics (e.g. 𝑊𝑌𝐷 in formulas) to plain letters."""
+    return "".join(unicodedata.normalize("NFKC", c) if "\U0001D400" <= c <= "\U0001D7FF" else c for c in text)
+
+
+def _join(prev: str, nxt: str) -> str:
+    # only the end of prev is searched (the same matches: a letter and "-" before the end or a final newline); over
+    # all of it, each line of a block of a flattened inventory (MP/2021/437, 6.6 MB of text) took longer and the act
+    # ran for hours
+    end = prev[-3:]
+    if re.search(rf"[{LOWER}]-$", end) and re.match(rf"[{LOWER}]", nxt):
+        return prev[:-1] + nxt
+    if re.search(r"\w-$", end) and re.match(r"-\w", nxt):  # "rolno-" "-środowiskowy": the hyphen is repeated
+        return prev + nxt[1:]
+    return prev + " " + nxt
+
+
+def _continuation_gaps(body: list[Line]) -> dict[int, float]:
+    """Per page: usual gap before a line that continues a paragraph (starts with a lower-case letter and not
+    with "a) "), relative to the font size; pages with fewer than 5 such lines are left out. Most pages set
+    lines at 0.2 of the size; some at 0.6–0.75 (DU/2024/853, annex of DU/2024/440), which the fixed 0.45 split
+    into one block per line. Per page, because forms in annexes are spaced out (DU/2024/1542). The lower
+    quartile, not the median: paragraphs may start with a lower-case word too (clauses of a court
+    resolution "po rozpoznaniu…", "z udziałem…" in DU/2024/1883), and their gaps are larger."""
+    ratios: dict[int, list[float]] = {}
+    for a, b in zip(body, body[1:]):
+        if a.page == b.page and abs(a.size - b.size) < 0.5 and 0 <= b.top - a.bottom < a.size \
+                and re.match(rf"[{LOWER}]", b.text) and not UNIT_START.match(b.text):
+            ratios.setdefault(b.page, []).append((b.top - a.bottom) / a.size)
+    return {p: sorted(r)[len(r) // 4] for p, r in ratios.items() if len(r) >= 5}
+
+
+POINT_LABEL = re.compile(r"^„?(\d+|[a-z])\)\s")
+
+
+def _follows(a: str, b: str) -> bool:
+    """Line b starts with the point label right after the one line a starts with: "1)" -> "2)", "a)" -> "b)"."""
+    ma, mb = POINT_LABEL.match(a), POINT_LABEL.match(b)
+    if not ma or not mb:
+        return False
+    x, y = ma.group(1), mb.group(1)
+    if x.isdigit() and y.isdigit():
+        return int(y) == int(x) + 1
+    return not x.isdigit() and not y.isdigit() and ord(y) == ord(x) + 1
+
+
+LEFT_OUT = re.compile(r"\((?:uchylon|pominię[tc]|skreślon)[a-z]*\)$")
+
+
+def _segment(body: list[Line]) -> list[Block]:
+    """Group lines into blocks (paragraphs): by the vertical gap (relative to font size and to the usual
+    gap on the page), at page breaks by content. Annex headers and signatures always start a block."""
+    blocks: list[Block] = []
+    # a new block needs a gap above 0.45 of the font size, or clearly above the usual continuation gap
+    split = {p: max(0.45, g + 0.1) for p, g in _continuation_gaps(body).items()}
+    cur: Block | None = None
+    prev: Line | None = None
+    for l in body:
+        kind = "p"
+        if l.mark == "scan" and ANNEX_OCR.match(l.text) and len(l.text.split()) <= 40:
+            kind = "annex"
+        elif l.mark == "scan" and SIGNATURE_OCR.match(l.text) and len(l.text.split()) <= 14:
+            kind = "signature"
+        elif l.mark:
+            kind = l.mark
+        elif ANNEX.match(l.text) and (l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph) \
+                or cur is not None and cur.kind == "signature" and ANNEX_UNDER_SIGNATURE.match(l.text) \
+                and (l.old or l.x0 > 0.4 * l.pw):
+            # in an old issue the annex (a consolidated text) starts under the signature, mid-page (DU/2010/648 p. 6),
+            # also as the new text of an annex of the amended act (DU/2004/895 p. 9: "„ZAŁĄCZNIK — Część I");
+            # in the issues of 2012–2014 too, set on the right (DU/2013/1457 p. 6: "Załącznik do obwieszczenia …")
+            kind = "annex"
+        elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
+            kind = "signature"
+        if prev is None or cur is None:
+            new = True
+        elif kind != "p" or cur.kind in ("signature", "notext", "image", "ocr", "unmapped", "scan"):
+            new = not (kind == "annex" and cur.kind == "annex" and l.page == prev.page)
+        elif cur.kind == "annex":
+            # right-aligned continuation lines of an annex header ("z dnia ... (poz. N)")
+            new = not (l.page == prev.page and l.x0 > 0.4 * l.pw and l.top - prev.bottom < 0.8 * l.size)
+        elif l.page != prev.page or (prev.col == 1 and l.col == 2 and l.band == prev.band):
+            # a page break, or the break from the bottom of the left column to the top of the right one;
+            # "(uchylony)" / "(pominięty)" is the whole text of its unit (DU/2026/468: "KSIĘGA PIERWSZA" on the next page)
+            new = bool(UNIT_START.match(l.text)) or bool(re.search(r"[.:;”]$", prev.text)) \
+                or bool(LEFT_OUT.search(prev.text))
+        else:
+            # Some PDFs set units with little extra space (2 pt over the usual gap between lines, not 6),
+            # or none: then a unit starts after a line that ends short of the right margin (the last line
+            # of a justified paragraph).
+            # On pages set with wide line spacing units and paragraphs often have no more space than other lines
+            # (DU/2024/1442, 440): there "1)", "a)", "Art. 1", "§ 1" at a line start begin a unit, "1." and "–" only
+            # after a sentence end, and a line that ends short of the right margin ends its paragraph.
+            gap, limit = l.top - prev.bottom, split.get(l.page, 0.45)
+            short = 0 < prev.x1 < prev.right - 2 * prev.size
+            # "2)", "b)" after a short line start a point even without ";" before: points in a table cell
+            # set with the usual line gap (MP/2025/121). So does "2)" right below a one-line "1)" whose row
+            # also holds the next cell ("1) B1.1, B1.3, B2, C   483", ibid.). Not after a hyphen ("impedan-"
+            # "cji) i", MP/2025/910), nor after an overlapping line or one of another size: footnote markers
+            # read as "1)" in tables (MP/2025/541).
+            point = (short or (_follows(prev.text, l.text) and abs(l.x0 - prev.x0) < 1)) \
+                and bool(POINT_START.match(l.text)) and gap >= 0 and abs(l.size - prev.size) < 0.5 \
+                and not prev.text.endswith("-")
+            new = gap > limit * l.size or (limit > 0.45 and short) or bool(UNIT_START_Q.match(l.text)) and (
+                (prev.lead >= 0 and gap > prev.lead + 1.2)
+                or (short and bool(re.search(r"[.:;,”]$", prev.text))) or point
+                or (limit > 0.45 and (bool(ITEM_START.match(l.text)) or bool(re.search(r"[.:;,”]$", prev.text)))))
+        if new:
+            if cur is not None:
+                blocks.append(cur)
+            cur = Block(kind, l.text, l.page)
+        else:
+            cur.text = _join(cur.text, l.text)
+        prev = l
+    if cur is not None:
+        blocks.append(cur)
+    return blocks
+
+
+# The last page of an issue of 2011 or earlier ends with the publisher's colophon ("Wydawca: Kancelaria Prezesa Rady
+# Ministrów" … "ISSN 0867-3411", DU/2000/291) or is a publisher's notice ("Szanowni Państwo!" … prices of subscriptions,
+# DU/2003/577), above a bare page number "— 4096 —"
+# "Szanowni Państwo" also without "!" over an advertisement for Monitor Polski B (DU/2002/933 p. 3). Above "Wydawca:"
+# stand where to buy copies and where to complain (DU/2002/753, DU/2003/2317), in 2000 under a list of the publisher's
+# books with prices ("Informacja o możliwości zakupu wydawnictw", DU/2000/1051 p. 3).
+COLOPHON = re.compile(r"^(?:Wydawca\s*:|Szanowni\s+Państwo(?:!|$)|Egzemplarze\s+bieżące|Reklamacje\s+z\s+powodu\s+niedoręcz"
+                      r"|Pojedyncze\s+egzemplarze\s+Dziennika\s+Ustaw"  # 1990s, over "Egzemplarze bieżące" (DU/1995/68)
+                      r"|O\s+wszelkich\s+zmianach\s+nazwy|Dziennik\s+Ustaw\s+i\s+Monitor\s+Polski\s+dostępne"
+                      r"|Informacja\s+o\s*możliwości\s+zakupu\s+wydawnictw|Tłoczono\s+z\s+polecenia)")
+ISSN = re.compile(r"\bISSN\s*\d{4}\s*-\s*\d{3}[\dX]\b")
+BARE_PAGE_NUMBER = re.compile(r"^[—–-]\s*\d+\s*[—–-]$")
+
+
+def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], list[Line]]:
+    """Body and footnote lines without the colophon of an issue (COLOPHON): it is not text of the act. Only on the
+    last page, and only if that page names an ISSN; acts of 2012 on are single PDFs without it. The colophon is set
+    across the page under the act, so everything from its highest line down is cut, body or footnote: it may be read
+    as footnotes (DU/2000/291: "Wydawca: …" as footnotes, "Cena 3 zł 96 gr" and the ISSN as body), and its first line
+    may fall into the left column, before the end of the right one (DU/2002/753). If only the bare page number and
+    markers of images are left above it, the page is the publisher's (DU/2003/2317 p. 10: the notice is an image) and
+    is dropped whole."""
+    if not body:
+        return body, notes
+    last = max(l.page for l in body + notes)
+    lines = [l for l in body + notes if l.page == last]
+    if all(l.mark in ("ocr", "scan") and l.top == 0 for l in lines):
+        # a page read by OCR: its lines have no position (top 0), so cut in reading order; by top, everything
+        # on the page went (DU/2000/48, a one-page act at the end of its issue, came out empty)
+        cut = next((i for i, l in enumerate(body) if l.page == last and COLOPHON.match(l.text)), None)
+        if cut is None or not any(ISSN.search(l.text) for l in lines):
+            return body, notes
+        above = [l for l in body[:cut] if l.page == last]
+        if above and all(BARE_PAGE_NUMBER.match(l.text) for l in above):
+            cut -= len(above)
+        body = body[:cut]
+        if body and body[-1].page == last and BARE_PAGE_NUMBER.match(body[-1].text):
+            body.pop()
+        return body, notes
+    starts = [l.top for l in lines if COLOPHON.match(l.text)]
+    if not starts or not any(ISSN.search(l.text) for l in lines):
+        return body, notes
+    at = min(starts)
+    above = [l for l in lines if l.top < at]
+    if any(BARE_PAGE_NUMBER.match(l.text) for l in above) and all(
+            BARE_PAGE_NUMBER.match(l.text) or l.mark in ("image", "notext") for l in above):
+        at = -1.0
+
+    def keep(l: Line) -> bool:
+        return l.page != last or l.top < at
+    body = [l for l in body if keep(l)]
+    if body and body[-1].page == last and BARE_PAGE_NUMBER.match(body[-1].text):
+        body.pop()
+    return body, [l for l in notes if keep(l)]
+
+
+def _own_act(body: list[Line], notes: list[Line], position: int, title: str | None = None, old: bool = False
+             ) -> tuple[list[Line], list[Line], int, int] | None:
+    """The act numbered `position` out of pages it shares with other acts of its issue (DU 2000-2011): the PDF of
+    a position holds whole pages, so also the end of the acts before it and the start of the ones after it
+    (DU/2005/1255 p. 1 holds 1255, 1256 and 1257; DU/2005/1369 p. 2 ends 1369 and starts 1370 at top 447). Keeps
+    the lines after the act's number (ACT_NUMBER) up to the next act's number, and the footnotes between them in
+    reading order: a Quark page sets an act's footnotes under its text, above the next act's number (DU/2005/1369
+    p. 2, DU/2007/1322 p. 1). The number itself is dropped: it is the position, as "Poz. N" closing the masthead of
+    2012 on, which is not text of the act either. Returns (body, notes, first page, last page), or None if the
+    act's number is not found (then nothing is cut). The last act of an issue ends on the page of its last line
+    (marks of images and scans are lines too), so a publisher's page dropped by _drop_colophon does not count as a
+    page with an image (DU/2003/2317 p. 10).
+    old: a scan of an issue of 1918-1989 (see convert)."""
+    start = next((i for i, l in enumerate(body) if l.act == position), None)
+    if old and title and start is not None:
+        # (< 1990) the act's number read twice, once for the number of the act before it ("228" for 227 over "UCHWAŁA
+        # RADY PAŃSTWA", then "228" over "ROZPORZĄDZENIE RADY MINISTRÓW", DU/1988/228: the text was act 227's): the one
+        # followed by the act's header
+        cands = [i for i, l in enumerate(body) if l.act == position]
+        good = [i for i in cands if any(_title_at(body, k, title) for k in range(i + 1, min(i + 3, len(body))))]
+        if len(cands) > 1 and good:
+            start = good[0]
+    if start is None:
+        # the act's number is lost, but the next act's is there and no earlier one: the act starts the pages and ends
+        # at the next number (a scan where the act opens the page, its number read in the header band and dropped
+        # with the header: DU/1990/100). On scans of 1918-1989 (convert tries the act's header first) only the very
+        # next number, after at least 30 words and no issue's contents: there the first number on the page is often
+        # the act's own misread ("140" for 138 under "Poż, 138, 139 i", DU/1967/138; "215" for 214 under the running
+        # header, DU/1949/214) or one of the issue's contents ("233" on the first page of DU/1952/232, a constitution
+        # of 30 pages), and the act was cut to the running header or to nothing (52 acts in 0.6.40-0.6.41); the rule
+        # is needed where the act's number and header are both misread ("175 RAEPORZĄDZENIE …", DU/1955/175)
+        nxt = next((i for i, l in enumerate(body) if l.act), None)
+        if nxt is None or not position < body[nxt].act <= position + ACT_NUMBER_NEXT or body[nxt].mark != "scan":
+            return None
+        if old and (body[nxt].act != position + 1
+                    or sum(len(re.findall(r"[^\W\d_]{2,}", l.text)) for l in body[:nxt]) < 30
+                    or any(re.search(r"\bTRE[ŚS][ĆC]\b", l.text, re.I) for l in body[:nxt])):
+            return None
+        own = body[:nxt]
+        return own, [n for n in notes if (n.page, n.band, n.col, n.top) < (body[nxt].page, body[nxt].band,
+                                                                           body[nxt].col, body[nxt].top)], \
+            min((l.page for l in own), default=body[nxt].page), body[nxt].page
+    end = _act_end(body, start, position, title)
+    first, last = body[start], body[end] if end < len(body) else None
+
+    def at(l: Line) -> tuple:
+        return l.page, l.band, l.col, l.top
+    notes = [l for l in notes if at(first) < at(l) and (last is None or at(l) < at(last))]
+    own = body[start + 1: end]
+    if first.mark == "scan" and own and (own[0].act or SIGNATURE_OCR.match(own[0].text)):
+        # read between the act's number and its header: a page number of the issue's contents (DU/1997/6) or the
+        # signature of the act before it (DU/1995/44); see _act_end
+        own = own[1:]
+    return own, notes, first.page, last.page if last else max((l.page for l in own + notes), default=first.page)
+
+
+def _act_end(body: list[Line], start: int, position: int, title: str | None = None) -> int:
+    """Index of the first line after the act that starts at body[start]: the next act's number (ACT_NUMBER), or len."""
+    scan = body[start].mark == "scan"
+    # on a scan the line right after the act's number is the next act's number only if it is the very next position:
+    # on an issue's first page OCR may read a page number of its contents there ("6", "25": DU/1997/6, whose text
+    # was cut to nothing up to 0.6.37)
+    end = next((i for i in range(start + 1, len(body)) if position < body[i].act <= position + ACT_NUMBER_NEXT
+                and not (scan and i == start + 1 and body[i].act != position + 1)), len(body))
+    if scan:
+        # the next act's number not read (or a later one only): on a scan the next act still starts with its type in
+        # capitals right after this act's signature, maybe after a bare number ("Prezes Rady Ministrów: T. Mazowiecki",
+        # "ROZPORZĄDZENIE RADY MINISTRÓW"; DU/1990/4, 271). Not after an annex header: the annex of an announcement
+        # may be an act ("Załącznik do obwieszczenia …", "ROZPORZĄDZENIE RADY MINISTRÓW"), or have a title in capitals
+        # (not a signature right after the act's number: that is the act before it, read after this act's number;
+        # "44", "Minister Finansów: wz. K. Kalicki", "ROZPORZĄDZENIE MINISTRA FINANSÓW": DU/1995/44 up to 0.6.37)
+        for i in range(start + 2, end - 1):
+            if body[i].mark == "scan" and SIGNATURE_OCR.match(body[i].text):
+                nxt = [l for l in body[i + 1: i + 3] if l.mark == "scan"]
+                if nxt and (OCR_NEW_ACT_TITLE.fullmatch(nxt[0].text) or len(nxt) > 1 and re.fullmatch(r"\W*\d{0,4}\W*", nxt[0].text)
+                                                                       and OCR_NEW_ACT_TITLE.fullmatch(nxt[1].text)):
+                    return i + 1
+        # nor after its signature: after an annex (a table, a form) the next act starts with its type in capitals and
+        # its date ("ROZPORZĄDZENIE MINISTRA FINANSÓW", "z dnia 21 grudnia 1992 r."; DU/1993/2, 1990/4). Not in an
+        # announcement (ELI title "Obwieszczenie …"): its annex is often the act it announces, with such a header
+        if title and not title.startswith("Obwieszczenie"):
+            heads = [i for i in range(start, end) if body[i].mark == "scan" and OCR_NEW_ACT_TITLE.fullmatch(body[i].text)
+                     and any(OCR_DATE_LINE.match(l.text) for l in body[i + 1: i + 3] if l.mark == "scan")
+                     and not _same_header(body, i, title)]  # the act's own header again (DU/1993/397)
+            if heads and heads[0] <= start + 3:  # the act's own header
+                heads = heads[1:]
+            if heads:
+                i = heads[0]
+                return i - 1 if i - 1 > start and re.fullmatch(r"\W*\d{1,4}\W*", body[i - 1].text) else i
+    return end
+
+
+def _same_header(body: list[Line], i: int, title: str) -> bool:
+    """body[i] (a header in capitals) and the lines under it are the type, issuer, date and subject of the ELI title
+    (the next act may have the same issuer and date: DU/1993/451 and 452)."""
+    m = ELI_TITLE.fullmatch(title.strip())
+    if not m:
+        return False
+    k = next((k for k in range(i + 1, min(i + 3, len(body))) if OCR_DATE_LINE.match(body[k].text)), None)
+    if k is None:
+        return False
+    day, _, year = _plain(m["date"]).split()
+    dm = re.search(r"(\d{1,2}) \S+ (\d{4})", _plain(body[k].text))
+    rest = _plain(m["rest"])[:120]
+    after = _plain(" ".join(l.text for l in body[k + 1: k + 3]))[:len(rest)]
+    return bool(dm) and (dm[1], dm[2]) == (day, year) \
+        and SequenceMatcher(None, _plain(m["head"]), _plain(body[i].text), autojunk=False).ratio() >= 0.8 \
+        and (not rest or SequenceMatcher(None, rest, after, autojunk=False).ratio() >= 0.75)
+
+
+OCR_DATE_LINE = re.compile(r"z\s?dnia\s+\d{1,2}\s+[^\W\d_]+\s+\d{4}\s?r?\.?$")
+
+
+def _plain(s: str) -> str:
+    """Capitals without diacritics and punctuation, single spaces: OCR of a title in capitals loses both."""
+    s = unicodedata.normalize("NFKD", s.upper().replace("Ł", "L"))
+    return " ".join(re.sub(r"[\W_]", " ", "".join(c for c in s if not unicodedata.combining(c))).split())
+
+
+ELI_TITLE = re.compile(r"(?P<head>.+?)\s+z\s+dnia\s+(?P<date>\d{1,2}\s+\w+\s+\d{4})\s*r\.?\s*(?P<rest>.*)", re.S)
+
+
+def _own_act_by_title(body: list[Line], notes: list[Line], position: int, title: str, old: bool = False
+                      ) -> tuple[list[Line], list[Line], int, int] | None:
+    """The act out of pages of a scanned issue when OCR lost its number (no line with act=position), found by its
+    title in ELI: its type and issuer in capitals and the date under them ("ROZPORZĄDZENIE MINISTRA FINANSÓW",
+    "z dnia 9 stycznia 1992 r." for "Rozporządzenie Ministra Finansów z dnia 9 stycznia 1992 r. zmieniające …").
+    Up to 0.6.32 such an act got all its pages: the end of the act before it and the acts after it (DU/1992/6 held
+    the end of 5 and all of 7 and 8). The header must match closely (difflib ratio ≥ 0.8; the day and year of the date
+    exactly, the month ≥ 0.8; the words after the date ≥ 0.5 to the rest of the title); of several
+    candidates the one whose next words are closest to the rest of the title wins (acts 5 and 6 of 1992 differ only
+    after 60 letters of it), a near tie gives None (no cut).
+    The header line is kept: it is text of the act. The act ends as in _own_act (_act_end)."""
+    m = ELI_TITLE.fullmatch(title.strip())
+    if not m:
+        return None
+    head, rest = _plain(m["head"]), _plain(m["rest"])[:300]
+    day, month, year = _plain(m["date"]).split()
+    kind = head.split()[0]
+    # not after the next act's number: that header is the next act's (DU/1993/599 starts its pages, its header unread,
+    # and "USTAWA z dnia 10 grudnia 1993 r." under the number 600 is the only candidate)
+    stop = next((i for i, l in enumerate(body) if position < l.act <= position + ACT_NUMBER_NEXT), len(body))
+    scored = []
+    for i, l in enumerate(body[:stop]):
+        if l.mark != "scan" or not OCR_NEW_ACT_TITLE.match(l.text) or not _plain(l.text).startswith(kind[:5]):
+            continue
+        if old and any(re.match(r"\d{1,4}\s*[—–-]\s", x.text) for x in body[i + 1: i + 3]):  # (< 1990)
+            continue  # an item of the issue's contents ("ROZPORZĄDZENIE RADY MINISTRÓW", "10 — z dnia …", DU/1975/10)
+        window = _plain(" ".join([l.text] + [x.text for x in body[i + 1: i + 5] if x.mark == "scan"]))
+        d = re.search(r" Z DNIA (\d{1,2}) (\w+) (\d{4})\b", window)
+        if not d or (d[1], d[3]) != (day, year):  # the day and year exactly: "9" and "10 grudnia" differ by a letter
+            continue
+        h = SequenceMatcher(None, head, window[:d.start()], autojunk=False).ratio()
+        mo = SequenceMatcher(None, month, d[2], autojunk=False).ratio()
+        after = re.sub(r"^R\b\s*", "", window[d.end():].strip())[:len(rest)]
+        r = SequenceMatcher(None, rest, after, autojunk=False).ratio() if rest else 1.0
+        if h >= 0.8 and mo >= 0.8 and r >= 0.5:
+            scored.append((h + r, i))
+    if not scored:
+        return None
+    scored.sort(reverse=True)
+    if len(scored) > 1 and scored[0][0] - scored[1][0] < 0.1:
+        return None
+    start = scored[0][1]
+    end = _act_end(body, start, position, title)
+    first, last = body[start], body[end] if end < len(body) else None
+
+    def at(l: Line) -> tuple:
+        return l.page, l.band, l.col, l.top
+    notes = [l for l in notes if at(first) < at(l) and (last is None or at(l) < at(last))]
+    own = body[start:end]
+    return own, notes, first.page, last.page if last else max((l.page for l in own + notes), default=first.page)
+
+
+def _title_at(lines: list[Line], k: int, title: str) -> bool:
+    """lines[k] starts the header of the act with ELI `title`, in any case: its type and issuer, the date (day and
+    year exactly) and the words after it ("Rozporządzenie Ministra Rolnictwa" / "z dnia 26 lutego 1923 r." / "w sprawie
+    …"), or the whole title when it has no date (1918-1919: "Dekret w przedmiocie …"). The line must begin with the
+    type, after at most 3 specks, not with a number or a "§": a title quoted in a sentence or in the issue's contents
+    ("102. Dekret …", "48 — z dnia …") is no header."""
+    m = ELI_TITLE.fullmatch(title.strip())
+    score = _title_score(lines, k, title)
+    return score is not None and score >= (0.6 if m else 0.85)
+
+
+# an item of an issue's contents on its first page: the position and a dash, at the line's start or after "Poz.:"
+# ("10 — z dnia …"; "Poz.: 49 — z dnia …", DU/1947/49; "Poz.: 864—z dnia …", DU/1927/863; "Poz,: 167 — między …",
+# DU/1947/167), or after the type in capitals ("ROZPORZĄDZENIE 31 — Ministra Sprawiedliwości z dnia …", DU/1981/29;
+# "OŚWIADCZENIE RZĄDOWE 277 — z dnia …", DU/1952/276). Up to 0.6.46 such an item of the next position ended the act
+# at the issue's masthead (_by_neighbors). Not a number before the type: that is the act's own ("146 - OŚWIADCZENIE");
+# nor a number and a dash with no words after them: specks of the scan ("ROZPORZĄDZENIE RADY MINISTRÓW: 3 —", DU/1986/27)
+CONTENTS_ITEM = re.compile(r"^\d{1,4}\s*[—–-]+\s|Poz[.,]?\s?[:;,]?\s*\d{1,4}\s*[—–-]")
+CONTENTS_TYPED_ITEM = re.compile(r"\W*[A-ZĄĆĘŁŃÓŚŹŻ]{3,}[^\da-ząćęłńóśźż]{0,30}?(?<!\d)\d{1,4}\s*[—–-]+\s*[^\W\d_]")
+
+
+def _title_score(lines: list[Line], k: int, title: str, n: int = 120, width: int | None = None) -> float | None:
+    """How well the header starting at lines[k] reads as `title` (see _title_at): None if its type, issuer or date
+    differ, else the likeness of the words after the date to the first `n` letters of the title's rest (of the whole
+    title when it has no date). width: compare with that many letters of the header, not as many as the title has
+    (see _by_neighbors)."""
+    first = lines[k].text
+    tm = PREWAR_TYPE_LOOSE.search(first[:25])
+    if not tm or re.search(r"[^\W\d_]{3}", first[:tm.start()]) or re.search(r"(?:^|\s)§|^\s*\d{1,4}[.,]\s", first[:tm.start()]):
+        return None  # specks of the scan before the type are allowed ("i „s oi, 88 DEKRET", DU/1946/32), words are not
+    if any(CONTENTS_ITEM.search(x.text[:30]) for x in lines[k: k + 3]) or CONTENTS_TYPED_ITEM.match(first):
+        return None  # an item of the issue's contents ("10 — z dnia …"; "Poz.: 49 — z dnia …", DU/1947/49)
+    window = _plain(" ".join([first[tm.start():]] + [x.text for x in lines[k + 1: k + 5] if x.mark in ("scan", "ocr")]))[:500]
+    m = ELI_TITLE.fullmatch(title.strip())
+    if not m:
+        t = _plain(title)[:150]
+        return SequenceMatcher(None, t, window[:width or len(t)], autojunk=False).ratio()
+    head, rest = _plain(m["head"]), _plain(m["rest"])[:n]
+    day, _, year = _plain(m["date"]).split()
+    if SequenceMatcher(None, head, window[:len(head)], autojunk=False).ratio() < 0.8:
+        return None
+    d = re.search(r"(?:^| )(?:Z )?DNIA (\d{1,2}) (\w+) (\d{4})\b", window[max(0, len(head) - 10): len(head) + 40])
+    if not d or (d[1], d[3]) != (day, year):
+        return None
+    after = re.sub(r"^R\b\s*", "", window[max(0, len(head) - 10) + d.end():].strip())[:width or len(rest)]
+    return SequenceMatcher(None, rest, after, autojunk=False).ratio() if rest else 1.0
+
+
+def _rest_len(title: str, n: int) -> int:
+    """How many letters of `title` _title_score compares with a header: of its rest after the date, else of all of it."""
+    m = ELI_TITLE.fullmatch(title.strip())
+    return len(_plain(m["rest"])[:n]) if m else len(_plain(title)[:150])
+
+
+def _neighbor_header(lines: list[Line], k: int, title: str, neighbors: dict[int, str] | None) -> bool:
+    """The header at lines[k] reads better as the title of another position near the act than as the act's own
+    (DU/1955/175 and 176: the same issuer and date, titles alike for 100 letters, "… dotyczących budownictwa" and
+    "… dotyczących przemysłu lekkiego"; with its own header misread, "175 RAEPORZĄDZENIE", the act was taken from the
+    header of 176)."""
+    own = _title_score(lines, k, title, 300) or 0.0
+    return any((s := _title_score(lines, k, t, 300)) is not None and s > own for t in (neighbors or {}).values() if t)
+
+
+def _by_neighbors(own: tuple, position: int, neighbors: dict[int, str], title: str | None = None) -> tuple:
+    """The act cut out by _own_act ends at the header of the next position (or one of the next ones) when OCR lost
+    that position's number: the whole next act was in the text (DU/1928/427 + 428, DU/1946/32 + 33 whose numbers OCR
+    read as "88" and not at all). Searched from the act's third line, so its own header is not taken; a header
+    under the next position's number ("735. Przekład Konwencja …") from the second.
+    Not a header that reads at least as well as the act's own `title` (DU/1926/314 and 315: the same issuer and date,
+    "zmieniające niektóre przepisy rozporządzenia …" in both). The own title must read so on its own length and on
+    that of the neighbour's: a short one ("… w sprawie rejestracji cechów.") reads well as the start of a longer
+    header ("… w sprawie rejestracji statutów izb …", DU/1983/221 and 222). Compared on one length for all, a long
+    own title won on letters that match by chance (DU/1928/19 and 20: "… o zapobieganiu upadłości.")."""
+    body, notes, lo, hi = own
+    nxt = {p: neighbors[p] for p in range(position + 1, position + 4) if p in neighbors}
+
+    def neighbor_header(k: int) -> bool:
+        hits = [t for t in nxt.values() if _title_at(body, k, t)]
+        if not hits or not title:
+            return bool(hits)
+        own_scores = [_title_score(body, k, title, 300, w) for w in [None] + [_rest_len(t, 300) for t in hits]]
+        if any(s is None for s in own_scores):
+            return True
+        return min(own_scores) < max(_title_score(body, k, t, 300) or 0.0 for t in hits)
+
+    def starts(k: int) -> bool:
+        if k >= 2 and neighbor_header(k):
+            return True
+        # or its number with a dot before its title, maybe with "Przekład" (a translation) between them, from the act's
+        # second line ("735. Przekład Konwencja, dotycząca Procedury Cywilnej …" right after the one paragraph of 734,
+        # DU/1926/734: the start of 735 was in the text)
+        for p, t in nxt.items():
+            m = re.match(rf"\W{{0,3}}{p}\s?[.,]\s*(?:Przek[łl]ad\s+)?", body[k].text)
+            if m and _title_at([replace(body[k], text=body[k].text[m.end():])] + body[k + 1: k + 5], 0, t):
+                return True
+        return False
+    end = next((k for k in range(1, len(body)) if starts(k)), None)
+    if end is None:
+        return own
+    last = body[end]
+
+    def at(l: Line) -> tuple:
+        return l.page, l.band, l.col, l.top
+    kept = body[:end]
+    while kept and not re.search(r"[^\W\d_]{2}", kept[-1].text):
+        kept = kept[:-1]  # the next act's number OCR misread ("450" for 459, DU/1919/458) or a speck
+    notes = [n for n in notes if at(n) < at(last)]
+    return kept, notes, lo, max((l.page for l in kept), default=lo)
+
+
+# an act starting on a page of an old issue read by OCR: its number and type in one paragraph ("56 ROZPORZĄDZENIE
+# PREZESA RADY MINISTRÓW z dnia …", DU/2000/56) or the number alone before the type ("57" + "ROZPORZĄDZENIE MINISTRA
+# FINANSÓW"); the number is not a line of its own as in the text layer (ACT_NUMBER)
+OCR_ACT_TYPE = (r"(?:ROZPORZĄDZENIE|USTAWA|OBWIESZCZENIE|UCHWAŁA|POSTANOWIENIE|ZARZĄDZENIE|OŚWIADCZENIE|UMOWA"
+                r"|KONWENCJA|PROTOKÓŁ|WYROK|ORZECZENIE|TRAKTAT|POROZUMIENIE|KOMUNIKAT|DEKRET|INFORMACJA|AKT|STATUT"
+                r"|REGULAMIN|ZAŁĄCZNIK)\b")
+# OCR may lose the diacritics ("OSWIADCZENIE RZADOWE", MP/2002/122)
+OCR_ACT_TYPE = "".join({"Ą": "[ĄA]", "Ę": "[ĘE]", "Ł": "[ŁL]", "Ó": "[ÓO]", "Ś": "[ŚS]", "Ż": "[ŻZ]"}.get(c, c)
+                       for c in OCR_ACT_TYPE)
+# M.P.: an act of the President has its register number between the number and the type, on the line of either
+# ("626" + "Rej. 182/2000 POSTANOWIENIE …", "627 Rej. 149/2000" + "POSTANOWIENIE …"; MP/2000/626); also "Rej. 87/00 MPM"
+OCR_REJ = r"Rej\.?\s*\d+/\d{2,4}(?:\s+MPM)?"
+OCR_ACT_START = re.compile(rf"^(\d{{1,4}})(?:\s+(?=(?:{OCR_REJ}\s+)?{OCR_ACT_TYPE})|\s+(?={OCR_REJ}$)|$)")
+OCR_TYPE_NEXT = re.compile(rf"(?:{OCR_REJ}\s*)?{OCR_ACT_TYPE}")
+# the title of an act on its own (not of an annex: no ZAŁĄCZNIK, STATUT, REGULAMIN), in capitals: "ROZPORZĄDZENIE MINISTRA
+# FINANSÓW", "USTAWA", "OŚWIADCZENIE RZĄDOWE", "ROZPORZĄDZENIE MINISTRA— SZEFA URZĘDU RADY MINISTRÓW" (DU/1994/7); a speck of the scan
+# after it ("… GOSPODARKI MORSKIEJ |", DU/1998/428)
+OCR_NEW_ACT_TITLE = re.compile(r"(?:ROZPORZĄDZENIE|USTAWA|OBWIESZCZENIE|UCHWAŁA|POSTANOWIENIE|ZARZĄDZENIE|OŚWIADCZENIE"
+                               r"|UMOWA|KONWENCJA|PROTOKÓŁ|ORZECZENIE|DEKRET|TRAKTAT|POROZUMIENIE)\b[A-ZĄĆĘŁŃÓŚŹŻ ,.—–|-]*")
+
+
+# "§" read by tesseract as "8", "$" or "S" at a paragraph's start ("8 2. Traci moc", DU/2000/53) and as "$" in the
+# text ("w $ 13 w ust. 1", DU/1997/78); "$" is not a character of Polish acts of those years
+SECTION_START_OCR = re.compile(r"^(?:[8$S5]|§)\s?(\d+[a-z]?\.)(?=\s+\S)")
+SECTION_IN_TEXT_OCR = re.compile(r"\$(?=\s?\d)")
+# and as "8" after a preposition ("1) w 8 1 skreśla się pkt 3", DU/1997/224 p. 1)
+SECTION_AFTER_WORD_OCR = re.compile(r"\b(w|we|z|ze|do|od|na|po|i|oraz|lub|albo|przez)\s8\s(?=\d+[a-z]?\b)")
+
+
+# glued to its number after a preposition, before what follows a § reference ("1) w 81 w ust. 1:", "2) w82:";
+# DU/1990/380)
+SECTION_GLUED_OCR = re.compile(r"\b(w|we|z|ze|do|od|na|po|i|oraz|lub|albo|przez)\s?8(\d{1,3}[a-z]?)(?=\s*(?::|w\s+ust\.|ust\."
+                               r"|pkt|lit\.|otrzymuje|dodaje|skreśla|uchyla|po\s+wyrazach|wyrazy))")
+
+
+# but a glued "8"/"5" may be the first digit of a list item: "79. Malediwy,", "80. Malezja," became "§ 0." (DU/1995/495;
+# 241 lines in 25 acts of DU 1990–1999 in 0.6.38). It is a list item when the page numbers paragraphs in a chain from
+# it to a number that cannot be a glued "§" (79, 49, 90…); without such a chain "81. 1. Ustala się" stays "§ 1."
+# (glued starts like that are common: 724 of ~1600 in the OCR cache had a "§" next to them on the page)
+NUMBERED_OCR = re.compile(r"(\d{1,4})\.\s")
+GLUED_NUMBER_OCR = re.compile(r"([85]\d{1,3})\.(?=\s+\S)")
+
+
+def _numbered(paragraphs: list[str]) -> set[int]:
+    """Numbers starting paragraphs of a page ("80. Malezja," -> 80)."""
+    return {int(m.group(1)) for p in paragraphs if (m := NUMBERED_OCR.match(p.strip()))}
+
+
+def _list_item(t: str, numbered: set[int]) -> bool:
+    """`t` starts with a glued "8N." or "5N." that continues a numbered list of its page, not with "§ N."."""
+    if not (m := GLUED_NUMBER_OCR.match(t)):
+        return False
+    n = int(m.group(1))
+    for step in (-1, 1):
+        k = n + step
+        while k in numbered:
+            if k < 10 or str(k)[0] not in "85":
+                return True
+            k += step
+    return False
+
+
+def _fix_section_sign(t: str, numbered: set[int] = frozenset()) -> str:
+    if not _list_item(t, numbered):
+        t = SECTION_START_OCR.sub(r"§ \1", t)
+    t = SECTION_GLUED_OCR.sub(r"\1 § \2", t)
+    return SECTION_AFTER_WORD_OCR.sub(r"\1 § ", SECTION_IN_TEXT_OCR.sub("§", t))
+
+
+def _act_type_next(p: str) -> bool:
+    """`p` starts with an act's type in capitals, maybe after a speck of the scan ("i ROZPORZĄDZENIE …")."""
+    return bool(PREWAR_TYPE_CAPS.match(SPECK_BEFORE_CAPS.sub("", p, count=1)))
+
+
+def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: int | None,
+               mark: str = "ocr", old: bool = False) -> list[Line]:
+    """Lines of a page read by OCR. On a page of an old issue the running header ("Dziennik Ustaw Nr 5 Poz. 55 i 56")
+    is dropped, and the number of this act or of one after it becomes a line of its own (act=N), so that _own_act
+    cuts the act out as on pages with a text layer (DU/2000/56: the page held all of act 55 before it).
+    Only the header goes: tesseract may join it with the text under it into one paragraph (MP/2008/470: the whole
+    act; DU/2000/393 p. 126: "Objaśnienia do wzoru nr 3 …"), which went with it up to 0.6.22. A rest without
+    letters ("Poz. 392 1") goes too, unless it is the act's number. old: a page of an issue of 1918-1989, with rules
+    of its own (marked "(< 1990)")."""
+    if paragraphs and (h := OLD_HEADER_OCR.match(paragraphs[0])):
+        rest = paragraphs[0][h.end():].strip()
+        number = rest.isdigit() and position is not None and position <= int(rest) <= position + ACT_NUMBER_NEXT
+        paragraphs = ([rest] if re.search(r"[^\W\d_]", rest) or number else []) + paragraphs[1:]
+    on_page: set[int] = set()  # positions in a pre-war running header (or in the contents on an issue's first page)
+    dashed: set[int] = set()  # positions in contents with dashes ("Poz.: 301—…")
+    from_header = False
+    if mark == "scan" and old:  # (< 1990; in later issues "Poz. 1. Powiat …" of an annex is no header, DU/1998/688)
+        for k in range(min(4, len(paragraphs))):
+            if h := old and (PREWAR_HEADER_LOOSE_OCR.match(paragraphs[k].strip())
+                             or PAGE_POS_HEADER_OCR.match(paragraphs[k].strip())) or PREWAR_HEADER_OCR.match(paragraphs[k].strip()):
+                on_page, from_header = {int(x) for x in re.findall(r"\d+", h.group(1))}, True
+                rest = paragraphs[k][h.end():].strip()
+                near = [p for p in paragraphs[:k] + paragraphs[k + 1: k + 3]
+                        if PREWAR_HEADER_BIT.fullmatch(p.strip()) and not (p.strip().isdigit() and int(p) in on_page)]
+                paragraphs = [p for i, p in enumerate(paragraphs) if i != k and not (i < k + 3 and p in near)]
+                if re.search(r"[^\W\d_]{3}", rest):
+                    paragraphs.insert(0, rest)
+                break
+        else:  # an issue's first page: the positions listed in its contents (only a bare number counts below)
+            for k, p in enumerate(paragraphs[:12]):
+                if PREWAR_CONTENTS.match(p.strip()):
+                    dashed = {int(x) for q in paragraphs[k: k + 12] for x in CONTENTS_DASH_ITEM.findall(q)}
+                    on_page = {int(x) for q in paragraphs[k: k + 12] for x in PREWAR_CONTENTS_ITEM.findall(q)} | dashed
+                    break
+    if mark == "scan":  # the previous act's signature read after the next act's number goes back before it (DU/1990/380)
+        paragraphs = list(paragraphs)
+        if position is not None:  # and the next act's number read at the end of the signature becomes a paragraph
+            for k in range(len(paragraphs) - 2, -1, -1):
+                if (sn := SIGNATURE_NUMBER_OCR.fullmatch(paragraphs[k].strip())) \
+                        and position < int(sn.group(2)) <= position + ACT_NUMBER_NEXT \
+                        and OCR_TYPE_NEXT.match(paragraphs[k + 1]):
+                    paragraphs[k: k + 1] = [sn.group(1), sn.group(2)]
+        for k in range(len(paragraphs) - 1):
+            if OCR_ACT_START.fullmatch(paragraphs[k].strip()) and SIGNATURE_OCR.match(paragraphs[k + 1]):
+                paragraphs[k], paragraphs[k + 1] = paragraphs[k + 1], paragraphs[k]
+        if old and position is not None:  # (< 1990)
+            for k in range(len(paragraphs) - 1, -1, -1):
+                for g in GLUED_NEXT_START.finditer(paragraphs[k]):
+                    rest = paragraphs[k][g.end():]
+                    if position <= int(g.group(1)) <= position + ACT_NUMBER_NEXT and _act_type_next(rest) \
+                            and re.search(r"[.:;]\s*$|:\s*(?:[\w.,'’-]+\s*){1,4}$", paragraphs[k][:g.start()]):
+                        paragraphs[k: k + 1] = [paragraphs[k][:g.start()], g.group(1), rest]
+                        break
+            for k in range(len(paragraphs) - 2, -1, -1):
+                if (tn := TRAILING_NUMBER.search(paragraphs[k])) and position <= int(tn.group(1)) <= position + ACT_NUMBER_NEXT \
+                        and not REFERENCE_BEFORE.search(paragraphs[k][:tn.start()]) and _act_type_next(paragraphs[k + 1]) \
+                        and paragraphs[k][:tn.start()].strip():
+                    paragraphs[k: k + 1] = [paragraphs[k][:tn.start()].rstrip(), tn.group(1)]
+        for k in range(len(paragraphs) - 2 if old else 0):  # (< 1990)
+            if PREWAR_ACT_NUMBER.fullmatch(paragraphs[k].strip()) and SIGNATURE_TAIL_OCR.match(paragraphs[k + 1]) \
+                    and _act_type_next(paragraphs[k + 2]):
+                paragraphs[k], paragraphs[k + 1] = paragraphs[k + 1], paragraphs[k]
+    out, numbered = [], _numbered(paragraphs) if mark == "scan" else set()
+    for k, t in enumerate(paragraphs):
+        if mark == "scan" and re.fullmatch(r"\d{1,4}[\s|.,;:'’\"!_~-]+", t):
+            t = t.rstrip(" |.,;:'’\"!_~-")  # a number with a speck of the scan after it ("151 |", DU/1990/150)
+        # a number of the header's list starting a paragraph ("218. | „+, 4Na mocy art. 44 …", DU/1934/218); with the
+        # list taken from the contents only a bare number (the contents' own lines start with the numbers too)
+        if old and mark == "scan" and position is not None and ERRATUM_OCR.match(t):  # (< 1990)
+            out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, "", pw, ph, mark=mark, act=position + ACT_NUMBER_NEXT))
+        if old and mark == "scan" and out and out[-1].act and not re.search(r"[^\W\d_]{3}", t):  # (< 1990)
+            continue  # specks of the scan under the act's number (";", DU/1984/126; ". , 5 s ‘ . : . , | z 228", DU/1984/87)
+        if old and mark == "scan" and out and out[-1].act and (sp := SPECK_BEFORE_CAPS.match(t)) \
+                and _act_type_next(t[sp.end():]):
+            t = t[sp.end():]  # "i ROZPORZĄDZENIE RADY MINISTRÓW." under the number 126 (DU/1984/126)
+        if old and mark == "scan" and position is not None and (sp := SPECK_BEFORE_CAPS.match(t)) and sp.end() \
+                and (m0 := OCR_ACT_START.match(t[sp.end():])) and position <= int(m0.group(1)) <= position + ACT_NUMBER_NEXT \
+                and OCR_TYPE_NEXT.match(t[sp.end() + m0.end():]):
+            t = t[sp.end():]  # "ZM 248 OŚWIADCZENIE RZĄDOWE" (DU/1984/248)
+        if old and mark == "scan" and position is not None:  # (< 1990)
+            if (ns := NUMBER_SPECK_TYPE.match(t)) and position <= int(ns.group(1)) <= position + ACT_NUMBER_NEXT \
+                    and _act_type_next(t[ns.end():]):
+                t = f"{ns.group(1)} {t[ns.end():]}"
+            elif (sn := SPECKED_NUMBER.fullmatch(t)) and sn.group(1) != t and position <= int(sn.group(1)) <= position + ACT_NUMBER_NEXT \
+                    and any(_act_type_next(p) for p in [p for p in paragraphs[k + 1: k + 3] if re.search(r"[^\W\d_]{3}", p)][:1]):
+                t = sn.group(1)
+        pm = old and (PREWAR_ACT_NUMBER.fullmatch(t) or (PREWAR_HEAD_NUMBER.match(t) if from_header else None))
+        if position is not None and pm and position <= int(pm.group(1)) <= position + ACT_NUMBER_NEXT \
+                and (int(pm.group(1)) in on_page and (from_header or int(pm.group(1)) not in dashed
+                                                      or k + 1 < len(paragraphs)
+                                                      and NUMBER_HEADER_NEXT.match(paragraphs[k + 1]))
+                     or mark == "scan" and k + 1 < len(paragraphs)
+                     and (PREWAR_START_NEXT.match(paragraphs[k + 1]) or old and (_act_type_next(paragraphs[k + 1])
+                                                                                 or PREWAR_TYPE_ANY.match(paragraphs[k + 1])))):
+            out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, pm.group(1), pw, ph, mark=mark, act=int(pm.group(1))))
+            t = t[pm.end():].strip()
+            if not t:
+                continue
+        # a dash after the number only after its dot ("405. - ROZPORZĄDZENIE"): "240 — Konwencja Nr 105 …" is an item of
+        # the contents (DU/1959/240); a speck before the number is no matter ("- 211. Oświadczenie …", DU/1926/211)
+        if old and mark == "scan" and position is not None and (tm := PREWAR_TYPED_START.match(t)) \
+                and position <= int(tm.group(1)) <= position + ACT_NUMBER_NEXT \
+                and (not re.search(r"[—–-]", t[tm.end(1):tm.end()]) or re.match(r"[.,]\s*[—–-]", t[tm.end(1):])) \
+                and ((from_header or int(tm.group(1)) in dashed and not re.search(r"[—–-]", t[tm.end(1):tm.end()])
+                      and not FINAL_PROVISION.match(t[tm.end():]))
+                     and int(tm.group(1)) in on_page or PREWAR_TYPE_CAPS.match(t[tm.end():])):
+            out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, tm.group(1), pw, ph, mark=mark, act=int(tm.group(1))))
+            t = t[tm.end():].strip()
+        if old and mark == "scan" and position is not None and (pm := PREWAR_GLUED_START.match(t)) \
+                and position <= int(pm.group(1)) <= position + ACT_NUMBER_NEXT:
+            out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, pm.group(1), pw, ph, mark=mark, act=int(pm.group(1))))
+            t = t[pm.end():]
+        m = OCR_ACT_START.match(t) if position is not None else None
+        # on a scan read in columns the previous act's signature or a page number of the table of contents may stand
+        # between the number and the type ("369", "Prezydent Rzeczypospolitej Polskiej: L. Wałęsa", "USTAWA";
+        # DU/1992/369; "669", ". 2352", "USTAWA"; DU/1994/669)
+        after = [p for p in paragraphs[k + 1: k + 3]
+                 if not (mark == "scan" and (SIGNATURE_OCR.match(p) or not re.search(r"[^\W\d_]{3}", p)))][:1]
+        if m and not OCR_TYPE_NEXT.match(t[m.end():]) and not (after and OCR_TYPE_NEXT.match(
+                SPECK_BEFORE_CAPS.sub("", after[0]) if old and not t[m.end():] else after[0] if not t[m.end():]
+                else f"{t[m.end():]} {after[0]}")):
+            m = None  # a bare number (or one with a register number) not followed by an act type
+        if m and position <= int(m.group(1)) <= position + ACT_NUMBER_NEXT:
+            out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, m.group(1), pw, ph, mark=mark, act=int(m.group(1))))
+            t = t[m.end():].strip()
+            if not t:
+                continue
+        if mark == "scan":
+            from .ocr import fix_words
+            t = fix_words(_fix_section_sign(t, numbered), old=old)
+            if (sig := SIGNATURE_AFTER_OCR.search(t)) and len(sig.group(1).split()) <= 14:
+                out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, t[:sig.start()], pw, ph, mark=mark))
+                t = sig.group(1)
+        out.append(Line(pno, 0.0, 0.0, 0.0, 1.0, t, pw, ph, mark=mark))
+    return out
+
+
+def convert(path: str, ocr: str | None = None, position: int | None = None, title: str | None = None,
+            _doc_gutter: tuple[float, float] | None = None, year: int | None = None,
+            neighbors: dict[int, str] | None = None) -> Document:
+    """ocr: "auto" or tesseract language(s), e.g. "pol+eng", to read pages without a text layer
+    (see ocr.py); None (default) = no OCR, such pages only get a note.
+    position: the act's position in the gazette (ELI "DU/2005/1255" -> 1255). On pages of issues of 2011 and
+    earlier it cuts the act out of the pages it shares with other acts (see _own_act); None = no cut.
+    title: the act's title in ELI; on a scan whose OCR lost the act's number the act is found by it (_own_act_by_title).
+    year: the act's year (ELI "DU/1921/259" -> 1921); scans of issues of 1918-1989 get rules of their own in cutting
+    the act out and in the order of columns (_ocr_lines, ocr._column_order). None = as for later issues.
+    neighbors: ELI titles of other positions of the year ({position: title}); on scans of 1918-1989 the act ends
+    where the next position's title starts, when OCR lost that position's number (_by_neighbors).
+    Two-column pages of those issues: a page with too few full lines to find its gutter (the first page of an act
+    over a page of footnotes) takes the gutter of the act's other pages; as it may come first, the PDF is then read
+    again (_doc_gutter)."""
+    doc = Document()
+    gut = {"doc": _doc_gutter, "found": [], "cands": []}
+    body: list[Line] = []
+    notes: list[Line] = []
+    if ocr:
+        from . import ocr as ocr_mod
+        doc.ocr_engine = f"tesseract {ocr_mod.check(ocr)}"
+    # a PDF of scans with Acrobat's OCR layer (Dz.U. 1918-1999) also has scans without it: read them as scans too
+    with open(path, "rb") as fh:
+        raw = fh.read()
+    scanned = bool(ocr) and (b"HiddenHorzOCR" in raw or b"HiddenVertOCR" in raw)
+    del raw
+    with pdfplumber.open(path) as pdf:
+        for pno, page in enumerate(pdf.pages, start=1):
+            scan = bool(ocr) and (_hidden_ocr_scan(page) or scanned and not page.chars
+                                  and _large_image(page, min_share=0.8) is not None)
+            b, n = ([], []) if scan else _page_lines(page, pno, gut)
+            layer = None  # text layer of a page mostly of glyphs without Unicode (forms, DU/2025/161): OCR first
+            if _unmapped_share(page) > 0.1:
+                layer, b, n = (b, n), [], []
+            if pno == 1:
+                for i, l in enumerate(b):
+                    if MASTHEAD_END.match(l.text):
+                        doc.masthead = [x.text for x in b[: i + 1]]
+                        b = b[i + 1 :]
+                        break
+                else:  # an act of 2011 or earlier starts under the running header of its issue (DU/2005/1255)
+                    if b and OLD_HEADER.match(b[0].text):
+                        doc.masthead, b = [b[0].text], b[1:]
+            elif b and (RUNNING_HEADER.match(b[0].text) or OLD_HEADER.match(b[0].text)):
+                b = b[1:]
+            if not b and not n:
+                read = ocr_mod.ocr_page(page, ocr, columns=scan, year=year) if ocr else None
+                if read and not scan and ocr_mod.old_gazette(read):  # a scan of a gazette page without any text layer
+                    scan, read = True, ocr_mod.in_columns(read, pno, year=year)  # (DU/1993/181, DU 2000)
+                if read and ocr_mod.usable(read):
+                    doc.no_text_pages.append(pno)
+                    doc.ocr_pages.append(pno)
+                    doc.ocr_langs[pno] = read.lang
+                    b = _ocr_lines(read.paragraphs, pno, page.width, page.height, position, "scan" if scan else "ocr",
+                                   old=year is not None and year < 1990)
+                elif layer and (layer[0] or layer[1]):
+                    # no OCR or an unreadable one: the text layer without the unmapped glyphs beats a bare note
+                    doc.unmapped_pages.append(pno)
+                    b, n = layer
+                    if b and RUNNING_HEADER.match(b[0].text):
+                        b = b[1:]
+                    b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="unmapped")] + b
+                else:
+                    doc.no_text_pages.append(pno)
+                    b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="notext")]
+            elif (img := _large_image(page)) is not None:
+                doc.image_pages.append(pno)
+                m = [Line(pno, img, img, 0.0, 1.0, "", page.width, page.height, mark="image")]
+                if ocr and (read := _image_text(page, ocr)):  # an image of text: its OCR text replaces the note
+                    doc.image_ocr_pages.append(pno)
+                    doc.ocr_langs[pno] = read.lang
+                    m = [Line(pno, img, img, 0.0, 1.0, t, page.width, page.height, mark="ocr") for t in read.paragraphs]
+                upright = all(l.pw == page.width and l.ph == page.height for l in b)
+                i = next((k for k, l in enumerate(b) if l.top > img), len(b)) if upright else len(b)
+                b = b[:i] + m + b[i:]
+            body.extend(b)
+            notes.extend(n)
+            page.close()  # pdfplumber caches every parsed page; 867-page acts exhausted 14 GB RAM
+
+    if _doc_gutter is None and gut["cands"] and gut["found"]:
+        common = Counter((round(a), round(b)) for a, b in gut["found"]).most_common(1)[0][0]
+        g = next(g for g in gut["found"] if (round(g[0]), round(g[1])) == common)
+        if any(abs(a - g[0]) <= 1 and abs(b - g[1]) <= 1 for a, b in gut["cands"]):
+            return convert(path, ocr, position, title, _doc_gutter=g, year=year, neighbors=neighbors)
+    body, notes = _drop_colophon(body, notes)
+    own = None
+    if position is not None and title and not any(l.act == int(position) for l in body):
+        own = _own_act_by_title(body, notes, int(position), title, old=year is not None and year < 1990)
+    old = year is not None and year < 1990
+    if old and position is not None and title and not own and not any(l.act == int(position) for l in body):
+        # (< 1990) neither the act's number nor its header in capitals found: its header in any case, as in the ELI
+        # title (DU/1946/32: "32" read as "88" in "i „s oi, 88 DEKRET", "% dnia 22 stycznia 1946 r."), not one that
+        # reads better as a neighbour's title (DU/1955/175); it ends as an act found by its number (_act_end: at the
+        # next act's number). Without such a header, the act may still end at the next number (_own_act)
+        k = next((k for k in range(len(body)) if _title_at(body, k, title)
+                  and not _neighbor_header(body, k, title, neighbors)), None)
+        if k is not None:
+            end = _act_end(body, k, int(position), title)
+            first, last = body[k], body[end] if end < len(body) else None
+
+            def at(l: Line) -> tuple:
+                return l.page, l.band, l.col, l.top
+            own = body[k:end], [n for n in notes if at(first) < at(n) and (last is None or at(n) < at(last))], \
+                first.page, last.page if last else max(l.page for l in body[k:])
+    if position is not None and (own := own or _own_act(body, notes, int(position), title, old)):
+        if old and neighbors:  # (< 1990)
+            own = _by_neighbors(own, int(position), neighbors, title)
+        body, notes, lo, hi = own
+        for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
+            setattr(doc, f, [p for p in getattr(doc, f) if lo <= p <= hi])  # pages of the other acts only
+        doc.ocr_langs = {p: v for p, v in doc.ocr_langs.items() if lo <= p <= hi}
+    doc.blocks = _quoted_scan_annexes(_segment(body), position)
+
+    doc.footnotes, doc.footnote_pages = _group_notes(notes)
+    return doc
+
+
+def _quoted_scan_annexes(blocks: list[Block], position=None) -> list[Block]:
+    """An annex header read from a scan before the act's signature is the new text of an annex of the act it amends,
+    quoted without the „ OCR lost (DU/2000/1315: Art. 2 gives annexes 1-3 of the amended act, then "Załącznik nr 3" is
+    followed by Art. 3-12 of this act and its signature). Such a header stays a paragraph of the act's text when no
+    signature stands before it and one stands after it, or the first article after it is the next one of this act
+    ("Art. 3." after "Art. 2."; an act set in an annex starts at "Art. 1."). A header naming this act's position
+    ("Załącznik do rozporządzenia … (poz. 753)") is this act's annex even when OCR put the signature after it
+    (DU/1994/753: signature in the other column; DU/1994/153: signature glued into § 3)."""
+    plain = [int(m.group(1)) if (m := re.match(r"^Art\.\s*(\d+)\.", b.text)) else None for b in blocks]
+    own = re.compile(rf"\(poz\.\s*{int(position)}\)") if position is not None else None
+    for i, b in enumerate(blocks):
+        if b.kind == "signature":
+            break
+        if b.kind != "annex" or i + 1 >= len(blocks) or blocks[i + 1].kind not in ("scan", "ocr"):
+            continue
+        if own and own.search(b.text):
+            continue
+        signed_after = any(x.kind == "signature" for x in blocks[i + 1:])
+        nxt = next((n for n in plain[i + 1:] if n is not None), None)
+        if signed_after or nxt is not None and nxt - 1 in plain[:i]:
+            blocks[i] = replace(b, kind="scan")
+    return blocks
+
+
+def _next_label(s: str) -> str:
+    return s + "a" if s.endswith("z") else s[:-1] + chr(ord(s[-1]) + 1)  # "b" -> "c", "z" -> "za" (DU/2023/1206)
+
+
+def _group_notes(notes: list[Line]) -> tuple[list[str], list[int]]:
+    """Lines under the footnote rule -> footnotes ("[^3] text") and the page each starts on."""
+    texts, pages = [], []
+    cur, cur_page, item = None, 0, 0
+    for l in notes:
+        point = re.match(r"^(\d+)\)\s", l.text)
+        letter = re.match(r"^([a-z]{1,2})\)\s", l.text)
+        title = re.match(r"^\d+\)[IVXL]+\)\s", l.text)  # "1)I) Niniejsza ustawa…": the title's footnote (t.j.)
+        # "Niniejsza ustawa:" + "1) wdraża…" + "2) służy…": points of a footnote (DU/2026/421), a paragraph each;
+        # other lines "N) …" start a footnote whose marker is not set as a superscript
+        # a second list after another colon starts at 1 again ("Niniejsza ustawa służy stosowaniu:", DU/2026/43)
+        if cur is not None and point and (int(point.group(1)) == item + 1 and item
+                                          or int(point.group(1)) == 1 and cur.rstrip().endswith(":")):
+            cur, item = cur + "\n\n" + l.text, int(point.group(1))
+        # footnotes a), b) (_letter_refs): the next letter after a footnote that ends a sentence; "b) …" after "a) …;"
+        # is a point of that footnote
+        elif re.match(r"^\[\^(?:\d+|[a-z]{1,2})\]", l.text) or point or title or letter and cur is not None \
+                and cur.rstrip().endswith(".") and (prev := re.match(r"^(?:\[\^([a-z]{1,2})\]|([a-z]{1,2})\))", cur)) \
+                and letter.group(1) == _next_label(prev.group(1) or prev.group(2)):
+            if cur is not None:
+                texts.append(cur)
+                pages.append(cur_page)
+            cur, cur_page, item = l.text, l.page, 0
+        else:
+            cur = l.text if cur is None else _join(cur, l.text)
+            cur_page = cur_page or l.page
+    if cur is not None:
+        texts.append(cur)
+        pages.append(cur_page)
+    return texts, pages
+
+
+# "Art. 266–280." / "Art. 22–28. (pominięte)": articles left out of a consolidated text, a unit of their own
+ART_RANGE = rf"(?:\s*[–-]\s*(?:Art\.\s*)?\d+[a-zł]*[{SUP_CHARS}]*)?"
+UNIT_HEAD = {
+    "Art.": re.compile(rf"^(Art\.\s*\d+[a-zł]*[{SUP_CHARS}]*{ART_RANGE}\.)\s*(.*)$", re.S),  # art. 106ł too
+    "§": re.compile(rf"^(§\s*\d+[a-z]*[{SUP_CHARS}]*\.)\s*(.*)$", re.S),
+}
+# A quoted unit that opens with its ust. 1 or § 1 (codes): "„Art. 21. 1. Treść" -> "„Art. 21." + "1. Treść",
+# "Art. 14t. § 1. Treść" -> "Art. 14t." + "§ 1. Treść"
+QUOTED_UNIT = re.compile(
+    rf"^(„?(?:Art\.|§)\s*\d+[a-zł]*[{SUP_CHARS}]*\.)\s+(„?(?:§\s*)?\d+[a-z]*[{SUP_CHARS}]*\.\s.*)$", re.S)
+# ” after minutes is the seconds sign in coordinates (16°41’56,70”), not a closing quote
+SECONDS = re.compile(r"\d[’′']\s?\d+(?:[,.]\d+)?”")
+# a quote that opens a block, possibly after the unit number: "„Art. 5.", "Art. 30. „1.", "1) „a)"
+QUOTE_HEAD = re.compile(rf"^(?:(?:Art\.|§)\s*\d+[a-zł]*[{SUP_CHARS}]*\.\s*|\d+[a-z]*[{SUP_CHARS}]*[.)]\s*|[a-z]{{1,3}}\)\s*)?[„“]")
+
+
+ART_NUMBER_AT = re.compile(r"^Art\.\s*(\d+[a-zł]*)\.")  # the number of "Art. 2. W ustawie …" (quote_depths)
+ART_DIGITS = re.compile(r"\d+")
+
+
+def quote_depths(blocks: list[Block]) -> list[int]:
+    """Quotation depth (opening minus closing marks) at the start of each block. Units inside
+    quotes are provisions of another act (amendments, "przepisy nieobjęte tekstem jednolitym"),
+    not units of this one. Only the first quoted unit carries the opening „, so the depth has to
+    be carried over. Only a quote that opens the block (after an optional unit number) may run
+    into the next blocks; one opened mid-sentence and left open is a typo in the source
+    („zwany dalej „kodem;”) and ends with its block. Some PDFs close with ˮ (U+02EE);
+    “ opens English quotes in forms.
+    A quote the source did not close ends at the next article of this act: "Art. N." with N right after the last
+    article outside quotes, and not the next of the articles at any depth inside them, unless the block before
+    announces a quote (DU/2004/895: pkt 17 of Art. 1 ends "…z późn. zm.)." without "”;", then "Art. 2. W ustawie …")."""
+    depths, d = [], 0
+    top, inner, announced = None, {}, False  # last article number outside quotes / at each depth inside them
+    for b in blocks:
+        if b.kind == "annex":
+            d, top, inner = 0, None, {}
+        t = SECONDS.sub("", b.text)
+        head = QUOTE_HEAD.match(t)
+        art = None if head or b.kind == "ocr" else ART_NUMBER_AT.match(t)
+        if d and art and top and art.group(1).isdigit() and int(art.group(1)) == int(top) + 1 and not announced \
+                and not any(int(ART_DIGITS.match(v).group()) in (int(top), int(top) + 1) for v in inner.values()):
+            d = 0
+        depths.append(d)
+        if art and d == 0:
+            top, inner = art.group(1), {}
+        elif art:
+            inner = {k: v for k, v in inner.items() if k < d} | {d: art.group(1)}
+        elif head and (quoted := ART_NUMBER_AT.match(t[head.end():])):
+            inner = {k: v for k, v in inner.items() if k <= d} | {d + 1: quoted.group(1)}
+        announced = t.rstrip().endswith(":")
+        if b.kind == "ocr":  # OCR misreads quotes; its text is never a heading anyway
+            continue
+        carry, local = d, 0  # quotes open from earlier blocks / opened mid-block in this one
+        for k, ch in enumerate(t):
+            if ch in "„“":
+                if head and k == head.end() - 1:
+                    carry += 1
+                else:
+                    local += 1
+            elif ch in "”ˮ":
+                if local:
+                    local -= 1
+                else:
+                    carry = max(0, carry - 1)
+        d = carry
+    return depths
+
+
+def page_ranges(pages: list[int]) -> str:
+    """[2, 3, 4, 7] -> 2-4, 7"""
+    out: list[list[int]] = []
+    for p in pages:
+        if out and p == out[-1][1] + 1:
+            out[-1][1] = p
+        else:
+            out.append([p, p])
+    return ", ".join(str(a) if a == b else f"{a}-{b}" for a, b in out)
+
+
+def no_text_note(pages: list[int]) -> str:
+    if len(pages) == 1:
+        return (f"> [Strona {pages[0]} PDF nie ma czytelnej warstwy tekstowej (np. skan lub grafika). "
+                "Jej treści tu nie ma, jest tylko w PDF.]")
+    return (f"> [Strony {page_ranges(pages)} PDF nie mają czytelnej warstwy tekstowej (np. skan lub grafika). "
+            "Ich treści tu nie ma, jest tylko w PDF.]")
+
+
+def ocr_note(page: int, engine: str) -> str:
+    return (f"> [Strona {page} PDF nie ma czytelnej warstwy tekstowej. Tekst poniżej odczytał OCR ({engine}). "
+            "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
+
+
+def scan_note(page: int, engine: str) -> str:
+    return (f"> [Strona {page} PDF jest skanem. Tekst poniżej odczytał OCR ({engine}), a nie warstwa tekstowa PDF. "
+            "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
+
+
+def image_ocr_note(page: int, engine: str) -> str:
+    return (f"> [Na stronie {page} PDF jest obraz tekstu (skan). Tekst poniżej odczytał z obrazu OCR ({engine}). "
+            "Może zawierać błędy i pomija grafikę. Wiążący jest PDF.]")
+
+
+def _escape_text(text: str) -> str:
+    """A text-layer paragraph that starts with > or # ("> 90 dni" in a table) must not become a quote block
+    (the mark of OCR text) or a heading."""
+    return "\\" + text if text[:1] in ">#" else text
+
+
+def _escape_ocr(text: str) -> str:
+    """OCR text is plain text: a leading #, >, |, [ or bullet must not become Markdown syntax.
+    ("1. Tekst" stays as it is, like ust. in the text layer.)"""
+    return "\\" + text if re.match(r"^([#>|\[]|[-*+]\s)", text) else text
+
+
+def frontmatter(meta: dict, source_pdf: str | None = None, no_text_pages: list[int] | None = None,
+                image_pages: list[int] | None = None, ocr_pages: list[int] | None = None, ocr_engine: str = "",
+                unmapped_pages: list[int] | None = None, image_ocr_pages: list[int] | None = None) -> str:
+    """YAML front matter; keys follow legalize-pl where the meaning is the same."""
+    from . import __version__
+
+    eli = meta["ELI"]
+    fields = {
+        "title": meta.get("title"),
+        "identifier": eli.replace("/", "-"),
+        "country": "pl",
+        "rank": (meta.get("type") or "").lower(),
+        "eli": eli,
+        "source": f"https://api.sejm.gov.pl/eli/acts/{eli}",
+        "source_pdf": source_pdf or f"https://api.sejm.gov.pl/eli/acts/{eli}/text.pdf",
+        "display_address": meta.get("displayAddress"),
+        "internal_address": meta.get("address"),
+        "publisher": meta.get("publisher"),
+        "position": str(meta.get("pos")),
+        "announcement_date": meta.get("announcementDate"),
+        "promulgation_date": meta.get("promulgation"),
+        "entry_into_force": meta.get("entryIntoForce"),
+        "status_pl": meta.get("status"),
+        "keywords": ", ".join(meta.get("keywords") or []),
+        "text_source": "pdf",
+        "pages_without_text": page_ranges(no_text_pages or []),
+        "pages_with_images": page_ranges(image_pages or []),
+        "pages_unmapped_glyphs": page_ranges(unmapped_pages or []),
+        "pages_ocr": page_ranges(ocr_pages or []),
+        "pages_images_ocr": page_ranges(image_ocr_pages or []),  # pages_with_images whose image text was read by OCR
+        "ocr": ocr_engine if ocr_pages or image_ocr_pages else "",
+        "converter": f"eli2md {__version__}",
+        "disclaimer": "Nieoficjalny tekst z automatycznej konwersji PDF. Wiążący jest PDF w "
+                      + ("Monitorze Polskim." if meta.get("publisher") == "MP" else "Dzienniku Ustaw."),
+    }
+    lines = ["---"]
+    for k, v in fields.items():
+        if v not in (None, "", "None"):
+            lines.append(f"{k}: {json.dumps(v, ensure_ascii=False)}")
+    lines.append("---")
+    return "\n".join(lines)
+
+
+FN_LABEL = re.compile(r"^\[\^(\d+|[a-z]{1,2})\]\s*(.*)$", re.S)
+PLAIN_LABEL = re.compile(r"^(\d+|[a-z]{1,2})\)\s*(\S.*)$", re.S)  # a label in body type: "1)I) Niniejsza…", "a) Zmiany…"
+LETTER_REF = re.compile(r"\[\^([a-z]{1,2})\]")
+NOTE_REF = re.compile(r"\[\^(\d+|[a-z]{1,2})\]")
+ANY_LABEL = re.compile(r"(?:^|(?<=\s))[„“]?\[\^(?:\d+|[a-z]{1,2})\](?=\s)")  # as BODY_LABEL, letters too
+
+
+def _plain_labels(doc: Document) -> Document:
+    """A footnote whose label is printed in body type ("1)I) Niniejsza ustawa wdraża…" in consolidated texts,
+    DU/2025/1131; "a) Zmiany tekstu jednolitego…" of the announcement, DU/2026/1245) is a footnote with that label,
+    not a paragraph after the last article, if the text has its marker and no other footnote has the label.
+    Otherwise it stays as printed: a definition nothing refers to is not shown by Markdown viewers, and text of
+    a table read as a footnote would vanish (MP/2011/560: "2) H ) ) ) Tabela 7. …")."""
+    have = {m.group(1) for f in doc.footnotes if (m := FN_LABEL.match(f))}
+    if not any((m := PLAIN_LABEL.match(f)) and m.group(1) not in have for f in doc.footnotes):
+        return doc
+    marked = {n for b in doc.blocks for n in NOTE_REF.findall(ANY_LABEL.sub("", b.text))}  # not labels (_body_notes)
+    out = []
+    for f in doc.footnotes:
+        if (m := PLAIN_LABEL.match(f)) and m.group(1) in marked and m.group(1) not in have:
+            have.add(m.group(1))
+            f = f"[^{m.group(1)}] {m.group(2)}"
+        out.append(f)
+    return replace(doc, footnotes=out)
+
+
+def _letter_refs(doc: Document) -> Document:
+    """A small "b)" in the text ("z późn. zm.b))") is a marker only if the act has footnote b); otherwise it is
+    written back as printed (a label in small type, not a footnote)."""
+    have = {m.group(1) for f in doc.footnotes if (m := FN_LABEL.match(f)) and m.group(1).isalpha()}
+    sub = lambda m: m.group(0) if m.group(1) in have else m.group(1) + ")"  # noqa: E731
+    return replace(doc, blocks=[replace(b, text=LETTER_REF.sub(sub, b.text)) if "[^" in b.text else b
+                                for b in doc.blocks])
+
+
+def _footnote_pages(doc: Document) -> dict[str, list[int]]:
+    """Footnote number -> pages on which a footnote with that number is printed, in order."""
+    occ: dict[str, list[int]] = {}
+    for f, pg in zip(doc.footnotes, doc.footnote_pages or [0] * len(doc.footnotes)):
+        if m := FN_LABEL.match(f):
+            occ.setdefault(m.group(1), []).append(pg)
+    return occ
+
+
+def _fn_label(n: str, j: int) -> str:
+    return n if j == 0 else f"{n}_{j + 1}"  # the 2nd footnote numbered 1 is [^1_2]
+
+
+def _fix_refs(text: str, page: int, occ: dict[str, list[int]]) -> str:
+    """Footnote numbering restarts in annexes and forms, so one number can label several footnotes.
+    A marker refers to the one printed on the page where its block starts, or the nearest later one."""
+    def sub(m: re.Match) -> str:
+        pages = occ.get(m.group(1), [])
+        if len(pages) < 2:
+            return m.group(0)
+        j = next((k for k, pg in enumerate(pages) if pg >= page), len(pages) - 1)
+        return f"[^{_fn_label(m.group(1), j)}]"
+    return re.sub(r"\[\^(\d+)\]", sub, text)
+
+
+# A marker that opens a printed line ("„¹⁾ Niniejsza ustawa…", "¹⁾ Maksymalne zawartości…") labels a note printed
+# in the text (explanations under an annex table, a footnote quoted by an amendment); a reference is glued to its word.
+BODY_LABEL = re.compile(r"(?:^|(?<=\s))([„“]?)\[\^(\d+)\](?=\s)")
+MARKER = re.compile(r"\[\^(\d+)\]")
+
+
+def _printed(n: str) -> str:
+    return n.translate(SUPER) + "⁾"  # "12" -> "¹²⁾", as printed
+
+
+def _body_notes(doc: Document, occ: dict[str, list[int]]) -> Document:
+    """Markers of notes printed in the text are not links to the footnotes: `[^1]` would point to the act's
+    footnote 1 (DU/2025/1016: "Arsen[^1]" in an annex table to "Minister … kieruje działem"). They are printed
+    as "¹⁾": the labels themselves, and in an annex the markers of the numbers it labels, unless that page has
+    a footnote with the number. A marker with no footnote at all stays: its footnote may be lost (DU/2024/127)."""
+    part, parts, labels = 0, [], {}
+    for b in doc.blocks:
+        part += b.kind == "annex"
+        parts.append(part)
+        if b.kind == "p":
+            labels.setdefault(part, set()).update(m.group(2) for m in BODY_LABEL.finditer(b.text))
+
+    def fix(b: Block, part: int) -> Block:
+        text = BODY_LABEL.sub(lambda m: m.group(1) + _printed(m.group(2)), b.text)
+        own = labels.get(part, set()) if part else set()
+        text = MARKER.sub(lambda m: _printed(m.group(1)) if m.group(1) in own
+                          and b.page not in occ.get(m.group(1), []) else m.group(0), text)
+        return replace(b, text=text)
+    return replace(doc, blocks=[fix(b, p) if b.kind == "p" and "[^" in b.text else b
+                                for b, p in zip(doc.blocks, parts)])
+
+
+def to_markdown(doc: Document, meta: dict | None = None) -> str:
+    """Markdown body: one block per paragraph, top-level units (Art. or, if none, §) as h5."""
+    doc = _letter_refs(_plain_labels(doc))
+    occ = _footnote_pages(doc)
+    doc = _body_notes(doc, occ)
+    if any(len(v) > 1 for v in occ.values()):
+        doc = replace(doc, blocks=[replace(b, text=_fix_refs(b.text, b.page, occ)) for b in doc.blocks])
+    depths = quote_depths(doc.blocks)
+    # Top-level unit per part (main text, each annex): Art. if the part has an "Art. N." at depth 0, else §.
+    # A paragraph "Art. 42 ust. 1 ustawy określa…" in an annex does not count (DU/2024/553).
+    part, parts = 0, []
+    for b in doc.blocks:
+        part += b.kind == "annex"
+        parts.append(part)
+    with_art = {p for b, d, p in zip(doc.blocks, depths, parts) if d == 0 and b.kind != "ocr"
+                and UNIT_HEAD["Art."].match(b.text)}
+    out = []
+    if meta:
+        out += [frontmatter(meta, no_text_pages=doc.no_text_pages, image_pages=doc.image_pages,
+                            ocr_pages=doc.ocr_pages, ocr_engine=doc.ocr_engine, unmapped_pages=doc.unmapped_pages,
+                            image_ocr_pages=doc.image_ocr_pages),
+                "# " + meta["title"]]
+    run: list[int] = []  # consecutive pages without text get one note
+    noted: set[int] = set()  # scanned pages with their note
+    for i, b in enumerate(doc.blocks):
+        if b.kind == "scan" and b.page not in noted:  # once per page, also over an annex header on it
+            noted.add(b.page)
+            lang = doc.ocr_langs.get(b.page)
+            out.append(scan_note(b.page, f"{doc.ocr_engine}, {lang}" if lang else doc.ocr_engine))
+        if b.kind == "ocr":  # each OCR page (or image of text) starts with its own note
+            if i == 0 or doc.blocks[i - 1].kind != "ocr" or doc.blocks[i - 1].page != b.page:
+                lang = doc.ocr_langs.get(b.page)
+                note = image_ocr_note if b.page in doc.image_ocr_pages else ocr_note
+                out.append(note(b.page, f"{doc.ocr_engine}, {lang}" if lang else doc.ocr_engine))
+            out.append("> " + _escape_ocr(" ".join(b.text.split())))  # a quote block: not the text layer
+        elif b.kind == "notext":
+            run.append(b.page)
+            nxt = doc.blocks[i + 1] if i + 1 < len(doc.blocks) else None
+            if not (nxt and nxt.kind == "notext" and nxt.page == b.page + 1):
+                out.append(no_text_note(run))
+                run = []
+        elif b.kind == "unmapped":
+            out.append(f"> [Na stronie {b.page} PDF większość znaków nie ma kodów Unicode (np. formularz). "
+                       "Tekst poniżej jest niepełny, pełna treść jest tylko w PDF.]")
+        elif b.kind == "image":
+            out.append(f"> [Na stronie {b.page} PDF jest obraz (np. wzór, rysunek, skan). "
+                       "Jego treści tu nie ma, jest tylko w PDF.]")
+        elif b.kind == "annex":
+            out.append("## " + b.text)
+        elif b.kind == "signature":
+            out.append("*" + b.text + "*")
+        elif depths[i] == 0 and (m := UNIT_HEAD["Art." if parts[i] in with_art else "§"].match(b.text)) \
+                and not m.group(2).startswith("„"):
+            out.append("##### " + m.group(1))
+            if m.group(2):
+                out.append(_escape_text(m.group(2)))
+        elif m := QUOTED_UNIT.match(b.text):
+            out += [m.group(1), m.group(2)]
+        else:
+            out.append(_escape_text(b.text))
+    seen: Counter = Counter()
+    for f in doc.footnotes:
+        if m := FN_LABEL.match(f):
+            text = m.group(2).replace("\n\n", "\n\n    ")  # later paragraphs of a footnote are indented
+            out.append(f"[^{_fn_label(m.group(1), seen[m.group(1)])}]: {text}")
+            seen[m.group(1)] += 1
+        else:
+            out.append(f)
+    return "\n\n".join(out) + "\n"
