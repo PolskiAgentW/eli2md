@@ -725,6 +725,33 @@ def _index_words(r: list[dict], big: list[dict]) -> tuple[list[dict], list[dict]
     return rest, idx
 
 
+def _subscripts(r: list[dict], big: list[dict]) -> tuple[list[dict], list[tuple[dict, dict, bool]]]:
+    """Split a row of small words into (other words, [(subscript, the normal-size word it hangs on, after a space)]).
+    A subscript starts right after a normal-size word ending with a letter or digit, its middle below that word's
+    middle and its bottom not above the word's bottom (small capitals stand on the baseline): "L" + "DWN"
+    (DU/2025/647 p. 43), "𝑊𝑏𝑈𝐸" + "𝑡−1" (DU/2025/439 p. 19). A small word a space after a subscript goes on it:
+    "L" + "Aeq" + "D". Else a row of three such words was a line of its own after the text ("L , L i L dla DWN N Aeq
+    D"), and a lone one went on the line nearest to its bottom, often the next one ("prowa-" "𝑡−1 dzenie")."""
+    rest, subs = [], []
+    last = None  # (the previous subscript, its base) if the word before was one
+    for w in sorted(r, key=lambda w: w["x0"]):
+        mid = (w["top"] + w["bottom"]) / 2
+        base = next((n for n in big if -1.0 < w["x0"] - n["x1"] < 1.5 and n["text"][-1:].isalnum()
+                     and (n["top"] + n["bottom"]) / 2 < mid < n["bottom"] + 1 and w["bottom"] >= n["bottom"] - 0.1),
+                    None)
+        if base is not None:
+            subs.append((w, base, False))
+            last = (w, base)
+        elif last is not None and 0 <= w["x0"] - last[0]["x1"] < 0.5 * w["size"]:
+            subs.append((w, last[1], True))
+            last = (w, last[1])
+        else:
+            rest.append(w)
+            last = None
+    rest.sort(key=lambda w: (w["top"], w["x0"]))
+    return rest, subs
+
+
 def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno: int,
                  gut: dict | None = None) -> tuple[list[Line], list[Line]]:
     if not words:
@@ -760,6 +787,8 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
         # indices are scripts even when a line has several: "Art. 479[30f]. … art. 479[30a]–479[30e]"
         r, idx = _index_words(r, big)
         attach += [(w, {"script": True, "index": True}) for w in idx]
+        r, subs = _subscripts(r, big)
+        attach += [(w, {"script": True, "lowered": True, "spaced": spaced, "base": n}) for w, n, spaced in subs]
         if not r:
             continue
         text = [w for w in r if not FOOTNOTE_MARK.match(w["text"])]
@@ -798,6 +827,13 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
     def dist(r: list[dict], s: dict) -> float:
         return abs((r[0]["top"] + r[0]["bottom"]) / 2 - s["bottom"])
     for s, flag in attach:
+        if "base" in flag:  # a subscript goes on the line of its word (see _subscripts)
+            flag = dict(flag)
+            base = flag.pop("base")
+            best = next((r for r in rows if any(w is base for w in r)), None)
+            if best is not None:
+                best.append({**s, **flag})
+                continue
         best = min(rows if key is None else [r for r in rows if key(r[0]) == key(s)],
                    key=lambda r: dist(r, s), default=None)
         if key is not None and (best is None or dist(best, s) >= 12):  # e.g. a marker in a band of its own
@@ -869,12 +905,18 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
             elif w.get("index"):  # "30f" -> "³⁰ᶠ"; as printed if a char has no superscript form ("[1q]")
                 sup = w["text"].translate(SUPER)
                 parts.append((sup if all(c in SUP_CHARS for c in sup) else f"[{w['text']}]", True))
+            elif w.get("lowered") and not w["text"].isdigit():  # as printed: "LDWN", "LAeq D", "WbUEt−1"
+                parts.append((w["text"], not w["spaced"]))
             elif w.get("script"):
                 up = mid is None or (w["top"] + w["bottom"]) / 2 < mid
                 parts.append((w["text"].translate(SUPER if up else SUB), True))
             else:  # "Art. 41¹.", "art. 63[^59]," : punctuation after a script or marker is a separate word
                 after_small = k > 0 and (r[k - 1].get("script") or r[k - 1].get("sup")) \
                     and w["x0"] - r[k - 1]["x1"] < 1.0
+                # after a subscript kept as printed a word goes on it only if it touches it ("𝑃𝑀" "𝑂𝑍𝐸" 0.0 pt,
+                # DU/2026/68 p. 60): "𝑆𝑡−1 i" and "𝑊𝑏𝑈𝑡−1," are both 0.41 pt after it (DU/2026/1252 p. 10)
+                if after_small and r[k - 1].get("lowered") and not r[k - 1]["text"].isdigit():
+                    after_small = not w["text"][:1].isalnum() or w["x0"] - r[k - 1]["x1"] < 0.2
                 parts.append((w["text"], bool(after_small)))
         text = ""
         for p, glued in parts:

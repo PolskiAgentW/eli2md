@@ -267,6 +267,33 @@ class Basic(unittest.TestCase):
         self.assertTrue(md.startswith("##### Art. 479³⁰ᶠ.\n\nTreść."))
         self.assertTrue(UNIT_START.match("5¹ᵃ) treść"))
 
+    def test_letter_subscripts(self):
+        # small words from a word's right edge, lower than its middle, are its subscripts, on its line
+        def w(text, x0, top=100.0, size=10.0):
+            return {"text": text, "x0": x0, "x1": x0 + 5 * len(text), "top": top, "bottom": top + size, "size": size}
+        # a row of 3+ was a line of its own: "hałasu L , L i L dla DWN Aeq D N" (DU/2025/647 p. 43)
+        words = [w("hałasu", 50), w("L", 85), w("DWN", 90, 103.8, 6.5), w(",", 105.5), w("L", 110),
+                 w("Aeq", 115, 103.8, 6.5), w("D", 131.5, 103.8, 6.5), w("i", 140), w("L", 150),
+                 w("N", 155, 103.8, 6.5), w("dla", 165)]
+        body, _ = _frame_lines(words, 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["hałasu LDWN, LAeq D i LN dla"])
+        # a lone one went on the line nearest to its bottom: "prowa-" "t−1 dzenie" (DU/2025/439 p. 19)
+        words = [w("Wb", 50), w("t−1", 60, 104.4, 7), w("–", 80), w("na", 90), w("prowa-", 105),
+                 w("dzenie", 90, 112), w("przez", 125, 112)]
+        body, _ = _frame_lines(words, 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["Wbt−1 – na prowa-", "dzenie przez"])
+        # small capitals stand on the baseline (108 here, descent 0.2 of the size): not a subscript
+        body, _ = _frame_lines([w("Ustawa", 50), w("A", 85), w("BC", 90, 102.8, 6.5), w("dalej", 110)], 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["Ustawa A BC dalej"])
+        # a word 0.41 pt after a subscript is a word of its own, punctuation there goes on it (DU/2026/1252 p. 10);
+        # one touching it is part of the symbol (DU/2025/901 p. 84)
+        words = [w("S", 50), w("t−1", 55, 104.4, 7), w("i", 70.41), w("LuS", 80), w("t−1", 95, 104.4, 7),
+                 w(",", 110.41), w("otrzymują", 120)]
+        body, _ = _frame_lines(words, 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["St−1 i LuSt−1, otrzymują"])
+        body, _ = _frame_lines([w("[gCO", 50), w("2eq/", 70, 104.4, 6.5), w("MJ]", 90)], 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["[gCO2eq/MJ]"])
+
     def test_article_range_is_a_heading(self):
         # consolidated texts: "Art. 266–280." / "Art. 22–28. (pominięte)" is a unit of its own, not the end of the
         # article before it (DU/2026/1245 art. 265, DU/2025/1584 art. 13)
