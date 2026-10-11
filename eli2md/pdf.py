@@ -296,12 +296,29 @@ def _drop_soft_hyphens(page):
     a blank ("przysługu­ją­cego" in DU/2013/666: ' ' at x 254.84, 'j' at 254.81); sorted by x it split the word:
     "przysługuj ą cego". Text turned by 180 degrees is upright for pdfplumber but runs to smaller x (DU/2025/984).
     A no-break space that the next letter overlaps by kerning is a word gap (DU/2026/994 p. 9: "wykonanych\xa0przez",
-    'p' 0.32 pt after the blank starts); in the soft hyphens seen the next char starts 0-0.03 pt before it."""
+    'p' 0.32 pt after the blank starts); in the soft hyphens seen the next char starts 0-0.03 pt before it.
+    Also drop blanks of a run (a blank next to it in content order) whose middle falls inside a letter on their line:
+    a table cell filled with blanks and written over spread its words ("d y s p o n e n c i ś r o d k ó w 1 0 d n i"
+    in DU/2025/133 p. 130). A lone blank under a letter (kerning) stays a word gap."""
     chars = page.chars
     drop = set()
     for c, n in zip(chars, chars[1:]):
         if not c["text"].strip() and n["text"].strip() and _char_angle(c) == 0 == _char_angle(n) \
                 and abs(n["top"] - c["top"]) < 1 and -0.5 <= n["x0"] - c["x0"] <= 0.05:
+            drop.add(id(c))
+    # a run of blanks drawn over letters (a filled table cell, DU/2025/133 p. 130)
+    lines = {}
+    for c in chars:
+        if c["text"].strip() and _char_angle(c) == 0:
+            lines.setdefault(round(c["top"]), []).append(c)
+    for i, c in enumerate(chars):
+        if c["text"].strip() or _char_angle(c) != 0 or id(c) in drop:
+            continue
+        if not any(0 <= j < len(chars) and not chars[j]["text"].strip() for j in (i - 1, i + 1)):
+            continue
+        mid = (c["x0"] + c["x1"]) / 2
+        if any(x["x0"] < mid < x["x1"] and abs(x["top"] - c["top"]) < 3  # pdfplumber's y_tolerance
+               for k in range(-3, 4) for x in lines.get(round(c["top"]) + k, ())):
             drop.add(id(c))
     return page.filter(lambda o: id(o) not in drop) if drop else page
 

@@ -706,6 +706,10 @@ class Basic(unittest.TestCase):
         turned = [{**char(t, x0, x1, 181.31), "upright": True, "matrix": (-4.604, 0.0, 0.0, -4.605, x1, 659.575)}
                   for t, x0, x1 in (("a", 157.66, 160.22), (" ", 156.36, 157.64), ("b", 153.85, 156.41))]
         self.assertEqual(_drop_soft_hyphens(Page(turned)).objs, turned)
+        # DU/2025/133 p. 130: a cell filled with blanks, its text drawn over them later ("d y s p o n e n c i")
+        run = [char(" ", x0, x0 + 1.52, 324.9) for x0 in (337.32, 338.87, 340.43, 341.99, 343.54, 345.1)]
+        d, y = char("d", 339.6, 342.63, 324.9), char("y", 342.61, 345.34, 324.9)
+        self.assertEqual(_drop_soft_hyphens(Page(run + [d, y])).objs, [run[0], run[5], d, y])
 
     @staticmethod
     def _row(text, x0, x1, top, size=10.0):
