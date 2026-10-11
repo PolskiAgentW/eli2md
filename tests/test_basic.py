@@ -2,7 +2,7 @@ import unittest
 
 from eli2md.eli import parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
-                        _QuarkWords, _drop_colophon, _frames, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
+                        _QuarkWords, _drop_colophon, _drop_soft_hyphens, _frames, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
                         _gutter, _ocr_lines, _plain_math, _quark_gap, _rows, _segment, quote_depths, _single_glyphs, _to_frame, _watermark, page_ranges,
                         to_markdown)
 
@@ -676,6 +676,36 @@ class Basic(unittest.TestCase):
         self.assertEqual(_drop_watermark(page).objs, [text, rect])
         clean = Page([text, rect])
         self.assertIs(_drop_watermark(clean), clean)
+
+    def test_drop_soft_hyphens(self):
+        # DU/2013/666 p. 22: "przysługu­ją­cego", each soft hyphen read as a blank that the next letter starts before
+        class Page:
+            def __init__(self, objs):
+                self.objs = objs
+
+            @property
+            def chars(self):
+                return [o for o in self.objs if o["object_type"] == "char"]
+
+            def filter(self, keep):
+                return Page([o for o in self.objs if keep(o)])
+
+        def char(t, x0, x1, top=537.52):
+            return {"object_type": "char", "text": t, "x0": x0, "x1": x1, "top": top, "matrix": (10.0, 0.0, 0.0, 10.0, x0, 300.0)}
+
+        u, shy1, j, a = char("u", 249.84, 254.84), char(" ", 254.84, 257.34), char("j", 254.81, 257.59), char("ą", 257.59, 262.03)
+        shy2, c = char(" ", 262.03, 264.53), char("c", 262.03, 266.47)
+        page = Page([u, shy1, j, a, shy2, c])
+        self.assertEqual(_drop_soft_hyphens(page).objs, [u, j, a, c])
+        # a real space: the next word starts after it; a blank ending a line: the next char is on another line
+        space, w, end, nxt = char(" ", 266.47, 268.97), char("p", 268.97, 273.97), char(" ", 273.97, 276.47), char("z", 70.0, 74.4, 549.0)
+        kern = [char("h", 455.0, 459.18), char("\xa0", 459.18, 461.68), char("p", 459.5, 464.5)]  # DU/2026/994 p. 9
+        clean = Page([c, space, w, end, nxt] + kern)
+        self.assertIs(_drop_soft_hyphens(clean), clean)
+        # text turned by 180 degrees runs to smaller x: "Ustawa budżetowa" in a table of DU/2025/984 p. 18
+        turned = [{**char(t, x0, x1, 181.31), "upright": True, "matrix": (-4.604, 0.0, 0.0, -4.605, x1, 659.575)}
+                  for t, x0, x1 in (("a", 157.66, 160.22), (" ", 156.36, 157.64), ("b", 153.85, 156.41))]
+        self.assertEqual(_drop_soft_hyphens(Page(turned)).objs, turned)
 
     @staticmethod
     def _row(text, x0, x1, top, size=10.0):

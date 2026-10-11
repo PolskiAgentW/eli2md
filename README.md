@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.51, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.52, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -214,6 +214,22 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.52** (2026-10-11). PDF: słowa z miękkim dywizem nie są już rozbite. pdfminer czyta miękki dywiz (U+00AD)
+w środku wiersza jako spację, a następna litera zaczyna się w tym samym miejscu albo do 0,03 pt wcześniej, więc po
+ułożeniu liter według położenia „przysługu­ją­cego” wychodziło jako „przysługuj ą cego” (DU/2013/666), a „wykonywania”
+jako „wykony wa nia” (DU/2012/1137). Taka spacja jest teraz pomijana: tylko w tekście pisanym od lewej do prawej i tylko
+wtedy, gdy następna litera w tym samym wierszu zaczyna się od 0,5 pt przed nią do 0,05 pt za nią. Twarda spacja,
+na którą kerning nasuwa następną literę o 0,32 pt, zostaje (DU/2026/994), tak samo jak spacje w tekście obróconym
+o 180 stopni (DU/2025/984).
+
+A/B 0.6.51 → 0.6.52 na 614 aktach z PDF (258 aktów DU i M.P. od 2012 r., w których w zbiorach jest pojedyncza litera
+z ogonkiem między słowami, 2 teksty jednolite z rozbitymi słowami: DU/2014/121, DU/2017/569, 298 losowych aktów DU i M.P.
+od 2012 r., 56 losowych z lat 2000–2011; poza porównaniem 7 aktów z tej listy: 2 bez metadanych w cache i 5 długich,
+które nie skończyły się w czasie A/B): zmienia się 15 aktów, w żadnym
+nie znika litera ani cyfra; jedyne znikające znaki to 2 łączniki przeniesienia, po których wyraz jest teraz scalony
+(„Rzecz-” „pospolita”, M.P. 2022 poz. 541); liczba jednostek jest we wszystkich ta sama. Zostaje znany przypadek
+DU/2017/569: „Zał ą czniki”, gdzie rozmiary fontów różnią się o 0,004 pt, więcej niż zaokrąglenie do 0,001 pt z 0.6.51.
 
 **0.6.51** (2026-10-11). PDF, dwie zmiany znalezione przy dodawaniu tekstów jednolitych ustaw 2012–2024 do
 dziennik-ustaw-md ([#1](https://github.com/PolskiAgentW/dziennik-ustaw-md/issues/1)):

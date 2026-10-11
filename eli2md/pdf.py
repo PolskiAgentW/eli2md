@@ -290,6 +290,22 @@ def _drop_watermark(page):
     return page.filter(lambda o: not (o.get("object_type") == "char" and _watermark(o)))
 
 
+def _drop_soft_hyphens(page):
+    """Drop blank chars of no width in the text flow: a blank followed (in content order, on its line, both written
+    left to right) by a char that starts where the blank starts. pdfminer reads a soft hyphen inside a line as such
+    a blank ("przysługu­ją­cego" in DU/2013/666: ' ' at x 254.84, 'j' at 254.81); sorted by x it split the word:
+    "przysługuj ą cego". Text turned by 180 degrees is upright for pdfplumber but runs to smaller x (DU/2025/984).
+    A no-break space that the next letter overlaps by kerning is a word gap (DU/2026/994 p. 9: "wykonanych\xa0przez",
+    'p' 0.32 pt after the blank starts); in the soft hyphens seen the next char starts 0-0.03 pt before it."""
+    chars = page.chars
+    drop = set()
+    for c, n in zip(chars, chars[1:]):
+        if not c["text"].strip() and n["text"].strip() and _char_angle(c) == 0 == _char_angle(n) \
+                and abs(n["top"] - c["top"]) < 1 and -0.5 <= n["x0"] - c["x0"] <= 0.05:
+            drop.add(id(c))
+    return page.filter(lambda o: id(o) not in drop) if drop else page
+
+
 def _doubled(c: dict) -> bool:
     """A glyph whose ToUnicode maps to its character twice: Word exports Cambria Math so, one 𝑘 reads "𝑘𝑘"
     (DU/2026/1236 p. 10, "kk" in 0.6.3; poppler reads it doubled too). Only mathematical alphanumerics (also
@@ -544,7 +560,7 @@ def _page_lines(page, pno: int, gut: dict | None = None) -> tuple[list[Line], li
     """Return (body_lines, footnote_lines) for one page."""
     body, notes = [], []
     _mac_pl(page)
-    for k, (words, fw, fh, rects) in enumerate(_frames(_drop_hidden_placed(_drop_watermark(_single_glyphs(page))))):
+    for k, (words, fw, fh, rects) in enumerate(_frames(_drop_soft_hyphens(_drop_hidden_placed(_drop_watermark(_single_glyphs(page)))))):
         b, n = _frame_lines(words, fw, fh, rects, pno, gut)
         if k > 0:
             b = [l for l in b if not RUNNING_HEADER.match(l.text)]
