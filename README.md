@@ -240,7 +240,9 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
   „Ener- getyki” → „Energetyki” (DU/2025/610), „zakon- AG traktowane” → „zakontraktowane” (DU/2025/159).
   A/B (ta zmiana na kandydacie 0.6.53): 479 tekstów jednolitych ustaw 2025+ — 36 zmienionych, 200 najnowszych aktów —
   7, 200 losowych t.j. ustaw 2012–2024 — 9; 0 aktów bez wyniku, liczba jednostek (art., ust., pkt, §) bez zmian; poza
-  odstępami i kolejnością zmieniają się tylko indeksy cyfrowe (² → ₂ itp.) i łączniki przeniesień. Kontrola 2
+  odstępami i kolejnością zmieniają się tylko indeksy cyfrowe (² → ₂ itp.) i łączniki przeniesień. Jeden przypadek
+  na gorsze: w spłaszczonym wzorze DU/2025/610 „2” z „CO2” trafia w inne miejsce jako „²” („(1−t )∙∑ … CO 2” →
+  „(1−tCO )∙∑ … EJ =²”). Kontrola 2
   legal-cite-pl (słowa artykułu jako podciąg warstwy tekstowej PDF) na tych 479: 412 → 393 z 64 302 artykułów
   niezgodnych, żaden akt nie ma ich więcej.
 
