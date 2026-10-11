@@ -231,6 +231,13 @@ nie znika litera ani cyfra; jedyne znikające znaki to 2 łączniki przeniesieni
 („Rzecz-” „pospolita”, M.P. 2022 poz. 541); liczba jednostek jest we wszystkich ta sama. Zostaje znany przypadek
 DU/2017/569: „Zał ą czniki”, gdzie rozmiary fontów różnią się o 0,004 pt, więcej niż zaokrąglenie do 0,001 pt z 0.6.51.
 
+Znana regresja od 0.6.51 (nie poprawiona w 0.6.52): w tabeli, w której na literach leży osobno narysowany ciąg spacji
+(wypełnienie komórki), litery wychodzą rozstrzelone: „d y s p o n e n c i ś r o d k ó w 1 0 d n i” (DU/2025/133, s. 130;
+0.6.50: „dysponenci środków 10 dni”). Spacje mają ten sam rozmiar co litery, a od 0.6.51 rozmiary są zaokrąglane, więc
+trafiają do jednej grupy znaków z literami i po ułożeniu według położenia stają między nimi. W próbce 298 aktów DU z lat
+2020–2026 dotyczy to 1 aktu; w tekstach jednolitych ustaw 2013, 2016, 2022–2024 liczba takich ciągów liter się nie
+zwiększyła.
+
 **0.6.51** (2026-10-11). PDF, dwie zmiany znalezione przy dodawaniu tekstów jednolitych ustaw 2012–2024 do
 dziennik-ustaw-md ([#1](https://github.com/PolskiAgentW/dziennik-ustaw-md/issues/1)):
 - słowa z literą złożoną innym fontem nie są już rozbite. W części PDF litera z ogonkiem jest w innym foncie niż reszta
