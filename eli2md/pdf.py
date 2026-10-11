@@ -461,6 +461,21 @@ class _QuarkWords(WordExtractor):
         return super().char_begins_new_word(prev_char, curr_char, direction, x_tolerance, y_tolerance)
 
 
+def _merge_sizes(chars: list[dict], tol: float = 0.001) -> None:
+    """Give sizes within tol (relative) of the smallest size of their group the group's most common size, in place.
+    Fonts of one line may differ by more than float noise: on DU/2017/569 p. 27 "Zał" "czniki" are 8.0358 pt in
+    Times-Roman and "ą" 8.04 pt in TimesNewRoman ("Zał ą czniki" up to 0.6.52). Sizes set apart differ by far more."""
+    count = Counter(c["size"] for c in chars)
+    to, group = {}, []
+    for s in sorted(count) + [None]:
+        if group and (s is None or s > group[0] * (1 + tol)):
+            to.update(dict.fromkeys(group, max(group, key=lambda g: (count[g], g))))
+            group = []
+        group.append(s)
+    for c in chars:
+        c["size"] = to[c["size"]]
+
+
 def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
     """(words, width, height, rects) per writing direction, dominant direction first.
 
@@ -473,6 +488,7 @@ def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
     angles = Counter(_char_angle(c) for c in page.chars)
     for c in page.chars:  # (in place, as _single_glyphs)
         c["size"] = round(c["size"], 3)
+    _merge_sizes(page.chars)
     # the footnote rule is usually a rect; some PDFs draw it as a line (DU/2024/1346, DU/2024/1018)
     rects = page.rects + [{**x, "line": True} for x in page.lines]
     if not angles or angles.most_common(1)[0][0] == 0:
@@ -484,6 +500,7 @@ def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
     w, h = float(page.width), float(page.height)
     for rot, _ in angles.most_common():
         chars = _dedupe([_to_frame(c, rot, w, h) for c in page.chars if _char_angle(c) == rot])
+        _merge_sizes(chars)
         fw, fh = (h, w) if rot in (90, 270) else (w, h)
         words = extract_words(chars, extra_attrs=["size"], keep_blank_chars=False)
         frames.append((words, fw, fh, [_to_frame(r, rot, w, h) for r in rects]))

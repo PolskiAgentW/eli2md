@@ -2,7 +2,7 @@ import unittest
 
 from eli2md.eli import parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
-                        _QuarkWords, _drop_colophon, _drop_soft_hyphens, _frames, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
+                        _QuarkWords, _drop_colophon, _drop_soft_hyphens, _frames, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _merge_sizes, _own_act,
                         _gutter, _ocr_lines, _plain_math, _quark_gap, _rows, _segment, quote_depths, _single_glyphs, _to_frame, _watermark, page_ranges,
                         to_markdown)
 
@@ -703,6 +703,13 @@ class Basic(unittest.TestCase):
         self.assertEqual(_drop_watermark(page).objs, [text, rect])
         clean = Page([text, rect])
         self.assertIs(_drop_watermark(clean), clean)
+
+    def test_merge_sizes(self):
+        # DU/2017/569 p. 27: "Zał" "czniki" 8.0358 pt in Times-Roman, "ą" 8.04 pt in TimesNewRoman ("Zał ą czniki")
+        chars = [{"text": t, "size": s} for t, s in (("Z", 8.036), ("a", 8.036), ("ł", 8.036), ("ą", 8.04), ("c", 8.036),
+                                                      ("1", 5.36), ("2", 5.4))]
+        _merge_sizes(chars)
+        self.assertEqual([c["size"] for c in chars], [8.036] * 5 + [5.36, 5.4])
 
     def test_drop_soft_hyphens(self):
         # DU/2013/666 p. 22: "przysługu­ją­cego", each soft hyphen read as a blank that the next letter starts before

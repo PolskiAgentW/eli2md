@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.52, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.53, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -215,6 +215,35 @@ i zużytych testach):
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
 
+**0.6.53** (2026-10-11). PDF, trzy zmiany:
+- poprawiona regresja z 0.6.51 opisana przy 0.6.52: ciąg spacji narysowany na literach (wypełnienie komórki tabeli)
+  nie rozstrzela już słów: „d y s p o n e n c i ś r o d k ó w 1 0 d n i” → „dysponenci środków 10 dni” (DU/2025/133,
+  s. 130). Pomijana jest spacja, która w kolejności zapisu w PDF sąsiaduje z inną spacją i której środek wypada wewnątrz
+  litery w tym samym wierszu. Pojedyncza spacja pod literą (kerning, DU/2026/994) zostaje.
+  A/B 0.6.52 → ta zmiana na 1101 aktach (614 z A/B 0.6.52, 200 najnowszych aktów DU i M.P., 298 aktów DU 2020–2026)
+  i 200 losowych tekstach jednolitych ustaw 2012–2024: zmienia się 24 i 4 akty, we wszystkich te same znaki poza
+  odstępami, 0 aktów bez wyniku. Np. „Komendantowi -Rektorowi” → „Komendantowi-Rektorowi” (DU/2026/1197),
+  „4 5 8 3,19” → „4 583,19” (M.P. 2021 poz. 1148), „z a” → „za”, „2 8.” → „28.” (DU/2026/1224);
+- litery jednego słowa złożone dwoma fontami o rozmiarach różniących się o mniej niż 0,1% nie rozdzielają już słowa:
+  „Zał ą czniki” → „Załączniki” (DU/2017/569, s. 27: 8,0358 pt w Times-Roman i 8,04 pt w TimesNewRoman). Rozmiary,
+  które mieszczą się w 0,1% od najmniejszego rozmiaru grupy, dostają najczęstszy rozmiar tej grupy. A/B (ta zmiana na
+  kandydacie 0.6.53, te same akty co wyżej): zmieniają się 4 z 1101 i 0 z 200, we wszystkich te same znaki, liczba
+  jednostek bez zmian, np. „Nale ż y wybra ć” → „Należy wybrać” (DU/2025/984), „spotka ń” → „spotkań” (M.P. 2012
+  poz. 252);
+- literowe indeksy dolne trafiają na wiersz swojego słowa, zapisane jak w druku: „L DWN ;” → „LDWN;”, „L , L i L dla
+  następujących DWN N Aeq D” → „LDWN, LN, LAeq D i LAeq N dla następujących” (DU/2025/647), „prowat−1 dzenie” →
+  „prowadzenie”, a „t−1” przy symbolu (DU/2025/439). W DU/2025/439 indeks „t−1” w środku słowa: 15 → 1 (zostaje
+  „realit−1 zację”, indeks symbolu WbP z początku wiersza); osobno stojący „t−1”: 17 → 11. Słowo po indeksie dokleja się
+  tylko, gdy jest interpunkcją albo styka się z indeksem (odstęp < 0,2 pt): „St−1 i LuSt−1” (DU/2026/1252), „[gCO2eq/MJ]”.
+  Indeks z samych cyfr nadal jako ₀₁…, teraz na właściwym wierszu: „CO 20 MW¹⁾²” → „CO₂ 20 MW¹⁾” (DU/2025/1685),
+  „OP =¹¹²²⁸⁸ ∙(” → „(M₁ ∙SO₁ +M₂ ∙SO₂ +⋯+M₈ ∙SO₈)” (DU/2025/870); przeniesienie rozdzielone indeksem łączy się:
+  „Ener- getyki” → „Energetyki” (DU/2025/610), „zakon- AG traktowane” → „zakontraktowane” (DU/2025/159).
+  A/B (ta zmiana na kandydacie 0.6.53): 479 tekstów jednolitych ustaw 2025+ — 36 zmienionych, 200 najnowszych aktów —
+  7, 200 losowych t.j. ustaw 2012–2024 — 9; 0 aktów bez wyniku, liczba jednostek (art., ust., pkt, §) bez zmian; poza
+  odstępami i kolejnością zmieniają się tylko indeksy cyfrowe (² → ₂ itp.) i łączniki przeniesień. Kontrola 2
+  legal-cite-pl (słowa artykułu jako podciąg warstwy tekstowej PDF) na tych 479: 412 → 393 z 64 302 artykułów
+  niezgodnych, żaden akt nie ma ich więcej.
+
 **0.6.52** (2026-10-11). PDF: słowa z miękkim dywizem nie są już rozbite. pdfminer czyta miękki dywiz (U+00AD)
 w środku wiersza jako spację, a następna litera zaczyna się w tym samym miejscu albo do 0,03 pt wcześniej, więc po
 ułożeniu liter według położenia „przysługu­ją­cego” wychodziło jako „przysługuj ą cego” (DU/2013/666), a „wykonywania”
@@ -231,7 +260,7 @@ nie znika litera ani cyfra; jedyne znikające znaki to 2 łączniki przeniesieni
 („Rzecz-” „pospolita”, M.P. 2022 poz. 541); liczba jednostek jest we wszystkich ta sama. Zostaje znany przypadek
 DU/2017/569: „Zał ą czniki”, gdzie rozmiary fontów różnią się o 0,004 pt, więcej niż zaokrąglenie do 0,001 pt z 0.6.51.
 
-Znana regresja od 0.6.51 (nie poprawiona w 0.6.52): w tabeli, w której na literach leży osobno narysowany ciąg spacji
+Znana regresja od 0.6.51 (poprawiona w 0.6.53): w tabeli, w której na literach leży osobno narysowany ciąg spacji
 (wypełnienie komórki), litery wychodzą rozstrzelone: „d y s p o n e n c i ś r o d k ó w 1 0 d n i” (DU/2025/133, s. 130;
 0.6.50: „dysponenci środków 10 dni”). Spacje mają ten sam rozmiar co litery, a od 0.6.51 rozmiary są zaokrąglane, więc
 trafiają do jednej grupy znaków z literami i po ułożeniu według położenia stają między nimi. W próbce 298 aktów DU z lat
