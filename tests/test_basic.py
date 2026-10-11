@@ -2,7 +2,7 @@ import unittest
 
 from eli2md.eli import parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
-                        _QuarkWords, _drop_colophon, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
+                        _QuarkWords, _drop_colophon, _frames, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _own_act,
                         _gutter, _ocr_lines, _plain_math, _quark_gap, _rows, _segment, quote_depths, _single_glyphs, _to_frame, _watermark, page_ranges,
                         to_markdown)
 
@@ -407,6 +407,42 @@ class Basic(unittest.TestCase):
         self.assertEqual([b.text for b in _segment(body)],
                          ["Art. 1096. (uchylony)", "KSIĘGA PIERWSZA", "JURYSDYKCJA KRAJOWA", "Art. 115. (pominięty)",
                           "TYTUŁ VI", "Art. 7. Wyrazy w nawiasie (skreślony wyraz) zostają."])
+
+    def test_segment_annex_under_signature_2012(self):
+        # issues of 2012-2014: the consolidated text starts under the signature of the notice, mid-page, with its
+        # header set on the right (DU/2013/1457 p. 6, DU/2012/1228 p. 3); a line on the left there stays text
+        def line(top, x0, text):
+            return Line(3, top, top + 10, x0, 10.0, text, pw=595.3, ph=841.9, x1=500, right=544)
+        body = [line(442, 84, "Art. 5. Ustawa wchodzi w życie z dniem 1 stycznia 2012 r.”."),
+                line(478, 428, "Marszałek Sejmu: E. Kopacz"),
+                line(520, 400, "Załącznik do obwieszczenia Marszałka Sejmu Rzeczypospolitej"),
+                line(531, 400, "Polskiej z dnia 13 września 2012 r. (poz. 1228)"),
+                line(571, 274, "USTAWA")]
+        self.assertEqual([(b.kind, b.text[:30]) for b in _segment(body)],
+                         [("p", "Art. 5. Ustawa wchodzi w życie"), ("signature", "Marszałek Sejmu: E. Kopacz"),
+                          ("annex", "Załącznik do obwieszczenia Mar"), ("p", "USTAWA")])
+        body[2] = line(520, 84, "Załącznik nr 1 do ustawy określa wzór.")
+        self.assertEqual([b.kind for b in _segment(body[:3])], ["p", "signature", "p"])
+
+    def test_frames_size_float_noise(self):
+        # DU/2016/2032 p. 1: "si" in Times-Roman and "ę" in TimesNewRoman differ in size by float noise only;
+        # extract_words breaks words where the size changes, which gave "si ę"
+        from pdfplumber.utils import extract_words
+
+        def char(text, x0, size, font):
+            return {"text": text, "x0": x0, "x1": x0 + 4.4, "top": 342.24, "bottom": 352.2, "doctop": 342.24,
+                    "size": size, "fontname": font, "upright": True, "matrix": (size, 0, 0, size, x0, 490)}
+
+        class Page:
+            width, height, rects, lines = 595.3, 841.9, [], []
+            chars = [char("s", 377.16, 9.959996015999991, "Times-Roman"),
+                     char("i", 381.0, 9.959996015999991, "Times-Roman"),
+                     char("ę", 383.76, 9.959996016000048, "QROYON+TimesNewRoman")]
+
+            def extract_words(self, **kw):
+                return extract_words(self.chars, **kw)
+
+        self.assertEqual([w["text"] for w in _frames(Page())[0][0]], ["się"])
 
     def test_segment_wide_line_spacing(self):
         # DU/2024/853: lines of a paragraph 7 pt apart at 12 pt (over 0.45 * size), paragraphs 17 pt apart;

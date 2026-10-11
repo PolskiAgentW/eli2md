@@ -319,7 +319,7 @@ def _to_frame(o: dict, rot: int, w: float, h: float) -> dict:
         x0, x1, t, b = w - x1, w - x0, h - b, h - t
     out = {**o, "x0": x0, "x1": x1, "top": t, "bottom": b, "doctop": t, "width": x1 - x0, "height": b - t}
     if "matrix" in o:  # pdfminer's size of a rotated glyph is its advance, not the font size
-        out.update(upright=True, size=math.hypot(o["matrix"][0], o["matrix"][1]))
+        out.update(upright=True, size=round(math.hypot(o["matrix"][0], o["matrix"][1]), 3))
     return out
 
 
@@ -433,8 +433,13 @@ def _frames(page) -> list[tuple[list[dict], float, float, list[dict]]]:
 
     Landscape tables are printed on portrait pages with text rotated by 90 degrees; such a
     page is read in a rotated frame. Pages with mostly upright text are read as before.
+    Sizes are rounded to 0.001 pt: words break where the size changes, and the letters of one size may differ
+    by float noise between two fonts (DU/2016/2032: "si" 9.959996015999991 in Times-Roman, "ę" 9.959996016000048
+    in TimesNewRoman gave "si ę"; 602 of 3 862 consolidated texts of ustawy 2012–2024 had such words).
     """
     angles = Counter(_char_angle(c) for c in page.chars)
+    for c in page.chars:  # (in place, as _single_glyphs)
+        c["size"] = round(c["size"], 3)
     # the footnote rule is usually a rect; some PDFs draw it as a line (DU/2024/1346, DU/2024/1018)
     rects = page.rects + [{**x, "line": True} for x in page.lines]
     if not angles or angles.most_common(1)[0][0] == 0:
@@ -813,7 +818,7 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
                         break
 
     body, notes = [], []
-    head: Line | None = None  # the last line of an annex header of an old issue (see below)
+    head: Line | None = None  # the last line of a small annex header (see below)
     for r in rows:
         if any(r is s for s in seps):  # a rule, not text
             continue
@@ -863,9 +868,10 @@ def _frame_lines(words: list[dict], pw: float, ph: float, rects: list[dict], pno
         ) or any(under(k, t, (band, col), line.top, down) for k, t, down in col_rules)
         # an annex header of an old issue set small in a column, with the line under it, is not a footnote
         # (DU/2002/664 p. 4: "Załącznik do obwieszczenia Marszałka Sejmu Rzeczypospolitej" / "Polskiej z dnia … (poz. 664)"
-        # in 8 pt under the signature)
-        if old and (ANNEX.match(line.text) or head is not None and (band, col) == (head.band, head.col)
-                    and abs(line.size - head.size) < 0.5 and 0 <= line.top - head.bottom < head.size):
+        # in 8 pt under the signature); nor one set on the right in a later issue (DU/2012/1228 p. 3, low on the page)
+        if (old or line.x0 > 0.4 * pw) and (
+                ANNEX.match(line.text) or head is not None and (band, col) == (head.band, head.col)
+                and abs(line.size - head.size) < 0.5 and 0 <= line.top - head.bottom < head.size):
             is_note, head = False, line
         else:
             head = None
@@ -962,9 +968,11 @@ def _segment(body: list[Line]) -> list[Block]:
         elif l.mark:
             kind = l.mark
         elif ANNEX.match(l.text) and (l.x0 > 0.4 * l.pw and l.top < 0.2 * l.ph) \
-                or l.old and cur is not None and cur.kind == "signature" and ANNEX_UNDER_SIGNATURE.match(l.text):
+                or cur is not None and cur.kind == "signature" and ANNEX_UNDER_SIGNATURE.match(l.text) \
+                and (l.old or l.x0 > 0.4 * l.pw):
             # in an old issue the annex (a consolidated text) starts under the signature, mid-page (DU/2010/648 p. 6),
-            # also as the new text of an annex of the amended act (DU/2004/895 p. 9: "„ZAŁĄCZNIK — Część I")
+            # also as the new text of an annex of the amended act (DU/2004/895 p. 9: "„ZAŁĄCZNIK — Część I");
+            # in the issues of 2012–2014 too, set on the right (DU/2013/1457 p. 6: "Załącznik do obwieszczenia …")
             kind = "annex"
         elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
             kind = "signature"
