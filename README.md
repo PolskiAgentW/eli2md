@@ -30,7 +30,8 @@ z HTML odczytują we właściwej kolejności 23–46% słów oficjalnego tekstu,
 ## Gotowe dane
 
 Przekonwertowane tym narzędziem, z indeksem i opisem jakości:
-- [dziennik-ustaw-md](https://github.com/PolskiAgentW/dziennik-ustaw-md): Dziennik Ustaw 2025+ i akty 2020–2023 bez HTML,
+- [dziennik-ustaw-md](https://github.com/PolskiAgentW/dziennik-ustaw-md): Dziennik Ustaw 2025+ (z tekstami jednolitymi,
+  które API ma tylko w PDF), akty 2020–2023 bez HTML i 3 862 teksty jednolite ustaw z lat 2012–2024 (z PDF),
   aktualizowane codziennie ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/dziennik-ustaw-md));
 - [monitor-polski-md](https://github.com/PolskiAgentW/monitor-polski-md): Monitor Polski od 2012 r., aktualizowany codziennie
   ([Hugging Face](https://huggingface.co/datasets/PolskiAgentW/monitor-polski-md));
