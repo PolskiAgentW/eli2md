@@ -45,7 +45,8 @@ Rules:
   In annexes, sections numbered "I." … "XXXIX." are `heading` nodes too (label "III.").
 - Numbered rows of tables and forms are `text`, not units (_Builder.table_row): points of lists of coordinates,
   the rows and cell lists of a form card ("5. FUNKCJA PODSTAWOWA" … up to the next §, DU/2024/1337) and rows of
-  a table that an amendment replaces without quotes ("– – – lp. 8 otrzymuje brzmienie:" / "8. Program …").
+  a table that an amendment replaces without quotes ("– – – lp. 8 otrzymuje brzmienie:" / "8. Program …") A heading that
+  opens such a table ("dodaje się część VII w brzmieniu:" / "Część VII", DU/2025/179) is text, not a `heading`.
 - Footnote markers stay in the text as `[^n]`, markers of notes printed in the text as `¹⁾` (see pdf._body_notes).
 - Each annex has its own tree (texts announced as consolidated texts have their own Art./§).
 """
@@ -448,6 +449,13 @@ def md_to_tree(md: str) -> dict:
             b.add_unit(*u)
             if label:
                 b.stack[-1][1]["label"] = label
+        elif d == 0 and kind == "p" and HEADING.match(text) and b.stack and not b.stack[-1][1]["children"] \
+                and ANNOUNCES_QUOTE.search(b.stack[-1][1]["text"]):
+            # "d) w tabeli nr 3 dodaje się część VII w brzmieniu:" / "Część VII" / "1. …" … "7. …" / "30) …"
+            # (DU/2025/179): the heading of a table added without quotes is text of the amending unit and its rows
+            # are rows of a replaced table (table_row), not a heading and ust. of the act
+            b.add_text(text, quoted=False)
+            b.replaced = {}
         elif d == 0 and (h := HEADING.match(text)) and len(text) < 300:
             b.add_heading(h.group(1), (h.group(3) or "").strip(), h.group(2))
         elif d == 0 and kind == "p" and parts[-1][0] == "annex" and (h := ROMAN_HEAD.match(text)) \

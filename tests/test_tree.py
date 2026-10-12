@@ -290,6 +290,18 @@ class Tree(unittest.TestCase):
         t = md_to_tree(md("##### § 7.", "Rozliczenia są składane w terminach:", "1) do 20. dnia każdego miesiąca;",
                           "2) do dnia 5 lutego – rozliczenie roczne.", "2. Jeżeli termin przypada na sobotę, upływa w poniedziałek."))
         self.assertEqual(paths(t["body"]), ["par_7", "par_7/pkt_1", "par_7/pkt_2", "par_7/ust_2"])
+        # DU/2025/179: a part of a table added without quotes starts with a heading; it is text of lit. d) and its rows
+        # are rows, so "30)" is a point of Art. 1 and "Część VII" is no heading of the act
+        t = md_to_tree(md("##### Art. 1.", "W ustawie wprowadza się następujące zmiany:", "29) w załączniku nr 6 do ustawy:",
+                          "c) w tabeli nr 2 uchyla się pkt 5 i 7,", "d) w tabeli nr 3 dodaje się część VII w brzmieniu:",
+                          "Część VII", "Sprawowanie bieżącego nadzoru nad operatorami", "Rodzaj czynności urzędowej Wysokość stawki w zł",
+                          "1. Sprawowanie bieżącego nadzoru nad operatorem 0", "2. Sprawowanie bieżącego nadzoru nad podmiotem 1000",
+                          "30) dodaje się załącznik nr 7 do ustawy w brzmieniu określonym w załączniku do niniejszej ustawy.",
+                          "##### Art. 2.", "Ustawa wchodzi w życie po upływie 14 dni od dnia ogłoszenia."))
+        self.assertEqual(paths(t["body"]), ["art_1", "art_1/pkt_29", "art_1/pkt_29/lit_c", "art_1/pkt_29/lit_d",
+                                            "art_1/pkt_30", "art_2"])
+        self.assertEqual(len(t["body"][0]["children"][0]["children"][1]["children"]), 5)
+        self.assertNotIn("heading", [n["type"] for n in t["body"]])
 
     def test_treaty_articles(self):
         # international agreements: "Artykuł N" in a paragraph of its own (title next, or in the same paragraph)

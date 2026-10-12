@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.53, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.54, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -215,6 +215,15 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.54** (2026-10-12). Drzewo jednostek (JSON): nagłówek na początku tabeli, którą nowelizacja dodaje bez cudzysłowu,
+nie jest już nagłówkiem aktu. W DU/2025/179 po „d) w tabeli nr 3 dodaje się część VII w brzmieniu:” linia „Część VII”
+była węzłem `heading`, wiersze tabeli „1.” … „7.” były ust. 1–7 na najwyższym poziomie, a „30)” art. 1 wisiał pod
+„ust. 7”. Teraz nagłówek i wiersze są tekstem lit. d, a pkt 30 należy do art. 1. Markdown bez zmian.
+A/B (drzewo z tych samych plików .md, wszystkie 92 790 aktów w sześciu zbiorach): zmieniają się 3 akty, wszystkie
+w tym miejscu: DU/2025/179, DU/2003/1256 („Oddział Celny w Radomierzy …”, wiersz dopisywanej tabeli, nie jest już
+nagłówkiem „Oddział”) i DU/1995/394 („Rozdział 8a” z dodawanego rozdziału trafia do pkt 5; jego § 35a nadal jest
+na najwyższym poziomie, bo w skanie nie ma cudzysłowu).
 
 **0.6.53** (2026-10-11). PDF, trzy zmiany:
 - poprawiona regresja z 0.6.51 opisana przy 0.6.52: ciąg spacji narysowany na literach (wypełnienie komórki tabeli)
