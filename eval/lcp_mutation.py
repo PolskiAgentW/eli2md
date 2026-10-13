@@ -6,7 +6,8 @@ does it refuse an article whose reading has one word changed?
 
 For each PDF: the Markdown is converted as legal-cite-pl does (`to_markdown(convert(pdf))`, installed eli2md) unless
 --md gives it (same order as --pdf); the text layer is read with `pdftotext -enc UTF-8`; articles come from
-`jednostki_md` and the allowed words as in `odczyt()` (_STOPKA, the position number, the words of `przypisy_md`).
+`jednostki_md` and the allowed words as in `odczyt()`: up to 82bd29f _STOPKA, the position number and the words of
+`przypisy_md`; from b38cb09 `wyjasnienia_warstwy` (page headers and whole footnotes at their place in the layer).
 Then in --per-act random articles one word (4+ letters, not the first or last) is changed: deleted, replaced with
 another word of the act, or swapped with the next word, and `wiernosc_pdftotext` runs on the changed article.
 The changes depend only on the seed and the articles, so two checkouts of legal-cite (--legal-cite) can be compared
@@ -16,6 +17,10 @@ Measured 2026-10-11 on the 8 consolidated texts legal-cite-pl reads from PDF (Dz
 poz. 85, 468, 795, 1244, 1245), eli2md 0.6.49, legal-cite-pl 74d31c2, pdftotext 26.01.0, --per-act 150 --seed 7:
 deleted 284/317 refused, replaced 290/290, swapped 288/288. All 33 deletions that pass delete a word that occurs in
 some footnote of the act (the allowed words are one set for the whole act).
+Measured 2026-10-13 on the same 8 texts, eli2md 0.6.54 (their pin since baa68fd), pdftotext 26.01.0, same options:
+legal-cite-pl 82bd29f deleted 283/317, replaced 291/291, swapped 284/284; b38cb09 (`wyjasnienia_warstwy`) deleted
+327/327, replaced 311/311, swapped 279/279. The changes differ between the two: b38cb09 reads 30 more articles
+(numbers like 59aa), so the random sample is not the same.
 """
 import argparse
 import random
@@ -56,10 +61,13 @@ def main() -> int:
             raw = p._tokeny_pdftotext(Path(t.name).read_text(encoding="utf-8"))
         przypisy = p.przypisy_md(md)
         jedn, _ = p.jednostki_md(md, przypisy)
-        pos = re.search(r"(\d+)\D*$", Path(pdf).stem)  # DU_2026_1245.pdf -> 1245, as odczyt() adds it
-        dozwolone = set(p._STOPKA) | ({pos.group(1)} if pos else set())
-        for tresc in przypisy.values():
-            dozwolone.update(p.tokeny(tresc))
+        # DU_2026_1245.pdf or cache DU/2026/1245/text.pdf -> 1245, as odczyt() adds it
+        pos = re.search(r"(\d+)\D*$", Path(pdf).stem) or re.search(r"(\d+)$", Path(pdf).parent.name)
+        footnote_words = {w for tresc in przypisy.values() for w in p.tokeny(tresc)}
+        if hasattr(p, "wyjasnienia_warstwy"):  # b38cb09+: a skipped word is explained by its place in the layer
+            dozwolone = p.wyjasnienia_warstwy(raw, przypisy, pos.group(1) if pos else "")
+        else:
+            dozwolone = set(p._STOPKA) | ({pos.group(1)} if pos else set()) | footnote_words
         vocab = sorted({w for j in jedn for w in j.tekst.split() if WORD.fullmatch(w)})
         for i in rng.sample(range(len(jedn)), min(a.per_act, len(jedn))):
             j = jedn[i]
@@ -86,7 +94,7 @@ def main() -> int:
             c[1] += refused
             if a.show and not refused and passed_before:
                 print(f"passes: {Path(pdf).name} art. {j.num} {kind} {words[k]!r}"
-                      f" (in footnote words: {words[k].lower().strip('.,;:()„”') in dozwolone})")
+                      f" (in footnote words: {words[k].lower().strip('.,;:()„”') in footnote_words})")
     for (kind, before), (n, refused) in sorted(tot.items()):
         print(f"{kind:8s} article passed unchanged: {before!s:5s}  changes {n:4d}  refused {refused:4d}")
     return 0
