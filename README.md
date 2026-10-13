@@ -6,6 +6,7 @@ z mierzoną jakością.
 
 > Status: **wersja 0.6.57, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
+> Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
 ## Po co
 
@@ -215,6 +216,11 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+### Zmiany w wersjach
+
+Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
+i w „Jakość: jak mierzę i co wyszło”.
 
 **0.6.57** (2026-10-13). Metadane, tekst bez zmian. (1) Tytuł z API ELI bez tego, co API dopisuje po tabulatorze:
 „…Prawosławnego⇥2023-03-23⇥Pobierz dokument D2023000054401.pdf” (DU/2023/544), „…Pieniężnej⇥202” (MP/2022/971).
