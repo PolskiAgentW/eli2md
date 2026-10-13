@@ -21,6 +21,12 @@ def parse_eli(s: str) -> tuple[str, int, int]:
     return m.group(1), int(m.group(2)), int(m.group(3))
 
 
+def clean_title(title: str | None) -> str | None:
+    """The ELI title without what the API appends after a tab: "…Prawosławnego\t2023-03-23\tPobierz dokument
+    D2023000054401.pdf" (DU/2023/544), "…Pieniężnej\t202" (MP/2022/971); 14 of 128 084 DU and MP titles, 2026-10-13."""
+    return title.split("\t", 1)[0].rstrip() if title and "\t" in title else title
+
+
 def get(url: str, retries: int = 3) -> bytes:
     for attempt in range(retries):
         try:
@@ -34,12 +40,16 @@ def get(url: str, retries: int = 3) -> bytes:
     raise AssertionError("unreachable")
 
 
-def fetch(eli: str, delay: float = 1.0, refresh: bool = False) -> tuple[dict, Path]:
-    """Return (metadata, path to text.pdf), using the on-disk cache unless `refresh`."""
+def fetch(eli: str, delay: float = 1.0, refresh: bool = False, change_date: str | None = None) -> tuple[dict, Path]:
+    """Return (metadata, path to text.pdf), using the on-disk cache unless `refresh` or unless the cached metadata has
+    another changeDate than `change_date` (the act's changeDate in the API year list: a cache from before a correction in
+    the API gave the old date and title, MP/2018/438, DU/2025/1099). The title is cleaned (clean_title)."""
     pub, year, pos = parse_eli(eli)
     d = CACHE / pub / str(year) / str(pos)
     d.mkdir(parents=True, exist_ok=True)
     meta_f, pdf_f = d / "meta.json", d / "text.pdf"
+    if change_date and meta_f.exists() and json.loads(meta_f.read_text()).get("changeDate") != change_date:
+        refresh = True
     if refresh:
         meta_f.unlink(missing_ok=True)
         pdf_f.unlink(missing_ok=True)
@@ -47,6 +57,7 @@ def fetch(eli: str, delay: float = 1.0, refresh: bool = False) -> tuple[dict, Pa
         meta_f.write_bytes(get(f"{API}/{pub}/{year}/{pos}"))
         time.sleep(delay)
     meta = json.loads(meta_f.read_text())
+    meta["title"] = clean_title(meta.get("title"))
     if not meta.get("textPDF"):
         raise LookupError(f"{eli}: no PDF text in the ELI API")
     if not pdf_f.exists() or pdf_f.stat().st_size == 0:

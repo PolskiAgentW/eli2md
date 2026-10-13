@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.56, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.57, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -215,6 +215,20 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.57** (2026-10-13). Metadane, tekst bez zmian. (1) Tytuł z API ELI bez tego, co API dopisuje po tabulatorze:
+„…Prawosławnego⇥2023-03-23⇥Pobierz dokument D2023000054401.pdf” (DU/2023/544), „…Pieniężnej⇥202” (MP/2022/971).
+Tak jest w 14 z 128 084 tytułów DU i M.P. w API (stan 2026-10-13). Dotyczy `title` we front matter, linii `# tytuł`,
+`title` w JSON i kolumny `title` w `index.csv` (`python -m eli2md.dataset`). (2) `eli2md.dataset` pobiera metadane
+i PDF aktu ponownie, gdy `changeDate` w pamięci podręcznej (`meta.json`) jest inny niż na liście API, także z `--all`.
+Wcześniej przeliczenie z `--all` na starej pamięci podręcznej dawało metadane sprzed poprawki w API: np. datę ogłoszenia
+DU/2025/1099 „2028-08-04” zamiast poprawionej w API 2025-08-04, tytuł MP/2018/438 sprzed poprawki.
+A/B (te same PDF, 0.6.56 → 0.6.57) na 11 aktach ze zbiorów, które mają w API taki tytuł: w każdym zmieniają się tylko
+tytuł we front matter, linia `# tytuł` i `title` w JSON. Innych aktów zmiana nie dotyczy: kod działa inaczej tylko
+przy tytule z tabulatorem. Sprawdzone przy tej wersji i bez zmian w kodzie: „6ng/m3” w MP/2019/572 (od 0.6.51,
+wcześniej „6 ng/m3”) jest zgodne z warstwą tekstową PDF, w której między pogrubioną „6” a „ng” nie ma odstępu
+(pdftotext daje to samo); „34..” w formularzu DU/2025/697 (wcześniej „3. 4.”) to dwa numery, „4.” i „3.”, narysowane
+w PDF jeden na drugim, więc obie wersje są zniekształcone.
 
 **0.6.56** (2026-10-13). PDF: poprawiona regresja z 0.6.53. Ciąg spacji w odstępie między dwoma wyrazami ciasnej
 linii (spacje szersze niż odstęp, ich środki wypadają w następnej literze) był usuwany w całości, jak ciąg spacji pod

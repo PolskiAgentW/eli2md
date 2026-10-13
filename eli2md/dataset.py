@@ -31,7 +31,7 @@ from pathlib import Path
 import pdfplumber
 
 from . import __version__
-from .eli import API, fetch, get
+from .eli import API, clean_title, fetch, get
 from .ocr import LANG as OCR_LANG, OcrUnavailable, check as check_ocr
 from .pdf import convert, to_markdown
 from .tree import md_to_tree
@@ -108,6 +108,7 @@ def _convert_one(job: tuple) -> dict:
     t0 = time.time()
     try:
         meta = json.loads((Path(pdf_path).parent / "meta.json").read_text())
+        meta["title"] = clean_title(meta.get("title"))
         doc = convert(pdf_path, ocr=ocr, position=meta.get("pos"), title=meta.get("title"), year=meta.get("year"),
                       neighbors=neighbors)
         md = to_markdown(doc, meta)
@@ -165,6 +166,8 @@ def main(argv: list[str] | None = None) -> int:
     titles: dict[int, dict[int, str]] = {}  # year -> {position: ELI title}, for convert(neighbors=)
     for year in a.years:
         items = json.loads(get(f"{API}/{a.publisher}/{year}"))["items"]
+        for i in items:
+            i["title"] = clean_title(i.get("title"))
         titles[year] = {i["pos"]: i.get("title", "") for i in items}
         for it in sorted(items, key=lambda i: i["pos"]):
             if not it.get("textPDF") or it.get("textHTML"):
@@ -192,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
         eli, year, pos = it["ELI"], it["year"], it["pos"]
         refresh = bool(old) and old.get("change_date") != it["changeDate"]
         try:
-            meta, pdf = fetch(eli, refresh=refresh)
+            meta, pdf = fetch(eli, refresh=refresh, change_date=it["changeDate"])
         except Exception as e:
             index[eli] = {**_base_row(it), "status": "error", "error": f"download: {type(e).__name__}: {e}"[:300]}
             continue

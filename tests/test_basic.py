@@ -1,6 +1,12 @@
 import unittest
 
-from eli2md.eli import parse_eli
+import json
+import tempfile
+from pathlib import Path
+from unittest import mock
+
+from eli2md import eli
+from eli2md.eli import clean_title, parse_eli
 from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
                         _QuarkWords, _drop_colophon, _drop_soft_hyphens, _frames, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _merge_sizes, _own_act,
                         _gutter, _ocr_lines, _plain_math, _quark_gap, _rows, _segment, quote_depths, _single_glyphs, _to_frame, _watermark, page_ranges,
@@ -16,6 +22,29 @@ class Basic(unittest.TestCase):
         self.assertEqual(parse_eli("https://api.sejm.gov.pl/eli/acts/DU/2024/1/"), ("DU", 2024, 1))
         with self.assertRaises(ValueError):
             parse_eli("2025/900")
+
+    def test_clean_title(self):
+        t = "Obwieszczenie Marszałka Sejmu Rzeczypospolitej Polskiej z dnia 9 lutego 2023 r. w sprawie ogłoszenia"
+        self.assertEqual(clean_title(t + "\t2023-03-23\tPobierz dokument D2023000054401.pdf"), t)  # DU/2023/544
+        self.assertEqual(clean_title(t + "\t202"), t)  # MP/2022/971
+        self.assertEqual(clean_title(t), t)
+        self.assertIsNone(clean_title(None))
+
+    def test_fetch_cache_with_another_change_date(self):
+        # a cache from before a correction in the API is fetched again (MP/2018/438: old title in a reconverted file)
+        old = {"ELI": "MP/2018/438", "textPDF": True, "title": "z dnia 22 marca", "changeDate": "2018-04-10T12:00:00"}
+        new = {**old, "title": "z dnia 5 kwietnia\t2", "changeDate": "2026-10-06T10:00:00"}
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(eli, "CACHE", Path(d)), \
+                mock.patch.object(eli, "get", side_effect=lambda url: b"%PDF" if url.endswith(".pdf")
+                                  else json.dumps(new).encode()) as get:
+            c = Path(d) / "MP" / "2018" / "438"
+            c.mkdir(parents=True)
+            (c / "meta.json").write_text(json.dumps(old))
+            (c / "text.pdf").write_bytes(b"%PDF old")
+            meta, _ = eli.fetch("MP/2018/438", delay=0, change_date="2018-04-10T12:00:00")
+            self.assertEqual((meta["title"], get.call_count), ("z dnia 22 marca", 0))
+            meta, pdf = eli.fetch("MP/2018/438", delay=0, change_date="2026-10-06T10:00:00")
+            self.assertEqual((meta["title"], get.call_count, pdf.read_bytes()), ("z dnia 5 kwietnia", 2, b"%PDF"))
 
     def test_markdown_articles(self):
         doc = Document(blocks=[Block("p", "USTAWA", 1), Block("p", "Art. 1. Tekst[^1] artykułu.", 1),
