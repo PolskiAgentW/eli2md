@@ -776,6 +776,17 @@ class Basic(unittest.TestCase):
         run = [char(" ", x0, x0 + 1.52, 324.9) for x0 in (337.32, 338.87, 340.43, 341.99, 343.54, 345.1)]
         d, y = char("d", 339.6, 342.63, 324.9), char("y", 342.61, 345.34, 324.9)
         self.assertEqual(_drop_soft_hyphens(Page(run + [d, y])).objs, [run[0], run[5], d, y])
+        # DU/2026/80 p. 55: 9 blanks between "Wojskowego" and "lub" of a tight bold line, all with their middles in "l";
+        # one stays the word gap ("Wojskowegolub" in 0.6.53-0.6.55)
+        o, l = char("o", 300.0, 306.13, 167.14), char("l", 307.45, 310.6, 167.14)
+        gap = [char(" ", x0, x0 + 2.88, 167.14) for x0 in (306.14, 306.25, 306.37, 306.48, 306.6, 306.71, 306.96, 307.07, 307.31)]
+        self.assertEqual(_drop_soft_hyphens(Page([o] + gap + [l])).objs, [o, gap[0], l])
+        # MP/2020/564 p. 11: a heading spaced out by one blank per letter stays one word ("Dziennikarze")
+        spaced = [char("D", 68.63, 77.99, 389.8), char(" ", 79.07, 82.31, 389.8), char("z", 78.96, 84.71, 389.8),
+                  char(" ", 85.8, 89.03, 389.8), char("i", 85.68, 89.28, 389.8), char(" ", 90.37, 93.61, 389.8),
+                  char("e", 90.36, 96.11, 389.8), char(" ", 97.19, 100.43, 389.8), char("n", 97.08, 104.28, 389.8),
+                  char(" ", 105.37, 108.61, 389.8), char("n", 105.35, 112.56, 389.8)]
+        self.assertEqual("".join(c["text"] for c in _drop_soft_hyphens(Page(spaced)).objs), "Dzienn")
 
     @staticmethod
     def _row(text, x0, x1, top, size=10.0):

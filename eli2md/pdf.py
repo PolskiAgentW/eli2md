@@ -323,6 +323,21 @@ def _drop_soft_hyphens(page):
         if any(x["x0"] < mid < x["x1"] and abs(x["top"] - c["top"]) < 3  # pdfplumber's y_tolerance
                for k in range(-3, 4) for x in lines.get(round(c["top"]) + k, ())):
             drop.add(id(c))
+    # a run between two words of a line keeps one blank: in a tight line the blanks are wider than the word gap and
+    # their middles fall inside the next letter ("Wojskowego" + 9 blanks + "lub", gap 1.3 pt = 0.115 em, DU/2026/80
+    # p. 55). Not a lone blank: letters spaced out by one blank each are one word ("D z i e n n i k a r z e", gaps
+    # 0.97-1.07 pt = 0.075-0.083 em, MP/2020/564 p. 11)
+    i = 0
+    while i < len(chars):
+        j = i
+        while j < len(chars) and not chars[j]["text"].strip():
+            j += 1
+        if 0 < i and i + 2 <= j < len(chars) and all(id(c) in drop for c in chars[i:j]):
+            p, q, b = chars[i - 1], chars[j], chars[i]
+            if _char_angle(p) == 0 == _char_angle(q) and abs(p["top"] - b["top"]) < 1 and abs(q["top"] - b["top"]) < 1 \
+                    and b["x0"] >= p["x1"] - 0.1 and q["x0"] - p["x1"] >= 0.1 * q.get("size", 10.0):
+                drop.discard(id(b))
+        i = max(j, i + 1)
     return page.filter(lambda o: id(o) not in drop) if drop else page
 
 

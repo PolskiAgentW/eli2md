@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.55, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.56, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -215,6 +215,17 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.56** (2026-10-13). PDF: poprawiona regresja z 0.6.53. Ciąg spacji w odstępie między dwoma wyrazami ciasnej
+linii (spacje szersze niż odstęp, ich środki wypadają w następnej literze) był usuwany w całości, jak ciąg spacji pod
+literami wypełnionej komórki tabeli (DU/2025/133), więc wyrazy się sklejały: „Wojskowegolub” (DU/2026/80, nagłówek
+wzoru orzeczenia), „zarzutów”:……” (MP/2019/268). Teraz zostaje jedna spacja, gdy ciąg ma co najmniej dwie spacje,
+po obu jego stronach stoją litery tej samej linii, a odstęp między nimi ma co najmniej 0,1 wysokości pisma.
+Pojedyncze spacje między literami rozstrzelonego nagłówka nadal znikają („D z i e n n i k a r z e” → „Dziennikarze”,
+MP/2020/564; pierwszy kandydat, z progiem 0,08 i bez warunku dwóch spacji, rozbijał ten nagłówek).
+A/B (te same PDF, 0.6.55 → 0.6.56) na 6 086 aktach: 848 ustaw i tekstów jednolitych ustaw z lat 2025–2026 z
+`dziennik-ustaw-md`, 2 995 + 1 500 aktów DU i MP z lat 2012–2026 jak przy 0.6.55 i 795 z lat 2000–2011. Zmieniają się
+2, te wyżej; pozostałe 6 084 są identyczne.
 
 **0.6.55** (2026-10-13). PDF: podpis pod aktem rozpoznawany także wtedy, gdy (1) nazwa urzędu ma przecinek
 („Minister Rodziny, Pracy i Polityki Społecznej: A. Dziemianowicz-Bąk”, DU/2026/1316), przed nazwiskiem stoi „z up.”
