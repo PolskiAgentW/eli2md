@@ -83,7 +83,10 @@ SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
 # "479" + "[30f]" (2026 prints use brackets, also for digits: "§ 4[1]", DU/2026/468). Written as superscripts
 # without the brackets, so both prints give "Art. 479³⁰ᶠ." ("1" alone is a script digit, see FOOTNOTE_MARK).
 INDEX = re.compile(r"^(?:\[(\d{1,3}[a-z]{0,3})\]|(\d{1,3}[a-z]{1,3}))$")
-SIGNATURE = re.compile(r"^[A-ZŁŚŻ][\w ]{2,80}: (\w{1,3}\. )+[A-ZŁŚŻ][\w-]+$")
+# a comma in the office ("Minister Rodziny, Pracy i Polityki Społecznej: A. Dziemianowicz-Bąk", DU/2026/1316), "z up." /
+# "w z." before the name (DU/2026/1108, DU/2004/311), initials without a space ("S.J. Jaros"), "p.o." before the office
+# (MP/2015/1118)
+SIGNATURE = re.compile(r"^(?:p\.o\. )?[A-ZŁŚŻ][\w ,]{2,80}: (?:(?:z up|w z)\. )?((?:\w{1,3}\.)+ )+[A-ZŁŚŻ][\w-]+$")
 # a signature read by OCR, which has no position on the page to tell it ("Prezes Trybunału Konstytucyjnego: A. Zo//",
 # "Minister Finansów: w z. H. Wasilewska-Trenkner"); also at the end of the last paragraph ("… z dniem ogłoszenia.
 # Prezydent Rzeczypospolitej Polskiej: W. Jaruzelski", DU/1990/390)
@@ -1066,7 +1069,11 @@ def _segment(body: list[Line]) -> list[Block]:
             # also as the new text of an annex of the amended act (DU/2004/895 p. 9: "„ZAŁĄCZNIK — Część I");
             # in the issues of 2012–2014 too, set on the right (DU/2013/1457 p. 6: "Załącznik do obwieszczenia …")
             kind = "annex"
-        elif SIGNATURE.match(l.text) and l.x0 > 0.45 * l.pw:
+        elif SIGNATURE.match(l.text) and (l.x0 > 0.45 * l.pw or cur is not None and cur.kind == "signature"
+                                          or l.x0 > 0.25 * l.pw and l.x1 > (l.right or 0.9 * l.pw) - 0.01 * l.pw):
+            # set flush right, a long office starts left of the middle (DU/2026/1181, MP/2019/209; the right edge of
+            # the text unknown in a short act: DU/2026/402); the countersignature
+            # of the Prime Minister under the President's signature is set on the left (MP/2014/78)
             kind = "signature"
         if prev is None or cur is None:
             new = True

@@ -451,6 +451,38 @@ class Basic(unittest.TestCase):
         body[2] = line(520, 84, "Załącznik nr 1 do ustawy określa wzór.")
         self.assertEqual([b.kind for b in _segment(body[:3])], ["p", "signature", "p"])
 
+    def test_segment_signature_long_office(self):
+        # a long office set flush right starts left of the middle of the page (DU/2026/1181: x0 0.445 of the width,
+        # MP/2019/209: 0.431); a comma in the office (DU/2026/1316), "z up." / "w z." before the name (DU/2026/1108,
+        # DU/2004/311), initials without a space (MP/2015/903 "S.J. Jaros"); were text glued to the last unit
+        def line(top, x0, text, x1=544.0):
+            return Line(2, top, top + 10, x0, 10.0, text, pw=595.3, ph=841.9, x1=x1, right=544)
+        for x0, text in ((265, "Minister Spraw Wewnętrznych i Administracji: wz. W. Leśniakiewicz"),
+                         (240, "Minister Rodziny, Pracy i Polityki Społecznej: A. Dziemianowicz-Bąk"),
+                         (300, "Minister Obrony Narodowej: z up. P. Bejda"),
+                         (330, "Minister Finansów: w z. W. Ciesielski"),
+                         (330, "Minister Zdrowia: p.o. A. Nowak"),
+                         (330, "Prezes Rady Ministrów: S.J. Jaros"),
+                         (300, "p.o. Prezes Zakładu Ubezpieczeń Społecznych: E. Łopacińska")):
+            body = [line(400, 84, "§ 43. Rozporządzenie wchodzi w życie z dniem następującym po dniu ogłoszenia.", 500),
+                    line(440, x0, text)]
+            self.assertEqual([b.kind for b in _segment(body)], ["p", "signature"], text)
+        # the same text on the left, or not reaching the right edge, stays text
+        for x0, x1 in ((84, 330), (240, 470)):
+            body = [line(400, 84, "§ 1. Tekst.", 500), line(440, x0, "Minister Zdrowia: A. Nowak", x1)]
+            self.assertEqual([b.kind for b in _segment(body)][1:], ["p"], (x0, x1))
+        # the right edge of the text unknown (a short act, DU/2026/402)
+        body = [line(400, 84, "§ 2. Rozporządzenie wchodzi w życie z dniem następującym po dniu ogłoszenia.", 500),
+                Line(2, 440, 450, 264, 10.0, "Minister Rodziny, Pracy i Polityki Społecznej: A. Dziemianowicz-Bąk",
+                     pw=595.3, ph=841.9, x1=544)]
+        self.assertEqual([b.kind for b in _segment(body)], ["p", "signature"])
+        # the countersignature on the left under the President's signature (MP/2014/78)
+        body = [line(400, 84, "§ 2. Postanowienie wchodzi w życie z dniem podpisania.", 500),
+                line(440, 331, "Prezydent Rzeczypospolitej Polskiej: B. Komorowski"),
+                line(470, 51, "Prezes Rady Ministrów: D. Tusk", 182)]
+        self.assertEqual([(b.kind, b.text[:9]) for b in _segment(body)],
+                         [("p", "§ 2. Post"), ("signature", "Prezydent"), ("signature", "Prezes Ra")])
+
     def test_frames_size_float_noise(self):
         # DU/2016/2032 p. 1: "si" in Times-Roman and "ę" in TimesNewRoman differ in size by float noise only;
         # extract_words breaks words where the size changes, which gave "si ę"

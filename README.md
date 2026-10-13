@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.54, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.55, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 
 ## Po co
@@ -215,6 +215,24 @@ i zużytych testach):
   R 0.834 → 1.000, na s5106 0.953 → 0.982.
 
 Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.txt`, `eval/tree_test_s5105_v0.6.0.txt`, `eval/tree_test_s5104_v0.5.3.txt`, `eval/tree_dev_s*.txt`.
+
+**0.6.55** (2026-10-13). PDF: podpis pod aktem rozpoznawany także wtedy, gdy (1) nazwa urzędu ma przecinek
+(„Minister Rodziny, Pracy i Polityki Społecznej: A. Dziemianowicz-Bąk”, DU/2026/1316), przed nazwiskiem stoi „z up.”
+albo „w z.”, przed urzędem „p.o.”, a inicjały są bez spacji („S.J. Jaworski”); (2) długa nazwa urzędu złożona do
+prawego marginesu zaczyna się na lewo od połowy strony (DU/2026/1181, MP/2019/209); (3) jest to kontrasygnata Prezesa
+Rady Ministrów, złożona po lewej pod podpisem Prezydenta (MP/2014/78). Wcześniej taki podpis był w `.md` zwykłym
+akapitem, a w drzewie JSON tekstem na najwyższym poziomie albo dzieckiem ostatniej jednostki (w DU/2026/1316 dzieckiem
+§ 43). Teraz jest kursywą i węzłem `signature`. Gdy pod takim podpisem stoi nagłówek załącznika, załącznik zaczyna się
+od niego (MP/2014/181: wcześniej treść załącznika była w treści głównej uchwały).
+A/B (te same PDF, 0.6.54 → 0.6.55): 2 995 aktów DU i MP z lat 2012–2026, w których opublikowany `.md` ma podpis jako
+zwykły akapit — zmienia się 2 986, we wszystkich te same znaki i słowa; w 2 980 zmienia się tylko podpis, w 6 także
+nagłówek załącznika jak wyżej. Nowy węzeł `signature`: 1 101 aktów nie miało żadnego, 1 885 dostaje kontrasygnatę.
+1 500 losowych innych aktów z tych lat: 0 zmienionych. Zostaje 9: podpis Prezydenta bez dwukropka w PDF
+(„Prezydent Rzeczypospolitej Polskiej A. Duda”, MP/2016/915, więc kontrasygnata pod nim też nie), urząd dłuższy niż
+pół strony („Przewodniczący Zgromadzenia Ogólnego Sędziów Naczelnego Sądu Administracyjnego: …”, MP/2016/1126) i dwa
+inne (MP/2023/283, MP/2020/787). Numery z lat 2000–2011 (795 aktów: 600 losowych i 195 z podpisem jako akapitem):
+zmienia się 146, we wszystkich te same znaki i słowa, w 11 także nagłówek załącznika pod podpisem (DU/2003/1624:
+wcześniej treść załącznika była w treści głównej). W M.P. z tych lat podpis zwykle nadal jest akapitem (85 z 99).
 
 **0.6.54** (2026-10-12). Drzewo jednostek (JSON): nagłówek na początku tabeli, którą nowelizacja dodaje bez cudzysłowu,
 nie jest już nagłówkiem aktu. W DU/2025/179 po „d) w tabeli nr 3 dodaje się część VII w brzmieniu:” linia „Część VII”
