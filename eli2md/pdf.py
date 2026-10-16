@@ -774,10 +774,14 @@ def _subscripts(r: list[dict], big: list[dict]) -> tuple[list[dict], list[tuple[
         base = next((n for n in big if -1.0 < w["x0"] - n["x1"] < 1.5 and n["text"][-1:].isalnum()
                      and (n["top"] + n["bottom"]) / 2 < mid < n["bottom"] + 1 and w["bottom"] >= n["bottom"] - 0.1),
                     None)
+        # a glyph extracted without width counts from its start: the Symbol "-" of "O(i - 1)" is 3.6 pt before
+        # "1)" in 7 pt (DU/2017/569 p. 15; "1)" left alone was a footnote marker)
+        prev = last[0] if last is not None else None
         if base is not None:
             subs.append((w, base, False))
             last = (w, base)
-        elif last is not None and 0 <= w["x0"] - last[0]["x1"] < 0.5 * w["size"]:
+        elif prev is not None and (0 <= w["x0"] - prev["x1"] < 0.5 * w["size"]
+                                   or prev["x1"] <= prev["x0"] and 0 <= w["x0"] - prev["x0"] < w["size"]):
             subs.append((w, last[1], True))
             last = (w, last[1])
         else:
