@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.57, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.58, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,18 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.58** (2026-10-16). PDF: artykuł złożony ciasno pod nagłówkiem jednostki trafiał do tekstu nagłówka.
+(1) „Art. N” albo „§ N” w linii zaraz pod nagłówkiem działu, rozdziału, oddziału, tytułu, księgi lub części zaczyna
+nowy blok. W DU/2025/960 (tekst jednolity) nagłówek „Rozdział 1 Zmiany w przepisach Art. 480–524. (pominięte)” to
+teraz nagłówek „Rozdział 1 Zmiany w przepisach” i art. 480–524 „(pominięte)”. (2) Po linii zakończonej
+„(uchylony)”, „(pominięty)” albo „(skreślony)” początek kolejnej jednostki zaczyna nowy blok: w DU/2020/105
+art. 199 „(uchylony)” i art. 200 są osobno. W całym `dziennik-ustaw-md` (DU 2012–2026, stan 2026-10-16) nagłówek
+z „Art. N.” w tekście ma 7 aktów. A/B (te same PDF, 0.6.57 → 0.6.58) na 997 aktach: 491 obwieszczeń tekstów
+jednolitych ustaw z lat 2025–2026, 500 losowych aktów DU z lat 2012–2026 z `dziennik-ustaw-md` i pozostałe 6 z tych 7.
+Zmieniają się dokładnie te 7: tekst bez zmian (te same wyrazy, te same znaki poza odstępami i znacznikami Markdown),
+jednostek (art., ust., pkt, §) więcej o 1–4. Pozostałe 990 są identyczne. Pomiar tekstów jednolitych 2025–2026
+względem warstwy tekstowej PDF: `eval/tj_pdf_layer_2025_2026.md`.
 
 **0.6.57** (2026-10-13). Metadane, tekst bez zmian. (1) Tytuł z API ELI bez tego, co API dopisuje po tabulatorze:
 „…Prawosławnego⇥2023-03-23⇥Pobierz dokument D2023000054401.pdf” (DU/2023/544), „…Pieniężnej⇥202” (MP/2022/971).
