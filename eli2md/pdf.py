@@ -1059,6 +1059,8 @@ def _follows(a: str, b: str) -> bool:
 
 
 LEFT_OUT = re.compile(r"\((?:uchylon|pominię[tc]|skreślon)[a-z]*\)$")
+HEAD_LABEL = re.compile(r"^(?:DZIAŁ|Dział|ROZDZIAŁ|Rozdział|ODDZIAŁ|Oddział|TYTUŁ|Tytuł|KSIĘGA|Księga|CZĘŚĆ|Część)\s+\S")
+ART_START = re.compile(r"^(?:Art\.|§)\s*\d")
 
 
 def _segment(body: list[Line]) -> list[Block]:
@@ -1119,9 +1121,14 @@ def _segment(body: list[Line]) -> list[Block]:
             point = (short or (_follows(prev.text, l.text) and abs(l.x0 - prev.x0) < 1)) \
                 and bool(POINT_START.match(l.text)) and gap >= 0 and abs(l.size - prev.size) < 0.5 \
                 and not prev.text.endswith("-")
-            new = gap > limit * l.size or (limit > 0.45 and short) or bool(UNIT_START_Q.match(l.text)) and (
+            # "Art. 1" / "§ 1" right under a unit heading set tight to its title ("Rozdział 1" "Zmiany w przepisach"
+            # "Art. 480–524. (pominięte)", DU/2025/960; "Art. 199. (uchylony)" in DU/2020/105) starts the article
+            new = gap > limit * l.size or (limit > 0.45 and short) \
+                or bool(HEAD_LABEL.match(cur.text)) and bool(ART_START.match(l.text)) \
+                or bool(UNIT_START_Q.match(l.text)) and (
                 (prev.lead >= 0 and gap > prev.lead + 1.2)
                 or (short and bool(re.search(r"[.:;,”]$", prev.text))) or point
+                or bool(LEFT_OUT.search(prev.text))  # "Art. 199. (uchylony)" "Art. 200. 1. …" (DU/2020/105)
                 or (limit > 0.45 and (bool(ITEM_START.match(l.text)) or bool(re.search(r"[.:;,”]$", prev.text)))))
         if new:
             if cur is not None:

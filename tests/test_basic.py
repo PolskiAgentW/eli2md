@@ -464,6 +464,21 @@ class Basic(unittest.TestCase):
                          ["Art. 1096. (uchylony)", "KSIĘGA PIERWSZA", "JURYSDYKCJA KRAJOWA", "Art. 115. (pominięty)",
                           "TYTUŁ VI", "Art. 7. Wyrazy w nawiasie (skreślony wyraz) zostają."])
 
+    def test_segment_article_under_tight_heading(self):
+        # a unit heading set tight to its title and to the article under it, on one page (DU/2025/960 "Rozdział 1"
+        # "Zmiany w przepisach" "Art. 480–524. (pominięte)"; DU/2020/105 "Art. 199. (uchylony)" "Art. 200. 1. …")
+        def line(top, x0, x1, text):
+            return Line(1, top, top + 10, x0, 10.0, text, x1=x1, right=524, lead=2.0)
+        body = [line(100, 270, 330, "Rozdział 1"), line(112, 240, 360, "Zmiany w przepisach"),
+                line(124, 56, 200, "Art. 480–524. (pominięte)"), line(136, 270, 330, "Rozdział 21"),
+                line(148, 200, 400, "Nadzór nad działalnością funduszy"), line(160, 56, 180, "Art. 199. (uchylony)"),
+                line(172, 56, 200, "Art. 200. 1. (uchylony)"), line(184, 56, 300, "Art. 7. Wyrazy w nawiasie (skreślony"),
+                line(196, 56, 200, "wyraz) zostają.")]
+        self.assertEqual([b.text for b in _segment(body)],
+                         ["Rozdział 1 Zmiany w przepisach", "Art. 480–524. (pominięte)",
+                          "Rozdział 21 Nadzór nad działalnością funduszy", "Art. 199. (uchylony)", "Art. 200. 1. (uchylony)",
+                          "Art. 7. Wyrazy w nawiasie (skreślony wyraz) zostają."])
+
     def test_segment_annex_under_signature_2012(self):
         # issues of 2012-2014: the consolidated text starts under the signature of the notice, mid-page, with its
         # header set on the right (DU/2013/1457 p. 6, DU/2012/1228 p. 3); a line on the left there stays text
