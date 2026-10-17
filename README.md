@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.58, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.59, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,13 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.59** (2026-10-17). PDF: znak bez szerokości w ciągu indeksów dolnych. W DU/2017/569 (tekst jednolity)
+wzór z art. 31 ust. 2 ma indeksy „KO(i - 1)”, w których „-” z fontu Symbol ma w PDF szerokość 0; „1)” zaczyna się
+3,6 pt za jego początkiem i w 0.6.58 nie było dołączane do indeksu, więc było odsyłaczem: „D KO(i -[^1] = Ws Rk(i -[^1]
++ …” (5 razy). Teraz odstęp od znaku bez szerokości liczy się od jego początku: „D KO(i - 1) = Ws Rk(i - 1) + …”.
+A/B (te same PDF, 0.6.58 → 0.6.59) na 3855 obwieszczeniach tekstów jednolitych z lat 2012–2024 z `dziennik-ustaw-md`
+i na 1304 aktach DU i M.P. z A/B przy 0.6.58: zmienia się tylko DU/2017/569 (bez utraty wyrazów, te same jednostki).
 
 **0.6.58** (2026-10-16). PDF: artykuł złożony ciasno pod nagłówkiem jednostki trafiał do tekstu nagłówka.
 (1) „Art. N” albo „§ N” w linii zaraz pod nagłówkiem działu, rozdziału, oddziału, tytułu, księgi lub części zaczyna

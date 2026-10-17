@@ -322,6 +322,13 @@ class Basic(unittest.TestCase):
         self.assertEqual([l.text for l in body], ["St−1 i LuSt−1, otrzymują"])
         body, _ = _frame_lines([w("[gCO", 50), w("2eq/", 70, 104.4, 6.5), w("MJ]", 90)], 600, 800, [], 1)
         self.assertEqual([l.text for l in body], ["[gCO2eq/MJ]"])
+        # a glyph without width in the chain counts from its start: "1)" 3.6 pt after the Symbol "-" is not a
+        # footnote marker (DU/2017/569 p. 15)
+        words = [w("wzoru:", 50), w("K", 100), {**w("O(i", 106, 104.4, 7), "x1": 116},
+                 {**w("-", 116.5, 103.2, 7), "x1": 116.5}, {**w("1)", 120.1, 104.4, 7), "x1": 125.9},
+                 w("=", 130), w("Ws", 140), w("Rk", 155)]
+        body, _ = _frame_lines(words, 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["wzoru: KO(i - 1) = Ws Rk"])
 
     def test_article_range_is_a_heading(self):
         # consolidated texts: "Art. 266–280." / "Art. 22–28. (pominięte)" is a unit of its own, not the end of the
