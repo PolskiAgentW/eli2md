@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.59, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.60, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,19 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.60** (2026-10-17). PDF: indeks dolny pod kursywną wielką literą. Pole litery „𝑃” we wzorach (Cambria Math)
+zachodzi na jej indeks dolny o 1,1–1,4 pt, a indeks dołączał się do słowa tylko przy zakładce do 1 pt. Indeks bez słowa
+trafiał wtedy na najbliższy wiersz, często do środka przeniesionego wyrazu, a symbol zostawał bez indeksu: „WbP –
+… na realizację prot−1 gramów rządowych” (DU/2025/337, w PDF „pro-/gramów”), „DEF – … przedłożonego Sejn−2 mowi”
+(DU/2025/1483), „publikod waną” (DU/2026/68), „bezpieczeń- OM stwa” (DU/2025/159). Teraz zakładka może mieć do 2 pt:
+„WbPt−1 – … na realizację programów rządowych”, „DEFn−2 – … przedłożonego Sejmowi”, „POM – … bezpieczeństwa”. Znika też
+„realit−1 zację” opisane przy 0.6.53 (DU/2025/439). A/B (te same PDF, 0.6.59 → 0.6.60) na 997 aktach DU (491 tekstów
+jednolitych z lat 2025–2026 bez HTML, 500 losowych, 7 z A/B 0.6.58): zmienia się 25, w tym 19 tekstów jednolitych.
+Na 343 ustawach bez HTML spoza tej listy zmieniają się 4, na 307 aktach (301 M.P., 6 DU) żaden. We wszystkich zmienionych
+liczba jednostek jest ta sama. Utracone wyrazy to tylko rozbite fragmenty („prot−1”, „gramów”, „P”). Znaki są te same poza
+złączonym przeniesieniem („-”, DU/2025/159) i czterema aktami, w których cyfry indeksu są teraz indeksem dolnym
+(„P 2024” → „P₂₀₂₄”, DU/2025/759, DU/2026/807; „Tℎ−T C =⁰” → „Tℎ−T₀ C =”, DU/2025/303, DU/2026/68).
 
 **0.6.59** (2026-10-17). PDF: znak bez szerokości w ciągu indeksów dolnych. W DU/2017/569 (tekst jednolity)
 wzór z art. 31 ust. 2 ma indeksy „KO(i - 1)”, w których „-” z fontu Symbol ma w PDF szerokość 0; „1)” zaczyna się

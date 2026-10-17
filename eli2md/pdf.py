@@ -771,7 +771,8 @@ def _subscripts(r: list[dict], big: list[dict]) -> tuple[list[dict], list[tuple[
     last = None  # (the previous subscript, its base) if the word before was one
     for w in sorted(r, key=lambda w: w["x0"]):
         mid = (w["top"] + w["bottom"]) / 2
-        base = next((n for n in big if -1.0 < w["x0"] - n["x1"] < 1.5 and n["text"][-1:].isalnum()
+        # the box of an italic capital overhangs its subscript: "𝑊𝑏𝑃" ends 1.4 pt after "𝑡−1" starts (DU/2025/337 p. 73)
+        base = next((n for n in big if -2.0 < w["x0"] - n["x1"] < 1.5 and n["text"][-1:].isalnum()
                      and (n["top"] + n["bottom"]) / 2 < mid < n["bottom"] + 1 and w["bottom"] >= n["bottom"] - 0.1),
                     None)
         # a glyph extracted without width counts from its start: the Symbol "-" of "O(i - 1)" is 3.6 pt before

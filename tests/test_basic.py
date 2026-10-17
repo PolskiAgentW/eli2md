@@ -311,6 +311,11 @@ class Basic(unittest.TestCase):
                  w("dzenie", 90, 112), w("przez", 125, 112)]
         body, _ = _frame_lines(words, 600, 800, [], 1)
         self.assertEqual([l.text for l in body], ["Wbt−1 – na prowa-", "dzenie przez"])
+        # the box of an italic capital overhangs its subscript by 1.4 pt (DU/2025/337 p. 73: "realizację prot−1 gramów")
+        words = [w("WbP", 50), w("t−1", 63.6, 104.4, 7), w("–", 80), w("na", 90), w("pro-", 105),
+                 w("gramów", 90, 112), w("przez", 125, 112)]
+        body, _ = _frame_lines(words, 600, 800, [], 1)
+        self.assertEqual([l.text for l in body], ["WbPt−1 – na pro-", "gramów przez"])
         # small capitals stand on the baseline (108 here, descent 0.2 of the size): not a subscript
         body, _ = _frame_lines([w("Ustawa", 50), w("A", 85), w("BC", 90, 102.8, 6.5), w("dalej", 110)], 600, 800, [], 1)
         self.assertEqual([l.text for l in body], ["Ustawa A BC dalej"])
