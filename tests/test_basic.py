@@ -366,7 +366,8 @@ class Basic(unittest.TestCase):
         self.assertIn("\n\nArt. 31.\n\n§ 1. Treść § 1.”;\n\n##### Art. 2.", md)
 
     def test_unit_start(self):
-        for t in ["Art. 41¹. Treść", "§ 2. Treść", "2. Treść", "5²) treść", "b) treść", "aa) treść", "– treść"]:
+        for t in ["Art. 41¹. Treść", "§ 2. Treść", "2. Treść", "5²) treść", "b) treść", "aa) treść", "– treść",
+                  "d)[^22] treść", "2.[^5] Treść"]:
             self.assertTrue(UNIT_START.match(t), t)
         for t in ["treść b) dalej", "1998 r. poz. 1", "(1, 3) x"]:
             self.assertFalse(UNIT_START.match(t), t)
@@ -475,6 +476,16 @@ class Basic(unittest.TestCase):
         self.assertEqual([b.text for b in _segment(body)],
                          ["Art. 1096. (uchylony)", "KSIĘGA PIERWSZA", "JURYSDYKCJA KRAJOWA", "Art. 115. (pominięty)",
                           "TYTUŁ VI", "Art. 7. Wyrazy w nawiasie (skreślony wyraz) zostają."])
+
+    def test_segment_point_with_footnote_marker(self):
+        # a point whose label carries its footnote marker: "d)[^22]" opens p. 42 of DU/2026/554 after a line ending
+        # with ","; "b)[^35]" follows the short line "a) na zasadach ogólnych albo" on the same page (DU/2025/24)
+        def line(page, top, x1, text):
+            return Line(page, top, top + 10, 56, 10.0, text, x1=x1, right=524, lead=2.0)
+        body = [line(1, 700, 524, "– praw do strumienia pieniądza, z zastrzeżeniem ust. 4f,"),
+                line(2, 80, 524, "d)[^22] przychodów ze zbycia przez bank spółdzielczy"),
+                line(2, 112, 300, "a) na zasadach ogólnych albo"), line(2, 124, 524, "b)[^35] poprzez zapłatę sumy")]
+        self.assertEqual([b.text[:7] for b in _segment(body)], ["– praw ", "d)[^22]", "a) na z", "b)[^35]"])
 
     def test_segment_article_under_tight_heading(self):
         # a unit heading set tight to its title and to the article under it, on one page (DU/2025/960 "Rozdział 1"

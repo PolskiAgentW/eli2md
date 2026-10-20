@@ -53,13 +53,16 @@ SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 
 # Letters of an index ("Art. 22¹ᵃ."): Unicode modifier letters a-z; there is none for q.
 SUP_LETTERS = "ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻ"
 SUP_CHARS = SUP_DIGITS + SUP_LETTERS
-# Lines that start a new unit even without a vertical gap (used at page breaks).
+# Lines that start a new unit even without a vertical gap (used at page breaks). The label may carry the marker of
+# its footnote: "d)[^22] przychodów" opens p. 42 of DU/2026/554 after "z zastrzeżeniem ust. 4f,".
+_REF = r"(?:\[\^[^\]\s]+\])?"
 UNIT_START = re.compile(
-    rf"^(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_CHARS}]*\.\s|\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s|–\s|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
+    rf"^(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_CHARS}]*\.{_REF}\s|\d+[a-z]*[{SUP_CHARS}]*\){_REF}\s|[a-z]{{1,3}}\){_REF}\s|–\s"
+    r"|Rozdział\s|DZIAŁ\s|Oddział\s|Załącznik)"
 )
 UNIT_START_Q = re.compile("^„?" + UNIT_START.pattern[1:])  # also a quoted unit of an amendment: „1. Treść
-ITEM_START = re.compile(rf"^„?(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s)")  # not "1." / "–"
-POINT_START = re.compile(rf"^„?(\d+[a-z]*[{SUP_CHARS}]*\)\s|[a-z]{{1,3}}\)\s)")  # "1)", "a)" only
+ITEM_START = re.compile(rf"^„?(Art\.\s*\d|§\s*\d|\d+[a-z]*[{SUP_CHARS}]*\){_REF}\s|[a-z]{{1,3}}\){_REF}\s)")  # not "1." / "–"
+POINT_START = re.compile(rf"^„?(\d+[a-z]*[{SUP_CHARS}]*\){_REF}\s|[a-z]{{1,3}}\){_REF}\s)")  # "1)", "a)" only
 LOWER = "a-ząćęłńóśźż"
 ANNEX = re.compile(r"^Załącznik")
 ANNEX_UNDER_SIGNATURE = re.compile(r"^„?(?:Załącznik|ZAŁĄCZNIK)")

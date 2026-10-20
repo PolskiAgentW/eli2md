@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.60, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.61, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,20 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.61** (2026-10-20). PDF: oznaczenie jednostki z odnośnikiem na początku wiersza. Wiersz „d)[^22] przychodów…”
+(odnośnik tuż za oznaczeniem, bez spacji) nie był rozpoznawany jako początek punktu, litery ani ustępu. Na początku
+strony po wierszu bez kropki i średnika oraz po krótkim wierszu taka jednostka była doklejana do poprzedniej.
+Przykłady: w DU/2026/554 (t.j. ustawy o CIT) art. 12 ust. 4 pkt 15 lit. d stała w tekście tiretu lit. c, a jej
+odnośnik mówi, że weszła w życie dzień po dacie tekstu jednolitego. W DU/2025/163 (t.j. ustawy o PIT) pierwsze z dwóch
+brzmień art. 23 ust. 1 pkt 4 lit. b stało w tekście lit. a. W DU/2015/1863 ust. 2–4 art. 2 stały w tekście lit. d.
+Teraz takie oznaczenie zaczyna jednostkę. A/B (te same PDF, 0.6.60 → 0.6.61) na 997 aktach DU (491 tekstów jednolitych
+z lat 2025–2026 bez HTML, 500 losowych, 7 z A/B 0.6.58): zmienia się 93, w tym 49 tekstów jednolitych. Na 343 ustawach
+bez HTML spoza tej listy nie zmienia się żaden akt, na 307 aktach (301 M.P., 6 DU) jeden (DU/2026/114). We wszystkich
+zmienionych tekst jest ten sam co do znaku, dochodzą tylko podziały akapitów (164) i nigdzie nie ubywa jednostek. 163
+podziały stoją przed oznaczeniem z odnośnikiem. Jeden dzieli tytuł ustawy w załączniku DU/2015/1863 na „USTAWA” i „z
+dnia …”, tak jak w innych tekstach: wiersze z oznaczeniem nie liczą się już do odstępu, który na danej stronie
+oddziela akapity.
 
 **0.6.60** (2026-10-17). PDF: indeks dolny pod kursywną wielką literą. Pole litery „𝑃” we wzorach (Cambria Math)
 zachodzi na jej indeks dolny o 1,1–1,4 pt, a indeks dołączał się do słowa tylko przy zakładce do 1 pt. Indeks bez słowa
