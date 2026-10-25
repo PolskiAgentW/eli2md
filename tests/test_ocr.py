@@ -315,6 +315,14 @@ class Scan(unittest.TestCase):
         self.assertEqual(_fix_section_sign("50. Bezafibratum", drugs), "50. Bezafibratum")
         self.assertEqual(_fix_section_sign("53. Brinzolamidum", drugs), "53. Brinzolamidum")
         self.assertEqual(_fix_section_sign("504. Lisinoprilum"), "504. Lisinoprilum")
+        # a glued "5" is a list's number also without "50." on the page (DU/2000/401: 46, 47, 54), unless "1." of a §
+        # follows; a glued "8" before "|" is a row of a table
+        self.assertEqual(_fix_section_sign("54. podkładki dla drzewiastych", {46, 47, 54}), "54. podkładki dla drzewiastych")
+        self.assertEqual(_fix_section_sign("51. Metadane"), "51. Metadane")
+        self.assertEqual(_fix_section_sign("57. 1. Zwierzę wpisane do księgi"), "§ 7. 1. Zwierzę wpisane do księgi")
+        self.assertEqual(_fix_section_sign("5 2. Wykonanie rozporządzenia"), "§ 2. Wykonanie rozporządzenia")
+        self.assertEqual(_fix_section_sign("885. | Vitaminum C 5% Inj."), "885. | Vitaminum C 5% Inj.")
+        self.assertEqual(_fix_section_sign("85. Wykonanie niniejszego rozporządzenia"), "§ 5. Wykonanie niniejszego rozporządzenia")
         # without a chain to a number that cannot be a glued "§" it stays a paragraph, also in a run of them
         self.assertEqual(_fix_section_sign("81. 1. Ustala się kategorie", {81, 82, 83}), "§ 1. 1. Ustala się kategorie")
         self.assertEqual(_fix_section_sign("85. 1. Kuchnie", {84, 85, 86}), "§ 5. 1. Kuchnie")

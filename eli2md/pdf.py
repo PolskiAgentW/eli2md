@@ -1575,11 +1575,15 @@ def _not_glued(k: int) -> bool:
 def _list_item(t: str, numbered: set[int]) -> bool:
     """`t` starts with a glued "8N." or "5N." that continues a numbered list of its page, not with "§ N.". "50." itself
     and a chain to it count too: a drug list of 50–59 on one page became "§ 0. Bezafibratum", "§ 1. Biperidenum" …
-    (DU/2007/205)."""
+    (DU/2007/205). A glued "5" is a list's number also without a chain, unless "1." of a § follows: in the OCR cache
+    (2026-10-26) a glued "5N." started 2362 paragraphs with text after it, and ~40 of 45 looked at were numbers of lists or
+    positions ("54. podkładki", DU/2000/401; "516. KONWENCJA"), while the 28 "5N. 1." were "§" ("57. 1. Zwierzę wpisane",
+    so are spaced "5 2. Wykonanie"). A glued "8N." before "|" is a row of a table (171, 25 of 25 looked at: "858. | Audyt
+    i Bilans", "885. | Vitaminum C", MP/2000/544)."""
     if not (m := GLUED_NUMBER_OCR.match(t)):
         return False
-    n = int(m.group(1))
-    if _not_glued(n):
+    n, rest = int(m.group(1)), t[m.end():]
+    if _not_glued(n) or re.match(r"\s*\|", rest) or m.group(1)[0] == "5" and not re.match(r"\s+1\.\s", rest):
         return True
     for step in (-1, 1):
         k = n + step
