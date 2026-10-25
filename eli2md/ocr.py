@@ -30,7 +30,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-from .pdf import COLOPHON, PROOF_NOTE, UNIT_START
+from .pdf import COLOPHON, OLD_HEADER_OCR, PRINTER_LINE, PROOF_NOTE, UNIT_START
 
 DPI = 300
 OCR_UNIT = re.compile(r"^(Artykuł|ARTYKUŁ|Article|ARTICLE|Artigo|ARTIGO|Άρθρο|Ustęp|Section|Rozdział|ROZDZIAŁ|"
@@ -210,8 +210,11 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
     for (blk, _, _), words in lines.items():
         text = " ".join(w[2] for w in words)
         top, bottom = min(w[0] for w in words), max(w[1] for w in words)
+        # in the band also the printer's line of pdf.PRINTER_LINE and the issue header cut short ("Korekta: 24.05.02",
+        # "Dziennik Ustaw Nr 65": DU/2002/595 p. 33, a scan under a text layer of only those lines, read by OCR from 0.6.63)
         if top < band * height and (
-                OCR_HEADER.match(text) or (len(words) <= 8 and str(page_number) in re.findall(r"\d+", text))) \
+                OCR_HEADER.match(text) or (len(words) <= 8 and str(page_number) in re.findall(r"\d+", text))
+                or PRINTER_LINE.match(text) or (m := OLD_HEADER_OCR.match(text)) and m.end() == len(text.rstrip(" .,"))) \
                 or OLD_HEADER_LINE.match(text) or PROOF_NOTE.match(text):
             continue
         confs += [w[3] for w in words]

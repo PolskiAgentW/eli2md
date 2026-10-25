@@ -94,6 +94,13 @@ class Ocr(unittest.TestCase):
         for t in ("„Dziennik Ustaw Nr 186, poz. 1149”", "- Dziennik Ustaw Nr 41 — 598 — Poz. 240 tabela",
                   "1. Dziennik Ustaw Nr 41 — 598 — Poz. 240"):
             self.assertFalse(ocr.OLD_HEADER_LINE.match(t), t)
+        # in the header band a printer's line and the header cut short are not text either (DU/2002/595 p. 33); lower on
+        # the page such a line stays
+        w = [(1, 1, 1, 100, 90, t) for t in "Korekta: 24.05.02".split()]
+        w += [(2, 1, 1, 180, 90, t) for t in "Dziennik Ustaw Nr 65".split()]
+        w += [(3, 1, 1, 1800, 90, t) for t in "Chmiel R — podstawowe".split()]
+        w += [(4, 1, 1, 2400, 90, t) for t in "Korekta: 24.05.02".split()]
+        self.assertEqual(ocr.parse_tsv(tsv(w), 3508).paragraphs, ["Chmiel R — podstawowe Korekta: 24.05.02"])
 
     def test_usable(self):
         self.assertFalse(ocr.usable(ocr.OcrPage(["a"], words=5, confidence=95)))
