@@ -87,6 +87,13 @@ class Ocr(unittest.TestCase):
         w += [(2, 1, 1, 1800, 90, t) for t in "Dziennik Ustaw Nr144 — 10062 — Poz. 1149".split()]
         w += [(3, 1, 1, 2400, 90, t) for t in "Dziennik Ustaw Nr 186, poz. 1149".split()]
         self.assertEqual(ocr.parse_tsv(tsv(w), 3508).paragraphs, ["Dziennik Ustaw Nr 186, poz. 1149"])
+        # also after 1-2 specks read as marks (DU/2000/129, DU/1995/37); a quotation of the gazette stays
+        for t in ("‘Dziennik Ustaw Nr 9 — 680 — Poz. 129", "- „Dziennik Ustaw Nr 8 — 124 — Poz. 37 i 38",
+                  "£ Dziennik Ustaw Nr 67 — 1238 — Poz. 292"):
+            self.assertTrue(ocr.OLD_HEADER_LINE.match(t), t)
+        for t in ("„Dziennik Ustaw Nr 186, poz. 1149”", "- Dziennik Ustaw Nr 41 — 598 — Poz. 240 tabela",
+                  "1. Dziennik Ustaw Nr 41 — 598 — Poz. 240"):
+            self.assertFalse(ocr.OLD_HEADER_LINE.match(t), t)
 
     def test_usable(self):
         self.assertFalse(ocr.usable(ocr.OcrPage(["a"], words=5, confidence=95)))

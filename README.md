@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.62, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.63, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,28 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.63** (2026-10-25). Numery do 2011 r., ciąg dalszy 0.6.62: trzy miejsca, w których nagłówek strony zostawał w
+tekście. (1) Nad nagłówkiem stoi inna linia drukarni niż notka z 0.6.62: notka w innym brzmieniu („Korekta: 24.05.02”,
+„Zam. 432 — Łamanie: 7.07.03”, „Zam. 1667 — kor. 28.06.2005 r.”, „Dołamanie: 28.06.02”) albo linia montażowa strony
+(„Dz. U. Nr 172 #1975 7/9/05 11:32 Page 10539”). Nagłówek był wtedy drugim wierszem strony i zostawał, a notka trafiała
+do tekstu, czasem doklejona do akapitu („…Agencja Wywiadu”, Dołamanie: 28.06.02”, DU/2002/836). Teraz taka linia jest
+usuwana razem z nagłówkiem, ale tylko wtedy, gdy nagłówek stoi pod nią. W innym miejscu zostaje, bo bywa treścią
+(„korekta odsetek od zadłużenia w dniu 01.07.2008 r.”, MP/2009/355). (2) Strona, której znaki w PDF w większości nie
+mają kodów Unicode i której OCR nie odczytał, bierze tekst z warstwy tekstowej. Usuwany był tam tylko nagłówek numerów
+od 2012 r. (MP/2011/424). (3) OCR czyta przed nagłówkiem 1–2 znaki szumu („- „Dziennik Ustaw Nr 8 — 124 — Poz. 37 i 38”,
+DU/1995/37); taki wiersz też jest pomijany. Przykłady: DU/2005/1679 miał 210 nagłówków w tekście, DU/2005/1444 120,
+DU/2002/595 32. A/B (te same PDF, 0.6.62 → 0.6.63) na 63 aktach. 26 kontrolnych (losowe akty zbiorów 1990–2011 bez tych
+przyczyn): pliki identyczne. 37 z jedną z tych przyczyn; w 32, których przeliczenie skończyło się przed wydaniem,
+nagłówków 581 → 0 (pozostałe 5 to długie dokumenty M.P. 2011 z OCR). W 20 z 32 znikają tylko nagłówki, notki i linie
+montażowe (w DU/2000/129 „Załącznik nr 10” na górze strony jest teraz nagłówkiem załącznika). W DU/2002/836 dwa wyrazy
+przeniesione przez doklejoną notkę są złączone („zadań”, „emerytalnym”). W 11 (DU/2002/595, DU/2003/1174, DU/2005/1014,
+1444, 1679, 1681, DU/2007/1390, MP/2002/489, 491, 493, 495) strony, których warstwa tekstowa miała tylko linię drukarni
+i nagłówek, a reszta jest obrazem, są teraz czytane przez OCR jak inne skany (jak DU/2001/1616 w 0.6.62), więc dochodzi
+ich tekst: DU/2005/1679 s. 90 angielski tekst protokołu zamiast notatki, że treści nie ma. OCR czyta wtedy z obrazu
+strony także notkę drukarni (MP/2002/493 „korekta: 16.07.02”); ta zostaje w tekście. Akty od 2012 r. się nie zmieniają:
+w zbiorach DU i M.P. od 2012 r. (7 250 i 18 235 aktów) nie ma ani takiej linii nad nagłówkiem, ani nagłówka starego
+numeru na takiej stronie, ani takiego wiersza OCR.
 
 **0.6.62** (2026-10-25). PDF i OCR numerów do 2011 r.: nagłówek strony („Dziennik Ustaw Nr 97 — 5671 — Poz. 563”)
 i notka drukarni nad nim („Zam. 688 Korekta III: 17.12.01”) nie trafiają do tekstu. (1) Strona z obróconą tabelą jest

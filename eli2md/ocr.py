@@ -41,8 +41,9 @@ BASE_LANG = "pol+eng"  # first pass of "auto"; must be installed
 OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw|Monitor\s*Polski)?[\s\-–—.,|\d]*(Poz\.?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?$", re.I)
 HEADER_BAND = 0.08  # share of the page height where the gazette header sits
 # the header of an issue of 2011 or earlier as a whole OCR line, wherever the page puts it: a rotated page or a map
-# (DU/2008/1149, DU/2001/277; "Dziennik Ustaw Nr144 — 11476 — Poz. 1616")
-OLD_HEADER_LINE = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\.?\s*\d+\s*[—–-]+\s*\d+\s*[—–-]+\s*Poz\.?\s*\d+"
+# (DU/2008/1149, DU/2001/277; "Dziennik Ustaw Nr144 — 11476 — Poz. 1616"), also after 1-2 specks read as marks
+# (DU/2000/129 "‘Dziennik Ustaw Nr 9 — 680 — Poz. 129", DU/1995/37 "- „Dziennik Ustaw Nr 8 — 124 — Poz. 37 i 38")
+OLD_HEADER_LINE = re.compile(r"^(?:[^\w\s]{1,2}\s*){0,2}(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\.?\s*\d+\s*[—–-]+\s*\d+\s*[—–-]+\s*Poz\.?\s*\d+"
                              r"(?:\s*(?:i|,)\s*\d+)*\.?$")
 MIN_WORDS, MIN_CONF = 20, 80.0  # below either, the page keeps only the note (eval/ocr_eval_scans_*.txt)
 # seconds per tesseract call. Pages take ~2 s, but a guilloche background (DU/2026/14 p19, excise
