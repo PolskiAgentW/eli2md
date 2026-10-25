@@ -946,6 +946,40 @@ class Basic(unittest.TestCase):
         for t in ("Zam. 688 Korekta III: 17.12.01", "Zam. 1034 Korekta i Dołamanie: 29.06.04"):
             self.assertTrue(P.PROOF_NOTE.match(t), t)
         self.assertFalse(P.PROOF_NOTE.match("Zam. 688 Korekta III: 17.12.01 Dziennik Ustaw Nr 144"))
+        # its other wordings and the slug of the imposed page, dropped over the header (DU/2002/595, DU/2005/1444)
+        for t in ("Korekta: 24.05.02", "Dołamanie: 28.06.02", "Dołmanie: 28.06.02", "Zam. 432 — Łamanie: 7.07.03",
+                  "Zam. 269 — Łamanie: Korekta: 13.05.2003 r.", "Zam. 1669 — łamanie 01.07.2005",
+                  "Zam. 1284 korekta: 30.06.2005 r.", "Zam. 1667 — kor. 28.06.2005 r.", "Zam. 1818 — dołamanie: 25.09.2006 r.",
+                  "Zam. 2699 — korekta 18.10.2007 r.", "Dz. U. Nr 172 #1975 7/9/05 11:32 Page 10539",
+                  "Dziennik Ustaw Nr 202#2226a 13/10/05 14:54 Page 13046"):
+            self.assertTrue(P.PRINTER_LINE.match(t), t)
+        for t in ("Korekta wynagrodzenia, o której mowa w ust. 1, od dnia 1.01.2005 r. obejmuje",
+                  "Dziennik Ustaw Nr 202 — 13046 — Poz. 1679", "Korekta: 24.05.02 Dziennik Ustaw Nr 65"):
+            self.assertFalse(P.PRINTER_LINE.match(t), t)
+
+    def test_old_header_under_printer_line_and_on_unmapped_page(self):
+        # convert drops a printer's line over the header with the header (DU/2002/595: "Korekta: 24.05.02"), and the
+        # header from the text layer of a page of glyphs without Unicode that OCR does not read (MP/2011/424 p. 176)
+        from eli2md import pdf as P
+
+        def line(pno, top, text):
+            return Line(pno, top, top + 10, 38.0, 10.0, text)
+        pages = {1: [line(1, 50, "Poz. 595"), line(1, 80, "ROZPORZĄDZENIE MINISTRA FINANSÓW"), line(1, 100, "§ 1. Tekst.")],
+                 2: [line(2, 29, "Korekta: 24.05.02"), line(2, 52, "Dziennik Ustaw Nr 65 — 4646 — Poz. 595"),
+                     line(2, 80, "§ 2. Dalszy tekst.")],
+                 3: [line(3, 52, "Dziennik Ustaw Nr 65 — 4647 — Poz. 595"), line(3, 80, "Załącznik nr 2")]}
+        pdf = mock.MagicMock()
+        pdf.__enter__.return_value.pages = [mock.Mock(pno=k, width=595.0, height=842.0) for k in pages]
+        with tempfile.NamedTemporaryFile(suffix=".pdf") as f, \
+                mock.patch.object(P.pdfplumber, "open", return_value=pdf), \
+                mock.patch.object(P, "_page_lines", side_effect=lambda page, pno, gut=None: (list(pages[pno]), [])), \
+                mock.patch.object(P, "_unmapped_share", side_effect=lambda page: 0.5 if page.pno == 3 else 0.0), \
+                mock.patch.object(P, "_large_image", return_value=None):
+            text = "\n".join(b.text for b in P.convert(f.name).blocks)
+        self.assertNotIn("Dziennik Ustaw Nr 65", text)
+        self.assertNotIn("Korekta", text)
+        self.assertIn("§ 2. Dalszy tekst.", text)
+        self.assertIn("Załącznik nr 2", text)
 
     def test_two_column_footnotes(self):
         # InDesign (DU/2011/1170 p. 2): a 70 pt line at the right column's edge, footnotes (8.5 pt) under it in that

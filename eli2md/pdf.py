@@ -53,6 +53,13 @@ OLD_RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski) Nr \d+\s*[�
 # the printer's note over the header of a proof page ("Zam. 688 Korekta III: 17.12.01", DU/2001/1616; "Zam. 1034 Korekta
 # i Dołamanie: 29.06.04", DU/2004/1974)
 PROOF_NOTE = re.compile(r"^Zam\.\s*\d+\s+Korekta\b.{0,30}:\s*\d{1,2}\.\d{1,2}\.\d{2}\s*$")
+# other printer's lines over that header, in the text with the header under them up to 0.6.62: the note in other wordings
+# ("Korekta: 24.05.02" DU/2002/595, "Zam. 432 — Łamanie: 7.07.03" DU/2003/1174, "Zam. 1667 — kor. 28.06.2005 r."
+# DU/2005/1034, "Dołamanie: 28.06.02" DU/2002/836) and the slug of the imposed page ("Dz. U. Nr 172 #1975 7/9/05 11:32
+# Page 10539" DU/2005/1444). Dropped only over the header (OLD_HEADER).
+PRINTER_LINE = re.compile(r"^(?:(?:Zam\.\s*\d+\s*[—–-]?\s*)?(?:(?:[Dd]o)?[łŁ]a?manie\b|[Kk]orekta\b|[Kk]or\.).{0,30}?"
+                          r"\d{1,2}\.\d{1,2}\.(?:\d{4}|\d{2})(?:\s*r\.)?"
+                          r"|.{0,40}#\s*\w+\s+\d{1,2}/\d{1,2}/\d{2}\s+\d{1,2}:\d{2}\s+Page\s+\d+)\s*$")
 # "Pozycja 19": MP 2012 up to poz. 130; ") Poz. 1024*": the last act of a year has a note "*) Ostatnia pozycja"
 MASTHEAD_END = re.compile(r"^[*)\s]*Poz(?:\.|ycja)\s*\d+[*)\s]*$")
 SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 41¹., 5²)
@@ -1739,7 +1746,8 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
             scan = bool(ocr) and (_hidden_ocr_scan(page) or scanned and not page.chars
                                   and _large_image(page, min_share=0.8) is not None)
             b, n = ([], []) if scan else _page_lines(page, pno, gut)
-            if b and PROOF_NOTE.match(b[0].text):
+            if b and (PROOF_NOTE.match(b[0].text)
+                      or len(b) > 1 and PRINTER_LINE.match(b[0].text) and OLD_HEADER.match(b[1].text)):
                 b = b[1:]
             layer = None  # text layer of a page mostly of glyphs without Unicode (forms, DU/2025/161): OCR first
             if _unmapped_share(page) > 0.1:
@@ -1769,7 +1777,8 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
                     # no OCR or an unreadable one: the text layer without the unmapped glyphs beats a bare note
                     doc.unmapped_pages.append(pno)
                     b, n = layer
-                    if b and RUNNING_HEADER.match(b[0].text):
+                    # also the header of an issue of 2011 or earlier, in the text up to 0.6.62 (MP/2011/424 p. 176)
+                    if b and (RUNNING_HEADER.match(b[0].text) or OLD_HEADER.match(b[0].text)):
                         b = b[1:]
                     b = [Line(pno, 0.0, 0.0, 0.0, 1.0, "", page.width, page.height, mark="unmapped")] + b
                 else:
