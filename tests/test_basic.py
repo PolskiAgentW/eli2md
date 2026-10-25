@@ -7,7 +7,7 @@ from unittest import mock
 
 from eli2md import eli
 from eli2md.eli import clean_title, parse_eli
-from eli2md.pdf import (MASTHEAD_END, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
+from eli2md.pdf import (MASTHEAD_END, MASTHEAD_NOTE, OLD_HEADER, UNIT_START, Block, Document, Line, _char_angle, _dedupe, _doubled,
                         _QuarkWords, _drop_colophon, _drop_soft_hyphens, _frames, _group_notes, _drop_watermark, _frame_lines, _free, _glyph_box, _join, _merge_sizes, _own_act,
                         _gutter, _ocr_lines, _plain_math, _quark_gap, _rows, _segment, quote_depths, _single_glyphs, _to_frame, _watermark, page_ranges,
                         to_markdown)
@@ -777,6 +777,17 @@ class Basic(unittest.TestCase):
         for line in ("poz. 5", "Poz. 5 i 6", "Pozycja nr 3 tabeli", "Monitor Polski – 2 – Poz. 5"):
             self.assertFalse(MASTHEAD_END.match(line), line)
 
+    def test_masthead_note(self):
+        # the note of the last position of a year belongs to the masthead "Poz. 1317*)" (MP/2025/1317, DU/2025/1900)
+        from eli2md.pdf import _masthead_note
+        for line in ("*) Ostatnia pozycja w 2025 r.", "*) Ostatnia pozycja w 2012 r"):
+            self.assertTrue(MASTHEAD_NOTE.match(line), line)
+        for line in ("*) Niniejsza ustawa wdraża dyrektywę", "Ostatnia pozycja w 2025 r.", "1) Ostatnia pozycja w 2025 r."):
+            self.assertFalse(MASTHEAD_NOTE.match(line), line)
+        masthead = ["MONITOR POLSKI", "Poz. 1317*)"]
+        notes = [Line(1, 780, 790, 50, 9, "*) Ostatnia pozycja w 2025 r."), Line(1, 790, 800, 50, 9, "1) Zgodnie z ustawą")]
+        self.assertEqual([l.text for l in _masthead_note(notes, masthead)], ["1) Zgodnie z ustawą"])
+        self.assertEqual(masthead, ["MONITOR POLSKI", "Poz. 1317*)", "*) Ostatnia pozycja w 2025 r."])
     def test_watermark(self):
         # the invisible "www.rcl.gov.pl" over MP 2012 pages: Artifact chars written at ~55 degrees (MP/2012/988)
         wm = {"object_type": "char", "text": "w", "tag": "Artifact", "matrix": (3.09, 4.42, -4.42, 3.09, 94.4, 54.1)}

@@ -62,6 +62,9 @@ PRINTER_LINE = re.compile(r"^(?:(?:Zam\.\s*\d+\s*[—–-]?\s*)?(?:(?:[Dd]o)?[ł
                           r"|.{0,40}#\s*\w+\s+\d{1,2}/\d{1,2}/\d{2}\s+\d{1,2}:\d{2}\s+Page\s+\d+)\s*$")
 # "Pozycja 19": MP 2012 up to poz. 130; ") Poz. 1024*": the last act of a year has a note "*) Ostatnia pozycja"
 MASTHEAD_END = re.compile(r"^[*)\s]*Poz(?:\.|ycja)\s*\d+[*)\s]*$")
+# that note: on page 1 under the footnote rule, but of the masthead, not of the act (up to 0.6.66 it ended the act's
+# text and its last unit in the tree: MP/2025/1317 annex pkt 10, DU/2025/1900 art. 93)
+MASTHEAD_NOTE = re.compile(r"^(?:_{3,}\s*)?\*\s?\)\s*Ostatnia pozycja w \d{4}\s*r\.?\s*$")  # "* )", after the rule "____"
 SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 41¹., 5²)
 # Letters of an index ("Art. 22¹ᵃ."): Unicode modifier letters a-z; there is none for q.
 SUP_LETTERS = "ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖʳˢᵗᵘᵛʷˣʸᶻ"
@@ -566,6 +569,12 @@ def _large_image(page, min_share: float = 0.1) -> float | None:
 
 
 HIDDEN_OCR_FONT = re.compile(r"Hidden(Horz|Vert)OCR")  # Adobe Acrobat "Paper Capture" text under a scan
+
+
+def _masthead_note(lines: list[Line], masthead: list[str]) -> list[Line]:
+    """`lines` without the note of a masthead "Poz. N*)" (MASTHEAD_NOTE), which goes to `masthead`."""
+    masthead += [l.text for l in lines if MASTHEAD_NOTE.match(l.text)]
+    return [l for l in lines if not MASTHEAD_NOTE.match(l.text)]
 
 
 def _hidden_ocr_scan(page) -> bool:
@@ -1764,6 +1773,8 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
                     if MASTHEAD_END.match(l.text):
                         doc.masthead = [x.text for x in b[: i + 1]]
                         b = b[i + 1 :]
+                        if any("*" in x for x in doc.masthead[-3:]):  # the star may be a line of its own ("*)", "Poz. 1900")
+                            b, n = _masthead_note(b, doc.masthead), _masthead_note(n, doc.masthead)
                         break
                 else:  # an act of 2011 or earlier starts under the running header of its issue (DU/2005/1255)
                     if b and OLD_HEADER.match(b[0].text):
