@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.68, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.69, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,16 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.69** (2026-10-26). Skany czytane przez OCR: sklejony numer „5N.” na początku akapitu („54. podkładki”,
+„51. Metadane”, „516. KONWENCJA”) jest numerem listy albo pozycji, a nie „§ N.” z „§” odczytanym jako „5” — chyba że
+dalej jest „1.” (ust. 1: „57. 1. Zwierzę wpisane” nadal daje „§ 7.”). Sklejony „8N.”, po którym jest „|” (wiersz tabeli:
+„858. | Audyt i Bilans”), też zostaje numerem. Rozdzielone „5 2.” i „8 2. Tekst” bez zmian. W cache OCR (127 006 stron)
+reguła zmienia 1856 akapitów; z losowych 60: 51 to numery list, tabel albo pozycji, 5 to prawdziwe „§” (akty
+przedwojenne, np. „58. Przekształcenie spółki…” między § 7 a § 9) — te teraz tracą nagłówek „§”, 4 nie umiem ocenić
+albo obie wersje są złe. A/B (te same PDF, 0.6.68 → 0.6.69) na 89 aktach: 25 kontrolnych i 40 losowych z OCR — pliki
+identyczne; 24 z numerem listy wziętym za „§” — w 20 wraca numer listy (zmieniają się tylko cyfry numerów), 4 bez zmian.
+Nadal bywa brany za „§” sklejony „8N.” bez „|” („84. ex.4404 Wyroby”): „8N. Tekst” to w cache częściej prawdziwy „§”.
 
 **0.6.68** (2026-10-26). Skany czytane przez OCR: numer pozycji listy zaczynający się od „5” albo „8” bywał brany
 za „§” odczytany jako cyfra, także gdy po nim zostawało „0”: lista leków 50–59 na jednej stronie dawała „§ 0. Bezafibratum”,
