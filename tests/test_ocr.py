@@ -348,6 +348,13 @@ class Scan(unittest.TestCase):
                 "259. Rozporządzenie Ministra Kolei Żelaznych z dnia 6 maja 1921 r. w sprawie przedłużenia terminu"]
         self.assertEqual(acts(page, 259), [(259, "259")])
         self.assertEqual(acts(page, 259, old=False), [])  # later issues as before
+        # the header of 1937-1938 as one line: positions first, the rest of the header after them (DU/1937/105 p. 6),
+        # or a rule read as a run of dashes between the name and the positions (p. 7): no text, the positions are the page's
+        body = ["§ 3. Tekst.", "§ 4. Tekst.", "Minister Skarbu: E. Kwiatkowski", "106", "Rozporządzenie Ministra"]
+        for head in ("Poz. 105 i 106 —— Dziennik Ustaw Nr 16 Str. 194",
+                     "Str. 195 Dziennik Ustaw Nr 16 -——————————-———_——__ Poz. 105 i 106"):
+            lines = _ocr_lines([head] + body, 1, 600, 840, 105, "scan", old=True)
+            self.assertEqual([(l.act, l.text) for l in lines], [(106 if p == "106" else 0, p) for p in body])
         # the type in capitals is enough without the header (DU/1930/111); a list item in ordinary case is not
         self.assertEqual(acts(["§ 3. Rozporządzenie wchodzi w życie.", "111. ROZPORZADZENIE RADY MINISTRÓW | z dnia 7 lutego"], 111),
                          [(111, "111")])

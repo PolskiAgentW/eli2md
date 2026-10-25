@@ -139,8 +139,14 @@ PREWAR_HEADER_OCR = re.compile(r"^(?:N[rReo]\.?\s*\d{1,3}[.,]?\s*)?(?:D\w{5,9}\s
 # the 1950s-1980s with the page number between ("Dziennik Ustaw Nr 25 | ps — 314 = Poz. 125 i 126", DU/1984/126)
 # and the page number with the positions only, the rest of the header read apart ("= 452° == Poz. 123 i", DU/1947/123)
 PAGE_POS_HEADER_OCR = re.compile(r"^[\W\d°]{0,15}P[oó0]z[.,]?\s*(\d{1,4}(?:\s*(?:i|,|\.|1|\|)?\s*\d{1,4})*)(?:\s*[i,.])?\W*$")
-PREWAR_HEADER_LOOSE_OCR = re.compile(r"^.{0,25}?D[\wć]{5,9}[.,]?\s*\W?\w{3,5}[.,]?.{0,24}?P[oó0]z[.,]?\s*"
+# Up to 40 characters between the name and "Poz.": the issue number and a rule read as a run of dashes ("Str. 195
+# Dziennik Ustaw Nr 16 -——————————-———_——__ Poz. 105", DU/1937/105 p. 7; up to 0.6.65 at most 24, the header stayed text).
+PREWAR_HEADER_LOOSE_OCR = re.compile(r"^.{0,25}?D[\wć]{5,9}[.,]?\s*\W?\w{3,5}[.,]?.{0,40}?P[oó0]z[.,]?\s*"
                                      r"(\d{1,4}(?:\s*(?:i|,|\.|1|\|)?\s*\d{1,4})*)[.,]?")
+# what the header line has after the positions when they come first: the rest of the header, not text ("Poz. 105 ——
+# Dziennik Ustaw Nr 16 Str. 194", DU/1937/105 p. 6; up to 0.6.65 "—— Dziennik Ustaw Nr 16 Str. 194" stayed a paragraph)
+PREWAR_HEADER_REST = re.compile(r"^(?:\s*(?:D\w{5,9}\s*U\w{3,4}[.,]?(?:\s*N[rReo]\.?\s*\d{1,3}[.,]?)?|Str[.,]?\s*\d{1,4}[.,]?"
+                                r"|[—–\-_~=|:;.,]+))+")
 PREWAR_HEADER_BIT = re.compile(r"N[rReo°]\.?\s*\d{1,3}[.,]?|\d{1,4}|Str\.?\s*\d{1,4}|D\w{5,9}\s*U\w{3,4}[.,]?\s*N[rReo]\.?\s*\d{1,3}[.,]?")
 PREWAR_ACT_NUMBER = re.compile(r"(\d{1,4})[.,]?")
 PREWAR_HEAD_NUMBER = re.compile(r"(\d{1,4})[.,]\s")
@@ -1599,7 +1605,7 @@ def _ocr_lines(paragraphs: list[str], pno: int, pw: float, ph: float, position: 
             if h := old and (PREWAR_HEADER_LOOSE_OCR.match(paragraphs[k].strip())
                              or PAGE_POS_HEADER_OCR.match(paragraphs[k].strip())) or PREWAR_HEADER_OCR.match(paragraphs[k].strip()):
                 on_page, from_header = {int(x) for x in re.findall(r"\d+", h.group(1))}, True
-                rest = paragraphs[k][h.end():].strip()
+                rest = PREWAR_HEADER_REST.sub("", paragraphs[k][h.end():], count=1).strip()
                 near = [p for p in paragraphs[:k] + paragraphs[k + 1: k + 3]
                         if PREWAR_HEADER_BIT.fullmatch(p.strip()) and not (p.strip().isdigit() and int(p) in on_page)]
                 paragraphs = [p for i, p in enumerate(paragraphs) if i != k and not (i < k + 3 and p in near)]

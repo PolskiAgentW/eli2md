@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.65, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.66, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,17 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.66** (2026-10-25). Dziennik Ustaw 1937–1938, strony czytane przez OCR: nagłówek strony ma tam numer strony („Str.
+194”) i bywa odczytany jako jedna linia z pozycjami na początku („Poz. 105 —— Dziennik Ustaw Nr 16 Str. 194”, DU/1937/105
+s. 6) albo z długą kreską między nazwą a pozycjami („Str. 195 Dziennik Ustaw Nr 16 -——————————-———_——__ Poz. 105”, s. 7).
+Do 0.6.65 w pierwszym wypadku reszta nagłówka po pozycjach zostawała akapitem, a w drugim nagłówek nie był rozpoznany:
+zostawał w tekście, a strona nie miała listy pozycji, od której zależy, gdzie zaczyna się akt (DU/1937/420: „Dziennik
+Ustaw Nr 53 Str. 978 420 ROZPORZĄDZENIE …” w jednym akapicie). A/B (te same PDF i odczyty OCR, 0.6.65 → 0.6.66) na 45
+aktach DU 1918–1989: 12 kontrolnych z OCR spoza tych lat — pliki identyczne; 33 z takim nagłówkiem (3 z największą liczbą
+nagłówków i 30 losowych ze 191) — nagłówków 107 → 43, bez nowych słów, z tym samym początkiem i końcem aktu; poza
+nagłówkami ubywa tylko kresek skanu i numeru strony odczytanego z błędem („$i. 1067”). Zostają nagłówki z „Poz.”
+odczytanym z błędem („Pz.”, „paź.”, „P oz.”), z szumem obok i dalej niż w 4 pierwszych akapitach strony.
 
 **0.6.65** (2026-10-25). Skany stron numerów do 2011 r. czytane przez OCR: w pasie nagłówka (górne 8% strony) OCR
 pomija teraz także linię drukarni („Korekta: 24.05.02”, „Zam. 1669 — łamanie 01.07.2005”) i nagłówek numeru odczytany
