@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.67, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.68, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,14 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.68** (2026-10-26). Skany czytane przez OCR: numer pozycji listy zaczynający się od „5” albo „8” bywał brany
+za „§” odczytany jako cyfra, także gdy po nim zostawało „0”: lista leków 50–59 na jednej stronie dawała „§ 0. Bezafibratum”,
+„§ 1. Biperidenum” … (DU/2007/205), a „504. Lisinoprilum” — „§ 04.” (DU/2001/1078). „§ 0.” nie istnieje, więc „50.”, „80.”,
+„504.” zostają numerem listy, tak jak cały ciąg numerów strony, który do takiej liczby dochodzi. A/B (te same PDF,
+0.6.67 → 0.6.68) na 51 aktach: 25 kontrolnych z OCR i nagłówkami „§” (DU 1918–2011, MP) — pliki identyczne; 26 z numerem
+listy wziętym za „§” — w 11 wraca numer listy („§ 0.” 13 → 0, zmieniają się tylko cyfry numerów), 15 bez zmian. Te 15
+to listy bez „50.”/„80.” na stronie („54. podkładki …”, „51. Metadane”): tam numer nadal bywa brany za „§”.
 
 **0.6.67** (2026-10-25). Ostatnia pozycja rocznika ma w winiecie gwiazdkę („Poz. 1317*)”) i przypis pod kreską na
 s. 1: „*) Ostatnia pozycja w 2025 r.”. To przypis winiety, nie aktu, ale do 0.6.66 trafiał na koniec tekstu aktu i do
