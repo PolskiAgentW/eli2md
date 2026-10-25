@@ -48,7 +48,7 @@ pdfplumber.page.PDFPageAggregatorWithMarkedContent = _PlacedTags  # looked up by
 
 RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
 # the running header of an issue of 2011 or earlier as a whole line ("Dziennik Ustaw Nr 97 — 5671 — Poz. 563")
-OLD_RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski) Nr \d+\s*[—–-]\s*\d+\s*[—–-]\s*Poz\.\s?\d+"
+OLD_RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski) N ?r \d+\s*[—–-]\s*\d+\s*[—–-]\s*Poz\.\s?\d+"
                                 r"(?:\s*(?:,|i)\s*\d+)*\s*$")
 # the printer's note over the header of a proof page ("Zam. 688 Korekta III: 17.12.01", DU/2001/1616; "Zam. 1034 Korekta
 # i Dołamanie: 29.06.04", DU/2004/1974)
@@ -119,8 +119,9 @@ SIGNATURE_NUMBER_OCR = re.compile(rf"({SIGNER_OCR}[\w ,—–-]{{2,90}}{SIGNER_N
 IMAGE_TEXT_CHARS = 30  # more text-layer chars than this over an image: the image is a background, not read by OCR
 # Dz.U. (and M.P.) up to 2011 came out in numbered issues: the page header names the issue ("Dziennik Ustaw Nr 150
 # — 9307 — Poz. 1255, 1256 i 1257", DU/2005/1255), the first page of an issue has "Nr 115" under the masthead
-# (DU/2002/994). Those years set acts in two columns; from 2012 there are no issues and one column.
-OLD_HEADER = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\s*\d+")
+# (DU/2002/994). Those years set acts in two columns; from 2012 there are no issues and one column. M.P. 2001-2002 set
+# "Nr" spaced out, read as "N r" ("Monitor Polski N r 43 — 1077 — Poz. 700", MP/2001/700 p. 2; up to 0.6.63 in the text).
+OLD_HEADER = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*N ?r\s*\d+")
 # The whole header as OCR reads it, page number and positions optional ("Monitor Polski Nr 26 — 1149 —")
 OLD_HEADER_OCR = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\s*\d+(?:\s*[—–-]+\s*\d+)?(?:\s*[—–-]+)?"
                             r"(?:\s*Poz[.,]?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?")

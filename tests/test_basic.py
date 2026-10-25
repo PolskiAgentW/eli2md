@@ -942,6 +942,10 @@ class Basic(unittest.TestCase):
             self.assertTrue(P.OLD_RUNNING_HEADER.match(t), t)
         for t in ("Dziennik Ustaw Nr 97, poz. 563", "Dziennik Ustaw Nr 97 — 5682 — Poz. 563 1 2 3 4 5"):
             self.assertFalse(P.OLD_RUNNING_HEADER.match(t), t)
+        # M.P. 2001-2002: "Nr" spaced out, read as "N r" (MP/2001/700 p. 2)
+        self.assertTrue(P.OLD_RUNNING_HEADER.match("Monitor Polski N r 43 — 1077 — Poz. 700"))
+        self.assertTrue(P.OLD_HEADER.match("Monitor Polski N r 43 — 1077 — Poz. 700"))
+        self.assertFalse(P.OLD_HEADER.match("Monitor Polski N 43"))
         # the printer's note over the header of a proof page (DU/2001/1616, DU/2004/1974)
         for t in ("Zam. 688 Korekta III: 17.12.01", "Zam. 1034 Korekta i Dołamanie: 29.06.04"):
             self.assertTrue(P.PROOF_NOTE.match(t), t)
@@ -959,7 +963,8 @@ class Basic(unittest.TestCase):
 
     def test_old_header_under_printer_line_and_on_unmapped_page(self):
         # convert drops a printer's line over the header with the header (DU/2002/595: "Korekta: 24.05.02"), and the
-        # header from the text layer of a page of glyphs without Unicode that OCR does not read (MP/2011/424 p. 176)
+        # header from the text layer of a page of glyphs without Unicode that OCR does not read (MP/2011/424 p. 176), also
+        # with "Nr" read as "N r" (MP/2001/700)
         from eli2md import pdf as P
 
         def line(pno, top, text):
@@ -967,7 +972,8 @@ class Basic(unittest.TestCase):
         pages = {1: [line(1, 50, "Poz. 595"), line(1, 80, "ROZPORZĄDZENIE MINISTRA FINANSÓW"), line(1, 100, "§ 1. Tekst.")],
                  2: [line(2, 29, "Korekta: 24.05.02"), line(2, 52, "Dziennik Ustaw Nr 65 — 4646 — Poz. 595"),
                      line(2, 80, "§ 2. Dalszy tekst.")],
-                 3: [line(3, 52, "Dziennik Ustaw Nr 65 — 4647 — Poz. 595"), line(3, 80, "Załącznik nr 2")]}
+                 3: [line(3, 52, "Dziennik Ustaw Nr 65 — 4647 — Poz. 595"), line(3, 80, "Załącznik nr 2")],
+                 4: [line(4, 52, "Dziennik Ustaw N r 65 — 4648 — Poz. 595"), line(4, 80, "§ 3. Koniec.")]}
         pdf = mock.MagicMock()
         pdf.__enter__.return_value.pages = [mock.Mock(pno=k, width=595.0, height=842.0) for k in pages]
         with tempfile.NamedTemporaryFile(suffix=".pdf") as f, \
@@ -976,10 +982,11 @@ class Basic(unittest.TestCase):
                 mock.patch.object(P, "_unmapped_share", side_effect=lambda page: 0.5 if page.pno == 3 else 0.0), \
                 mock.patch.object(P, "_large_image", return_value=None):
             text = "\n".join(b.text for b in P.convert(f.name).blocks)
-        self.assertNotIn("Dziennik Ustaw Nr 65", text)
+        self.assertNotIn("Dziennik Ustaw N", text)
         self.assertNotIn("Korekta", text)
         self.assertIn("§ 2. Dalszy tekst.", text)
         self.assertIn("Załącznik nr 2", text)
+        self.assertIn("§ 3. Koniec.", text)  # and the header spaced out as in M.P. 2001-2002 ("N r") is gone too
 
     def test_two_column_footnotes(self):
         # InDesign (DU/2011/1170 p. 2): a 70 pt line at the right column's edge, footnotes (8.5 pt) under it in that

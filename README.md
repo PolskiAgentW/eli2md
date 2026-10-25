@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.63, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.64, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,19 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.64** (2026-10-25). M.P. 2001–2002: „Nr” w nagłówku strony jest tam złożone z odstępem i warstwa tekstowa daje „N
+r” („Monitor Polski N r 43 — 1077 — Poz. 700”). Taki nagłówek nie był rozpoznawany, a od niego zależy, czy strona należy
+do numeru do 2011 r. Skutki do 0.6.63 na takich stronach: nagłówek zostawał w tekście, strona w dwóch łamach była
+czytana w poprzek („na podstawie Praw Dziecka, wyraża zgodę na powołanie PAWŁA art.4 ust. 1…”), a akt nie był wycinany
+ze strony, którą dzieli z innymi pozycjami (plik MP/2001/111 miał też teksty poz. 109, 110 i 112). Teraz „N r” liczy się
+jak „Nr”. A/B (te same PDF, 0.6.63 → 0.6.64) na 39 aktach M.P. 2001–2002: 6 kontrolnych bez takiego nagłówka — pliki
+identyczne; 33 z nim (3 najdłuższe i 30 losowych z 336): nagłówków 290 → 0. W 32 z 33 nowy tekst nie ma znaków, których
+nie było w starym (poza znacznikami Markdown: „Art. 1.” i „§ 1.” bywają teraz jednostkami); ubywa tekstu sąsiednich
+pozycji, a łamy idą w kolejności. Obejrzane od początku do końca: MP/2001/111, 173, 466, 516 — każdy ma tylko własny
+tytuł, treść i podpis. W MP/2001/569 strony 3–49, których warstwa tekstowa ma tylko nagłówek, a reszta jest skanem, są
+teraz czytane przez OCR (jak w 0.6.63). Inne zbiory się nie zmieniają: „N r” po nazwie dziennika jest w warstwie
+tekstowej tylko w nagłówkach M.P. 2001–2002.
 
 **0.6.63** (2026-10-25). Numery do 2011 r., ciąg dalszy 0.6.62: trzy miejsca, w których nagłówek strony zostawał w
 tekście. (1) Nad nagłówkiem stoi inna linia drukarni niż notka z 0.6.62: notka w innym brzmieniu („Korekta: 24.05.02”,
