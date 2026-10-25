@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.66, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.67, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,14 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.67** (2026-10-25). Ostatnia pozycja rocznika ma w winiecie gwiazdkę („Poz. 1317*)”) i przypis pod kreską na
+s. 1: „*) Ostatnia pozycja w 2025 r.”. To przypis winiety, nie aktu, ale do 0.6.66 trafiał na koniec tekstu aktu i do
+ostatniej jednostki w drzewie (MP/2025/1317: załącznik, pkt 10; DU/2025/1900: art. 93). Teraz, gdy w końcu winiety jest
+„*”, ta linia (też „* )” i po kresce „____”) idzie do winiety. A/B (te same PDF, 0.6.66 → 0.6.67) na 56 aktach z lat
+2012–2026: 40 kontrolnych (20 DU, 20 MP, losowe) — pliki identyczne; 16 z tym przypisem (14 MP 2012–2025, DU/2021/2507,
+DU/2025/1900) — przypis znika z tekstu i z drzewa, poza jego słowami nic nie ubywa ani nie przybywa. Te same 40
+kontrolnych z 0.6.61 i z 0.6.66 różnią się tylko numerem wersji w metadanych.
 
 **0.6.66** (2026-10-25). Dziennik Ustaw 1937–1938, strony czytane przez OCR: nagłówek strony ma tam numer strony („Str.
 194”) i bywa odczytany jako jedna linia z pozycjami na początku („Poz. 105 —— Dziennik Ustaw Nr 16 Str. 194”, DU/1937/105
