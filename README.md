@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.64, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.65, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,20 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.65** (2026-10-25). Skany stron numerów do 2011 r. czytane przez OCR: w pasie nagłówka (górne 8% strony) OCR
+pomija teraz także linię drukarni („Korekta: 24.05.02”, „Zam. 1669 — łamanie 01.07.2005”) i nagłówek numeru odczytany
+bez numeru strony i pozycji („Dziennik Ustaw Nr 65”). Do 0.6.64 zostawały one w tekście jako osobne akapity: ucięty
+nagłówek głównie w DU 1918–1989, linia drukarni na stronach czytanych od 0.6.63 przez OCR, bo ich warstwa tekstowa ma
+tylko nagłówek (DU/2002/595 s. 33). A/B (te same PDF i odczyty OCR, 0.6.64 → 0.6.65) na 46 aktach: 12 kontrolnych bez
+takich akapitów — 11 plików identycznych, w DU/2000/114 dwie granice akapitu są w innym miejscu (słowa te same; nagłówek,
+który 0.6.64 usuwał dopiero później, zmieniał typowy odstęp między liniami strony); 20 losowych z uciętym nagłówkiem
+w opublikowanym pliku — w 18 ubywa tylko nagłówków, bez nowych słów i z tym samym końcem aktu, DU/2002/1311 nie miał go
+już w 0.6.64, a po jednym nagłówku zostaje w DU/1969/22 (OCR odczytał „Dziennik Ustąw”), DU/1937/267 (leży tuż pod
+pasem) i DU/1955/182 („; Dziennik Ustaw Nr 30 ; — 307 —”); 14 ze stronami czytanymi przez OCR od 0.6.63 — linii drukarni 36 → 1 (w DU/2005/1444 ta
+jedna jest w warstwie tekstowej s. 122–123), uciętych nagłówków 2 → 0, a w DU/2005/1679 wraca numer punktu „3.5” (s. 196),
+który 0.6.64 gubił razem z nagłówkiem. W opublikowanych plikach aktów od 2012 r. takich akapitów nie było (od 2012 r.
+nagłówek strony nie ma numeru dziennika).
 
 **0.6.64** (2026-10-25). M.P. 2001–2002: „Nr” w nagłówku strony jest tam złożone z odstępem i warstwa tekstowa daje „N
 r” („Monitor Polski N r 43 — 1077 — Poz. 700”). Taki nagłówek nie był rozpoznawany, a od niego zależy, czy strona należy
