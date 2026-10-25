@@ -310,6 +310,11 @@ class Scan(unittest.TestCase):
         self.assertEqual(_fix_section_sign("80. Malezja,", countries), "80. Malezja,")
         self.assertEqual(_fix_section_sign("82. Malta,", countries), "82. Malta,")
         self.assertEqual(_fix_section_sign("50. PN-T-83020:1996 Ochronnik", {49, 50, 51}), "50. PN-T-83020:1996 Ochronnik")
+        # "§ 0." does not exist: "50." is a list's number, and so is a run reaching it (drug list 50–59, DU/2007/205)
+        drugs = {50, 51, 52, 53}
+        self.assertEqual(_fix_section_sign("50. Bezafibratum", drugs), "50. Bezafibratum")
+        self.assertEqual(_fix_section_sign("53. Brinzolamidum", drugs), "53. Brinzolamidum")
+        self.assertEqual(_fix_section_sign("504. Lisinoprilum"), "504. Lisinoprilum")
         # without a chain to a number that cannot be a glued "§" it stays a paragraph, also in a run of them
         self.assertEqual(_fix_section_sign("81. 1. Ustala się kategorie", {81, 82, 83}), "§ 1. 1. Ustala się kategorie")
         self.assertEqual(_fix_section_sign("85. 1. Kuchnie", {84, 85, 86}), "§ 5. 1. Kuchnie")

@@ -1567,15 +1567,24 @@ def _numbered(paragraphs: list[str]) -> set[int]:
     return {int(m.group(1)) for p in paragraphs if (m := NUMBERED_OCR.match(p.strip()))}
 
 
+def _not_glued(k: int) -> bool:
+    """`k` cannot be a glued "§ N.": not starting with "8"/"5" (79, 49, 90) or leaving a "§ 0."/"§ 04." ("50.", "804.")."""
+    return k < 10 or str(k)[0] not in "85" or str(k)[1] == "0"
+
+
 def _list_item(t: str, numbered: set[int]) -> bool:
-    """`t` starts with a glued "8N." or "5N." that continues a numbered list of its page, not with "§ N."."""
+    """`t` starts with a glued "8N." or "5N." that continues a numbered list of its page, not with "§ N.". "50." itself
+    and a chain to it count too: a drug list of 50–59 on one page became "§ 0. Bezafibratum", "§ 1. Biperidenum" …
+    (DU/2007/205)."""
     if not (m := GLUED_NUMBER_OCR.match(t)):
         return False
     n = int(m.group(1))
+    if _not_glued(n):
+        return True
     for step in (-1, 1):
         k = n + step
         while k in numbered:
-            if k < 10 or str(k)[0] not in "85":
+            if _not_glued(k):
                 return True
             k += step
     return False
