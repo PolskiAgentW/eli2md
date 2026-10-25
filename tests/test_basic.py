@@ -922,6 +922,31 @@ class Basic(unittest.TestCase):
         self.assertEqual(body[1].text, "1. Minister Finansów 100 zł Treść komórki")
         self.assertEqual({l.col for l in body}, {0})
 
+    def test_old_header_of_rotated_page(self):
+        # a page with a rotated table is read in the rotated frame first; the upright running header of its issue is
+        # in the next frame and is not text of the act (DU/2011/563 p. 2: 42 headers in the text up to 0.6.61)
+        from eli2md import pdf as P
+        r = self._row
+        rotated = r("1 2 3 4 5", 60, 400, 100) + r("Stwierdzono niezgodność", 60, 177, 112)
+        upright = r("Dziennik Ustaw Nr 97 — 5669 — Poz. 563", 38, 557, 49) + r("Załącznik nr 2", 38, 108, 70)
+        page = mock.Mock(chars=[])
+        with mock.patch.object(P, "_frames", return_value=[(rotated, 842, 595, []), (upright, 595, 842, [])]), \
+                mock.patch.object(P, "_single_glyphs", side_effect=lambda p: p), \
+                mock.patch.object(P, "_drop_watermark", side_effect=lambda p: p), \
+                mock.patch.object(P, "_drop_hidden_placed", side_effect=lambda p: p), \
+                mock.patch.object(P, "_drop_soft_hyphens", side_effect=lambda p: p):
+            body, _ = P._page_lines(page, 2)
+        self.assertEqual([l.text for l in body], ["1 2 3 4 5", "Stwierdzono niezgodność", "Załącznik nr 2"])
+        for t in ("Dziennik Ustaw Nr 97 — 5669 — Poz. 563", "Monitor Polski Nr 56 — 4643 — Poz. 567",
+                  "Dziennik Ustaw Nr 214 — 13516 — Poz.1814", "Dziennik Ustaw Nr 144 — 11467 — Poz. 1615 i 1616"):
+            self.assertTrue(P.OLD_RUNNING_HEADER.match(t), t)
+        for t in ("Dziennik Ustaw Nr 97, poz. 563", "Dziennik Ustaw Nr 97 — 5682 — Poz. 563 1 2 3 4 5"):
+            self.assertFalse(P.OLD_RUNNING_HEADER.match(t), t)
+        # the printer's note over the header of a proof page (DU/2001/1616, DU/2004/1974)
+        for t in ("Zam. 688 Korekta III: 17.12.01", "Zam. 1034 Korekta i Dołamanie: 29.06.04"):
+            self.assertTrue(P.PROOF_NOTE.match(t), t)
+        self.assertFalse(P.PROOF_NOTE.match("Zam. 688 Korekta III: 17.12.01 Dziennik Ustaw Nr 144"))
+
     def test_two_column_footnotes(self):
         # InDesign (DU/2011/1170 p. 2): a 70 pt line at the right column's edge, footnotes (8.5 pt) under it in that
         # column while the left column goes on; Quark (DU/2009/1323 p. 1): a row "———————" in the left column and

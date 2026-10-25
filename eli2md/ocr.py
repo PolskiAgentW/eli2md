@@ -30,7 +30,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-from .pdf import COLOPHON, UNIT_START
+from .pdf import COLOPHON, PROOF_NOTE, UNIT_START
 
 DPI = 300
 OCR_UNIT = re.compile(r"^(Artykuł|ARTYKUŁ|Article|ARTICLE|Artigo|ARTIGO|Άρθρο|Ustęp|Section|Rozdział|ROZDZIAŁ|"
@@ -40,6 +40,10 @@ BASE_LANG = "pol+eng"  # first pass of "auto"; must be installed
 # a header line (or its pieces) at the top of the page: "Dziennik Ustaw — 58 — Poz. 975", "— 58 —"
 OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw|Monitor\s*Polski)?[\s\-–—.,|\d]*(Poz\.?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?$", re.I)
 HEADER_BAND = 0.08  # share of the page height where the gazette header sits
+# the header of an issue of 2011 or earlier as a whole OCR line, wherever the page puts it: a rotated page or a map
+# (DU/2008/1149, DU/2001/277; "Dziennik Ustaw Nr144 — 11476 — Poz. 1616")
+OLD_HEADER_LINE = re.compile(r"^(?:Dziennik\s*Ustaw|Monitor\s*Polski)\s*Nr\.?\s*\d+\s*[—–-]+\s*\d+\s*[—–-]+\s*Poz\.?\s*\d+"
+                             r"(?:\s*(?:i|,)\s*\d+)*\.?$")
 MIN_WORDS, MIN_CONF = 20, 80.0  # below either, the page keeps only the note (eval/ocr_eval_scans_*.txt)
 # seconds per tesseract call. Pages take ~2 s, but a guilloche background (DU/2026/14 p19, excise
 # stamp form) kept tesseract busy for over 10 minutes; such a page keeps only the note.
@@ -206,7 +210,8 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
         text = " ".join(w[2] for w in words)
         top, bottom = min(w[0] for w in words), max(w[1] for w in words)
         if top < band * height and (
-                OCR_HEADER.match(text) or (len(words) <= 8 and str(page_number) in re.findall(r"\d+", text))):
+                OCR_HEADER.match(text) or (len(words) <= 8 and str(page_number) in re.findall(r"\d+", text))) \
+                or OLD_HEADER_LINE.match(text) or PROOF_NOTE.match(text):
             continue
         confs += [w[3] for w in words]
         page.line_widths.append(max(w[5] for w in words) - min(w[4] for w in words))

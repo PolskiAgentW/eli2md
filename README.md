@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.61, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.62, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,22 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.62** (2026-10-25). PDF i OCR numerów do 2011 r.: nagłówek strony („Dziennik Ustaw Nr 97 — 5671 — Poz. 563”)
+i notka drukarni nad nim („Zam. 688 Korekta III: 17.12.01”) nie trafiają do tekstu. (1) Strona z obróconą tabelą jest
+czytana najpierw w obróconym układzie, a poziomy nagłówek trafiał do drugiego układu, w którym usuwany był tylko nagłówek
+numerów od 2012 r. (bez „Nr”). (2) Notka drukarni nad nagłówkiem była pierwszym wierszem strony, więc nagłówek, drugi,
+zostawał (DU/2001/1616, DU/2004/1974). (3) W tekście z OCR nagłówek z „Nr” był usuwany tylko w górnym pasie strony, a na
+stronie obróconej albo z mapą stoi gdzie indziej (DU/2008/1149). Teraz taki wiersz, cały, jest pomijany w każdym miejscu
+strony. Przykłady: DU/2011/563 miał 42 nagłówki w tekście, DU/2007/535 66, DU/2010/806 32. A/B (te same PDF, 0.6.61 →
+0.6.62) na 37 aktach z nagłówkiem w tekście (30 losowych z 1276 aktów zbiorów 1990–2011 o ≤ 200 stronach i 7 obejrzanych
+wcześniej): nagłówków 292 → 0, notek 54 → 0. W 34 aktach znikają tylko słowa nagłówków i notek. W 3 zmienia się też
+tekst stron: w DU/2001/1616 12 stron, na których warstwa tekstowa miała tylko notkę i nagłówek, a reszta strony jest
+obrazem, jest teraz czytanych przez OCR jak inne takie strony (zamiast notatki o obrazie). W DU/2002/1223 i DU/2008/1149
+strona tabeli albo mapy bez wiersza nagłówka ma niższą pewność OCR i jest czytana drugi raz z podaną rozdzielczością
+(jak od 0.6.20), co tam daje inny, czytelniejszy odczyt („sa game = poms = em Z” → „5 | Dzierzkowice-Zastawie 6 |
+Krzywię 7 | Sosnowa Wola”). Akty od 2012 r. się nie zmieniają: w żadnym z 25 485 plików zbiorów DU i M.P. od 2012 r.
+nie ma takiego wiersza.
 
 **0.6.61** (2026-10-20). PDF: oznaczenie jednostki z odnośnikiem na początku wiersza. Wiersz „d)[^22] przychodów…”
 (odnośnik tuż za oznaczeniem, bez spacji) nie był rozpoznawany jako początek punktu, litery ani ustępu. Na początku

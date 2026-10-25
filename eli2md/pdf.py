@@ -47,6 +47,12 @@ class _PlacedTags(pdfplumber.page.PDFPageAggregatorWithMarkedContent):
 pdfplumber.page.PDFPageAggregatorWithMarkedContent = _PlacedTags  # looked up by Page when it parses a page
 
 RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski)\s*[–-]\s*\d+\s*[–-]\s*Poz\.\s*\d+\s*$")
+# the running header of an issue of 2011 or earlier as a whole line ("Dziennik Ustaw Nr 97 — 5671 — Poz. 563")
+OLD_RUNNING_HEADER = re.compile(r"^(?:Dziennik Ustaw|Monitor Polski) Nr \d+\s*[—–-]\s*\d+\s*[—–-]\s*Poz\.\s?\d+"
+                                r"(?:\s*(?:,|i)\s*\d+)*\s*$")
+# the printer's note over the header of a proof page ("Zam. 688 Korekta III: 17.12.01", DU/2001/1616; "Zam. 1034 Korekta
+# i Dołamanie: 29.06.04", DU/2004/1974)
+PROOF_NOTE = re.compile(r"^Zam\.\s*\d+\s+Korekta\b.{0,30}:\s*\d{1,2}\.\d{1,2}\.\d{2}\s*$")
 # "Pozycja 19": MP 2012 up to poz. 130; ") Poz. 1024*": the last act of a year has a note "*) Ostatnia pozycja"
 MASTHEAD_END = re.compile(r"^[*)\s]*Poz(?:\.|ycja)\s*\d+[*)\s]*$")
 SUP_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"  # unit numbers may carry them: Art. 41¹., 5²)
@@ -617,8 +623,8 @@ def _page_lines(page, pno: int, gut: dict | None = None) -> tuple[list[Line], li
     _mac_pl(page)
     for k, (words, fw, fh, rects) in enumerate(_frames(_drop_soft_hyphens(_drop_hidden_placed(_drop_watermark(_single_glyphs(page)))))):
         b, n = _frame_lines(words, fw, fh, rects, pno, gut)
-        if k > 0:
-            b = [l for l in b if not RUNNING_HEADER.match(l.text)]
+        if k > 0:  # the upright header of a page whose table is rotated (DU/2011/563 p. 2)
+            b = [l for l in b if not (RUNNING_HEADER.match(l.text) or OLD_RUNNING_HEADER.match(l.text))]
         body += b
         notes += n
     return body, notes
@@ -1733,6 +1739,8 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
             scan = bool(ocr) and (_hidden_ocr_scan(page) or scanned and not page.chars
                                   and _large_image(page, min_share=0.8) is not None)
             b, n = ([], []) if scan else _page_lines(page, pno, gut)
+            if b and PROOF_NOTE.match(b[0].text):
+                b = b[1:]
             layer = None  # text layer of a page mostly of glyphs without Unicode (forms, DU/2025/161): OCR first
             if _unmapped_share(page) > 0.1:
                 layer, b, n = (b, n), [], []

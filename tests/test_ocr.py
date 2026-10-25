@@ -80,6 +80,14 @@ class Ocr(unittest.TestCase):
                                   (2, 1, 1, 2000, 90, "12")]), 3508)
         self.assertEqual(page.paragraphs, ["12"])
 
+    def test_old_header_anywhere(self):
+        # the header of an old issue read low on a rotated page or a map (DU/2008/1149) and the printer's note over the
+        # header of a proof page (DU/2001/1616) are not text; a line that only starts like the header is
+        w = [(1, 1, 1, 150, 90, t) for t in "Zam. 688 Korekta III: 17.12.01".split()]
+        w += [(2, 1, 1, 1800, 90, t) for t in "Dziennik Ustaw Nr144 — 10062 — Poz. 1149".split()]
+        w += [(3, 1, 1, 2400, 90, t) for t in "Dziennik Ustaw Nr 186, poz. 1149".split()]
+        self.assertEqual(ocr.parse_tsv(tsv(w), 3508).paragraphs, ["Dziennik Ustaw Nr 186, poz. 1149"])
+
     def test_usable(self):
         self.assertFalse(ocr.usable(ocr.OcrPage(["a"], words=5, confidence=95)))
         self.assertFalse(ocr.usable(ocr.OcrPage(["a"], words=500, confidence=30)))
