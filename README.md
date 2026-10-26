@@ -243,13 +243,16 @@ zmienia już odstępu między wierszami. Wyraz przeniesiony przez stronę zostaj
 strony | „nieniu”, DU/1947/89), teraz bez numeru między częściami. Strona skanu, z której do aktu trafiał tylko numer
 strony (ostatnia, DU/1990/213 s. 3), nie ma już notki i nie liczy się do `pages_ocr` i `pages_without_text` (6 aktów DU
 1918–1989 i 22 DU 1990–1999 z A/B). Zostają kawałki nagłówka z „=” i numerem pozycji („= Poz. 283”, jak w 0.6.71) i
-część wierszy-numerów (przyczyn tych 36 i 38 nie sprawdzałem). Kontrolne akty bez takiego wiersza (60 DU 1918–1989, 60
-DU 1990–1999, 61 DU 2000–2011): bez zmian poza 2 w DU 1990–1999 (numer strony spoza wzorca pomiaru, zdjęty) i 1 w DU
-2000–2011 (tylko spacja na końcu wiersza). Zmiana (3) na 95 aktach DU 1918–1989, w których 0.6.71 mogła wyciąć tekst
-aktu (zbiór zostawił dla nich plik sprzed 0.6.71): tekst wraca w 4 (DU/1934/853, 1935/416, 1965/119, 1968/28; stopka
-zostaje w tekście), w 2 ubył tylko numer strony, 89 bez zmian (bez znaków z (3), cięte jak w 0.6.71). Inne akty
-opublikowane z 0.6.71 (296 DU 1918–1989, 136 DU 1990–1999): zmieniły się 2 i 3, ubyły tylko numery stron i kawałki
-nagłówka.
+część wierszy-numerów: w DU 1918–1989 (36) głównie pierwszy wiersz strony skanu niżej niż 8% wysokości (załącznik z
+własną numeracją, DU/1932/732) oraz wartości tabel taryf w tej samej postaci („— 15—”, DU/1919/422); w DU 1990–1999 (38)
+głównie strony obrócone, na których OCR czyta nagłówek do góry nogami („97L AN MEJSM] AlUUsBIZQ]” to „Dziennik Ustaw Nr
+126”, numer strony wspak, DU/1998/949: 33 wiersze); w DU 2000–2011 (10) numeracja załączników poza nagłówkiem. Kontrolne
+akty bez takiego wiersza (60 DU 1918–1989, 60 DU 1990–1999, 61 DU 2000–2011): bez zmian poza 2 w DU 1990–1999 (numer
+strony spoza wzorca pomiaru, zdjęty) i 1 w DU 2000–2011 (tylko spacja na końcu wiersza). Zmiana (3) na 95 aktach DU
+1918–1989, w których 0.6.71 mogła wyciąć tekst aktu (zbiór zostawił dla nich plik sprzed 0.6.71): tekst wraca w 4
+(DU/1934/853, 1935/416, 1965/119, 1968/28; stopka zostaje w tekście), w 2 ubył tylko numer strony, 89 bez zmian (bez
+znaków z (3), cięte jak w 0.6.71). Inne akty opublikowane z 0.6.71 (296 DU 1918–1989, 136 DU 1990–1999): zmieniły się 2
+i 3, ubyły tylko numery stron i kawałki nagłówka.
 
 **0.6.71** (2026-10-26). Stopka zeszytu w skanach bez ISSN. Ostatnia strona zeszytu kończy się stopką wydawcy: kto
 drukował, cena, gdzie kupić i reklamować („Warszawa. Tłoczono w Drukarni Państwowej… Cena 25 gr”, DU/1925/876;
