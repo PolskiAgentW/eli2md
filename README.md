@@ -235,10 +235,12 @@ a nie „Cena 5 zł” czy „Wydawca:”, które mogą być w taryfie albo wzor
 wcześniejszego z dwóch miejsc, więc znika też ogłoszenie dla prenumeratorów nad kolofonem (DU/1991/456).
 A/B (0.6.70 → 0.6.71, te same PDF i odczyty OCR): na 199 aktach DU 1918–1989 i 83 DU 1990–1999 ze stopką
 w tekście zmienia się 163 i 76; każde wycięcie zaczyna się od stopki, podpis zostaje, jednostki drzewa bez zmian poza
-DU/1993/365 (bez ogłoszenia pod spodem drzewo czyta trzy punkty ust. 5). Na 535 aktach kontrolnych (DU 1918–1989 300,
+DU/1993/365: tam ogłoszenie wydawcy zaczyna się już na przedostatniej stronie, której reguła nie tnie, i trzy jego punkty
+(„1) bilans…”) drzewo czyta teraz jako punkty ostatniego ustępu aktu. Na 535 aktach kontrolnych (DU 1918–1989 300,
 1990–1999 100, 2000–2011 49, 2012+ z OCR 86) zmieniły się 2, w obu to stopka, której wzorzec pomiaru nie znał
 (DU/1950/18 „Lena 96 zł”, DU/1990/359). Zostaje stopka: gdy OCR nie odczytał podpisu, gdy stoi w jednym akapicie
-z podpisem albo w środku zeszytu przed jego załącznikiem, i na stronach z warstwą tekstową (DU 2000–2011: 16 aktów).
+z podpisem albo w środku zeszytu przed jego załącznikiem, gdy zaczyna się na przedostatniej stronie, i na stronach
+z warstwą tekstową (DU 2000–2011: 16 aktów).
 
 **0.6.70** (2026-10-26). Drzewo JSON: nagłówek z liczebnikiem słownym pisanym małymi literami, stojący jako osobny
 akapit („Rozdział pierwszy”, „Część druga”, „Dział trzeci.”, „Oddział pierwszy.”), jest węzłem `heading`. Od 0.6.50
