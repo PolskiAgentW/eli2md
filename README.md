@@ -4,10 +4,9 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.72, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.73, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
-> Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze). Do aktów od 2012 r. lepiej
-> używać 0.6.70 (znana wada 0.6.72: łączenie akapitów przez stronę, opis przy 0.6.72).
+> Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
 ## Po co
 
@@ -223,6 +222,23 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
 
+**0.6.73** (2026-10-26). Akapity nie łączą się przez stronę po zdjętym numerze strony (wada 0.6.72). W tekście
+z warstwy tekstowej PDF (akty od 2012 r.) między stronami nie ma notki strony, a wiersz z samym numerem strony u góry
+(zwykle numeracja załącznika, „– 2 –”), który 0.6.72 zdejmuje, był jedyną przegrodą: 0.6.72 łączyła ostatni akapit
+strony z pierwszym akapitem następnej, także wiersze tabel i nagłówki. Teraz po takim numerze zaczyna się nowy akapit,
+chyba że to ciąg zdania: wiersz na końcu strony kończy się wyrazem (może z przecinkiem albo dywizem), a następny zaczyna
+się małą literą („dążenia do zmniejszania nierówności w zdrowiu”, MP/2018/6). Ciąg zdania zaczynający się na nowej
+stronie inaczej („… ochrony zdrowia” | „(brak integracji …”, MP/2018/6) zostaje osobnym akapitem, jak do 0.6.70.
+A/B (te same PDF): na 29 aktach DU i MP od 2012 r. z takim wierszem 0.6.72 → 0.6.73 rozdziela 29 z 35 złączeń
+(9 aktów); zostaje 6 (MP/2018/6: 3 zdania, DU/2025/1836: 3 razy tekst komórki tabeli przez stronę). Wobec 0.6.70
+(wersja, którą do 0.6.73 były konwertowane nowe akty zbiorów od 2012 r.): ciąg słów bez zmian poza numerami stron, te same akapity poza tymi
+6 złączeniami, a w drzewie JSON 3 aktów znikają 4 węzły `tir`, którymi był numer strony („– 2 –” czytane jako tiret
+„2 –”, DU/2021/2474). 120 aktów kontrolnych bez zmian.
+Na aktach zbiorów 1918–2011 z A/B 0.6.72 (1794: z wierszem-numerem, kontrolne i inne opublikowane z 0.6.71–0.6.72)
+0.6.72 → 0.6.73 zmienia 3: stopka wydawcy na ostatniej stronie zeszytu („… www.wydawnictwa.cokprm.gov.pl” | „CENTRUM OBSŁUGI KANCELARII PREZESA
+RADY MINISTRÓW …”, MP/2010/1130; DU/2010/1522, DU/2011/1763) znów jest kilkoma akapitami, jak w 0.6.71; ciąg słów
+i jednostki bez zmian.
+
 **0.6.72** (2026-10-26). Numer strony jako osobny wiersz tekstu i poprawka wady 0.6.71.
 (1) Strona, na której nagłówek zeszytu jest w obrazie strony, ma w warstwie tekstowej sam numer strony („— 9511 —”,
 DU/2004/1453 s. 3, załącznik zeskanowany pod nagłówkiem). Filtr nagłówka zdejmował tylko cały wiersz „Dziennik Ustaw
@@ -264,8 +280,8 @@ artykułów…”, DU/2021/2474; „27 Heksafluorek siarki 47,58 28 Kadm 300,47�
 rok SPIS TREŚCI”, DU/2025/1057). Na 29 aktach z takim wierszem (14 DU, 15 MP): 35 złączeń w 10 aktach; 28 z nich łączy
 akapit zaczynający się wielką literą albo cyfrą (nowy wiersz tabeli, punkt, nagłówek), część pozostałych to zdanie
 ciągnięte przez stronę („dążenia do zmniejszania nierówności w zdrowiu”, MP/2018/6). Ciąg słów bez zmian poza numerami
-stron; 120 aktów kontrolnych bez zmian. Do aktów od 2012 r. lepiej używać 0.6.70: zbiory DU i MP od 2012 r. są
-konwertowane tą wersją. W zbiorach 1918–2011 strony skanów mają notki, a to samo porównanie na aktach z A/B tej wersji
+stron; 120 aktów kontrolnych bez zmian. Poprawione w 0.6.73 (opis wyżej); do tego czasu do aktów od 2012 r. lepiej
+było używać 0.6.70. W zbiorach 1918–2011 strony skanów mają notki, a to samo porównanie na aktach z A/B tej wersji
 (0.6.71 → 0.6.72, 1794 akty) daje 7 złączeń w 6 aktach (4 to stopka wydawcy po adresie strony internetowej, DU/2011/1763).
 
 **0.6.71** (2026-10-26). Stopka zeszytu w skanach bez ISSN. Ostatnia strona zeszytu kończy się stopką wydawcy: kto
