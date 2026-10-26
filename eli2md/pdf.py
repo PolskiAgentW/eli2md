@@ -1191,6 +1191,7 @@ COLOPHON = re.compile(r"^(?:Wydawca\s*:|Szanowni\s+Państwo(?:!|$)|Egzemplarze\s
                       r"|Informacja\s+o\s*możliwości\s+zakupu\s+wydawnictw|Tłoczono\s+z\s+polecenia)")
 ISSN = re.compile(r"\bISSN\s*\d{4}\s*-\s*\d{3}[\dX]\b")
 BARE_PAGE_NUMBER = re.compile(r"^[—–-]\s*\d+\s*[—–-]$")
+PAGE_NUMBER_BAND = 0.08  # share of the page height where the header and its page number sit (as ocr.HEADER_BAND)
 # A scan of 1989 or earlier has no ISSN in its colophon: who printed it, the price, where to buy and complain
 # ("Warszawa. Tłoczono w Drukarni Państwowej z polecenia Ministra Sprawiedliwości. … Cena 25 gr", DU/1925/876;
 # "Reklamacje z powodu niedoręczenia …", "Redakcja: Urząd Rady Ministrów …", "Zam. 1420", "Cena 0,50 zł",
@@ -1219,6 +1220,11 @@ COLOPHON_PUBLISHER = re.compile(r"PRENUMERATORZY|P\.\s*T\.\s*Prenumerator|Prenum
                                 r"|Redakcja\s*:\s*Urząd\s+Rady|OD\s+ADMINISTRACJI|Opłata\s+za\s+prenumeratę"
                                 r"|Szanowni\s+Państwo\W{0,3}(?:Prenumerator|WYDZIAŁ)|nadesłanego\s+zamówienia\s+w\s+Wydziale"
                                 r"|Wydawca\s*:\s*(?:Kancelaria|Urząd)|WYDZIAŁ\s+WYDAWNICTW|Wydział\s+Wydawnictw\b.{0,80}uprzejmie")
+# text of the act after the colophon's first line in reading order: OCR may read the colophon's row under the left column,
+# before the rest of the right one (DU/1934/853: "Warszawa. Drukarnia Państwowa, Tłoczono z" glued to "nić rodzaj, …",
+# then § 15-19 and the signature; DU/1935/416 § 1-3, DU/1965/119 art. 73-76, DU/1968/28 "§2 Rozporządzenie wchodzi w życie").
+# 0.6.71 cut them with the colophon; now nothing is cut then (as up to 0.6.70)
+ACT_TEXT_OCR = re.compile(r"^\W{0,3}(?:§\s*\d+\s*[a-z]?\.|Art(?:\.|ykuł)\s*\d+)|wchodzi\s+w\s+życie|obowiązuje\s+od\s+dnia")
 ANNEX_OR_FORM = re.compile(r"^\W{0,3}(?:Załącznik|ZAŁĄCZNIK|Wzór|WZÓR|Tabela|TABELA|Taryfa|TARYFA)\b")
 SIGNED_OCR = re.compile(rf"^(?:{SIGNER_OCR}|Sędziowie)[\w ,—–-]{{0,90}}:\s*\S"
                         rf"|(?<=[.;])\s+{SIGNER_OCR}[\w ,—–-]{{2,90}}:\s*\S.{{0,60}}$")
@@ -1241,10 +1247,15 @@ def _scan_colophon(body: list[Line], last: int) -> int | None:
         if annex:
             m = COLOPHON_PUBLISHER.search(t)
             if m and m.start() <= COLOPHON_SCAN_AT:
-                return i
+                return None if _act_text_after(body, i) else i
         elif (m := COLOPHON_SCAN.search(t)) and m.start() <= COLOPHON_SCAN_AT or COLOPHON_SHORT.match(t):
-            return i
+            return None if _act_text_after(body, i) else i
     return None
+
+
+def _act_text_after(body: list[Line], i: int) -> bool:
+    """The act's text goes on after line i, the colophon's first (ACT_TEXT_OCR, a signature)."""
+    return any(ACT_TEXT_OCR.search(l.text) or SIGNED_OCR.search(l.text) for l in body[i + 1:])
 
 
 def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], list[Line]]:
@@ -1823,6 +1834,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
     gut = {"doc": _doc_gutter, "found": [], "cands": []}
     body: list[Line] = []
     notes: list[Line] = []
+    top_numbers: set[int] = set()  # ids of lines that are only the page number at the top of a page
     if ocr:
         from . import ocr as ocr_mod
         doc.ocr_engine = f"tesseract {ocr_mod.check(ocr)}"
@@ -1855,6 +1867,12 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
                         doc.masthead, b = [b[0].text], b[1:]
             elif b and (RUNNING_HEADER.match(b[0].text) or OLD_HEADER.match(b[0].text)):
                 b = b[1:]
+            # the page number alone at the top of the page: the rest of the header is in the page's image (DU/2004/1453
+            # p. 3 "— 9511 —" over a scanned annex; up to 0.6.71 in the text, 737 lines in DU 2000-2011), or the page of an
+            # annex has its own numbering (DU/1939/521 "— 27 —"). Dropped after _drop_colophon, which takes a page with
+            # only that number and images over the colophon for the publisher's (DU/2003/2317 p. 10)
+            if pno > 1 and b and not b[0].mark and BARE_PAGE_NUMBER.match(b[0].text) and b[0].top < PAGE_NUMBER_BAND * b[0].ph:
+                top_numbers.add(id(b[0]))
             if not b and not n:
                 read = ocr_mod.ocr_page(page, ocr, columns=scan, year=year) if ocr else None
                 if read and not scan and ocr_mod.old_gazette(read):  # a scan of a gazette page without any text layer
@@ -1896,6 +1914,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
         if any(abs(a - g[0]) <= 1 and abs(b - g[1]) <= 1 for a, b in gut["cands"]):
             return convert(path, ocr, position, title, _doc_gutter=g, year=year, neighbors=neighbors)
     body, notes = _drop_colophon(body, notes)
+    body = [l for l in body if id(l) not in top_numbers]
     own = None
     if position is not None and title and not any(l.act == int(position) for l in body):
         own = _own_act_by_title(body, notes, int(position), title, old=year is not None and year < 1990)

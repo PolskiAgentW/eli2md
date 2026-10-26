@@ -771,6 +771,17 @@ class Basic(unittest.TestCase):
                     "O O Z ZZO ZOZ OOOO A A Reklamacje z powodu niedoręczenia poszczególnych numerów wnosić należy",
                     "Zam. 1420 54.000", "Cena 0,50 zł")
         self.assertEqual([l.text for l in _drop_colophon(body, [])[0]], [body[0].text])
+        # nor when the act goes on after the colophon's first line: OCR read the colophon's row under the left column,
+        # before the rest of the right one (DU/1934/853: § 15-19 and the signature; up to 0.6.71 cut with the colophon)
+        body = scan("Minister Sprawiedliwości: Czesław Michałowski", "§ 13. W napisie tego wykazu należy uwidocz-",
+                    "Warszawa. Drukarnia Państwowa, Tłoczono z nić rodzaj, położenie i rozmiar danego lokalu",
+                    "§ 15. W dziale pierwszym dotychczasowego wykazu należy wpisać właścicieli.",
+                    "Rozporządzenie niniejsze wchodzi w życie z dniem ogłoszenia, Minister Sprawiedliwości: Cz. Michałowski",
+                    "polecenia Ministra Sprawiedliwości, 72827", "Cena 1 zł 20 gr")
+        self.assertEqual(len(_drop_colophon(body, [])[0]), 7)
+        for tail in ("Art. 76. Tracą moc wszystkie przepisy", "§2 Rozporządzenie wchodzi w życie z dniem ogło-"):
+            self.assertEqual(len(_drop_colophon(body[:3] + scan(tail), [])[0]), 4, tail)  # DU/1965/119, DU/1968/28
+        self.assertEqual(len(_drop_colophon(body[:3] + body[5:], [])[0]), 2)  # only the colophon after it: cut
         # without a signature nothing is cut: an act about the State Printing House
         body = scan("§ 3. Drukarnia Państwowa wykonuje druki dla urzędów.", "§ 4. Zarządzenie wchodzi w życie.")
         self.assertEqual(len(_drop_colophon(body, [])[0]), 2)
@@ -1031,6 +1042,33 @@ class Basic(unittest.TestCase):
         self.assertIn("§ 2. Dalszy tekst.", text)
         self.assertIn("Załącznik nr 2", text)
         self.assertIn("§ 3. Koniec.", text)  # and the header spaced out as in M.P. 2001-2002 ("N r") is gone too
+
+    def test_bare_page_number_at_top(self):
+        # a page whose header is in its image keeps only the page number as text (DU/2004/1453 p. 3: "— 9511 —");
+        # it goes, the page keeps its image marker; a bare number lower on the page stays
+        from eli2md import pdf as P
+
+        def line(pno, top, text):
+            return Line(pno, top, top + 10, 38.0, 10.0, text)
+        pages = {1: [line(1, 50, "Poz. 1453"), line(1, 80, "ROZPORZĄDZENIE MINISTRA"), line(1, 100, "§ 1. Tekst.")],
+                 2: [line(2, 52, "Dziennik Ustaw Nr 135 — 9510 — Poz. 1453"), line(2, 80, "Załącznik do rozporządzenia")],
+                 3: [line(3, 52, "— 9511 —")],
+                 4: [line(4, 52, "-9512-"), line(4, 80, "Dalszy tekst załącznika."), line(4, 400, "— 7 —")]}
+        pdf = mock.MagicMock()
+        pdf.__enter__.return_value.pages = [mock.Mock(pno=k, width=595.0, height=842.0) for k in pages]
+        with tempfile.NamedTemporaryFile(suffix=".pdf") as f, \
+                mock.patch.object(P.pdfplumber, "open", return_value=pdf), \
+                mock.patch.object(P, "_page_lines", side_effect=lambda page, pno, gut=None: (list(pages[pno]), [])), \
+                mock.patch.object(P, "_unmapped_share", return_value=0.0), \
+                mock.patch.object(P, "_large_image", side_effect=lambda page: 100.0 if page.pno in (2, 3) else None):
+            doc = P.convert(f.name)
+        text = "\n".join(b.text for b in doc.blocks)
+        self.assertNotIn("9511", text)
+        self.assertNotIn("9512", text)
+        self.assertIn("— 7 —", text)
+        self.assertIn("Dalszy tekst załącznika.", text)
+        self.assertEqual(doc.image_pages, [2, 3])
+        self.assertIn((3, "image"), [(b.page, b.kind) for b in doc.blocks])
 
     def test_two_column_footnotes(self):
         # InDesign (DU/2011/1170 p. 2): a 70 pt line at the right column's edge, footnotes (8.5 pt) under it in that

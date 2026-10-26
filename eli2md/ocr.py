@@ -38,7 +38,8 @@ OCR_UNIT = re.compile(r"^(Artykuł|ARTYKUŁ|Article|ARTICLE|Artigo|ARTIGO|Άρθ
 LANG = "auto"
 BASE_LANG = "pol+eng"  # first pass of "auto"; must be installed
 # a header line (or its pieces) at the top of the page: "Dziennik Ustaw — 58 — Poz. 975", "— 58 —"
-OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw|Monitor\s*Polski)?[\s\-–—.,|\d]*(Poz\.?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?$", re.I)
+# OCR reads the dashes around the page number of a scan of the 1990s also as "=" ("= 4284 —", "== 1368 —", DU/1996/239)
+OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw|Monitor\s*Polski)?[\s\-–—=.,|\d]*(Poz\.?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?$", re.I)
 HEADER_BAND = 0.08  # share of the page height where the gazette header sits
 # the header of an issue of 2011 or earlier as a whole OCR line, wherever the page puts it: a rotated page or a map
 # (DU/2008/1149, DU/2001/277; "Dziennik Ustaw Nr144 — 11476 — Poz. 1616"), also after 1-2 specks read as marks

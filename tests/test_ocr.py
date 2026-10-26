@@ -79,6 +79,10 @@ class Ocr(unittest.TestCase):
         page = ocr.parse_tsv(tsv([(1, 1, 1, 150, 90, "–"), (1, 1, 1, 150, 90, "3"), (1, 1, 1, 150, 90, "–"),
                                   (2, 1, 1, 2000, 90, "12")]), 3508)
         self.assertEqual(page.paragraphs, ["12"])
+        # the dashes around the page number read as "=" (DU/1996/239 "= 4284 —", DU/1995/194 "== 1368 —")
+        for words in (["=", "4284", "—"], ["==", "1368", "—"], ["—", "1366", "="]):
+            page = ocr.parse_tsv(tsv([(1, 1, 1, 150, 90, w) for w in words] + [(2, 1, 1, 400, 90, "Dalej")]), 3508)
+            self.assertEqual(page.paragraphs, ["Dalej"], words)
 
     def test_old_header_anywhere(self):
         # the header of an old issue read low on a rotated page or a map (DU/2008/1149) and the printer's note over the
