@@ -241,6 +241,11 @@ DU/1993/365: tam ogłoszenie wydawcy zaczyna się już na przedostatniej stronie
 (DU/1950/18 „Lena 96 zł”, DU/1990/359). Zostaje stopka: gdy OCR nie odczytał podpisu, gdy stoi w jednym akapicie
 z podpisem albo w środku zeszytu przed jego załącznikiem, gdy zaczyna się na przedostatniej stronie, i na stronach
 z warstwą tekstową (DU 2000–2011: 16 aktów).
+Znana wada (znaleziona 2026-10-26 po wydaniu, przy przeliczeniu 4548 aktów DU 1918–1989): OCR potrafi ułożyć wiersz
+stopki przed resztą tekstu z drugiego łamu tej samej strony, a wycięcie zabiera wszystko od stopki do końca, także ten
+tekst aktu (DU/1934/853: § 15–19, DU/1935/416: § 1–3, DU/1965/119: art. 73–76). W opublikowanych zbiorach takich aktów nie
+przeliczałem (zostaje poprzedni plik ze stopką; 97 aktów DU 1918–1989 z możliwą stratą wskazanych sprawdzeniem wyciętej
+części), ale konwersja tą wersją może je tak obciąć.
 
 **0.6.70** (2026-10-26). Drzewo JSON: nagłówek z liczebnikiem słownym pisanym małymi literami, stojący jako osobny
 akapit („Rozdział pierwszy”, „Część druga”, „Dział trzeci.”, „Oddział pierwszy.”), jest węzłem `heading`. Od 0.6.50
