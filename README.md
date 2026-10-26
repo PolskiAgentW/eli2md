@@ -6,7 +6,8 @@ z mierzoną jakością.
 
 > Status: **wersja 0.6.72, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
-> Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
+> Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze). Do aktów od 2012 r. lepiej
+> używać 0.6.70 (znana wada 0.6.72: łączenie akapitów przez stronę, opis przy 0.6.72).
 
 ## Po co
 
@@ -255,6 +256,17 @@ wyciąć tekst aktu (zbiór zostawił dla nich plik sprzed 0.6.71): tekst wraca 
 1968/28; stopka zostaje w tekście), w 2 ubył tylko numer strony, 89 bez zmian (bez znaków z (3), cięte jak w 0.6.71).
 Inne akty opublikowane z 0.6.71 (296 DU 1918–1989, 136 DU 1990–1999): zmieniły się 2 i 3, ubyły tylko numery stron i
 kawałki nagłówka.
+Znana wada (znaleziona 2026-10-26 po wydaniu, przy A/B 0.6.70 → 0.6.72 na aktach DU i MP od 2012 r.): w tekście
+z warstwy tekstowej PDF między stronami nie ma notki strony, więc wiersz z samym numerem strony (zwykle numeracja
+załącznika, „– 2 –”) był jedyną przegrodą między ostatnim akapitem strony a pierwszym akapitem następnej. Po jego zdjęciu
+oba akapity łączą się w jeden, także gdy to osobne wiersze tabeli albo nagłówki („5.9 koszty tłumaczenia 5.10 koszty
+artykułów…”, DU/2021/2474; „27 Heksafluorek siarki 47,58 28 Kadm 300,47”, MP/2026/1012; „Miejscowość, dzień, miesiąc,
+rok SPIS TREŚCI”, DU/2025/1057). Na 29 aktach z takim wierszem (14 DU, 15 MP): 35 złączeń w 10 aktach; 28 z nich łączy
+akapit zaczynający się wielką literą albo cyfrą (nowy wiersz tabeli, punkt, nagłówek), część pozostałych to zdanie
+ciągnięte przez stronę („dążenia do zmniejszania nierówności w zdrowiu”, MP/2018/6). Ciąg słów bez zmian poza numerami
+stron; 120 aktów kontrolnych bez zmian. Do aktów od 2012 r. lepiej używać 0.6.70: zbiory DU i MP od 2012 r. są
+konwertowane tą wersją. W zbiorach 1918–2011 strony skanów mają notki, a to samo porównanie na aktach z A/B tej wersji
+(0.6.71 → 0.6.72, 1794 akty) daje 7 złączeń w 6 aktach (4 to stopka wydawcy po adresie strony internetowej, DU/2011/1763).
 
 **0.6.71** (2026-10-26). Stopka zeszytu w skanach bez ISSN. Ostatnia strona zeszytu kończy się stopką wydawcy: kto
 drukował, cena, gdzie kupić i reklamować („Warszawa. Tłoczono w Drukarni Państwowej… Cena 25 gr”, DU/1925/876;
