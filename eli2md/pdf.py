@@ -1100,9 +1100,10 @@ HEAD_LABEL = re.compile(r"^(?:DZIAŁ|Dział|ROZDZIAŁ|Rozdział|ODDZIAŁ|Oddzia�
 ART_START = re.compile(r"^(?:Art\.|§)\s*\d")
 
 
-def _segment(body: list[Line]) -> list[Block]:
+def _segment(body: list[Line], after_number: set[int] = frozenset()) -> list[Block]:
     """Group lines into blocks (paragraphs): by the vertical gap (relative to font size and to the usual
-    gap on the page), at page breaks by content. Annex headers and signatures always start a block."""
+    gap on the page), at page breaks by content. Annex headers and signatures always start a block.
+    after_number: ids of lines right after a dropped page number at the top of their page."""
     blocks: list[Block] = []
     # a new block needs a gap above 0.45 of the font size, or clearly above the usual continuation gap
     split = {p: max(0.45, g + 0.1) for p, g in _continuation_gaps(body).items()}
@@ -1141,6 +1142,13 @@ def _segment(body: list[Line]) -> list[Block]:
             # "(uchylony)" / "(pominięty)" is the whole text of its unit (DU/2026/468: "KSIĘGA PIERWSZA" on the next page)
             new = bool(UNIT_START.match(l.text)) or bool(re.search(r"[.:;”]$", prev.text)) \
                 or bool(LEFT_OUT.search(prev.text))
+            # after a dropped page number (up to 0.6.71 a paragraph of its own between the pages) only a sentence
+            # going on: a word, a comma or a hyphen at the page's end, a small letter on the next one (MP/2018/6
+            # "dążenia do zmniejszania" "nierówności w zdrowiu"). Not rows of a table or a form ("5.9 koszty
+            # tłumaczenia" "5.10 koszty …", DU/2021/2474; "… 90–99" "nadciśnienie …", DU/2023/2392), nor a heading
+            # ("Miejscowość, dzień, miesiąc, rok" "SPIS TREŚCI", DU/2025/1057): 0.6.72 joined them
+            if id(l) in after_number and not (re.search(r"[^\W\d_][,-]?$", prev.text) and l.text[:1].islower()):
+                new = True
         else:
             # Some PDFs set units with little extra space (2 pt over the usual gap between lines, not 6),
             # or none: then a unit starts after a line that ends short of the right margin (the last line
@@ -1914,6 +1922,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
         if any(abs(a - g[0]) <= 1 and abs(b - g[1]) <= 1 for a, b in gut["cands"]):
             return convert(path, ocr, position, title, _doc_gutter=g, year=year, neighbors=neighbors)
     body, notes = _drop_colophon(body, notes)
+    after_number = {id(body[i + 1]) for i in range(len(body) - 1) if id(body[i]) in top_numbers}
     body = [l for l in body if id(l) not in top_numbers]
     own = None
     if position is not None and title and not any(l.act == int(position) for l in body):
@@ -1941,7 +1950,7 @@ def convert(path: str, ocr: str | None = None, position: int | None = None, titl
         for f in ("no_text_pages", "image_pages", "ocr_pages", "unmapped_pages", "image_ocr_pages"):
             setattr(doc, f, [p for p in getattr(doc, f) if lo <= p <= hi])  # pages of the other acts only
         doc.ocr_langs = {p: v for p, v in doc.ocr_langs.items() if lo <= p <= hi}
-    doc.blocks = _quoted_scan_annexes(_segment(body), position)
+    doc.blocks = _quoted_scan_annexes(_segment(body, after_number), position)
 
     doc.footnotes, doc.footnote_pages = _group_notes(notes)
     return doc

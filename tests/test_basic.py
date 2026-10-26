@@ -1070,6 +1070,35 @@ class Basic(unittest.TestCase):
         self.assertEqual(doc.image_pages, [2, 3])
         self.assertIn((3, "image"), [(b.page, b.kind) for b in doc.blocks])
 
+    def test_no_join_over_dropped_page_number(self):
+        # an annex with its own page numbers in a PDF with a text layer: the number was the only break between the
+        # pages; without it (0.6.72) rows of a table were joined ("5.9 koszty tłumaczenia 5.10 …", DU/2021/2474).
+        # A sentence going on over the page is still joined (MP/2018/6)
+        from eli2md import pdf as P
+
+        def line(pno, top, text):
+            return Line(pno, top, top + 10, 38.0, 10.0, text)
+        pages = {1: [line(1, 50, "Poz. 2474"), line(1, 80, "Załącznik do rozporządzenia"),
+                     line(1, 800, "5.9 koszty tłumaczenia")],
+                 2: [line(2, 40, "– 2 –"), line(2, 80, "5.10 koszty artykułów"), line(2, 800, "dążenia do zmniejszania")],
+                 3: [line(3, 40, "– 3 –"), line(3, 80, "nierówności w zdrowiu."), line(3, 800, "27 Kadm 300,47")],
+                 4: [line(4, 40, "– 4 –"), line(4, 80, "nadciśnienie tętnicze stopnia 2")]}
+        pdf = mock.MagicMock()
+        pdf.__enter__.return_value.pages = [mock.Mock(pno=k, width=595.0, height=842.0) for k in pages]
+        with tempfile.NamedTemporaryFile(suffix=".pdf") as f, \
+                mock.patch.object(P.pdfplumber, "open", return_value=pdf), \
+                mock.patch.object(P, "_page_lines", side_effect=lambda page, pno, gut=None: (list(pages[pno]), [])), \
+                mock.patch.object(P, "_unmapped_share", return_value=0.0), \
+                mock.patch.object(P, "_large_image", return_value=None):
+            doc = P.convert(f.name)
+        texts = [b.text for b in doc.blocks]
+        self.assertIn("5.9 koszty tłumaczenia", texts)
+        self.assertIn("5.10 koszty artykułów", texts)
+        self.assertIn("dążenia do zmniejszania nierówności w zdrowiu.", texts)
+        self.assertIn("27 Kadm 300,47", texts)
+        self.assertIn("nadciśnienie tętnicze stopnia 2", texts)
+        self.assertFalse(any("– 2 –" in t or "– 3 –" in t for t in texts))
+
     def test_two_column_footnotes(self):
         # InDesign (DU/2011/1170 p. 2): a 70 pt line at the right column's edge, footnotes (8.5 pt) under it in that
         # column while the left column goes on; Quark (DU/2009/1323 p. 1): a row "———————" in the left column and
