@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.71, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.72, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -222,6 +222,34 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
 
+**0.6.72** (2026-10-26). Numer strony jako osobny wiersz tekstu i poprawka wady 0.6.71.
+(1) Strona, na której nagłówek zeszytu jest w obrazie strony, ma w warstwie tekstowej sam numer strony („— 9511 —”,
+DU/2004/1453 s. 3, załącznik zeskanowany pod nagłówkiem). Filtr nagłówka zdejmował tylko cały wiersz „Dziennik Ustaw
+Nr 135 — 9510 — Poz. 1453”, więc numer trafiał do tekstu. Teraz pierwszy wiersz strony (od drugiej), który jest samym
+numerem między kreskami i stoi w górnych 8% strony, nie jest tekstem. Znacznik obrazu strony zostaje. To samo dotyczy
+załączników z własną numeracją stron (DU/1939/521 „— 27 —”). (2) OCR czyta kreski wokół numeru strony w skanach także
+jako „=” („= 4284 —”, DU/1996/239). W pasie nagłówka taki wiersz z samym numerem też nie jest już tekstem. Wiersz
+z numerem pozycji („= | Poz. 181”) zostaje jak dotąd, bo po nim rozpoznawany jest nagłówek starego skanu razem z resztą
+jego kawałków (DU/1986/181 s. 10: bez niego zostawał „Dziżnnik Ustaw Nr 37 ; en”). (3) Wada 0.6.71: gdy OCR ułożył
+wiersz stopki przed resztą tekstu z drugiego łamu, wycięcie stopki zabierało też ten tekst (DU/1934/853 § 15–19).
+Teraz, gdy po pierwszym wierszu stopki stoi „§ N.” albo „Art. N” na początku akapitu, „wchodzi w życie”, „obowiązuje
+od dnia” albo podpis, nic nie jest wycinane (jak do 0.6.70). Tekst aktu bez takich znaków (tabela, wykaz miejscowości,
+DU/1959/177) nadal może zostać wycięty razem ze stopką.
+A/B (0.6.71 → 0.6.72, te same PDF i odczyty OCR) na aktach opublikowanych zbiorów, które mają wiersz z samym numerem
+strony: DU 1918–1989 154 akty, wierszy-numerów 245 → 36; DU 1990–1999 137, 246 → 38; DU 2000–2011 527, 754 → 10. W
+zmienionych aktach ciąg słów różni się tylko brakiem numerów stron i kawałków nagłówka, z wyjątkami: wyraz przeniesiony
+przez stronę z numerem pomiędzy jest teraz sklejony („uwzględ- — 250 = nieniu” → „uwzględnieniu”, DU/1947/89), także z
+literą śmieci odczytaną przy numerze („odjaz- — 25 — i dem” → „odjazi dem”, DU/1939/521; tak w 3 aktach); numery pozycji
+tabeli, sklejane dotąd w jeden akapit („30. 31.”), stoją osobno jak sąsiednie (DU/1998/915), bo numer strony nie zmienia
+już odstępu między wierszami. Zostają kawałki nagłówka z „=” i numerem pozycji („= Poz. 283”, jak w 0.6.71) i część
+wierszy-numerów (przyczyn tych 36 i 38 nie sprawdzałem). Kontrolne akty bez takiego wiersza (60 DU 1918–1989, 60 DU
+1990–1999, 61 DU 2000–2011): bez zmian poza 2 w DU 1990–1999 (numer strony spoza wzorca pomiaru, zdjęty) i 1 w DU
+2000–2011 (tylko spacja na końcu wiersza). Zmiana (3) na 95 aktach DU 1918–1989, w których 0.6.71 mogła wyciąć tekst
+aktu (zbiór zostawił dla nich plik sprzed 0.6.71): tekst wraca w 4 (DU/1934/853, 1935/416, 1965/119, 1968/28; stopka
+zostaje w tekście), w 2 ubył tylko numer strony, 89 bez zmian (bez znaków z (3), cięte jak w 0.6.71). Inne akty
+opublikowane z 0.6.71 (296 DU 1918–1989, 136 DU 1990–1999): zmieniły się 2 i 3, ubyły tylko numery stron i kawałki
+nagłówka.
+
 **0.6.71** (2026-10-26). Stopka zeszytu w skanach bez ISSN. Ostatnia strona zeszytu kończy się stopką wydawcy: kto
 drukował, cena, gdzie kupić i reklamować („Warszawa. Tłoczono w Drukarni Państwowej… Cena 25 gr”, DU/1925/876;
 „Reklamacje z powodu niedoręczenia…”, „Redakcja: Urząd Rady Ministrów…”, „Zam. 1420”, „Cena 0,50 zł”, DU/1954/141),
@@ -245,7 +273,8 @@ Znana wada (znaleziona 2026-10-26 po wydaniu, przy przeliczeniu 4548 aktów DU 1
 stopki przed resztą tekstu z drugiego łamu tej samej strony, a wycięcie zabiera wszystko od stopki do końca, także ten
 tekst aktu (DU/1934/853: § 15–19, DU/1935/416: § 1–3, DU/1965/119: art. 73–76). W opublikowanych zbiorach takich aktów nie
 przeliczałem (zostaje poprzedni plik ze stopką; 97 aktów DU 1918–1989 z możliwą stratą wskazanych sprawdzeniem wyciętej
-części), ale konwersja tą wersją może je tak obciąć.
+części), ale konwersja tą wersją może je tak obciąć. W 0.6.72 poprawione dla tekstu z „§ N.”, „Art. N”, „wchodzi
+w życie” albo podpisem po stopce (opis wyżej); tekst bez tych znaków nadal może zostać wycięty.
 
 **0.6.70** (2026-10-26). Drzewo JSON: nagłówek z liczebnikiem słownym pisanym małymi literami, stojący jako osobny
 akapit („Rozdział pierwszy”, „Część druga”, „Dział trzeci.”, „Oddział pierwszy.”), jest węzłem `heading`. Od 0.6.50

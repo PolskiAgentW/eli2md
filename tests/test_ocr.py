@@ -83,6 +83,10 @@ class Ocr(unittest.TestCase):
         for words in (["=", "4284", "—"], ["==", "1368", "—"], ["—", "1366", "="]):
             page = ocr.parse_tsv(tsv([(1, 1, 1, 150, 90, w) for w in words] + [(2, 1, 1, 400, 90, "Dalej")]), 3508)
             self.assertEqual(page.paragraphs, ["Dalej"], words)
+        # but not a piece with the positions: pdf.py finds the header of an old scan by it (DU/1986/181 p. 10)
+        page = ocr.parse_tsv(tsv([(1, 1, 1, 150, 90, w) for w in ("=", "|", "Poz.", "181")]
+                                 + [(2, 1, 1, 400, 90, "Dalej")]), 3508)
+        self.assertTrue(page.paragraphs[0].startswith("= | Poz. 181"), page.paragraphs)
 
     def test_old_header_anywhere(self):
         # the header of an old issue read low on a rotated page or a map (DU/2008/1149) and the printer's note over the

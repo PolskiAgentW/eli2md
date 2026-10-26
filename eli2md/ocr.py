@@ -38,8 +38,11 @@ OCR_UNIT = re.compile(r"^(Artykuł|ARTYKUŁ|Article|ARTICLE|Artigo|ARTIGO|Άρθ
 LANG = "auto"
 BASE_LANG = "pol+eng"  # first pass of "auto"; must be installed
 # a header line (or its pieces) at the top of the page: "Dziennik Ustaw — 58 — Poz. 975", "— 58 —"
-# OCR reads the dashes around the page number of a scan of the 1990s also as "=" ("= 4284 —", "== 1368 —", DU/1996/239)
-OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw|Monitor\s*Polski)?[\s\-–—=.,|\d]*(Poz\.?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?$", re.I)
+OCR_HEADER = re.compile(r"^(Dziennik\s*Ustaw|Monitor\s*Polski)?[\s\-–—.,|\d]*(Poz\.?\s*\d+(?:\s*(?:i|,)\s*\d+)*)?$", re.I)
+# OCR reads the dashes around the page number of a scan of the 1990s also as "=" ("= 4284 —", "== 1368 —", DU/1996/239):
+# the number alone. Not a piece with the positions ("= | Poz. 181", DU/1986/181 p. 10): pdf.py finds the header of an old
+# scan by it, with its other pieces ("Dziżnnik Ustaw Nr 37 ; en") and where an act starts on the page
+OCR_PAGE_NUMBER_EQ = re.compile(r"^[\s\-–—=.,|]*\d{1,5}[\s\-–—=.,|]*$")
 HEADER_BAND = 0.08  # share of the page height where the gazette header sits
 # the header of an issue of 2011 or earlier as a whole OCR line, wherever the page puts it: a rotated page or a map
 # (DU/2008/1149, DU/2001/277; "Dziennik Ustaw Nr144 — 11476 — Poz. 1616"), also after 1-2 specks read as marks
@@ -214,7 +217,8 @@ def parse_tsv(tsv: str, height: int, page_number: int | None = None, band: float
         # in the band also the printer's line of pdf.PRINTER_LINE and the issue header cut short ("Korekta: 24.05.02",
         # "Dziennik Ustaw Nr 65": DU/2002/595 p. 33, a scan under a text layer of only those lines, read by OCR from 0.6.63)
         if top < band * height and (
-                OCR_HEADER.match(text) or (len(words) <= 8 and str(page_number) in re.findall(r"\d+", text))
+                OCR_HEADER.match(text) or OCR_PAGE_NUMBER_EQ.match(text)
+                or (len(words) <= 8 and str(page_number) in re.findall(r"\d+", text))
                 or PRINTER_LINE.match(text) or (m := OLD_HEADER_OCR.match(text)) and m.end() == len(text.rstrip(" .,"))) \
                 or OLD_HEADER_LINE.match(text) or PROOF_NOTE.match(text):
             continue
