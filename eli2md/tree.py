@@ -86,6 +86,10 @@ HEADING = re.compile(
     r"^((?:DZIAŁ|Dział|ROZDZIAŁ|Rozdział|ODDZIAŁ|Oddział|TYTUŁ|Tytuł|KSIĘGA|Księga|CZĘŚĆ|Część)\s+"
     rf"(?:[0-9]+[a-z]*[{SUP}]*|[IVXLC]+(?:[a-z]*|[A-Z]{{1,2}})[{SUP}]*|{ORDINAL}(?:\s+[A-Za-z](?=\s|$))?))"
     rf"\.?({NOTE})(?:\s+(.*))?$", re.S)
+# an ordinal in lower case only as a whole paragraph: "Rozdział pierwszy", "Część druga", "Dział trzeci.", "Tytuł drugi."
+# (31 acts, 200 such lines in 2026-10: DU/2002/750, DU/1926/217, DU/2025/903) were text of the article before them; with
+# text after it the paragraph is a sentence ("Część pierwsza wniosku zawiera dane.")
+WORD_HEADING = re.compile(rf"^((?:Dział|Rozdział|Oddział|Tytuł|Księga|Część)\s+{ORDINAL.lower()})\.?({NOTE})()$")
 # "III. Stanowiska pracy …": a section of an annex numbered I–XXXIX. It ends the units of the section before
 # (DU/2024/629: the "1)" list of section III is not under "6." of section II). Only in annexes: in the main text
 # such lines are mostly rows of tables replaced by an amendment without quotes (DU/2025/330: "część I otrzymuje
@@ -449,14 +453,14 @@ def md_to_tree(md: str) -> dict:
             b.add_unit(*u)
             if label:
                 b.stack[-1][1]["label"] = label
-        elif d == 0 and kind == "p" and HEADING.match(text) and b.stack and not b.stack[-1][1]["children"] \
+        elif d == 0 and kind == "p" and _heading(text) and b.stack and not b.stack[-1][1]["children"] \
                 and ANNOUNCES_QUOTE.search(b.stack[-1][1]["text"]):
             # "d) w tabeli nr 3 dodaje się część VII w brzmieniu:" / "Część VII" / "1. …" … "7. …" / "30) …"
             # (DU/2025/179): the heading of a table added without quotes is text of the amending unit and its rows
             # are rows of a replaced table (table_row), not a heading and ust. of the act
             b.add_text(text, quoted=False)
             b.replaced = {}
-        elif d == 0 and (h := HEADING.match(text)) and len(text) < 300:
+        elif d == 0 and (h := _heading(text)) and len(text) < 300:
             b.add_heading(h.group(1), (h.group(3) or "").strip(), h.group(2))
         elif d == 0 and kind == "p" and parts[-1][0] == "annex" and (h := ROMAN_HEAD.match(text)) \
                 and b.roman_section(h.group(1)):
@@ -467,6 +471,10 @@ def md_to_tree(md: str) -> dict:
     out["annexes"] = [{"heading": h, "body": b.body} for _, h, b in parts[1:]]
     out["footnotes"] = footnotes
     return out
+
+
+def _heading(text: str) -> re.Match | None:
+    return HEADING.match(text) or WORD_HEADING.match(text)
 
 
 def iter_units(nodes: list[dict]):

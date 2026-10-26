@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.69, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.70, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,16 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.70** (2026-10-26). Drzewo JSON: nagłówek z liczebnikiem słownym pisanym małymi literami, stojący jako osobny
+akapit („Rozdział pierwszy”, „Część druga”, „Dział trzeci.”, „Oddział pierwszy.”), jest węzłem `heading`. Od 0.6.50
+liczebnik był rozpoznawany tylko wielkimi literami („CZĘŚĆ PIERWSZA”), więc taki nagłówek i jego tytuł trafiały jako tekst
+do artykułu przed nim (DU/2002/750: „Rozdział drugi” / „Sprawy z zakresu prawa rodzinnego”). Akapit, w którym po
+liczebniku jest dalszy tekst („Część pierwsza wniosku zawiera dane.”), zostaje tekstem. `.md` się nie zmienia. A/B drzew
+(te same `.md`, 0.6.69 → 0.6.70) na wszystkich 92 921 aktach 6 zbiorów: zmienia się 29 drzew, nowych nagłówków jest 193,
+żaden nie znika, liczba jednostek i słowa bez zmian. W 10 aktach jednostka tuż po nowym nagłówku przestaje należeć do
+artykułu przed nim (DU/1926/80: `art_10/ust_1` → `ust_1`). W cytatach, także po cudzysłowie, którego OCR nie zamknął,
+nagłówek zostaje tekstem (43 takie wiersze w 10 aktach).
 
 **0.6.69** (2026-10-26). Skany czytane przez OCR: sklejony numer „5N.” na początku akapitu („54. podkładki”,
 „51. Metadane”, „516. KONWENCJA”) jest numerem listy albo pozycji, a nie „§ N.” z „§” odczytanym jako „5” — chyba że

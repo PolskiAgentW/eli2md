@@ -75,6 +75,18 @@ class Tree(unittest.TestCase):
                                             "art_35⁹", "art_1110⁴", "art_1110⁴/par_3", "art_36"])
         self.assertFalse(any(c["type"] == "text" for n in t["body"] for c in n.get("children", [])))
 
+    def test_lower_case_ordinal_heading_as_whole_paragraph(self):
+        # DU/2002/750, DU/1926/217: "Rozdział drugi" / "Dział trzeci." as a paragraph of its own was text of the article
+        # before it; "Część pierwsza wniosku …" with text after it stays a sentence
+        t = md_to_tree(md("Rozdział pierwszy", "Postanowienia ogólne", "##### Art. 1.", "Treść.",
+                          "Rozdział drugi", "Sprawy z zakresu prawa rodzinnego", "##### Art. 2.", "Treść.",
+                          "Dział trzeci.", "##### Art. 3.", "Część pierwsza wniosku zawiera dane."))
+        self.assertEqual([(n["label"], n["text"]) for n in t["body"] if n["type"] == "heading"],
+                         [("Rozdział pierwszy", "Postanowienia ogólne"), ("Rozdział drugi", "Sprawy z zakresu prawa rodzinnego"),
+                          ("Dział trzeci", "")])
+        self.assertEqual([n.get("text") for n in t["body"] if n["type"] == "art"],
+                         ["Treść.", "Treść.", "Część pierwsza wniosku zawiera dane."])
+
     def test_roman_sections_in_annex_end_units(self):
         # DU/2024/629: section III starts with a "1)" list, which is not under "6." of section II
         annex = ("## Załącznik nr 1", "WYKAZ STANOWISK", "I. Stanowiska w obszarze wytwarzania:", "1. realizacji procesu:",
