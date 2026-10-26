@@ -758,6 +758,37 @@ class Basic(unittest.TestCase):
                     Line(10, 543, 550, 37, 7, "Egzemplarze bieżące oraz archiwalne można nabywać:"),
                     Line(10, 782, 792, 262, 9, "ISSN 0867-3411 (w tym 7% VAT)")]
             self.assertEqual([l.text for l in _drop_colophon(body, [])[0]], ["Tekst aktu."])
+
+    def test_colophon_of_an_old_scan(self):
+        # a scan of 1989 or earlier: no ISSN, cut after the last signature (DU/1925/876, DU/1954/141)
+        def scan(*texts, page=1):
+            return [Line(page, 0, 0, 0, 0, t, mark="scan") for t in texts]
+        body = scan("§ 2. Rozporządzenie niniejsze wchodzi w życie z dniem ogłoszenia.",
+                    "Minister Pracy i Opieki Społecznej: B. Ziemięcki",
+                    "Warszawa. Tłoczono w Drukarni Państwowej z polecenia Ministra Sprawiedliwości. Cena 25 gr")
+        self.assertEqual([l.text for l in _drop_colophon(body, [])[0]], [body[0].text, body[1].text])
+        body = scan("Minister Spraw Zagranicznych: w z, M, Naszkowski",
+                    "O O Z ZZO ZOZ OOOO A A Reklamacje z powodu niedoręczenia poszczególnych numerów wnosić należy",
+                    "Zam. 1420 54.000", "Cena 0,50 zł")
+        self.assertEqual([l.text for l in _drop_colophon(body, [])[0]], [body[0].text])
+        # without a signature nothing is cut: an act about the State Printing House
+        body = scan("§ 3. Drukarnia Państwowa wykonuje druki dla urzędów.", "§ 4. Zarządzenie wchodzi w życie.")
+        self.assertEqual(len(_drop_colophon(body, [])[0]), 2)
+        # nor before the signature, nor on a page before the last
+        body = scan("Opłata za prenumeratę wynosi 5 zł.", "Minister Skarbu: J. Kowalski") + scan("Tekst.", page=2)
+        self.assertEqual(len(_drop_colophon(body, [])[0]), 3)
+        # nor after an annex under the signature: a tariff
+        body = scan("Minister Skarbu: J. Kowalski", "Załącznik do rozporządzenia", "Cena 5 zł", "Cena 7 zł")
+        self.assertEqual(len(_drop_colophon(body, [])[0]), 4)
+        # after an annex only a start in the publisher's words (DU/1991/561)
+        body = scan("Minister Skarbu: J. Kowalski", "## Załącznik do rozporządzenia", "Cena 5 zł",
+                    "UWAGA PRENUMERATORZY!", "Opłata za prenumeratę na rok 1992 wynosi:")
+        self.assertEqual([l.text for l in _drop_colophon(body, [])[0]], [l.text for l in body[:3]])
+        # with an ISSN, from a notice to subscribers after the signature, above the colophon (DU/1991/456)
+        body = scan("Przewodniczący: M. Tyczka Prezes Trybunału Konstytucyjnego", "UWAGA PRENUMERATORZY!",
+                    "Opłata za prenumeratę na rok 1992 wynosi:", "Egzemplarze bieżące oraz z lat ubiegłych",
+                    "ISSN 0867-3411")
+        self.assertEqual([l.text for l in _drop_colophon(body, [])[0]], [body[0].text])
         # an image on the last page of an act, under its running header: it is kept
         body = [Line(9, 100, 110, 40, 10, "Załącznik nr 2"), Line(9, 120, 120, 0, 1, "", mark="image"),
                 Line(9, 543, 550, 37, 7, "Egzemplarze bieżące oraz archiwalne można nabywać:"),
@@ -769,7 +800,9 @@ class Basic(unittest.TestCase):
             ("Wydawca: Kancelaria Prezesa Rady Ministrów", 0), ("Cena 2 zł 40 gr", 0), ("ISSN 0867-3411", 0))]
         self.assertEqual([l.text for l in _drop_colophon(ocr, [])[0]],
                          ["48", "ROZPORZĄDZENIE MINISTRA PRACY", "Minister Pracy: L. Komołowski"])
-        self.assertEqual(len(_drop_colophon(ocr[:4], [])[0]), 4)  # no ISSN: nothing is cut
+        # no ISSN: cut after the signature (_scan_colophon); without one nothing is cut
+        self.assertEqual(len(_drop_colophon(ocr[:4], [])[0]), 3)
+        self.assertEqual(len(_drop_colophon(ocr[:2] + ocr[3:4], [])[0]), 3)
 
     def test_masthead_end(self):
         for line in ("Poz. 5", "Poz. 1021", "Pozycja 19", ") Poz. 1024*", "Poz. 1024*)"):  # MP/2012/19, MP/2012/1024

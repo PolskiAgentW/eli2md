@@ -4,7 +4,7 @@ Konwerter aktów z **Dziennika Ustaw** i **Monitora Polskiego** (PDF) do **Markd
 z mierzoną jakością.
 *Converts Polish Journal of Laws (and Monitor Polski) PDFs to Markdown; accuracy is measured against official HTML.*
 
-> Status: **wersja 0.6.70, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
+> Status: **wersja 0.6.71, faza rozwojowa (przed 1.0)**: nowe wersje wychodzą często, a format wyniku może się
 > jeszcze zmienić. Kod może zawierać błędy. Wiążący jest zawsze PDF opublikowany w Dzienniku Ustaw albo w Monitorze Polskim.
 > Co zmieniła każda wersja: [Zmiany w wersjach](#zmiany-w-wersjach) (najnowsze na górze).
 
@@ -221,6 +221,24 @@ Wyniki per akt: `eval/tree_test_s5108_v0.6.*.txt`, `eval/tree_test_s5106_v0.6.1.
 
 Od 0.6.3, najnowsze na górze. Wcześniejsze wersje (0.5.x, 0.6.0–0.6.2) są opisane przy wynikach testów wyżej
 i w „Jakość: jak mierzę i co wyszło”.
+
+**0.6.71** (2026-10-26). Stopka zeszytu w skanach bez ISSN. Ostatnia strona zeszytu kończy się stopką wydawcy: kto
+drukował, cena, gdzie kupić i reklamować („Warszawa. Tłoczono w Drukarni Państwowej… Cena 25 gr”, DU/1925/876;
+„Reklamacje z powodu niedoręczenia…”, „Redakcja: Urząd Rady Ministrów…”, „Zam. 1420”, „Cena 0,50 zł”, DU/1954/141),
+czasem ogłoszeniem dla prenumeratorów („Opłata za prenumeratę na rok 1989…”, „UWAGA PRENUMERATORZY!”). Od 0.6.18 była
+wycinana tylko ze strony, na której jest ISSN, a skany sprzed 1989 r. go nie mają, więc trafiała do tekstu ostatniego aktu
+zeszytu. Teraz na ostatniej stronie czytanej przez OCR stopka jest wycinana także bez ISSN, ale tylko po ostatnim podpisie
+aktu: od pierwszego wiersza, który zaczyna się (w pierwszych 30 znakach) od słów stopki. Bez podpisu nic nie jest
+wycinane (akt o drukarni państwowej może mieć te słowa w tekście). Po załączniku, wzorze albo tabeli pod podpisem wycina
+tylko wiersz w słowach wydawcy („UWAGA PRENUMERATORZY”, „Tłoczono z polecenia”, „Reklamacje z powodu niedoręczenia”…),
+a nie „Cena 5 zł” czy „Wydawca:”, które mogą być w taryfie albo wzorze. Na stronie z ISSN wycięcie zaczyna się od
+wcześniejszego z dwóch miejsc, więc znika też ogłoszenie dla prenumeratorów nad kolofonem (DU/1991/456).
+A/B (0.6.70 → 0.6.71, te same PDF i odczyty OCR): na 199 aktach DU 1918–1989 i 83 DU 1990–1999 ze stopką
+w tekście zmienia się 163 i 76; każde wycięcie zaczyna się od stopki, podpis zostaje, jednostki drzewa bez zmian poza
+DU/1993/365 (bez ogłoszenia pod spodem drzewo czyta trzy punkty ust. 5). Na 535 aktach kontrolnych (DU 1918–1989 300,
+1990–1999 100, 2000–2011 49, 2012+ z OCR 86) zmieniły się 2, w obu to stopka, której wzorzec pomiaru nie znał
+(DU/1950/18 „Lena 96 zł”, DU/1990/359). Zostaje stopka: gdy OCR nie odczytał podpisu, gdy stoi w jednym akapicie
+z podpisem albo w środku zeszytu przed jego załącznikiem, i na stronach z warstwą tekstową (DU 2000–2011: 16 aktów).
 
 **0.6.70** (2026-10-26). Drzewo JSON: nagłówek z liczebnikiem słownym pisanym małymi literami, stojący jako osobny
 akapit („Rozdział pierwszy”, „Część druga”, „Dział trzeci.”, „Oddział pierwszy.”), jest węzłem `heading`. Od 0.6.50

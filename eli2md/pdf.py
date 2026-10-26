@@ -1191,11 +1191,66 @@ COLOPHON = re.compile(r"^(?:Wydawca\s*:|Szanowni\s+Państwo(?:!|$)|Egzemplarze\s
                       r"|Informacja\s+o\s*możliwości\s+zakupu\s+wydawnictw|Tłoczono\s+z\s+polecenia)")
 ISSN = re.compile(r"\bISSN\s*\d{4}\s*-\s*\d{3}[\dX]\b")
 BARE_PAGE_NUMBER = re.compile(r"^[—–-]\s*\d+\s*[—–-]$")
+# A scan of 1989 or earlier has no ISSN in its colophon: who printed it, the price, where to buy and complain
+# ("Warszawa. Tłoczono w Drukarni Państwowej z polecenia Ministra Sprawiedliwości. … Cena 25 gr", DU/1925/876;
+# "Reklamacje z powodu niedoręczenia …", "Redakcja: Urząd Rady Ministrów …", "Zam. 1420", "Cena 0,50 zł",
+# DU/1954/141), or a notice to subscribers ("Opłata za prenumeratę na rok 1989 wynosi", DU/1989/70; "UWAGA
+# PRENUMERATORZY!", DU/1991/456; "P.T. Prenumeratorzy Dziennika Ustaw", DU/1990/40; "„OD ADMINISTRACJI: P. P.
+# prenumeratorów, uprasza się o wpłacenie", DU/1923/1057). OCR may put a few stray
+# characters before it ("O O Z ZZO ZOZ OOOO A A Reklamacje", "85973 Cena 40 gr") or start it in the middle of a
+# sentence of its other column ("nadesłanego zamówienia w Wydziale Wydawnictw i Poligrafii Egzemplarze bieżące",
+# DU/1995/539).
+COLOPHON_SCAN = re.compile(r"Wydawca\s*:|Szanowni\s+Państwo|Egzemplarze\s+bieżące|Reklamacje\s+z\s+powodu\s+niedoręcz"
+                           r"|Pojedyncze\s+egzemplarze\s+Dziennika|Tłoczono\s+(?:z\s+polecenia|w\s+Drukarni)"
+                           r"|Redakcja\s*:\s*Urząd\s+Rady|Opłata\s+za\s+prenumeratę|Prenumerata\s+Dz\.\s*U"
+                           r"|Konto\s+czekowe\s+Pocztowej|Drukarnia\s+Państwowa|PRENUMERATORZY|P\.\s*T\.\s*Prenumerator"
+                           r"|Prenumeratorzy\s+Dziennika|nadesłanego\s+zamówienia|WYDZIAŁ\s+WYDAWNICTW"
+                           r"|Wydział\s+Wydawnictw|Informacja\s+o\s*możliwości\s+zakupu|OD\s+ADMINISTRACJI")
+COLOPHON_SCAN_AT = 30  # the colophon starts within this many characters of its line
+COLOPHON_SHORT = re.compile(r"^(?:Zam\.\s*\d|Cena\s+\d[\d,.]*\s*(?:zł|gr)\b).{0,30}$")
+# the signature over such a colophon, read loosely: an office and a colon at the start of a line ("Minister Spraw
+# Zagranicznych: w z, M, Naszkowski", DU/1954/141; "Przewodniczący: M. Tyczka Prezes Trybunału Konstytucyjnego",
+# "Sędziowie: …", DU/1991/456), or after the end of a sentence at the end of a line ("… czasopism. Minister Spraw
+# Zagranicznych: Beck", DU/1936/567)
+# after an annex or a form under the signature only a start in the publisher's own words cuts (DU/1991/561: "UWAGA
+# PRENUMERATORZY!" after the annex; DU/1996/458: "… nadesłanego zamówienia w Wydziale …" after a table)
+COLOPHON_PUBLISHER = re.compile(r"PRENUMERATORZY|P\.\s*T\.\s*Prenumerator|Prenumeratorzy\s+Dziennika|Reklamacje\s+z\s+powodu"
+                                r"\s+niedoręcz|Pojedyncze\s+egzemplarze\s+Dziennika|Egzemplarze\s+bieżące|Tłoczono\s+z\s+polecenia"
+                                r"|Redakcja\s*:\s*Urząd\s+Rady|OD\s+ADMINISTRACJI|Opłata\s+za\s+prenumeratę"
+                                r"|Szanowni\s+Państwo\W{0,3}(?:Prenumerator|WYDZIAŁ)|nadesłanego\s+zamówienia\s+w\s+Wydziale"
+                                r"|Wydawca\s*:\s*(?:Kancelaria|Urząd)|WYDZIAŁ\s+WYDAWNICTW|Wydział\s+Wydawnictw\b.{0,80}uprzejmie")
+ANNEX_OR_FORM = re.compile(r"^\W{0,3}(?:Załącznik|ZAŁĄCZNIK|Wzór|WZÓR|Tabela|TABELA|Taryfa|TARYFA)\b")
+SIGNED_OCR = re.compile(rf"^(?:{SIGNER_OCR}|Sędziowie)[\w ,—–-]{{0,90}}:\s*\S"
+                        rf"|(?<=[.;])\s+{SIGNER_OCR}[\w ,—–-]{{2,90}}:\s*\S.{{0,60}}$")
+
+
+def _scan_colophon(body: list[Line], last: int) -> int | None:
+    """Where the colophon of a scan without an ISSN starts (COLOPHON_SCAN, COLOPHON_SHORT): the first such line of
+    the last page after the last signature (SIGNED_OCR). None without a signature: a colophon is not told from the
+    text of an act about the press or the State Printing House by its words alone. After an annex or a form under
+    the signature only COLOPHON_PUBLISHER starts it: a tariff may have a line "Cena 5 zł", a form a field "Wydawca:"."""
+    sig = max((i for i, l in enumerate(body) if SIGNED_OCR.search(l.text)), default=None)
+    if sig is None:
+        return None
+    annex = False
+    for i in range(sig + 1, len(body)):
+        t = body[i].text
+        annex = annex or bool(ANNEX_OR_FORM.match(t))
+        if body[i].page != last:
+            continue
+        if annex:
+            m = COLOPHON_PUBLISHER.search(t)
+            if m and m.start() <= COLOPHON_SCAN_AT:
+                return i
+        elif (m := COLOPHON_SCAN.search(t)) and m.start() <= COLOPHON_SCAN_AT or COLOPHON_SHORT.match(t):
+            return i
+    return None
 
 
 def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], list[Line]]:
     """Body and footnote lines without the colophon of an issue (COLOPHON): it is not text of the act. Only on the
-    last page, and only if that page names an ISSN; acts of 2012 on are single PDFs without it. The colophon is set
+    last page, and only if that page names an ISSN; acts of 2012 on are single PDFs without it. A last page read
+    by OCR without an ISSN (scans of 1989 and earlier) is cut after the last signature (_scan_colophon). The colophon is set
     across the page under the act, so everything from its highest line down is cut, body or footnote: it may be read
     as footnotes (DU/2000/291: "Wydawca: …" as footnotes, "Cena 3 zł 96 gr" and the ISSN as body), and its first line
     may fall into the left column, before the end of the right one (DU/2002/753). If only the bare page number and
@@ -1210,6 +1265,12 @@ def _drop_colophon(body: list[Line], notes: list[Line]) -> tuple[list[Line], lis
         # on the page went (DU/2000/48, a one-page act at the end of its issue, came out empty)
         cut = next((i for i, l in enumerate(body) if l.page == last and COLOPHON.match(l.text)), None)
         if cut is None or not any(ISSN.search(l.text) for l in lines):
+            cut = None
+        # also over a colophon with an ISSN, a notice to subscribers after the signature ("UWAGA PRENUMERATORZY!
+        # Opłata za prenumeratę na rok 1992 wynosi:" over "Egzemplarze bieżące …", DU/1991/456)
+        scan = _scan_colophon(body, last)
+        cut = min((c for c in (cut, scan) if c is not None), default=None)
+        if cut is None:
             return body, notes
         above = [l for l in body[:cut] if l.page == last]
         if above and all(BARE_PAGE_NUMBER.match(l.text) for l in above):
