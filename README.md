@@ -237,13 +237,14 @@ od dnia” albo podpis, nic nie jest wycinane (jak do 0.6.70). Tekst aktu bez ta
 DU/1959/177) nadal może zostać wycięty razem ze stopką.
 A/B (0.6.71 → 0.6.72, te same PDF i odczyty OCR) na aktach opublikowanych zbiorów, które mają wiersz z samym numerem
 strony: DU 1918–1989 154 akty, wierszy-numerów 245 → 36; DU 1990–1999 137, 246 → 38; DU 2000–2011 527, 754 → 10. W
-zmienionych aktach ciąg słów różni się tylko brakiem numerów stron i kawałków nagłówka, z wyjątkami: wyraz przeniesiony
-przez stronę z numerem pomiędzy jest teraz sklejony („uwzględ- — 250 = nieniu” → „uwzględnieniu”, DU/1947/89), także z
-literą śmieci odczytaną przy numerze („odjaz- — 25 — i dem” → „odjazi dem”, DU/1939/521; tak w 3 aktach); numery pozycji
-tabeli, sklejane dotąd w jeden akapit („30. 31.”), stoją osobno jak sąsiednie (DU/1998/915), bo numer strony nie zmienia
-już odstępu między wierszami. Zostają kawałki nagłówka z „=” i numerem pozycji („= Poz. 283”, jak w 0.6.71) i część
-wierszy-numerów (przyczyn tych 36 i 38 nie sprawdzałem). Kontrolne akty bez takiego wiersza (60 DU 1918–1989, 60 DU
-1990–1999, 61 DU 2000–2011): bez zmian poza 2 w DU 1990–1999 (numer strony spoza wzorca pomiaru, zdjęty) i 1 w DU
+zmienionych aktach ciąg słów różni się tylko brakiem numerów stron i kawałków nagłówka, z jednym wyjątkiem: numery
+pozycji tabeli, sklejane dotąd w jeden akapit („30. 31.”), stoją osobno jak sąsiednie (DU/1998/915), bo numer strony nie
+zmienia już odstępu między wierszami. Wyraz przeniesiony przez stronę zostaje rozdzielony jak dotąd („uwzględ-” | notka
+strony | „nieniu”, DU/1947/89), teraz bez numeru między częściami. Strona skanu, z której do aktu trafiał tylko numer
+strony (ostatnia, DU/1990/213 s. 3), nie ma już notki i nie liczy się do `pages_ocr` i `pages_without_text` (6 aktów DU
+1918–1989 i 22 DU 1990–1999 z A/B). Zostają kawałki nagłówka z „=” i numerem pozycji („= Poz. 283”, jak w 0.6.71) i
+część wierszy-numerów (przyczyn tych 36 i 38 nie sprawdzałem). Kontrolne akty bez takiego wiersza (60 DU 1918–1989, 60
+DU 1990–1999, 61 DU 2000–2011): bez zmian poza 2 w DU 1990–1999 (numer strony spoza wzorca pomiaru, zdjęty) i 1 w DU
 2000–2011 (tylko spacja na końcu wiersza). Zmiana (3) na 95 aktach DU 1918–1989, w których 0.6.71 mogła wyciąć tekst
 aktu (zbiór zostawił dla nich plik sprzed 0.6.71): tekst wraca w 4 (DU/1934/853, 1935/416, 1965/119, 1968/28; stopka
 zostaje w tekście), w 2 ubył tylko numer strony, 89 bez zmian (bez znaków z (3), cięte jak w 0.6.71). Inne akty
